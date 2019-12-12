@@ -1,0 +1,7 @@
+class TabbedClass {
+	constructor() {
+  }
+  addObject() {
+
+  }
+}

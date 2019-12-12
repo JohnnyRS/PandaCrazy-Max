@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" href="css/jquery-ui.min.css">
+  <link rel="stylesheet" href="css/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="css/bootstrap-editable.css"> -->
+  <link rel="stylesheet" href="css/fontAwesome.min.css">
+  <link rel="stylesheet" href="css/panda-crazy-max.css">
+  <script src="js/jquery-3.4.1.min.js"></script>
+  <script src="js/jquery-ui.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <!-- <script src="js/bootstrap-editable.min.js"></script> -->
+  <!-- <script src="js/resizable.js"></script> -->
+  <title>Panda Crazy Max</title>
+</head>
+<body>
+  <div class="container-fluid text-light border-light rounded bg-dark h-100 p-0">
+    <div class="pane pcm_top border">
+      <div class="navbar navbar-text navbar-fixed-top pcm_status text-left">
+        <button class="btn btn-secondary btn-xs" id="pcm_saveElapsedToFile">Save</button>
+        <small>[<span class="text-danger" id="pcm_collecting">Off</span>-</small>
+        <small><span id="pcm_collectingTotal">0</span>]</small>
+        <small>[Elapsed: <span id="pcm_pandaElapsed">0ms</span>]</small>
+        <small>[Accepted: <span id="pcm_totalPandaAccepted">0</span>]</small>
+        <small>[Fetched: <span id="pcm_totalPandaFetched">0</span>]</small>
+        <!-- <small>[NoMore's: <span id="pcm_totalPandaNoMore">0</span>]</small> -->
+        <small>[PRE's: <span id="pcm_totalPres">0</span>]</small>
+        <small>[PandaPRE's: <span id="pcm_totalPandaPREs">0</span>]</small>
+      </div>
+    </div>
+    <div class="panel p-0">
+      <div class="panel-body pcm_main">
+        <div class="card-group pcm_pandaGroup p-0 px-1 sortable">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="pcm_modal" class="modal fade" tabindex = "-1" role="dialog">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+            <h4 class="modal-title">wow</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+        <div class="modal-body">my body
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-success pcm_modalSave" data-dismiss="modal">Save</button>
+          <button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button>
+          <button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/classes/MturkClass.js"></script>
+  <script src="js/classes/MturkQueue.js"></script>
+  <script src="js/classes/MturkPanda.js"></script>
+  <script src="js/classes/TimerClass.js"></script>
+  <script src="js/classes/ModalClass.js"></script>
+  <script src="js/classes/UrlClass.js"></script>
+  <script src="js/classes/PandaGStats.js"></script>
+  <script src="js/classes/PandaStats.js"></script>
+  <script src="js/classes/PandaCard.js"></script>
+  <script src="js/pandaCrazyMax.js"></script>
+</body>
+</html>
