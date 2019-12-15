@@ -51,9 +51,11 @@ panda.addTabsObj(pandaTabs);
 
 $(".sortable").sortable({connectWith: ".sortable"}).disableSelection();
 
-panda.addPanda("3L8V324VIVRQCOOFCXM8V9CTK3H9FD", "Collect the store name and store address of a hiring sign", "Collect store information of a hiring sign", "ASOSP45W2WM03", "Job Spotter", "0.06", false, 0, 0, true, 4000, -1, 0, 1);
-panda.addPanda("397QAO5SO1377KFWK82UNND4G0ZFE0", "Collect the store name and store address of a hiring sign", "Collect store information of a hiring sign", "ASOSP45W2WM03", "Job Spotter", "0.03", false, 12, 0, true, 4000, -1, 0, 1, 0);
-
+// ***************** Add Panda's Here for now *******************
+// addPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, autoGoHam, hamDuration, duration, acceptLimit, hitsAvailable=0, tabUnique=0, autoAdded=false, friendlyTitle = "", friendlyReqName = "")
+  panda.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts ar the same", "Tell us if two receipts ar the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, 12, 0, true, 4000, -1, 0);
+  // **************************************************************
+  
 // Usually the main page is faster to load so it probably already got the queue.
 const queueResults = localStorage.getItem("PCM_queueResults");
 if (queueResults) queue.setQueueResults(JSON.parse(queueResults));
