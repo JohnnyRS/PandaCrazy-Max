@@ -15,12 +15,13 @@ class ModalClass {
     this.tempObject =  null;
     this.theSpan = null;
   }
-  showModal(cancelFunc=null) {
+  showModal(cancelFunc=null, doAfter=null) {
     $(`#${this.idName}`).modal({backdrop:"static", keyboard:false});
     $(`#${this.idName}`).on('hide.bs.modal', {attached:this.attached,button:this.buttonPressed}, function (event) {
       event.data.attached.modalClosed(); this.tempObject = {};
       if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc.apply();
     });
+    if (doAfter) $(`#${this.idName}`).on('shown.bs.modal', () => { doAfter.apply(); });
   }
   closeModal() { $(`#${this.idName}`).modal("hide"); }
   isPopup(obj, again) { // workaround for popup unload not working when crossed domains
@@ -29,7 +30,7 @@ class ModalClass {
   }
   prepareModal(dataObject, width, addHeaderClass, title, body, bodyClass, footerClass, saveButton="invisible", saveText="Save", saveFunc=null, noButton="invisible", noText="No", noFunc=null, cancelButton="invisible", cancelText="Cancel") {
     this.buttonPressed = "Cancel"; this.tempObject = Object.assign({}, dataObject);
-    $(`#${this.idName}`).unbind('hide.bs.modal')
+    $(`#${this.idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal')
     $(`#${this.idName} .${this.classModalDialog}`).css("maxWidth",width);
     $(`#${this.idName} .${this.classModalHeader}`).addClass(addHeaderClass);
     $(`#${this.idName} .${this.classModalTitle}`).html(title);
@@ -53,46 +54,11 @@ class ModalClass {
     this.showModal(cancelFunc);
     $(`#${this.idName}`).on("keypress", (e) => { if (e.which == 13) { this.closeModal(); deleteFunc.apply(); } })
   }
-  editableSuccess(newValue, key) { modal.tempObject[key] = newValue; }
-  displayObjectData(thisArrayObject, divContainer) {
-    function textToggle(thisObject, target, element, theValue, textBorder, textColor) {
-      let parent = $(target).parent();
-      if (target.tagName==="SPAN") {
-        $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${element.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => textToggle(thisObject, e.target, element, theValue, textBorder, textColor)).focus( (e) => $(e.target).select() ) );
-        $(`#pcm_${element.key}DetailI`).focus();
-      } else if (target.tagName==="INPUT" || target.tagName==="TD") {
-        if (target.tagName==="TD") parent = $(target);
-        else thisObject.tempObject[element.key] = theValue = $(target).val();
-        if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
-        let theSpan = $(parent).empty().append($(`<span id="pcm_${element.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`));
-        if (!element.disable) $(theSpan).on('click', (e) => { textToggle(thisObject, e.target, element, theValue, textBorder, textColor); });
-      }
-    }
-    thisArrayObject.forEach(element => {
-      let textColor = "", textBorder = "bottom-dotted", theValue = this.tempObject[element.key];
-      if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
-      if (theValue===-1) { theValue = "0"; }
-      if (element.format==="date") { theValue = formatAMPM("short",new Date(theValue)); }
-      if (element.disable) { textColor = " text-warning"; textBorder = ""; }
-      const row = $(`<tr class="d-flex"></tr>`).append($(`<td class="col-4">${element.label}</td>`)).appendTo(divContainer);
-      const valueCol = $(`<td class="font-weight-bold col-8 text-left"></td>`).appendTo(row);
-      if (element.type==="range") {
-        $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => { $(`#pcm_${element.key}Detail`).val(($(e.target).val())); this.tempObject[element.key] = $(e.target).val(); } ).appendTo(valueCol);
-        $(`<input class="pcm_inputRangeText" id="pcm_${element.key}Detail" type="text" value="${theValue}" size="2"></input>`).appendTo(valueCol);
-      } else if (element.type==="text") {
-          textToggle(this, valueCol[0], element, theValue, textBorder, textColor);
-      } else if (element.type==="trueFalse") {
-        $(`<span id="pcm_${element.key}Detail" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`).on('click', (e) => {
-          $(e.target).html( ($(e.target).html() === "true") ? "false" : "true" ); this.tempObject[element.key] = $(e.target).html();
-        }).appendTo(valueCol);
-      }
-    });
-  }
   showDetailsModal(hitDetails, successFunc) {
     this.prepareModal(hitDetails, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", successFunc, "invisible", "No", null, "visible btn-sm", "Cancel");
     const modalBody = $(`#${this.idName} .${this.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    this.displayObjectData([
+    dataShow.displayObjectData([
       { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
       { label:"Limit # of total Hits in queue:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
       { label:"Accept Only Once:", type:"trueFalse", key:"once" }, 
@@ -105,12 +71,19 @@ class ModalClass {
       { label:"Requester Name:", type:"text", key:"reqName" }, 
       { label:"Requester ID", type:"text", key:"reqId" }, 
       { label:"Group ID", type:"text", key:"groupId", disable:true }, 
+      { label:"Title", type:"text", key:"title", disable:true }, 
+      { label:"Description", type:"text", key:"description", disable:true }, 
       { label:"Price", type:"text", key:"price", disable:true }, 
       { label:"Assigned Time", type:"text", key:"assignedTime", disable:true }, 
       { label:"Expires", type:"text", key:"expires", disable:true }, 
       { label:"Date Added", type:"text", key:"dateAdded", disable:true, format:"date" }, 
       { label:"Number of Seconds Collecting", type:"text", key:"limitNumQueue", disable:true }
-    ], divContainer);
+    ], divContainer, this.tempObject, true);
     this.showModal();
+  }
+  showInputModal(contents, addFunc, doAfter) {
+    this.prepareModal(null, "700px", "modal-header-info modal-lg", "Add new Panda Info", "<h4>Enter New Panda Information. [GroupID is mandatory]</h4>", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Add new Panda Info", addFunc, "invisible", "No", null, "visible btn-sm", "Cancel");
+    $(`#${this.idName} .${this.classModalBody}`).append(contents);
+    this.showModal(null, doAfter);
   }
 }

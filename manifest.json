@@ -20,7 +20,7 @@
   "permissions": [
     "activeTab",
     "webRequest",
-    "http*//*.mturk.com/*",
-    "http*//www.amazon.com/ap/signin?*"
+    "https://*.mturk.com/*",
+    "https://www.amazon.com/ap/signin?*"
   ]
 }

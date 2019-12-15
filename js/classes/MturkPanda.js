@@ -15,15 +15,12 @@ class MturkPanda extends MturkClass {
 		this.hitQueue = [];										// Array of panda's to add but delayed
 		this.hitsDelayed = false;
 		this.lastAdded = null;
+		this.tabsObj = null;
 	}
 	static _init_Timer(timer) { MturkPanda._this_Timer = new TimerClass(timer); }
 	static _init_GStats(timer) { MturkPanda._this_GStats = new PandaGStats(); }
 	isSearching() { return this.PandaGStats.collecting.value; }
 	connectToSearch(searchObj) { this.searchObj = searchObj; }
-	isThisCollecting(gId) {
-		let returnValue = false;
-		if (gId in this.pandaGroupIds) returnValue = this.PandaStats[this.pandaGroupIds[gId]].collecting;
-		return returnValue; }
 	createPandaUrl(groupId) {
 		return `https://worker.mturk.com/projects/${groupId}/tasks/accept_random`; }
 	createPreviewUrl(groupId) {
@@ -38,7 +35,9 @@ class MturkPanda extends MturkClass {
 		}, (myId, obj, test) => {
 			obj.stopCollecting(myId);
 		}, this.pandaObjs[myId].duration, tempDuration, tempGoHam );
-}
+	}
+	addTabsObj(obj) { this.tabsObj = obj; }
+
 	startCollecting(myId, tempDuration=-1, tempGoHam=-1) {
 		MturkPanda._this_GStats.addCollecting(); MturkPanda._this_GStats.collectingOn();
 		this.PandaStats[myId].collecting = true;
@@ -78,7 +77,7 @@ class MturkPanda extends MturkClass {
 	addAndRunPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, hitsAvailable, tempDuration=-1, tempGoHam=-1, friendlyTitle = "", friendlyReqName = "" ) {
 		let myId = null, diff = 0;
 		if (groupId in this.pandaGroupIds && once) { return null; }
-		else if (groupId in this.pandaGroupIds) { myId = this.pandaGroupIds[groupId] }
+		else if (groupId in this.pandaGroupIds) { myId = this.pandaGroupIds[groupId][0] }
 		else myId = this.addPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, false, -1, -1, 0, hitsAvailable, true, friendlyTitle, friendlyReqName);
 		if (!this.PandaStats[myId].collecting) {
 			const nowDate = new Date().getTime();
@@ -100,13 +99,13 @@ class MturkPanda extends MturkClass {
 			this.pandaCard[myId].updateAllCardInfo();
 		}
 	}
-	addPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, autoGoHam, hamDuration, duration, acceptLimit, hitsAvailable, autoAdded=false, friendlyTitle = "", friendlyReqName = "") {
-		if (groupId in this.pandaGroupIds) { return null; }
+	addPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, autoGoHam, hamDuration, duration, acceptLimit, hitsAvailable=0, tabUnique=0, autoAdded=false, friendlyTitle = "", friendlyReqName = "") {
 		const myId = this.index++;
 		this.pandaUniques.push(myId);
-		this.pandaGroupIds[groupId] = myId;
-		this.pandaObjs[myId] = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, once:once, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, acceptLimit:acceptLimit, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, autoAdded:autoAdded, queueUnique:null, skipped:false, hitsAvailable:hitsAvailable, assignedTime:null, expires:null, dateAdded: new Date().getTime() };
-		this.pandaCard[myId] = new PandaCard(myId, this.pandaObjs[myId], this.PandaStats[myId]);
+		if (groupId in this.pandaGroupIds) { this.pandaGroupIds[groupId].push(myId); }
+		else this.pandaGroupIds[groupId] = [myId];
+		this.pandaObjs[myId] = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, once:once, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, acceptLimit:acceptLimit, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, autoAdded:autoAdded, tempGroupId:null, queueUnique:null, skipped:false, hitsAvailable:hitsAvailable, assignedTime:null, expires:null, dateAdded: new Date().getTime(), tabUnique:tabUnique, positionNum:null };
+		this.pandaCard[myId] = new PandaCard(myId, this.pandaObjs[myId], this.tabsObj, tabUnique);
 		this.PandaStats[myId] = new PandaStats(myId);
 		if (MturkPanda._this_Timer.isHamOn()) $(`#pcm_hamButton_${myId}`).addClass("disabled");
 		const pandaUrl = this.createPandaUrl(groupId);
@@ -145,12 +144,16 @@ class MturkPanda extends MturkClass {
 				modal.showDeleteModal(modalBody, () => {
 						this.ctrlDelete.forEach( (thisId) => { 
 							this.pandaCard[thisId].removeCard( () => {
+								const gId = this.pandaObjs[thisId].groupId;
 								this.pandaUniques = arrayRemove(this.pandaUniques,thisId);
-								delete this.pandaGroupIds[this.pandaObjs[thisId].groupId]; delete this.pandaObjs[thisId];
+								if (this.pandaGroupIds[gId].length > 1) { this.pandaGroupIds[gId] = arrayRemove(this.pandaGroupIds[gId],thisId); }
+								else delete this.pandaGroupIds[gId]; 
+								delete this.pandaObjs[thisId];
 								delete this.pandaCard[thisId]; delete this.PandaStats[thisId]; delete this.pandaUrls[thisId];
 								MturkPanda._this_GStats.subPanda();
 							});
 						});
+						modal.closeModal();
 						this.ctrlDelete = [];
 					}, () => {}, () => {  this.ctrlDelete = []; $(".pcm_deleteButton").css("background-color", ""); }
 				);
@@ -160,6 +163,7 @@ class MturkPanda extends MturkClass {
 			modal.showDetailsModal( this.pandaObjs[myId], (changedDetails) => {
 				this.pandaObjs[myId] = Object.assign(this.pandaObjs[myId], changedDetails);
 				this.pandaCard[myId].updateAllCardInfo();
+				modal.closeModal();
 			} );
 		});
 		return myId;
@@ -181,10 +185,10 @@ class MturkPanda extends MturkClass {
 		thisHit.expires = details.expirationTime; this.pandaCard[myId].updateAllCardInfo();
 	}
 	checkIfLimited(myId, accepted, newQueue=false) {
-		const thisHit = this.pandaObjs[myId]; let addedHits = 0, unskip=false, skipIt=false;
-		if (accepted && thisHit.once) this.stopCollecting(myId, true);
-		else if (accepted && thisHit.autoAdded && thisHit.hitsAvailable===1) { console.log("It Worked!"); this.stopCollecting(myId, true); }
-		else if (accepted && thisHit.acceptLimit>0 && thisHit.acceptLimit<=this.PandaStats[myId].accepted) this.stopCollecting(myId, true);
+		const thisHit = this.pandaObjs[myId]; let addedHits = 0, unskip=false, skipIt=false, stopIt=false;
+		if (accepted && thisHit.once) stopIt = true;
+		else if (accepted && thisHit.autoAdded && thisHit.hitsAvailable===1) { console.log("It Worked!"); stopIt = true; }
+		else if (accepted && thisHit.acceptLimit>0 && thisHit.acceptLimit<=this.PandaStats[myId].accepted) stopIt = true;
 		else {
 			if (accepted && myId in this.queueAdds) addedHits = this.queueAdds[myId];
 			const hitsInQueue = queue.totalResults("", thisHit.groupId) + ((accepted) ? addedHits : 0);
@@ -203,6 +207,10 @@ class MturkPanda extends MturkClass {
 					MturkPanda._this_Timer.deleteFromQueue(thisHit.queueUnique); this.pandaSkipped.push(myId); thisHit.skipped = true;
 				}
 			}
+		}
+		if (stopIt) {
+			$(`#pcm_pandaCard_${myId}`).stop(true,true);
+			this.stopCollecting(myId, true);
 		}
 	}
 	gotNewQueue() {
@@ -232,7 +240,7 @@ class MturkPanda extends MturkClass {
 			 }
 			else if (result.type === "ok.text") {
 				MturkPanda._this_GStats.addTotalAccepted();
-				$(`#pcm_pandaCard_${myId}`).effect( "highlight", {}, 15000 );
+				$(`#pcm_pandaCard_${myId}`).stop(true,true).effect( "highlight", {}, 15000 );
 				this.PandaStats[myId].addAccepted();
 				if (this.pandaObjs[myId].autoGoHam) {
 					MturkPanda._this_Timer.goHam(queueUnique, this.pandaObjs[myId].hamDuration);

@@ -1,19 +1,29 @@
 html, body {
   height: 100%;
 }
-.bottom-dotted { border-bottom:2px dotted #007bff; }
+.bottom-dotted { border-bottom:2px dotted #c46f74; }
 .fill { 
   min-height: 100%;
   height: 100%;
 }
+.btn-primary-dark { background-color: #5c5c77; color: #ebf0f0; }
+.btn-primary-dark:hover { color: #E0FFFF !important; background-color: #1A3E5E; }
 .pcm_top {
-  max-height:65px;
+  height:45px;
   border-width:1px !important;
   border-bottom-width:4px !important;
 }
-.pcm_main {
+.pcm_menu { height:30px; }
+#pcm_quickMenu { line-height: 1.0; vertical-align: top; border-bottom: 4px solid #e0cdcb; }
+.pcm_status { background-color: #205755; color: #f3fd7d; padding-left: 10px; height:20px; line-height: 1.0; vertical-align: top; }
+.pcm-quickBtn, .pcm-topMenuBtn { background-color: #ebf1f5; font-size: 0.8em !important; }
+.pcm_tabs {
   overflow-y:auto;
   height: calc(100vh - 200px);
+}
+.pcm-tabDelete {
+  line-height:1.2;
+  color: #eb892d;
 }
 .pcm_hitButton {
   margin-top: 2px !important;
@@ -39,13 +49,21 @@ html, body {
   background-color: #D3D3D3;
   color: #000000;
 }
+.pcm_topMenu {
+  line-height:0px !important;
+  vertical-align: top;
+}
+.pcm_dropdownMenu {
+  line-height:1.5;
+  background-color: #cdd9f3;
+}
 .card {
-  margin-right:3px;
-  margin-top:2px;
-  border-color: #000080 !important;
+  margin: 2px 2px 0 0 !important;
+  border-color: #023bd6 !important;
   border-width: 2px !important;
-  max-width: 240px !important;
-  min-width:200px !important;
+  max-width: 220px !important;
+  min-width:220px !important;
+  padding: 0 1px !important;
 }
 .pcm_pandaCard {
   background-color: #48D1CC;
@@ -63,7 +81,8 @@ html, body {
   color: #000080;
   font-weight: 700 !important;
   line-height: 1.2 !important;
-  font-size: 0.9em !important;
+  font-size: 0.8em !important;
+  /* width: 200px !important; */
 }
 .pcm_groupId {
   color: #000000;
@@ -96,6 +115,7 @@ html, body {
   font-size: .575rem !important;
   color: #FFF5EE;
 }
+.text-pcmInfo { color: #b6f77a; }
 .btn-group-xs > .btn, .btn-xs {
   padding: .25rem .4rem;
   font-size: .875rem;
@@ -130,7 +150,7 @@ html, body {
   background-color: #f0ad4e;
 }
 .modal-header-danger {
-color:#fff;
+  color:#fff;
   padding:9px 15px;
   border-bottom:1px solid #eee;
   background-color: #d9534f;
@@ -163,8 +183,13 @@ color:#fff;
 .pcm_detailsTable tr .editable-cancel { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_detailsTable tr select { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_inputText { height:14px !important; margin-left:2px; font-size:0.9em !important; }
+.pcm_inputText-md { height:18px !important; margin-left:2px; font-size:0.9em !important; width:350px !important; }
 .pcm_inputRangeText { height:13px !important; margin-left:2px; font-size:0.7em !important; width:30px; }
 .pcm_inputRange { height:7px !important; }
+.form-inline label { display:block; }
+.form-check { line-height: 0.6 !important; vertical-align: top; }
+.pcm_inputError { padding-bottom: 5px; color: #f78976; }
+::-webkit-input-placeholder { color: #0d161d; opacity: 0.5 !important; }
 .nav-tabs
  {
   border-color:#1A3E5E;
@@ -197,59 +222,14 @@ color:#fff;
 } 
 
 .tab-pane {
-  border:solid 1px #1A3E5E;
+  border:solid 1px rgb(5, 43, 41);
   border-top: 0; 
   width:100%;
-  background-color:rgb(2, 11, 19);
+  background-color: #000000;
   padding:5px;
 }
 
-.card-group {
-    display: grid;
+.card-deck {
+    margin-right: 0;
+    margin-left: 0;
   }
-  @media (min-width: 1) {
-    .card-group {
-      grid-template-columns: repeat(1, 1fr);
-    }
-  }
-  @media (min-width: 420px) {
-    .card-group {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  @media (min-width: 620px) {
-    .card-group {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-  @media (min-width: 820px) {
-    .card-group {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-  @media (min-width: 1020px) {
-    .card-group {
-      grid-template-columns: repeat(5, 1fr);
-    }
-  }
-  @media (min-width: 1220px) {
-    .card-group {
-      grid-template-columns: repeat(6, 1fr);
-    }
-  }
-  @media (min-width: 1420px) {
-    .card-group {
-      grid-template-columns: repeat(7, 1fr);
-    }
-  }
-  @media (min-width: 1620px) {
-    .card-group {
-      grid-template-columns: repeat(8, 1fr);
-    }
-  }
-  @media (min-width: 1820px) {
-    .card-group {
-      grid-template-columns: repeat(9, 1fr);
-    }
-  }
-  

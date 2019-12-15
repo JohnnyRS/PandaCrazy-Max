@@ -1,3 +1,12 @@
+function createInput(appendHere, divAddClass, id, label, placeholder) {
+  $(`<div class="form-inline w-100${divAddClass}"></div>`).append($(`<label for="${id}" class="col-sm-3 text-right">${label}</label>`)).append($(`<input type="text" class="form-control pcm_inputText-md ml-2 col-sm-7 text-left" id="${id}" placeholder="${placeholder}">`)).appendTo(appendHere);
+}
+function createCheckBox(appendHere, label, id, value, checked) {
+  const checkedText = (checked) ? " checked" : "";
+  const formCheck = $(`<div class="form-check form-check-inline"></div>`).appendTo(appendHere);
+  $(`<input class="form-check-input${checkedText}" type="checkbox" id="${id}" value="${value}"${checkedText}>`).appendTo(formCheck);
+  $(`<label class="form-check-label" for="${id}">${label}</label>`).appendTo(formCheck);
+}
 function saveToFile(theData) {
   var blob = new Blob( [JSON.stringify(theData)], {type: "text/plain"}), dl = document.createElement("A");
   dl.href = URL.createObjectURL(blob); dl.download = "PCM_test.json";
@@ -35,14 +44,16 @@ MturkPanda._init_GStats(); // initialise a static stats for all global panda sta
 const panda = new MturkPanda(); // set up a mturk class for a panda
 const modal = new ModalClass(panda); // set up a modal class for a options, warnings or details
 const queue = new MturkQueue(); // set up a mturk class for a panda
+const menus = new MenuClass("pcm_quickMenu", panda); // set up a mturk class for a panda
+const dataShow = new DataShowClass(); // set up a datashow class to display data easier
+const pandaTabs = new TabbedClass($(`#pcm_pandaSection`)); // set up a mturk class for a panda
+panda.addTabsObj(pandaTabs);
 
 $(".sortable").sortable({connectWith: ".sortable"}).disableSelection();
 
-// ***************** Add Panda's Here for now *******************
-// addPanda(groupId, description, title, reqId, reqName, price, once, limitNumQueue, limitTotalQueue, autoGoHam, hamDuration, duration, acceptLimit, hitsAvailable, autoAdded=false, friendlyTitle = "", friendlyReqName = "") {
-panda.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts ar the same", "Tell us if two receipts ar the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, 12, 0, true, 4000, -1, 0, 1);
-// **************************************************************
-  
+panda.addPanda("3L8V324VIVRQCOOFCXM8V9CTK3H9FD", "Collect the store name and store address of a hiring sign", "Collect store information of a hiring sign", "ASOSP45W2WM03", "Job Spotter", "0.06", false, 0, 0, true, 4000, -1, 0, 1);
+panda.addPanda("397QAO5SO1377KFWK82UNND4G0ZFE0", "Collect the store name and store address of a hiring sign", "Collect store information of a hiring sign", "ASOSP45W2WM03", "Job Spotter", "0.03", false, 12, 0, true, 4000, -1, 0, 1, 0);
+
 // Usually the main page is faster to load so it probably already got the queue.
 const queueResults = localStorage.getItem("PCM_queueResults");
 if (queueResults) queue.setQueueResults(JSON.parse(queueResults));
