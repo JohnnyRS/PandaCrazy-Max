@@ -1,46 +1,56 @@
 class MturkQueue extends MturkClass {
-	constructor() {
+	constructor(timer, loggedOffTimer=5000) {
     super();
+    this.timer = timer;
+    this.loggedOffTimer = loggedOffTimer;
     this.queueUnique = null;
     this.queueUrl = new UrlClass("https://worker.mturk.com/tasks?format=json");
     this.queueResults = [];
+    this.portQueue = null;
+    this.loggedOff = false;
+		queueTimer.setTimer(timer);
   }
-  static _init_Timer(timer) { MturkQueue._this_Timer = new TimerClass(timer); }
+  sendQueueResults() { chrome.runtime.sendMessage( {command:"gotNewQueue", queueResults:this.queueResults} ); }
+  setTimer(timer) { this.timer = timer; }
   startQueueMonitor() {
-		this.queueUnique = MturkQueue._this_Timer.addToQueue(-1, this, (unique, elapsed, myId, obj) => {
-			obj.goFetch(obj.queueUrl, unique, elapsed); }, (myId, obj) => {
-				obj.stopQueueMonitor();
-			}); }
-	stopSearching() {
+		if (!queueTimer.running) this.queueUnique = queueTimer.addToQueue(-1, this, (unique, elapsed, myId, obj) => { obj.goFetch(obj.queueUrl, unique, elapsed); }, (myId, obj) => { obj.stopQueueMonitor(); });
+  }
+	stopQueueMonitor() {
     console.log("stopSearching: delete " + this.queueUnique);
-    MturkQueue._this_Timer.deleteFromQueue(this.queueUnique); }
+    queueTimer.deleteFromQueue(this.queueUnique);
+  }
   totalResults(rId="", gId="", price=0) {
     let total = 0;
     if (gId!=="") total = this.queueResults.filter( item => item.project.hit_set_id===gId ).length;
     else if (rId!=="") total = this.queueResults.filter( item => item.project.requester_id===rId ).length;
-    else total = this.queueResults.map( item => item.project.monetary_reward.amount_in_dollars )
+    else total = parseFloat(this.queueResults.map( item => item.project.monetary_reward.amount_in_dollars )
       .reduce( (acc, reward) => {
           // let reward = parseFloat(project.monetary_reward.amount_in_dollars);
           return acc +  ( (reward>price) ? reward : 0 );
-        }, 0 );
+        }, 0 )).toFixed(2);
       return total;
   }
-  setQueueResults(queueResults) { this.queueResults = queueResults; }
 	goFetch(objUrl, queueUnique, elapsed) {
 		// Can deal with getting search results data.
 		super.goFetch(objUrl).then(result => {
 			if (result.mode === "logged out" && queueUnique !== null) {
-				MturkQueue._this_Timer.pauseTimer(queueUnique); }
-			else if (result.type === "ok.json") {
-				if (result.mode === "pre") {
-					console.log("Received a Queue PRE!!")
-				} else {
-          this.queueResults = result.data.tasks;
-          localStorage.setItem("PCM_queueResults", JSON.stringify(this.queueResults));
-          // console.log("total groupid: " + this.totalResults("", "3L8V324VIVRQCOOFCXM8V9CTK3H9FD"));
-          // console.log("total requesterid: " + this.totalResults("ASOSP45W2WM03", ""));
-          // console.log("total dollar value: $" + this.totalResults());
-        }
-			 }
-		 }); }
+        queueTimer.setTimer(10000);
+        this.loggedOff = true;
+      } else if (result.type === "ok.json") {
+        if (this.loggedOff) { this.loggedOff=false; queueTimer.setTimer(this.timer); }
+				if (result.mode === "pre") console.log("Received a Queue PRE!!")
+				else { this.queueResults = result.data.tasks; this.sendQueueResults(); }
+      }
+    });
+  }
+}
+
+const myQueue = new MturkQueue(2000); // 2s queue monitor by default
+
+if (chrome.runtime) {
+  chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
+    // console.log(`sender = ${sender.url} | request = ${JSON.stringify(request)}`);
+    if (request.command === "startQueueMonitor") { myQueue.startQueueMonitor(); }
+    else if (request.command === "totalResults") { sendResponse({hits:myQueue.totalResults(request.rId, request.gId, request.price)}); }
+  });
 }
