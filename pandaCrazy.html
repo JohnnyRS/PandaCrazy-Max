@@ -17,75 +17,7 @@
 <body>
   <div class="container-fluid text-light border-light rounded bg-dark h-100 p-0">
     <div class="pane pcm_top border">
-      <div class="container-fluid px-1 py-0 my-0 border border-info pcm_topMenu">
-        <div class="btn-group text-left pcm_topMenuGroup" role="group">
-          <div class="btn-group py-0">
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">Jobs</button>
-            <button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu pcm_dropdownMenu">
-              <a class="dropdown-item" href="#">Add</a>
-              <a class="dropdown-item" href="#">Save</a>
-              <a class="dropdown-item" href="#">Stop All</a>
-              <a class="dropdown-item" href="#">Search Jobs</a>
-              <a class="dropdown-item" href="#">Search Mturk</a>
-              <div class="dropdown-divider"></div>
-              <a class="dropdown-item" href="#">Export</a>
-              <a class="dropdown-item" href="#">Import</a>
-            </div>
-          </div>
-          <div class="btn-group">
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">Display</button>
-            <button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu pcm_dropdownMenu">
-              <a class="dropdown-item" href="#">Normal Info</a>
-              <a class="dropdown-item" href="#">Minimal Info</a>
-              <a class="dropdown-item" href="#">One Line Info</a>
-              <div class="dropdown-divider"></div>
-            </div>
-          </div>
-          <div class="btn-group">
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">Grouping</button>
-            <button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu pcm_dropdownMenu">
-              <a class="dropdown-item" href="#">Start/Stop</a>
-              <a class="dropdown-item" href="#">Create by Selection</a>
-              <a class="dropdown-item" href="#">Create Instantly</a>
-              <a class="dropdown-item" href="#">Edit</a>
-            </div>
-          </div>
-          <div class="btn-group">
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">1</button>
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">2</button>
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">3</button>
-            <button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu pcm_dropdownMenu">
-              <a class="dropdown-item" href="#">Edit Timers</a>
-              <a class="dropdown-item" href="#">Increase by 5ms</a>
-              <a class="dropdown-item" href="#">Decrease by 5ms</a>
-              <a class="dropdown-item" href="#">Reset Timers</a>
-            </div>
-          </div>
-          <div class="btn-group">
-            <button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">Options</button>
-            <button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-              <span class="sr-only">Toggle Dropdown</span>
-            </button>
-            <div class="dropdown-menu pcm_dropdownMenu">
-              <a class="dropdown-item" href="#">General</a>
-              <a class="dropdown-item" href="#">Edit Timers</a>
-              <a class="dropdown-item" href="#">Edit Alarms</a>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="container-fluid px-1 py-0 my-0" id="pcm_topMenu"><!-- Top Menu is dynamically created here --></div>
       <div class="navbar navbar-text navbar-fixed-top py-0 pcm_status w-100 text-left">
         <small>[<span class="text-danger" id="pcm_collecting">Off</span>-</small>
         <small><span id="pcm_collectingTotal">0</span>]</small>
@@ -98,35 +30,19 @@
       </div>
     </div>
     <div class="panel py-0">
-      <div class="panel-body py-0" id="pcm_quickMenu"></div> <!-- Quick Menu is dynamically created here -->
+      <div class="panel-body py-0" id="pcm_quickMenu"><!-- Quick Menu is dynamically created here --></div>
     </div>
     <div class="panel p-0">
-      <div class="panel-body" id="pcm_pandaSection"></div> <!-- Tab secion is dynamically created here -->
+      <div class="panel-body" id="pcm_pandaSection"><!-- Tab secion is dynamically created here --></div>
     </div>
   </div>
-  <div id="pcm_modal" class="modal fade" tabindex = "-1" role="dialog">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-            <h4 class="modal-title"></h4>
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-        <div class="modal-body text-center"></div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-success pcm_modalSave">Save</button>
-          <button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button>
-          <button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <script src="js/common.js"></script>
+  <script src="js/classes/AlarmsClass.js"></script>
   <script src="js/classes/MturkClass.js"></script>
-  <script src="js/classes/MturkQueue.js"></script>
   <script src="js/classes/MturkPanda.js"></script>
-  <script src="js/classes/TimerClass.js"></script>
+  <script src="js/classes/PandaGroupings.js"></script>
   <script src="js/classes/ModalClass.js"></script>
-  <script src="js/classes/DataShowClass.js"></script>
+  <!-- <script src="js/classes/DataShowClass.js"></script> -->
   <script src="js/classes/UrlClass.js"></script>
   <script src="js/classes/PandaGStats.js"></script>
   <script src="js/classes/PandaStats.js"></script>
