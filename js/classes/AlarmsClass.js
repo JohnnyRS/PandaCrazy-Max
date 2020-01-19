@@ -24,6 +24,17 @@ class AlarmsClass {
     }
     this.myAudio = this.myAlarms[alarmSound].audioObj;
     this.myAudio.currentTime = 0;
-    if (!isPlaying) this.myAudio.play();
+    this.myAudio.play();
   }
+  doQueueAlarm() { this.playSound("queueAlert"); }
+	doAlarms(thisHit) {
+		const minutes = Math.floor(thisHit.assignedTime / 60);
+		if ( thisHit.price < parseFloat(this.myAlarms.lessThan2.payRate) ) {
+			if (minutes <= this.myAlarms.lessThan2.lessMinutes) this.playSound("lessThan2Short"); else this.playSound("lessThan2");
+		} else if ( thisHit.price <= parseFloat(this.myAlarms.lessThan5.payRate) ) {
+			if (minutes <= this.myAlarms.lessThan5.lessMinutes) this.playSound("lessThan5Short"); else this.playSound("lessThan5");
+		} else if ( thisHit.price <= parseFloat(this.myAlarms.lessThan15.payRate) ) {
+			if (minutes <= this.myAlarms.lessThan15.lessMinutes) this.playSound("lessThan15Short"); else this.playSound("lessThan15");
+		} else if ( thisHit.price < parseFloat(this.myAlarms.moreThan15.payRate) ) { this.playSound("moreThan15"); }
+	}
 }
