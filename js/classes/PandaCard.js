@@ -15,23 +15,25 @@ class PandaCard {
     this.updateAllCardInfo();
   }
   updateAllCardInfo() {
+    let titleSelect = $(`${this.title.id}_${this.myId}`);
+    const titlePre = ($(titleSelect).attr('data-original-title')!==undefined) ? "data-original-" : "";
     let reqName = (this.pandaObj[this.friendlyReqName.valueName]!=="") ? this.pandaObj[this.friendlyReqName.valueName] : this.pandaObj[this.reqName.valueName];
-		$(`${this.reqName.id}_${this.myId}`).html(`${reqName}`);
+		$(`${this.reqName.id}_${this.myId}`).attr(`${titlePre}title`, `${reqName}<br>${this.pandaObj[this.groupId.valueName]}`).html(`${reqName}`);
 		$(`${this.groupId.id}_${this.myId}`).html(`${shortenGroupId(this.pandaObj[this.groupId.valueName])}`);
 		$(`${this.price.id}_${this.myId}`).html(`${parseFloat(this.pandaObj[this.price.valueName]).toFixed(2)}`);
 		if (this.pandaObj[this.numbers.valueName]>1) $(`${this.numbers.id}_${this.myId}`).html(`[${this.pandaObj[this.numbers.valueName]}]`);
     let title = (this.pandaObj[this.friendlyTitle.valueName]!=="") ? this.pandaObj[this.friendlyTitle.valueName] : this.pandaObj[this.title.valueName];
-		$(`${this.title.id}_${this.myId}`).html(`${title}`);
+    $(titleSelect).attr(`${titlePre}title`, `${title}`).html(`${title}`);
   }
   createCardStatus(appendHere) {
     if (this.display>1) $(`<div class="pcm_hitStats" id="pcm_hitStats_${this.myId}"></div>`).html(`[ <span class="pcm_hitAccepted" id="pcm_hitAccepted_${this.myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched_${this.myId}"></span> ]`).appendTo(appendHere)
   }
   createCardButtonGroup(appendhere) {
     const group = $(`<div class="card-text" id="pcm_buttonGroup_${this.myId}"></div>`).appendTo(appendhere);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" id="pcm_collectButton_${this.myId}"></button>`).append(`<span>Collect</span>`).appendTo(group);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}"></button>`).append(`<span>GoHam</span>`).appendTo(group);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${this.myId}"></button>`).append(`<span>Details</span>`).appendTo(group);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${this.myId}"></button>`).append(`<span>X</span>`).appendTo(group);
+    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" id="pcm_collectButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Start Collecting this Panda Hit"></button>`).append(`<span>Collect</span>`).appendTo(group);
+    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Collect hits from this Panda only! Delayed ham mode can be turned on by clicking and holding this button."></button>`).append(`<span>GoHam</span>`).appendTo(group);
+    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Display and edit all options for this Panda."></button>`).append(`<span>Details</span>`).appendTo(group);
+    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Delete this Panda hit. [CTRL] click to delete multiple hits."></button>`).append(`<span>X</span>`).appendTo(group);
   }
   oneLineCard(appendHere) {
     const nameGroup = $(`<div class="pcm_nameGroup row h5 w-100"></div>`).append(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}"></span>`).appendTo(text);
@@ -43,9 +45,9 @@ class PandaCard {
     const body = $(`<div class="card-body p-0"></div>`).appendTo(card);
     const text = $(`<div class="card-text p-0" id="output_${this.myId}">`).appendTo(body);
     if (this.display===0) $(`<div class="pcm_nameGroup row h5 w-100"></div>`).append(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}"></span>`).append($(`<span class="pcm_dMenuButton btn dropdown-toggle text-white" type="button" data-toggle="dropdown" id="pcm_dMenuButton_${this.myId}"></span>`).append($(`<div class="dropdown-menu" aria-labelledby="pcm_dMenuButton_"></div>`).append(`<a class="dropdown-item" href="#">Action</a>`))).appendTo(text);
-    if (this.display>1) $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}"></span>`)).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${this.myId}"></span>`)).appendTo(text);
+    if (this.display>1) $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`)).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${this.myId}"></span>`)).appendTo(text);
     if (this.display>1) $(`<div class="pcm_priceGroup"></div>`).append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${this.myId}"></span>`)).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${this.myId}"></span>`)).appendTo(text);
-    if (this.display>1) $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${this.myId}"></div>`).appendTo(text);
+    if (this.display>1) $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).appendTo(text);
     this.createCardStatus(text);
     this.createCardButtonGroup(text);
   }
@@ -57,5 +59,37 @@ class PandaCard {
     $(`#pcm_pandaCard_${this.myId}`).effect('slide', { direction:'left', mode:'hide' }, 300, () => { 
       $(`#pcm_pandaCard_${this.myId}`).remove(); removeFunc.apply();
     });
+  }
+  showDetailsModal(panda, successFunc=null) {
+    const idName = panda.modal.prepareModal(this.pandaObj, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", (changes) => {
+      this.pandaObj = Object.assign(this.pandaObj, changes);
+      this.updateAllCardInfo();
+      panda.modal.closeModal();
+      if (successFunc!==null) successFunc.apply(this, [changes]);
+    }, "invisible", "No", null, "visible btn-sm", "Cancel");
+    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
+    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    displayObjectData([
+      { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
+      { label:"Limit # of total Hits in queue:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
+      { label:"Accept Only Once:", type:"trueFalse", key:"once" }, 
+      { label:"Hits # Accepted Limit:", type:"text", key:"acceptLimit" }, 
+      { label:"Stop Collecting After Minutes:", type:"text", key:"duration" }, 
+      { label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam" }, 
+      { label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration" }, 
+      { label:"Friendly Requester Name:", type:"text", key:"friendlyReqName" }, 
+      { label:"Friendly Hit Title:", type:"text", key:"friendlyTitle" }, 
+      { label:"Requester Name:", type:"text", key:"reqName" }, 
+      { label:"Requester ID", type:"text", key:"reqId" }, 
+      { label:"Group ID", type:"text", key:"groupId", disable:true }, 
+      { label:"Title", type:"text", key:"title", disable:true }, 
+      { label:"Description", type:"text", key:"description", disable:true }, 
+      { label:"Price", type:"text", key:"price", disable:true }, 
+      { label:"Assigned Time", type:"text", key:"assignedTime", disable:true }, 
+      { label:"Expires", type:"text", key:"expires", disable:true }, 
+      { label:"Date Added", type:"text", key:"dateAdded", disable:true, format:"date" }, 
+      { label:"Number of Seconds Collecting", type:"text", key:"limitNumQueue", disable:true }
+    ], divContainer, panda.modal.tempObject[idName], true);
+    panda.modal.showModal();
   }
 }

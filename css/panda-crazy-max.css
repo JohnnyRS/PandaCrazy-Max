@@ -1,8 +1,10 @@
 html, body { height: 100%; }
 .bottom-dotted { border-bottom:2px dotted #c46f74; }
+.tooltip.show { opacity: 1 !important; filter: alpha(opacity=100) !important;}
+.tooltip-inner { border: 1px red solid; max-width: 300px; }
 #pcm_volumeVertical { height:200px; margin-left:15px; }
 #pcm_volumeVertical .ui-slider-range { background-color: #cecfcf; }
-.fill {  min-height: 100%; height: 100%; }
+.fill { min-height: 100%; height: 100%; }
 .btn-primary-dark { background-color: #063e4d; color: #ebf0f0; }
 .btn-primary-dark:hover { color: #E0FFFF !important; background-color: #2d78b9; }
 .pcm_top {
@@ -16,7 +18,8 @@ html, body { height: 100%; }
 .pcm_status { background-color:#03043a; color: #f3fd7d; padding-left: 10px; height:20px; line-height: 1.0; vertical-align: top; }
 .pcm-quickBtn, .pcm-topMenuBtn { background-color: #ebf1f5; font-size: 0.8em !important; }
 .pcm_dMenuButton { background-color:#063e4d; vertical-align: bottom; width:17px; line-height:1.2; font-size: 13px; padding: 7px 4px 0 4px; }
-.pcm_tabs { overflow-y:auto; height: calc(100vh - 200px); }
+#pcm_pandaTabs .pcm_tabs { overflow-y:auto; height: calc(100vh - 260px); }
+#pcm_logTabs .pcm_tabs { overflow-y:auto; height: 140px; }
 .pcm-tabDelete { line-height:1.2; color: #eb892d; }
 .pcm_hitButton {
   margin-top: 2px !important;
@@ -24,6 +27,7 @@ html, body { height: 100%; }
   line-height:0.4 !important;
   font-size:.775rem !important;
 }
+.pcm_hamButton { display: inline-block; }
 .pcm_hamButton.disabled { background-color: #A9A9A9; border-color: #808080; }
 .pcm_deleteButton {
   font-size:.675rem !important;
@@ -32,7 +36,9 @@ html, body { height: 100%; }
   margin-left:5px !important;
 }
 .pcm_buttonOn { background-color: #008000; color: #FFFFFF; }
+.pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm_buttonOff { background-color: #D3D3D3; color: #000000; }
+.pcm_buttonOff.pcm_delayedHam { background-color: #087d9b; color: #f3e3e3; }
 .pcm_dropdownMenu { line-height:1.5; background-color: #cdd9f3; }
 .card {
   margin: 2px 2px 0 0 !important;
@@ -75,16 +81,19 @@ html, body { height: 100%; }
 .pcm_price { color: #000000; }
 .pcm_numbers { color: #006400; }
 .pcm_title { color: #000000; }
+.pcm_captchaText { font-size: 10px; margin-top:2px; }
 .pcm_hitStats {
   color: #000000;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   font-size:0.6em !important;
 }
+.pcm_queueResults { font-size:11px; line-height: 1.2; padding-top:2px; padding-bottom:2px; font-weight: 600; color:#dbdbd2; }
+.pcm_queueResults span { color:#47cdcd; }
 .table-moreCondensed>tbody>tr>td { padding-right:1px !important; font-size: 11px; }
 .table-xs { font-size: .575rem !important; line-height: .1 !important; }
 .text-xs { font-size: .575rem !important; color: #FFF5EE; }
-.text-pcmInfo { color: #b6f77a; padding-top:1px !important; padding-bottom:1px !important; font-size:11px; line-height:1.0; }
+.text-pcmInfo { color: #edf5e6; padding-top:1px !important; padding-bottom:1px !important; font-size:11px; line-height:1.0; }
 .btn-group-xs > .btn, .btn-xs { padding: .25rem .4rem; font-size: .875rem; line-height: .5; border-radius: .2rem; }
 .btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
 .radio-xxs { height: 12px; }
@@ -100,8 +109,9 @@ html, body { height: 100%; }
 .pcm_triggerItem.pcm_disabled:hover .text-xs { color: #000080; }
 .pcm_triggerItem.pcm_disabled.active { color: #FAEBD7; }
 .pcm_triggerItem.pcm_disabled:hover { background-color: #E0FFFF; color: #000000; }
-/* .modal-body { max-height:calc(100vh - 180px); overflow-y:auto; } */
-.pcm_jobsModalBody { max-height:calc(100vh - 160px); overflow-y:auto; }
+.pcm_jobsModalBody { max-height:calc(100vh - 165px); overflow-y:auto; }
+.pcm_groupingsEditModalBody { max-height:calc(100vh - 235px); overflow-y:auto; }
+.pcm_modalControl { background-color: #0c0a1f; color: #FFFFFF; }
 .modal-header-success {
   color:#fff;
   padding:9px 15px;
@@ -148,8 +158,9 @@ html, body { height: 100%; }
 .pcm_detailsTable tr .editable-submit { font-size: 0.3em !important; height:20px; }
 .pcm_detailsTable tr .editable-cancel { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_detailsTable tr select { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
-.pcm_inputText { height:14px !important; margin-left:2px; font-size:0.9em !important; }
+.pcm_inputText { height:17px !important; margin-left:2px; font-size:0.9em !important; width:300px; padding-left:4px; }
 .pcm_inputText-md { height:19px !important; margin-left:2px; padding-top:2px; font-size:0.9em !important; width:350px !important; }
+.pcm_inputDiv-url input { width: 600px !important; }
 .pcm_inputRangeText { height:13px !important; margin-left:2px; font-size:0.7em !important; width:30px; }
 .pcm_inputRange { height:7px !important; }
 .form-inline label { display:block; }

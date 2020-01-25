@@ -24,7 +24,7 @@ class TimerClass {
 	sendToPort() { if (this.port) { this.port.postMessage({return:"timerInfo", running:this._running, goingHam:this._goingHam, paused:this._paused, queueTotal:Object.keys(this.queueObject).length, myIdHam:(this._goingHam!==null) ? this.queueObject[this._goingHam].myId : -1}); }
 		}
 	setPort(port) { this.port = port; }
-	setTimer(timer) { this.timeout = timer; }
+	setTimer(timer, adjust=false) { if (timer<this.min) return null; this.timeout = timer; if (adjust) this.adjustTimer(timer); }
 	setHamTimer(timer) { this.hamTimeout = timer; }
 	returnTimer() { return this.timeout; }
 	privateLoop() {
@@ -93,10 +93,12 @@ class TimerClass {
 	isRunning() { return this.running; }
 	runQueueTimer() { this.goTimer(); }
 	pauseTimer() { this.paused = true; }
-	unPauseTimer() { this.paused = false; this.goTimer(); }
+	unPauseTimer() { if (this.paused) { this.paused = false; this.goTimer(); } }
 	pauseToggle() { this.paused = !this.paused; this.goTimer(); return this.paused;  }
 	stopAll() {
 		if (this.queue.length) {
+			if (this.timeoutID!==null) clearTimeout(this.timeoutID);
+			this.timeoutDoing = null;
 			this.queue.forEach( (queueUnique) => {
 				const thisItem = this.queueObject[queueUnique];
 				thisItem.funcAfter.apply(this, [thisItem.myId, thisItem.obj, false]);
@@ -117,7 +119,7 @@ class TimerClass {
 		if (this.queueSkipped.includes(queueUnique)) {
 			this.removeFromQueueSkipped(queueUnique);
 			this.queueObject[queueUnique].skipped = false;
-			this.queue.unshift(queueUnique); console.log(this.queue,this.queueSkipped);
+			this.queue.unshift(queueUnique);
 			this.goTimer();
 		}
 	}
@@ -151,18 +153,18 @@ let portsConnected = 0;
 if (chrome.runtime) {
 	chrome.runtime.onConnect.addListener( function(port) {
 		let portTimer = null;
-		console.log(`port name: ${port.name} is NOW connected!`);
 		if (port.name==="pandaTimer") { portTimer = pandaTimer; pandaTimer.setPort(port); }
 		else if (port.name==="queueTimer") { portTimer = queueTimer; queueTimer.setPort(port); }
 		else if (port.name==="searchTimer") { portTimer = searchTimer; searchTimer.setPort(port); }
 		if (portTimer) {
+			console.log(`port name: ${port.name} is NOW connected!`);
 			portsConnected++;
 			port.onMessage.addListener(function(msg) {
 				if (msg.command == "addToQueue") {
-					const value = portTimer.addToQueue(msg.myId, msg.thisObj, (a1, a2, a3, a4) => {
-							if (port) port.postMessage({return:msg.doThis, queueUnique:a1, elapsed:a2, myId:a3, obj:a4});
+					const value = portTimer.addToQueue(msg.myId, msg.thisObj, (a1, a2, a3, a4) => { console.log(port.name);
+							if (port!==null) port.postMessage({return:msg.doThis, queueUnique:a1, elapsed:a2, myId:a3, obj:a4});
 						}, (a1, a2, a3) => {
-							if (port) port.postMessage({return:msg.doAfter, myId:a1, obj:a2, turnOffHam:a3});
+							if (port!==null) port.postMessage({return:msg.doAfter, myId:a1, obj:a2, turnOffHam:a3});
 						}, msg.goHamStart, msg.duration, msg.tempDuration, msg.tempGoHam);
 					port.postMessage({return:"addToQueue", myId:msg.myId, obj:msg.thisObj, value:value});
 				}
@@ -184,8 +186,9 @@ if (chrome.runtime) {
 			});
 			port.onDisconnect.addListener( () => {
 				console.log(`TC port name: ${port.name} is disconnected!`);
-				port = null; portsConnected = (portsConnected>0) ? portsConnected-1 : 0;
-				if (portsConnected===0) queueTimer.stopAll();
+				portsConnected = (portsConnected>0) ? portsConnected-1 : 0;
+				if (portsConnected===0) { queueTimer.stopAll(); }
+				port = null; portTimer.setPort(port); portTimer.stopAll();
 			});
 		}
 	});

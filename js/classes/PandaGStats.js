@@ -1,6 +1,6 @@
 class PandaGStats {
 	constructor() {
-		this.collecting = { value:false, id:"#pcm_collecting", disabled:null, type:"boolean" };
+		this.collecting = { value:false, id:"#pcm_collecting", disabled:null, type:"boolean", on:`<span class="text-success">On</span>`, off:`<span class="text-danger">Off</span>`, paused:`<span class="text-warning">Paused</span>` };
 		this.collectingTotal = { value:0, id:"#pcm_collectingTotal", disabled:null, type:"integer" };
 		this.pandaElapsed = { value:false, id:"#pcm_pandaElapsed", disabled:null, type:"integer" };
 		this.totalPandaErrors = { value:0, id:"#pcm_totalPandaErrors", disabled:null, type:"integer" };
@@ -23,8 +23,10 @@ class PandaGStats {
 	addTotalPandaFetched() { this.totalPandaFetched.value++; this.updateStatNav(this.totalPandaFetched); }
 	addTotalPandaNoMore() { this.totalPandaNoMore.value++; this.updateStatNav(this.totalPandaNoMore); }
 	addTotalAccepted() { this.totalAccepted.value++; this.updateStatNav(this.totalAccepted); }
-	collectingOn() { this.collecting.value = true; this.updateStatNav(this.collecting,"On"); }
-	collectingOff() { if (this.collectingTotal.value<1) { this.collecting.value = false; this.updateStatNav(this.collecting,"Off"); } }
+	collectingOn() { this.collecting.value = true; this.updateStatNav(this.collecting,this.collecting.on); }
+	collectingOff() { if (this.collectingTotal.value<1) { this.collecting.value = false; this.updateStatNav(this.collecting,this.collecting.off); } }
+	collectingPaused() { this.updateStatNav(this.collecting,this.collecting.paused); }
+	collectingUnPaused() { this.updateStatNav(this.collecting,(this.collecting.value) ? this.collecting.on : this.collecting.off ); }
 	addCollecting() { this.collectingTotal.value++; this.updateStatNav(this.collectingTotal); }
 	subCollecting() { this.collectingTotal.value--; this.updateStatNav(this.collectingTotal); }
 	addTotalPandaErrors() { this.totalPandaErrors.value++; this.updateStatNav(this.totalPandaErrors); }

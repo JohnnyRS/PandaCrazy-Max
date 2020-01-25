@@ -4,13 +4,14 @@ class MturkQueue extends MturkClass {
     this.timer = timer;
     this.loggedOffTimer = loggedOffTimer;
     this.queueUnique = null;
-    this.queueUrl = new UrlClass("https://worker.mturk.com/tasks?format=json");
+    this.queueUrl = new UrlClass("https://worker.mturk.com/tasks");
     this.queueResults = [];
     this.portQueue = null;
     this.loggedOff = false;
+    this.authenticityToken = null;
 		queueTimer.setTimer(timer);
   }
-  sendQueueResults() { chrome.runtime.sendMessage( {command:"gotNewQueue", queueResults:this.queueResults} ); }
+  sendQueueResults() { chrome.runtime.sendMessage( {command:"gotNewQueue", queueResults:this.queueResults,authenticityToken:this.authenticityToken } ); }
   setTimer(timer) { this.timer = timer; }
   startQueueMonitor() {
 		if (!queueTimer.running) this.queueUnique = queueTimer.addToQueue(-1, this, (unique, elapsed, myId, obj) => { obj.goFetch(obj.queueUrl, unique, elapsed); }, (myId, obj) => { obj.stopQueueMonitor(); });
@@ -36,10 +37,21 @@ class MturkQueue extends MturkClass {
 			if (result.mode === "logged out" && queueUnique !== null) {
         queueTimer.setTimer(10000);
         this.loggedOff = true;
-      } else if (result.type === "ok.json") {
+      } else if (result.type === "ok.text") {
         if (this.loggedOff) { this.loggedOff=false; queueTimer.setTimer(this.timer); }
-				if (result.mode === "pre") console.log("Received a Queue PRE!!")
-				else { this.queueResults = result.data.tasks; this.sendQueueResults(); }
+        const html = $.parseHTML( result.data );
+        const errorPage = $(html).find(".error-page");
+        if (errorPage.length>0) {
+          const errorMessage = $(errorPage).find("p.message").html();
+          if (errorMessage.includes("We have detected an excessive rate of page")) console.log("Received a Queue PRE!!");
+        } else {
+          const targetDiv = $(html).find(".task-queue-header").next("div");
+          const rawProps = $(targetDiv).find("div[data-react-props]").attr("data-react-props");
+          const authenticityToken = $(html).filter('meta[name="csrf-token"]')[0].content;
+          if (authenticityToken) this.authenticityToken = authenticityToken;
+          this.queueResults = JSON.parse(rawProps).bodyData;
+          this.sendQueueResults();
+        }
       }
     });
   }

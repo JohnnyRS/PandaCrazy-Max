@@ -1,5 +1,5 @@
 class ModalClass {
-	constructor(attached) {
+	constructor() {
     this.idName = "pcm_modal";
     this.modals = [];
     this.classModalDialog = "modal-dialog";
@@ -12,8 +12,7 @@ class ModalClass {
     this.classCancelButton = "pcm_modalCancel";
     this.buttonPressed = "Cancel";
     this.popup = null;
-    this.attached = attached;
-    this.tempObject =  null;
+    this.tempObject =  [];
     this.theSpan = null;
   }
   createModal() {
@@ -27,40 +26,52 @@ class ModalClass {
     $(`<div id=${idName} class="modal pcm_modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog my-3"></div>`).append(modalContent)).appendTo("body");
     return idName;
   }
-  showModal(cancelFunc=null, doAfter=null) {
+  showModal(cancelFunc=null, doAfter=null, afterClose=null) {
     const idName = this.modals.slice(-1)[0];
     $(`#${idName}`).modal({backdrop:"static", keyboard:false});
     $(`.modal-backdrop`).each( (index, element) => { $(element).css("zIndex",1050+(index*2)).css("opacity",0.8); } );
-    $(`#${idName}`).on('hide.bs.modal', {attached:this.attached}, (e) => {
-      e.data.attached.modalClosed(); this.tempObject = {};
+    $(`#${idName}`).on('hide.bs.modal', (e) => {
+      this.tempObject = [];
       if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc.apply();
+      if (afterClose!==null) afterClose.apply();
       $(e.target).remove();
       this.modals.pop();
     });
     if (doAfter) $(`#${idName}`).on('shown.bs.modal', () => { doAfter.apply(); });
   }
-  closeModal() { const idName = this.modals.slice(-1)[0]; $(`#${idName}`).modal("hide"); }
+  closeModal(title="") {
+    let foundTitle = -1;
+    if (title!=="") {
+      this.modals.forEach( (idName, index) => { console.log($(`#${idName} .modal-title:first`).text());
+        if ($(`#${idName} .modal-title:first`).text() === title) foundTitle=index;
+      });
+    }
+    console.log(foundTitle);
+    const idName = this.modals.slice(foundTitle)[0];
+    $(`#${idName}`).modal("hide"); 
+    delete this.tempObject[idName];
+  }
   isPopup(obj, again) { // workaround for popup unload not working when crossed domains
     if (!obj.popup.window) { $(`#${obj.idName}`).modal('hide'); }
     else if (again) setTimeout(obj.isPopup, 500, obj, true);
   }
   prepareModal(dataObject, width, addHeaderClass, title, body, bodyClass, footerClass, saveButton="invisible", saveText="Save", saveFunc=null, noButton="invisible", noText="No", noFunc=null, cancelButton="invisible", cancelText="Cancel") {
     const idName = this.createModal();
-    this.buttonPressed = "Cancel"; this.tempObject = Object.assign({}, dataObject);
-    $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal')
+    this.buttonPressed = "Cancel"; this.tempObject[idName] = Object.assign({}, dataObject);
+    $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
     $(`#${idName} .${this.classModalDialog}`).css("maxWidth",width);
     $(`#${idName} .${this.classModalHeader}`).css("maxWidth",width).addClass(addHeaderClass);
     $(`#${idName} .${this.classModalTitle}`).html(title);
     $(`#${idName} .${this.classModalBody}`).addClass(bodyClass).html(body);
     $(`#${idName} .${this.classModalFooter}`).addClass(footerClass);
-    $(`#${idName} .${this.classSaveButton}`).removeClass("invisible visible").addClass(saveButton).html(saveText).unbind('click').click( () => { this.buttonPressed="save"; saveFunc.apply(this, [this.tempObject]); });
+    $(`#${idName} .${this.classSaveButton}`).removeClass("invisible visible").addClass(saveButton).html(saveText).unbind('click').click( () => { this.buttonPressed="save"; if (saveFunc!==null) saveFunc.apply(this, [this.tempObject[idName]]); });
     $(`#${idName} .${this.classNoButton}`).removeClass("invisible visible").addClass(noButton).html(noText).unbind('click').click( () => { this.buttonPressed="no"; noFunc.apply();});
     $(`#${idName} .${this.classCancelButton}`).removeClass("invisible visible").addClass(cancelButton).html(cancelText);
     return idName;
   }
-  showLoggedOffModal() {
+  showLoggedOffModal(afterClose=null) {
     const idName = this.prepareModal(null, "600px", "modal-header-warning", "Program Paused!", "<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href='https://worker.mturk.com/' target='_blank' title='https://worker.mturk.com/' class='pcm_mturkLink'>https://worker.mturk.com/</a></h5>", "text-center");
-    this.showModal();
+    this.showModal(null, null, afterClose);
     $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
       e.preventDefault();
       this.popup = window.open( $(e.target).attr('href'), "_blank", "width=" + 1000 + ",height=" +  800 + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes" );
@@ -72,63 +83,34 @@ class ModalClass {
     this.showModal(cancelFunc);
     $(`#${idName}`).on("keypress", (e) => { if (e.which == 13) { this.closeModal(); deleteFunc.apply(); } })
   }
-  showDetailsModal(hitDetails, successFunc) {
-    const idName = this.prepareModal(hitDetails, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", successFunc, "invisible", "No", null, "visible btn-sm", "Cancel");
-    const modalBody = $(`#${idName} .${this.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([
-      { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
-      { label:"Limit # of total Hits in queue:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
-      { label:"Accept Only Once:", type:"trueFalse", key:"once" }, 
-      { label:"Hits # Accepted Limit:", type:"text", key:"acceptLimit" }, 
-      { label:"Stop Collecting After Minutes:", type:"text", key:"duration" }, 
-      { label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam" }, 
-      { label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration" }, 
-      { label:"Friendly Requester Name:", type:"text", key:"friendlyReqName" }, 
-      { label:"Friendly Hit Title:", type:"text", key:"friendlyTitle" }, 
-      { label:"Requester Name:", type:"text", key:"reqName" }, 
-      { label:"Requester ID", type:"text", key:"reqId" }, 
-      { label:"Group ID", type:"text", key:"groupId", disable:true }, 
-      { label:"Title", type:"text", key:"title", disable:true }, 
-      { label:"Description", type:"text", key:"description", disable:true }, 
-      { label:"Price", type:"text", key:"price", disable:true }, 
-      { label:"Assigned Time", type:"text", key:"assignedTime", disable:true }, 
-      { label:"Expires", type:"text", key:"expires", disable:true }, 
-      { label:"Date Added", type:"text", key:"dateAdded", disable:true, format:"date" }, 
-      { label:"Number of Seconds Collecting", type:"text", key:"limitNumQueue", disable:true }
-    ], divContainer, this.tempObject, true);
-    this.showModal();
-  }
-  showJobsTable(modalBody, jobs) {
+  showJobsTable(panda, modalBody, jobs, checkboxFunc=null) {
     const divContainer = $(`<table class="table table-dark table-hover table-sm table-moreCondensed pcm_jobTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    displayObjectData([ { string:"", type:"string" }, {string:"Requester Name", type:"string", noBorder:true}, {string:"Title", type:"string", noBorder:true}, {string:"Pay", type:"string", noBorder:true}, {string:"", type:"string"}, {string:"", type:"string"} ], divContainer, panda.info, true, true, "#0b716c");
     jobs.forEach(myId => {
-      const status = (this.attached.pandaStats[myId].collecting) ? "On" : "Off";
-      displayObjectData1([
-        { string:"", type:"checkbox", width:"20px", unique:myId, inputClass:" pcm_checkbox"},
+      const status = (panda.pandaStats[myId].collecting) ? "On" : "Off";
+      displayObjectData([
+        { string:"", type:"checkbox", width:"20px", unique:myId, inputClass:" pcm_checkbox", btnFunc:checkboxFunc },
         { string:"Requester Name", type:"keyValue", key:"reqName", orKey:"friendlyReqName", width:"155px", id:`pcm_RQN_${myId}` },
         { string:"Hit Title", type:"keyValue", key:"title", orKey:"friendlyTitle", id:`pcm_TTL_${myId}` },
         { string:"Pay", type:"keyValue", key:"price", pre:"$", width:"45px", id:`pcm_Pay_${myId}` },
-        { label:"Collect", type:"button", addClass:` btn-xxs pcm_button${status}`, width:"65px", unique:myId, btnFunc: (e) => {
+        { label:"Collect", type:"button", addClass:` btn-xxs pcm_button${status}`, idStart:"pcm_collectButton1", width:"62px", unique:myId, btnFunc: (e) => {
             $(`#pcm_collectButton_${e.data.unique}`).click();
           }},
-        { label:"Details", type:"button", addClass:" btn-xxs", width:"65px", unique:myId, btnFunc: (e) => { 
+        { label:"Details", type:"button", addClass:" btn-xxs", idStart:"pcm_detailsButton1_", width:"62px", unique:myId, btnFunc: (e) => { 
             const myId = e.data.unique;
-            this.showDetailsModal(this.attached.pandaObjs[myId], (changedDetails) => {
-              this.attached.pandaObjs[myId] = Object.assign(this.attached.pandaObjs[myId], changedDetails);
-              this.attached.pandaCard[myId].updateAllCardInfo();
-              modal.closeModal();
-              $(`#pcm_RQN_${myId}`).text( (changedDetails.friendlyReqName!=="") ? changedDetails.friendlyReqName : changedDetails.reqName );
-              $(`#pcm_TTL_${myId}`).text( (changedDetails.friendlyTitle!=="") ? changedDetails.friendlyTitle : changedDetails.title );
-              $(`#pcm_Pay_${myId}`).text(changedDetails.price);
+            panda.pandaCard[myId].showDetailsModal(panda, (changes) => {
+              $(`#pcm_RQN_${myId}`).text( (changes.friendlyReqName!=="") ? changes.friendlyReqName : changes.reqName );
+              $(`#pcm_TTL_${myId}`).text( (changes.friendlyTitle!=="") ? changes.friendlyTitle : changes.title );
+              $(`#pcm_Pay_${myId}`).text(changes.price);
             });
           }}
-      ], divContainer, this.attached.pandaObjs[myId], true, true);
+      ], divContainer, panda.info[myId], true, true);
     });
   }
-  jobsFilter(search, modalControl) {
-    return this.attached.pandaUniques.filter( (myId) => {
-      const value = this.attached.pandaObjs[myId];
-      const stats = this.attached.pandaStats[myId];
+  jobsFilter(panda, search, modalControl) {
+    return panda.pandaUniques.filter( (myId) => {
+      const value = panda.info[myId];
+      const stats = panda.pandaStats[myId];
       let good = false;
       const radioChecked = $(modalControl).find(`input[name='theJobs']:checked`).val();
       if (radioChecked==="0") good = true;
@@ -140,96 +122,91 @@ class ModalClass {
       return good;
     } )
   }
-  showJobsModal() {
-    const idName = this.prepareModal(null, "1000px", "modal-header-info modal-lg", "List Jobs", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
-    const modalBody = $(`#${idName} .${this.classModalBody}`); $(modalBody).addClass("pcm_jobsModalBody");
+  showJobsModal(panda, type="jobs", thisUnique=-1, thisObj=null, thisSaveFunc=null, thisCheckFunc=null, cancelFunc=null) {
+    const theTitle = (type==="groupingEdit") ? "Edit Groupings" : "List Jobs";
+    const saveBtnStatus = (type==="groupingEdit") ? "visible btn-sm" : "invisible";
+    const idName = this.prepareModal(thisObj, "1000px", "modal-header-info modal-lg", theTitle, "", "text-right bg-dark text-light", "modal-footer-info", saveBtnStatus, "Save Groupings", thisSaveFunc, "invisible", "No", null, "invisible", "Close");
+    const addClass = (type === "groupingEdit") ? "pcm_groupingsEditModalBody" : "pcm_jobsModalBody";
+    const modalBody = $(`#${idName} .${this.classModalBody}`); $(modalBody).addClass(addClass);
     const modalControl = $(`<div class="pcm_modalControl w-100"></div>`).insertBefore(modalBody);
+    if (type==="groupingEdit") {
+      $(`<div class="small text-warning font-weight-bold"></div>`).append("Select the jobs you want in this grouping below:").appendTo(modalControl);
+      createInput(modalControl, "", "pcm_groupingNameI", "Grouping Name: ", `default: Grouping #${thisUnique}`, null, " pl-5 text-warning", this.tempObject[idName].name).append(`<span class="ml-2 small text-info pcm_jobsInGroup">Jobs in Group: ${Object.keys(thisObj.group).length}</span>`);
+      createInput(modalControl, " border-bottom", "pcm_groupingDescI", "Description: ", `default: no description`, null, " pl-5 text-warning", this.tempObject[idName].description);
+    }
     const radioGroup = $(`<div class="text-center"></div>`).appendTo(modalControl);
-    radioButtons(radioGroup, "theJobs", "0", "All Jobs", true); radioButtons(radioGroup, "theJobs", "1", "Collecting");
-    radioButtons(radioGroup, "theJobs", "2", "Not Collecting"); radioButtons(radioGroup, "theJobs", "3", "Searching Mode");
+    radioButtons(radioGroup, "theJobs", "0", "All Jobs", true); 
+    if (type === "jobs") radioButtons(radioGroup, "theJobs", "1", "Collecting");
+    if (type === "jobs") radioButtons(radioGroup, "theJobs", "2", "Not Collecting");
+    radioButtons(radioGroup, "theJobs", "3", "Searching Mode");
     radioButtons(radioGroup, "theJobs", "4", "Only Once");
     const inputControl = createInput(modalControl, "", "pcm_searchJobs", "Search phrase: ", "example: receipts", (e) => {
       $(e.target).closest(".pcm_modalControl").find(".pcm_searchingJobs").click();
     }, " pl-5");
-    $(`<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>`).click( (e) => {
+    $(`<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>`).on( 'click', (e) => {
       $(modalBody).find(".pcm_jobTable").remove();
-      this.showJobsTable(modalBody, this.jobsFilter($("#pcm_searchJobs").val(), modalControl));
+      this.showJobsTable(panda, modalBody, this.jobsFilter(panda, $("#pcm_searchJobs").val(), modalControl), thisCheckFunc);
+      if (type==="groupingEdit") Object.keys(groupings.store[thisUnique].group).forEach( (value) => { $(`#pcm_selection_${value}`).prop('checked', true); });
     }).appendTo(inputControl);
-    $(`<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>`).click( (e) => {
+    if (type === "jobs") $(`<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>`).click( (e) => {
       const selected = $(modalBody).find(`.pcm_checkbox:checked`).map((_,element) => { 
         return Number($(element).val()); }).get();
-      if (selected.length) this.attached.removeJobs(selected, () => {
+      if (selected.length) panda.removeJobs(selected, () => {
           $(modalBody).find(".pcm_jobTable").remove();
-          this.showJobsTable(modalBody, this.jobsFilter($("#pcm_searchJobs").val(), modalControl));
+          this.showJobsTable(panda, modalBody, this.jobsFilter(panda, $("#pcm_searchJobs").val(), modalControl));
         });
     }).appendTo(inputControl);
     $(modalControl).find("input:radio[name='theJobs']").click( (e) => {
       $(e.target).closest(".pcm_modalControl").find(".pcm_searchingJobs").click();
-    } )
-    this.showJobsTable(modalBody, this.jobsFilter("", modalControl));
-    this.showModal();
+    } );
+    this.showJobsTable(panda, modalBody, this.jobsFilter(panda, "", modalControl), thisCheckFunc);
+    this.showModal(cancelFunc);
   }
-  showGroupingsModal(groupings) {
-    const idName = this.prepareModal(null, "1000px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
-    const modalBody = $(`#${idName} .${this.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    Object.keys(groupings).forEach(grouping => {
-      displayObjectData1([
-        { string:`Grouping Name and Description`, type:"keyValue", key:"name", andKey:"description" },
-        { label:"Edit", type:"button", addClass:" btn-xxs", width:"45px", data:1, btnFunc: (e) => { console.log($(e.target).data("data1")); } },
-        { label:"Del", type:"button", addClass:" btn-xxs", width:"45px", data:1, btnFunc: (e) => { console.log($(e.target).data("data1")); } }
-      ], divContainer, groupings[grouping], true, true);
-      });
-    this.showModal();
+  showJobAddModal(panda) {
+    const idName = this.prepareModal(null, "900px", "modal-header-info modal-lg", "Add new Panda Info", "<h4>Enter New Panda Information. [GroupID is mandatory]</h4>", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Add new Panda Info", () => {
+      const gId = $(`#pcm_formAddGroupID`).val();
+      if (gId === "") {
+        $(`label[for='pcm_formAddGroupID'`).css('color', 'red');
+        $(div).find('.pcm_inputError:first').html("Must fill in GroupID or URL!").data("gIdEmpty",true);
+      } else if (gId in panda.pandaGroupIds && !$(div).find('.pcm_inputError:first').data("gIdDup")) {
+        $(`label[for='pcm_formAddGroupID'`).css('color', 'yellow');
+        $(div).find('.pcm_inputError:first').html("GroupID already added. Still want to add?").data("gIdDup",true);
+      } else {
+        let groupId = null, reqId = null;
+        const groupVal = $(`#pcm_formAddGroupID`).val();
+        if (groupVal.includes(`://`)) [groupId, reqId] = panda.parsePandaUrl(groupVal);
+        else groupId = groupVal;
+        const reqName = ($(`#pcm_formReqName`).val()) ? $(`#pcm_formReqName`).val() : groupId;
+        reqId = (reqId) ? reqId : $(`#pcm_formAddReqID`).val();
+        const title = ($(`#pcm_formAddTitle`).val()) ? $(`#pcm_formAddTitle`).val() : groupId;
+        const description = ($(`#pcm_formAddDesc`).val()) ? $(`#pcm_formAddDesc`).val() : groupId;
+        const pay = ($(`#pcm_formAddPay`).val()) ? $(`#pcm_formAddPay`).val() : "0.00";
+        const startNow = $(`#pcm_startCollecting`).is(':checked');
+        const once = $(`#pcm_onlyOnce`).is(':checked'); 
+        const currentTab = panda.tabs.currentTab;
+        panda.modal.closeModal();
+        if (groupId) {
+          const myId = panda.addPanda(groupId, description, title, reqId, reqName, pay, once, 0, 0, false, 4000, -1, 0, 0, currentTab);
+          if (startNow) panda.startCollecting(myId);
+        } else if (reqId) console.log("Create Search Panda");
+      }
+    }, "invisible", "No", null, "visible btn-sm", "Cancel");
+    const div = $(`<div><div class="pcm_inputError"></div></div>`);
+    createInput(div, " pcm_inputDiv-url", "pcm_formAddGroupID", "* Group ID or URL: ", "example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI");
+    createCheckBox(div, "Start Collecting", "pcm_startCollecting", "", true);
+    createCheckBox(div, "Collect Only Once", "pcm_onlyOnce", "");
+    createInput(div, " pt-3 border-top border-info", "pcm_formReqName", "Requester Name: ", "default: group ID shown");
+    createInput(div, "", "pcm_formAddReqID", "Requester ID: ", "example: AGVV5AWLJY7H2");
+    createInput(div, "", "pcm_formAddTitle", "Title: ", "default: group ID shown");
+    createInput(div, "", "pcm_formAddDesc", "Description: ", "default: group ID shown");
+    createInput(div, "", "pcm_formAddPay", "Pay Amount: ", "default: 0.00");
+    $(`#${idName} .${this.classModalBody}`).append(div);
+    this.showModal(null, () => { $(`#pcm_formAddGroupID`).focus(); });
   }
-  showGeneralOptions() {
-    const idName = this.prepareModal(null, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "visible btn-sm", "Close");
-    const modalBody = $(`#${idName} .${this.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([
-      { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
-      { label:"Disable Captcha Alert:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
-      { label:"Show Captcha Counter Text:", type:"trueFalse", key:"once" }, 
-      { label:"Captcha shown after #hits:", type:"text", key:"acceptLimit" }, 
-      { label:"Disable Queue Watch Alert:", type:"text", key:"duration" }, 
-      { label:"Disable Dekstop Notifications:", type:"trueFalse", key:"autoGoHam" }, 
-      { label:"Show Unfocused window warning:", type:"text", key:"hamDuration" }
-    ], divContainer, this.tempObject, true);
-    this.showModal();
-  }
-  showTimerOptions() {
-    const idName = this.prepareModal(null, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "visible btn-sm", "Close");
-    const modalBody = $(`#${idName} .${this.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([
-      { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
-      { label:"Disable Captcha Alert:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
-      { label:"Show Captcha Counter Text:", type:"trueFalse", key:"once" }, 
-      { label:"Captcha shown after #hits:", type:"text", key:"acceptLimit" }, 
-      { label:"Disable Queue Watch Alert:", type:"text", key:"duration" }, 
-      { label:"Disable Dekstop Notifications:", type:"trueFalse", key:"autoGoHam" }, 
-      { label:"Show Unfocused window warning:", type:"text", key:"hamDuration" }
-    ], divContainer, this.tempObject, true);
-    this.showModal();
-  }
-  showAlarmOptions() {
-    const idName = this.prepareModal(null, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "visible btn-sm", "Close");
-    const modalBody = $(`#${idName} .${this.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([
-      { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
-      { label:"Disable Captcha Alert:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
-      { label:"Show Captcha Counter Text:", type:"trueFalse", key:"once" }, 
-      { label:"Captcha shown after #hits:", type:"text", key:"acceptLimit" }, 
-      { label:"Disable Queue Watch Alert:", type:"text", key:"duration" }, 
-      { label:"Disable Dekstop Notifications:", type:"trueFalse", key:"autoGoHam" }, 
-      { label:"Show Unfocused window warning:", type:"text", key:"hamDuration" }
-    ], divContainer, this.tempObject, true);
-    this.showModal();
-  }
-  showInputModal(contents, addFunc, doAfter) {
-    const idName = this.prepareModal(null, "700px", "modal-header-info modal-lg", "Add new Panda Info", "<h4>Enter New Panda Information. [GroupID is mandatory]</h4>", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Add new Panda Info", addFunc, "invisible", "No", null, "visible btn-sm", "Cancel");
-    $(`#${idName} .${this.classModalBody}`).append(contents);
+  showDialogModal(width, title, body, addFunc, yesBtn, noBtn, doAfter=null) {
+    const yesClass = (yesBtn) ? "visible btn-sm" : "invisible";
+    const noClass = (noBtn) ? "visible btn-sm" : "invisible";
+    const idName = this.prepareModal(null, width, "modal-header-info modal-lg", title, body, "text-right bg-dark text-light", "modal-footer-info", yesClass, "Yes", addFunc, noClass, "No");
     this.showModal(null, doAfter);
   }
 }

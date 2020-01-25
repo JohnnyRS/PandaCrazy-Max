@@ -52,9 +52,9 @@ class LogTabsClass {
       if (prevHits.length >  0) {
         let prevDivIndex = 0, addedToEnd = false;
         newIds.forEach( (value, index) => { // seconds is -1 then expired
-          if (index===0 && newInfo[value].secondsLeft!==-1 && panda.globalOpt.checkQueueAlert(newInfo[value].secondsLeft)) {
-            if (panda.globalOpt.isQueueAlert()) $(this.queueContent).closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
-            if (panda.globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
+          if (index===0 && newInfo[value].secondsLeft!==-1 && globalOpt.checkQueueAlert(newInfo[value].secondsLeft)) {
+            if (globalOpt.isQueueAlert()) $(this.queueContent).closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
+            if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
           }
           if (newInfo[value].secondsLeft!==-1 && prevDivIndex >= prevHits.length) { // hit added to end
             addedToEnd = true;

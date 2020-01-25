@@ -5,9 +5,11 @@ class MturkClass {
 		this.timerValue = { value:0, id:"#pcm_timerValue", disabled:null, type:"integer" };
 		this.resultUrl = ""; }
 	updateStatNav(statObj) { // global stats for pandas and searches
+		if (!window.jQuery) return null;
 		if (statObj.disabled===null) statObj.disabled = ($(statObj.id).length) ? false : true;
 		if (statObj.disabled===true) return null;
-		$(statObj.id).html(statObj.value); }
+		$(statObj.id).html(statObj.value);
+	}
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
 	addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
 	async goFetch(objUrl) {
@@ -15,17 +17,14 @@ class MturkClass {
 		const response = objUrl.goFetch().then(result => {
 			this.resultUrl = result.url;
 			this.addTotalFetched();
-			let returnObj = { type: result.type, status: result.status, mode: "", data: result.data };
-			if (this.resultUrl && this.resultUrl.includes('https://www.amazon.com/ap/signin')) {
-				console.log("You are logged out!");
-				returnObj.mode = "logged out"; returnObj.data = null; }
-			else if (result.type === "ok.json" && result.data.error === "You have exceeded the allowable page request rate") {
-				this.addPRE();
-				returnObj.mode = "pre"; returnObj.data = null; }
-			else if (result.type === "ok.json" && result.data.message && result.data.message.includes("You have accepted the maximum number of HITs allowed at one time")) {
-				returnObj.mode = "maxxedOut"; returnObj.data = null;
-				console.log("maxed queue!");
-			}
+			let returnObj = { type:result.type, status:result.status, mode: "", data:result.data, url:result.url };
+			if (this.resultUrl && this.resultUrl.includes('https://www.amazon.com/ap/signin')) { returnObj.mode = "logged out"; returnObj.data = null; }
+			else if (result.type === "ok.json" && result.data.error && result.data.error === "You have exceeded the allowable page request rate") { this.addPRE(); returnObj.mode = "pre"; returnObj.data = null; }
+			else if (result.type === "ok.json" && result.data.message && result.data.message.includes("You have accepted the maximum number of HITs allowed at one time")) { returnObj.mode = "maxxedOut"; returnObj.data = null; }
+			else if (result.type === "ok.json" && result.data.message && result.data.message === "There are no more of these HITs available.") { returnObj.mode = "noMoreHits"; returnObj.data = null; }
+			else if ( result.type === "ok.json" && result.data.message && result.data.message.includes("you do not meet those Qualifications") ) { returnObj.mode = "noQual"; returnObj.data = null; }
+			else if ( result.type === "ok.json" && result.data.message && result.data.message.includes("prevent you from working") ) { returnObj.mode = "blocked"; returnObj.data = null; }
+			else if ( result.type === "ok.json" && result.data.message ) { returnObj.mode = "unknown";  }
 			return returnObj;
 		});
 		return response; } }

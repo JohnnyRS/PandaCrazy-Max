@@ -1,11 +1,11 @@
 class MenuClass {
-  constructor(panda, id) {
+  constructor(id) {
     this.quickMenuId = id;
     this.topMenuId = "pcm_topMenu";
 
-    this.createTopMenu(panda);
-    this.createQuickMenu(panda);
-    this.showQuickMenu(panda);
+    this.createTopMenu();
+    this.createQuickMenu();
+    this.showQuickMenu();
   }
   addMenu(appendHere, label, btnFunc, tooltip="") {
     const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
@@ -33,37 +33,37 @@ class MenuClass {
       else if (info.type==="divider") $(`<div class="dropdown-divider"></div>`).appendTo(dropdownMenu);
     });
   }
-  createTopMenu(panda) {
+  createTopMenu() {
     const topMenu = $(`<div class="btn-group text-left border border-info" id="pcm_topMenuGroup" role="group"></div>`).appendTo($(`#${this.topMenuId}`));
     this.addSubMenu(topMenu, "Vol:", "Change Volume of Alarms", () => {}, "min-width:3rem; text-align:center;", [{type:"rangeMax", label:"100"}, {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }}, {type:"rangeMin", label:"0"}]);
-    this.addSubMenu(topMenu, "Jobs", "List all Panda Jobs Added", () => { panda.modal.showJobsModal(panda); }, "", 
+    this.addSubMenu(topMenu, "Jobs", "List all Panda Jobs Added", () => { panda.showJobsModal(); }, "", 
       [{type:"item", label:"Add", menuFunc: () => { panda.modal.showJobAddModal(panda); }, tooltip:"Add a new Panda Job"},
        {type:"item", label:"Stop All", menuFunc: () => { panda.portPanda.postMessage({command:"stopAll"}); }, tooltip:"Stop All Collecting Panda's"},
-       {type:"item", label:"Search Jobs", menuFunc: () => { panda.modal.showJobsModal(panda); }, tooltip:"Search the Panda Jobs Added"},
+       {type:"item", label:"Search Jobs", menuFunc: () => { panda.showJobsModal(); }, tooltip:"Search the Panda Jobs Added"},
        {type:"item", label:"Search Mturk"},
        {type:"divider"}, {type:"item", label:"Export"}, {type:"item", label:"Import"}]);
     this.addSubMenu(topMenu, "Display", "Change Panda Display Size", () => {}, "", [{type:"item", label:"Normal"}, {type:"item", label:"Minimal Info"}, {type:"item", label:"One Line Info"}]);
-    this.addSubMenu(topMenu, "Grouping", "List all Groupings Added", () => { panda.groupings.showGroupingsModal(panda); }, "",
-      [{type:"item", label:"Start/Stop", menuFunc: () => { panda.groupings.showGroupingsModal(panda); } },
-       {type:"item", label:"Create by Selection", menuFunc: () => { panda.groupings.createInstant(panda,true); } },
-       {type:"item", label:"Create Instantly", menuFunc: () => { panda.groupings.createInstant(panda); } },
-       {type:"item", label:"Edit", menuFunc: () => { panda.groupings.showGroupingsModal(panda); } }]);
-    this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { panda.portPanda.postMessage({command:"setTimer", timer:panda.globalOpt.getTimer1()}); }, "",
-      [{type:"item", label:"Edit Timers", menuFunc: () => { panda.globalOpt.showTimerOptions(); } }, {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}],
-      "2", () => { panda.portPanda.postMessage({command:"setTimer", timer:panda.globalOpt.getTimer2()}); },
-      "3", () => { panda.portPanda.postMessage({command:"setTimer", timer:panda.globalOpt.getTimer3()}); });
-    this.addSubMenu(topMenu, "Options", "Change Global, Alarms or timer Options ", function() { panda.globalOpt.showGeneralOptions(); }, "", [{type:"item", label:"General", menuFunc:() => { panda.globalOpt.showGeneralOptions(); }}, {type:"item", label:"Edit Timers", menuFunc:function() { panda.globalOpt.showTimerOptions(); }}, {type:"item", label:"Edit Alarms", menuFunc:() => { panda.modal.showAlarmOptions(); }}]);
+    this.addSubMenu(topMenu, "Grouping", "List all Groupings Added", () => { groupings.showGroupingsModal(panda); }, "",
+      [{type:"item", label:"Start/Stop", menuFunc: () => { groupings.showGroupingsModal(panda); } },
+       {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(panda,true); } },
+       {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(panda); } },
+       {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(panda); } }]);
+    this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { panda.portPanda.postMessage({command:"setTimer", timer:globalOpt.getTimer1()}); }, "",
+      [{type:"item", label:"Edit Timers", menuFunc: () => { globalOpt.showTimerOptions(); } }, {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}],
+      "2", () => { panda.portPanda.postMessage({command:"setTimer", timer:globalOpt.getTimer2()}); },
+      "3", () => { panda.portPanda.postMessage({command:"setTimer", timer:globalOpt.getTimer3()}); });
+    this.addSubMenu(topMenu, "Options", "Change Global, Alarms or timer Options ", function() { globalOpt.showGeneralOptions(); }, "", [{type:"item", label:"General", menuFunc:() => { globalOpt.showGeneralOptions(); }}, {type:"item", label:"Edit Timers", menuFunc:function() { globalOpt.showTimerOptions(); }}, {type:"item", label:"Edit Alarms", menuFunc:() => { panda.modal.showAlarmOptions(); }}]);
   }
-  createQuickMenu(panda) {
+  createQuickMenu() {
     const quickMenu = $(`<div class="btn-group text-left w-100 py-1" role="group"></div>`).appendTo($(`#${this.quickMenuId}`));
     const group = $(`<div class="btn-group py-0 my-0"></div>`).appendTo(quickMenu);
     this.addMenu(group, "Pause", () => { panda.portPanda.postMessage({command:"pauseToggle"}); }, "Pause Timer.");
-    this.addMenu(group, "Start Group", () => { panda.groupings.showGroupingsModal(panda); } );
+    this.addMenu(group, "Start Group", () => { groupings.showGroupingsModal(panda); } );
     this.addMenu(group, "Stop All", () => { panda.portPanda.postMessage({command:"stopAll"}); }, "Stop All Collecting Panda's");
     this.addMenu(group, "Add Job", () => { panda.modal.showJobAddModal(panda); }, "Add a Panda Job");
     this.addSeparator(group, " - ");
     this.addMenu(group, "Reset Timer", () => {} );
-    this.addMenu(group, "Search Jobs", () => { panda.modal.showJobsModal(panda); }, "Search the Panda Jobs Added" );
+    this.addMenu(group, "Search Jobs", () => { panda.showJobsModal(); }, "Search the Panda Jobs Added" );
     this.addMenu(group, "Search Mturk", () => {} );
   }
   showQuickMenu() { $(`#${this.quickMenuId}`).show(); }
