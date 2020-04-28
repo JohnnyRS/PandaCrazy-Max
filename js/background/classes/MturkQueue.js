@@ -62,7 +62,7 @@ goFetch(objUrl, queueUnique, elapsed) { // Can deal with getting search results 
   }
 }
 
-const myQueue = new MturkQueue(2000); // 2s queue monitor by default
+const myQueue = new MturkQueue(2000); // 2s for queue monitor by default
 
 if (chrome.runtime) {
   chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
