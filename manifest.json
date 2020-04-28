@@ -16,10 +16,12 @@
     "scripts": [
       "js/jquery-3.4.1.min.js",
       "js/common.js",
-      "js/classes/TimerClass.js",
+      "js/classes/DatabaseClass.js",
+      "js/background/classes/DebuggerClass.js",
+      "js/background/classes/TimerClass.js",
       "js/classes/UrlClass.js",
       "js/classes/MturkClass.js",
-      "js/classes/MturkQueue.js"
+      "js/background/classes/MturkQueue.js"
     ]
   },
   "content_scripts": [
