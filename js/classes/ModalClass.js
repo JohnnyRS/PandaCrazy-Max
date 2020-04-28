@@ -10,6 +10,7 @@ class ModalClass {
     this.classSaveButton = "pcm_modalSave";
     this.classNoButton = "pcm_modalNo";
     this.classCancelButton = "pcm_modalCancel";
+    this.modalLoggedOff = 0;
     this.buttonPressed = "Cancel";
     this.popup = null;
     this.tempObject =  [];
@@ -46,7 +47,6 @@ class ModalClass {
         if ($(`#${idName} .modal-title:first`).text() === title) foundTitle=index;
       });
     }
-    console.log(foundTitle);
     const idName = this.modals.slice(foundTitle)[0];
     $(`#${idName}`).modal("hide"); 
     delete this.tempObject[idName];
@@ -70,8 +70,10 @@ class ModalClass {
     return idName;
   }
   showLoggedOffModal(afterClose=null) {
+    if (this.modalLoggedOff>0) return;
+    this.modalLoggedOff++;
     const idName = this.prepareModal(null, "600px", "modal-header-warning", "Program Paused!", "<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href='https://worker.mturk.com/' target='_blank' title='https://worker.mturk.com/' class='pcm_mturkLink'>https://worker.mturk.com/</a></h5>", "text-center");
-    this.showModal(null, null, afterClose);
+    this.showModal(null, null, () => { this.modalLoggedOff=0; afterClose.apply(); });
     $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
       e.preventDefault();
       this.popup = window.open( $(e.target).attr('href'), "_blank", "width=" + 1000 + ",height=" +  800 + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes" );
@@ -184,7 +186,7 @@ class ModalClass {
         const startNow = $(`#pcm_startCollecting`).is(':checked');
         const once = $(`#pcm_onlyOnce`).is(':checked'); 
         const currentTab = panda.tabs.currentTab;
-        panda.modal.closeModal();
+        this.closeModal();
         if (groupId) {
           const myId = panda.addPanda(groupId, description, title, reqId, reqName, pay, once, 0, 0, false, 4000, -1, 0, 0, currentTab);
           if (startNow) panda.startCollecting(myId);

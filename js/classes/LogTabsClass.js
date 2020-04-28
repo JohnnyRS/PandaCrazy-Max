@@ -22,7 +22,8 @@ class LogTabsClass {
       fetch(returnLink, { method: 'POST', credentials: `include`,
         headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
         body: "_method=delete&authenticity_token=" + encodeURIComponent(panda.authenticityToken)
-      }).then( res => console.log("ok: ",res) ).catch( err => console.log("error:",err) );
+      }).then( res => { logThis(1, "LogTabsClass", `Returned hit: ${res}`);
+      }).catch( err => logError(2, "LogTabsClass", `Returned hit error: ${err}`) );
       e.preventDefault();
     });
     $(toAdd).append(" :: ");
@@ -32,10 +33,11 @@ class LogTabsClass {
         e.preventDefault();
     });
     if (indexAdd) index++;
+    logThis(3, "LogTabsClass",`new to queue: {title: ${escape(hitInfo.project.title)}, hit_set_id: ${hitInfo.project.hit_set_id}, requester_id: ${hitInfo.project.requester_id}, requester_name: ${escape(hitInfo.project.requester_name)}}`);
     return index;
   }
   addIntoQueue(panda, hitInfo, hitInfo2, task_url="") {
-    if (this.assignIds.includes(hitInfo.taskId)) return null;
+    if (this.assignIds.includes(hitInfo.taskId)) return null; // Hit already in queue so don't add.
     let found =this.assignIds.findIndex( key => { return this.taskInfo[key].secondsLeft>hitInfo.assignedTime; } );
     this.assignIds.splice( ((found===-1) ? this.assignIds.length-1 : found-1), 0, hitInfo.taskId );
     const newInfo = { project: { assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo.assignedTime, creation_time:hitInfo2.creationTime, description:hitInfo.description, latest_expiration_time:hitInfo.expires, monetary_reward:{amount_in_dollars:hitInfo.price}, requester_name:hitInfo.reqName, title:hitInfo.title}, secondsLeft:hitInfo.assignedTime, task_id:hitInfo.task_id, task_url:task_url.replace("&auto_accept=true","")};
@@ -47,44 +49,69 @@ class LogTabsClass {
     let prevHits = $(this.queueContent).find("div");
     $(this.queueTab).find("span").html(`Queue Watch - ${queueResults.length}`);
     if (queueResults.length > 0) {
-      let newIds = [], newInfo = {};
+      let newIds = [], newInfo = {}, oldIds = []; // oldIds is used for duplication error checking
       queueResults.forEach( (value) => { newIds.push(value.assignment_id); newInfo[value.assignment_id] = {project:value.project, secondsLeft:value.time_to_deadline_in_seconds, task_url:value.task_url.replace(".json","")}; } );
-      if (prevHits.length >  0) {
+      if (prevHits.length > 0) {
+        // Some previous jobs are still in queue. Let's compare and find out if something was added or removed.
         let prevDivIndex = 0, addedToEnd = false;
-        newIds.forEach( (value, index) => { // seconds is -1 then expired
-          if (index===0 && newInfo[value].secondsLeft!==-1 && globalOpt.checkQueueAlert(newInfo[value].secondsLeft)) {
-            if (globalOpt.isQueueAlert()) $(this.queueContent).closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
-            if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
-          }
-          if (newInfo[value].secondsLeft!==-1 && prevDivIndex >= prevHits.length) { // hit added to end
-            addedToEnd = true;
-            prevDivIndex = this.addToLog(panda, newInfo, value, this.queueContent, prevDivIndex, true, true); }
-          else {
-            let prevAssignId = $(prevHits[prevDivIndex]).data('assignId'), nomore = false, deleted = false;
-            while (!nomore && prevAssignId !== value) {
-              if (newInfo[value].secondsLeft!==-1 && !this.assignIds.includes(value)) {
-                prevDivIndex = this.addToLog(panda, newInfo, value, prevHits[prevDivIndex], prevDivIndex, true, false);
-                nomore=true;
-              } else $(prevHits[prevDivIndex]).remove(); deleted = true;
-              prevHits = $(this.queueContent).find("div");
-              if (prevDivIndex >= prevHits.length ) nomore=true;
-              if (!nomore && deleted) prevAssignId = $(prevHits[prevDivIndex]).data('assignId');
+        newIds.forEach( (value, index) => {
+          if (newInfo[value].secondsLeft!==-1) { // make sure job isn't expired.
+            let prevAssignId = $(prevHits[prevDivIndex]).data('assignId');
+            if (oldIds.includes(prevAssignId)) 
+              logError(0,"LogTabsClass",`Duplication error found. Not adding job to queue.`);
+            else if (prevDivIndex >= prevHits.length) { // There are more jobs in new queue than old queue.
+              logThis(2,"LogTabsClass",`Add job to end of queue.`);
+              addedToEnd = true;
+              prevDivIndex = this.addToLog(panda, newInfo, value, this.queueContent, prevDivIndex, true, true);
+            } else {
+              // Look for a difference between previous queue and new queue.
+              if (value != prevAssignId) { // found something that is different.
+                if (!this.assignIds.includes(value)) {
+                  // Work was added here at prevDivIndex because this new work is not in previous queue.
+                  logThis(2,"LogTabsClass",`Add job in queue.`);
+                  prevDivIndex = this.addToLog(panda, newInfo, value, prevHits[prevDivIndex], prevDivIndex, true, false);
+                  prevHits = $(this.queueContent).find("div");
+                } else { // Previous jobs were returned at prevDivIndex because the new work was in previous queue
+                  do {
+                    logThis(2,"LogTabsClass",`Remove job from queue because it was returned.`);
+                    $(prevHits[prevDivIndex]).remove();
+                    prevHits = $(this.queueContent).find("div");
+                    prevAssignId = $(prevHits[prevDivIndex]).data('assignId');
+                  } while (prevAssignId !== value); // for multiple jobs returned at once.
+                }
+              }
+              if (prevAssignId === value) { // Update the time left for this job
+                const timeLeft = getTimeLeft(newInfo[value].secondsLeft);
+                $(prevHits[prevDivIndex]).find(`.pcm_timeLeft`).html(timeLeft);
+                prevDivIndex++; // Point to the next previous job in queue.
+              }
+              oldIds.push(prevAssignId);
             }
-            if (newInfo[value].secondsLeft!==-1 && prevAssignId === value) {
-              const timeLeft = getTimeLeft(newInfo[value].secondsLeft);
-              $(prevHits[prevDivIndex]).find(`.pcm_timeLeft`).html(timeLeft);
-              prevDivIndex++;
+          } else { console.log(value,$(prevHits[prevDivIndex]).data('assignId'));
+            if ($(prevHits[prevDivIndex]).data('assignId') === value) {
+              logThis(2,"LogTabsClass",`Job has been expired and still in previous.`);
+              $(prevHits[prevDivIndex]).remove();
+              prevHits = $(this.queueContent).find("div");
             }
           }
         });
+        // check if previous jobs were returned from end of queue so need to be removed manually.
         if (!addedToEnd && newIds.length < prevHits.length) $(prevHits[newIds.length-1]).nextAll('div').remove();
       } else if (newIds.length > 0) {
-        newIds.forEach( (key) => {
+        // Previous queue is empty and new queue has something so just add the new work.
+        newIds.forEach( (key) => { // make sure ALL work is added
+          logThis(2,"LogTabsClass",`Add jobs to empty queue.`);
           if (newInfo[key].secondsLeft!==-1) this.addToLog(panda, newInfo, key, this.queueContent, 0, false, true);
         });
       }
       this.assignIds = Array.from(newIds); this.taskInfo = Object.assign({}, newInfo);
-    } else if (prevHits.length >  0) { $(this.queueContent).empty(); this.assignIds.length = 0; this.taskInfo = Object.assign({}, {}); }
+      // Let's find out if an alarm should be alerted because of a low timer
+      let firstTimeLeft = queueResults[0].time_to_deadline_in_seconds;
+      if (firstTimeLeft!==-1 && globalOpt.checkQueueAlert(firstTimeLeft)) { // -1 means expired
+        if (globalOpt.isQueueAlert()) $(this.queueContent).closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
+        if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
+      }
+    } else if (prevHits.length>0) { $(this.queueContent).empty(); this.assignIds.length = 0; this.taskInfo = Object.assign({}, {}); }
   }
   updateCaptcha(captchaCount) {
     if (captchaCount!==null) this.tabs.updateCaptcha(captchaCount);

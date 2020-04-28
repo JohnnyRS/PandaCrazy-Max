@@ -98,7 +98,6 @@ function allTabs(searching, doAfter) {
     windows.forEach( window => {
       window.tabs.forEach( tab => { if (tab.url.includes(searching)) counter++; } );
     });
-    console.log(`returning ${counter}`);
     doAfter.apply(this, [counter]);
   });
 }
@@ -183,4 +182,9 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       if (element.string!=="") $(`<span${border}>${element.string}</span>`).appendTo(valueCol);
     }
   });
+}
+function saveToFile(theData) {
+  var blob = new Blob( [theData], {type: "text/plain"}), dl = document.createElement("A");
+  dl.href = URL.createObjectURL(blob); dl.download = "PandaCrazyLog_" + formatAMPM("short") + ".json";
+  document.body.appendChild(dl); dl.click(); dl.remove();
 }

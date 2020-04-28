@@ -25,7 +25,6 @@ class MturkPanda extends MturkClass {
 		this.logTabs = new LogTabsClass();
 		this.logTabs.updateCaptcha(globalOpt.getCaptchaCount());
 
-		this.modal = new ModalClass(); // set up a modal class for a options, warnings or details
 		this.messagesPort = chrome.runtime.connect({name:"pandaMessages"});
 		this.portPanda = chrome.runtime.connect({name:"pandaTimer"}); // connect a port to timerClass
 		this.portPanda.postMessage({command:"setTimer", timer:995}); // little lower than 1s panda timer by default
@@ -46,10 +45,12 @@ class MturkPanda extends MturkClass {
 				if (!msg.running) MturkPanda._this_GStats.collectingOff();
 				if (msg.paused) MturkPanda._this_GStats.collectingPaused(); else MturkPanda._this_GStats.collectingUnPaused();
 			}
+			else if (msg.return === "loggedOff") { this.nowLoggedOff(); }
+			else if (msg.return === "loggedon") {}
 		});
 		chrome.runtime.onMessage.addListener( (request, sender) => {
 			if (request.command==="gotNewQueue") {
-				if (this.loggedOff) { this.modal.closeModal("Program Paused!"); this.portPanda.postMessage({command:"unPauseTimer"}); this.loggedOff = false; }
+				if (this.loggedOff) this.nowLoggedOn();
 				if (!this.authenticityToken) this.authenticityToken = request.authenticityToken;
 				this.queueResults = request.queueResults; this.gotNewQueue();
 				this.logTabs.updateQueue(this, this.queueResults);
@@ -64,8 +65,16 @@ class MturkPanda extends MturkClass {
 	createPandaUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks/accept_random`; }
 	createPreviewUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks`; }
 	goodToFetch(myId) { return true; }
-	showJobsModal(type="jobs", thisUnique=-1, thisObj=null, thisSaveFunc=null, thisCheckFunc=null, cancelFunc=null) { this.modal.showJobsModal(this, type, thisUnique, thisObj, thisSaveFunc, thisCheckFunc, cancelFunc); }
+	showJobsModal(type="jobs", thisUnique=-1, thisObj=null, thisSaveFunc=null, thisCheckFunc=null, cancelFunc=null) { modal.showJobsModal(this, type, thisUnique, thisObj, thisSaveFunc, thisCheckFunc, cancelFunc); }
 	modalClosed() { this.portPanda.postMessage({command:"unPauseTimer"}); }
+	nowLoggedOff() {
+		this.portPanda.postMessage({command:"pauseTimer"}); this.loggedOff = true;
+		modal.showLoggedOffModal( () => { this.portPanda.postMessage({command:"unPauseTimer"}); } );
+	}
+	nowLoggedOn() {
+		modal.closeModal("Program Paused!"); this.portPanda.postMessage({command:"unPauseTimer"});
+		this.loggedOff = false;
+	}
 	sendToQueue(myId, goHamStart=false, tempDuration=-1, tempGoHam=-1) {
 		this.portPanda.postMessage({command:"addToQueue", myId:myId, thisObj:this, duration:this.info[myId].duration, tempDuration:tempDuration, tempGoHam:tempGoHam, goHamStart:goHamStart, doThis:"doThis", doAfter:"doAfter"});
 	}
@@ -95,8 +104,9 @@ class MturkPanda extends MturkClass {
 	removeJobs(jobsArr, afterFunc=null) {
 		let bodyText = ""; const info = this.info;
 		jobsArr.forEach( (thisId) => {  bodyText += `( ${info[thisId].reqName} [${info[thisId].price}] )<BR>`; });
-		this.modal.showDeleteModal(bodyText, () => {
+		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( (thisId) => {
+				this.stopCollecting(thisId, true)
 				this.pandaCard[thisId].removeCard( () => {
 					const gId = this.info[thisId].groupId;
 					this.pandaUniques = arrayRemove(this.pandaUniques,thisId);
@@ -107,7 +117,7 @@ class MturkPanda extends MturkClass {
 					if (afterFunc!==null) afterFunc.apply(this);
 				});
 			});
-			this.modal.closeModal();
+			modal.closeModal();
 			jobsArr.length = 0;
 		}, () => {}, () => { jobsArr.length = 0; $(".pcm_deleteButton").css("background-color", ""); });
 	}
@@ -282,10 +292,7 @@ class MturkPanda extends MturkClass {
 			this.pandaStats[myId].addFetched(); MturkPanda._this_GStats.addTotalPandaFetched();
 			$(`#pcm_groupId_${myId}`).effect( "highlight", {color:"#E6E6FA"}, 300 );
 			this.checkIfLimited(myId, false);
-			if (result.mode === "logged out" && queueUnique !== null) {
-				this.portPanda.postMessage({command:"pauseTimer"}); this.loggedOff = true;
-				this.modal.showLoggedOffModal( () => { this.portPanda.postMessage({command:"unPauseTimer"}); } );
-			}
+			if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
 			else if (result.mode === "pre") { MturkPanda._this_GStats.addPandaPRE(); }
 			else if (result.mode === "maxxedOut") { console.log("Maxxed out dude"); }
 			else if (result.mode === "noMoreHits") { MturkPanda._this_GStats.addTotalPandaNoMore(); this.pandaStats[myId].addNoMore(); }

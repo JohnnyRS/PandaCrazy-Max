@@ -50,13 +50,13 @@ class PandaGOptions {
     else { $('[data-toggle="tooltip"]').tooltip('disable'); $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable'); }
    }
   showGeneralOptions() {
-    const idName = panda.modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
+    const idName = modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.general = Object.assign(this.general, changes);
-      panda.modal.closeModal();
+      modal.closeModal();
       this.update();
     });
-    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody); console.log(panda.modal.tempObject[idName]);
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
+    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody); console.log(modal.tempObject[idName]);
     displayObjectData([
       { label:"Show Help Tooltips:", type:"trueFalse", key:"showHelpTooltips", min:0, max:24 }, 
       { label:"Disable Captcha Alert:", type:"trueFalse", key:"disableCaptchaAlert", min:0, max:24 }, 
@@ -66,15 +66,15 @@ class PandaGOptions {
       { label:"Disable Queue Watch Alarm:", type:"trueFalse", key:"disableQueueAlarm" }, 
       { label:"Disable Desktop Notifications:", type:"trueFalse", key:"disableNotifications" }, 
       { label:"Show Unfocused window warning:", type:"trueFalse", key:"unfocusWarning" }
-    ], divContainer, panda.modal.tempObject[idName], true);
-    panda.modal.showModal();
+    ], divContainer, modal.tempObject[idName], true);
+    modal.showModal();
    }
   showTimerOptions() {
-    const idName = panda.modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
+    const idName = modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.timers = Object.assign(this.timers, changes);
-      panda.modal.closeModal();
+      modal.closeModal();
     });
-    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([
       { label:"Main Timer:", type:"text", key:"mainTimer" }, 
@@ -87,15 +87,15 @@ class PandaGOptions {
       { label:"Timer Decrease By:", type:"text", key:"timerDecrease" },
       { label:"Timer Add Timer By:", type:"text", key:"timerAddMore" },
       { label:"Timer Auto Slowdown Increase:", type:"text", key:"timerAutoIncrease" }
-    ], divContainer, panda.modal.tempObject[idName], true);
-    panda.modal.showModal();
+    ], divContainer, modal.tempObject[idName], true);
+    modal.showModal();
    }
   showAlarmOptions() {
-    const idName = panda.modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
+    const idName = modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.alarms = Object.assign(this.alarms, changes);
-      panda.modal.closeModal();
+      modal.closeModal();
     });
-    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([
       { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
@@ -106,8 +106,8 @@ class PandaGOptions {
       { label:"Disable Queue Watch Alert:", type:"text", key:"duration" }, 
       { label:"Disable Dekstop Notifications:", type:"trueFalse", key:"autoGoHam" }, 
       { label:"Show Unfocused window warning:", type:"text", key:"hamDuration" }
-    ], divContainer, panda.modal.tempObject[idName], true);
-    panda.modal.showModal();
+    ], divContainer, modal.tempObject[idName], true);
+    modal.showModal();
    }
   updateCaptcha() {
     if (this.general.captchaCountText) {

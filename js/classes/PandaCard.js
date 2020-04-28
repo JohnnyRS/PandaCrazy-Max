@@ -61,13 +61,13 @@ class PandaCard {
     });
   }
   showDetailsModal(panda, successFunc=null) {
-    const idName = panda.modal.prepareModal(this.pandaObj, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", (changes) => {
+    const idName = modal.prepareModal(this.pandaObj, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", (changes) => {
       this.pandaObj = Object.assign(this.pandaObj, changes);
       this.updateAllCardInfo();
-      panda.modal.closeModal();
+      modal.closeModal();
       if (successFunc!==null) successFunc.apply(this, [changes]);
     }, "invisible", "No", null, "visible btn-sm", "Cancel");
-    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([
       { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
@@ -89,7 +89,7 @@ class PandaCard {
       { label:"Expires", type:"text", key:"expires", disable:true }, 
       { label:"Date Added", type:"text", key:"dateAdded", disable:true, format:"date" }, 
       { label:"Number of Seconds Collecting", type:"text", key:"limitNumQueue", disable:true }
-    ], divContainer, panda.modal.tempObject[idName], true);
-    panda.modal.showModal();
+    ], divContainer, modal.tempObject[idName], true);
+    modal.showModal();
   }
 }

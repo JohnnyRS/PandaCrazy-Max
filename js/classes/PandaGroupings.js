@@ -15,15 +15,15 @@ class PandaGroupings {
   createInstant(panda, andEdit=false) {
     const collection = (panda.pandaUniques.filter( (value) => { return panda.pandaStats[value].collecting; })).map( (value) => { return [value,panda.info[value].autoTGoHam]; } );
     if (collection.length && !andEdit) {
-      panda.modal.showDialogModal("700px", "Create Grouping Instantly", "Do you really want to create an instant grouping for all the hits collecting now?", () => {
+      modal.showDialogModal("700px", "Create Grouping Instantly", "Do you really want to create an instant grouping for all the hits collecting now?", () => {
         this.addGroupings(`Grouping #${this.unique}`,"Instantly made so no description.", collection);
-        panda.modal.closeModal();
+        modal.closeModal();
       }, true, true, null);
     } else if (!andEdit) {
-      panda.modal.showDialogModal("700px", "Create Grouping Instantly", "You can only create an instant grouping if there are panda's collecting. Start collecting the panda's you want in the group or use the create by selection menu option.", null , false, false, null);
+      modal.showDialogModal("700px", "Create Grouping Instantly", "You can only create an instant grouping if there are panda's collecting. Start collecting the panda's you want in the group or use the create by selection menu option.", null , false, false, null);
     } else if (andEdit) {
       const unique = this.addGroupings("","", collection);
-      panda.modal.showgroupingEditModal(panda, unique, () => { this.showGroupingsModal(panda); }, () => { this.delete(unique); });
+      modal.showgroupingEditModal(panda, unique, () => { this.showGroupingsModal(panda); }, () => { this.delete(unique); });
     }
   }
   delete(unique) { delete this.store[unique]; }
@@ -46,8 +46,8 @@ class PandaGroupings {
   }
   stop() { return this.store[unique].group; }
   showGroupingsModal(panda) {
-    const idName = panda.modal.prepareModal(null, "1000px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
-    const modalBody = $(`#${idName} .${panda.modal.classModalBody}`);
+    const idName = modal.prepareModal(null, "1000px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     Object.keys(this.store).forEach(grouping => {
       const bgColor = (this.store[grouping].collecting) ? "#066306" : ((Object.keys(this.store[grouping].group).length===0) ? "#800517" : "");
@@ -66,7 +66,7 @@ class PandaGroupings {
         } }
       ], divContainer, this.store[grouping], true, true, bgColor);
       });
-      panda.modal.showModal();
+      modal.showModal();
   }
   showgroupingEditModal(panda, grouping, afterFunc=null, cancelFunc=null) {
     panda.showJobsModal("groupingEdit", grouping, this.store[grouping], (savedResults) => {
@@ -75,7 +75,7 @@ class PandaGroupings {
       savedResults.description = $(`#pcm_groupingDescI`).val();
       if (savedResults.description == "") savedResults.description = `no description`;
       this.store[grouping] = Object.assign(this.store[grouping], savedResults);
-      panda.modal.closeModal();
+      modal.closeModal();
       const jobNumbers = Object.keys(this.store[grouping].group).length;
       const bgColor = (jobNumbers>0) ? "" : "#800517";
       $(`#pcm_nameDesc_${grouping}`).html(`${this.store[grouping].name} - ${this.store[grouping].description} - <span class="small">{${jobNumbers} Jobs}</span>`)

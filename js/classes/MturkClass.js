@@ -27,4 +27,6 @@ class MturkClass {
 			else if ( result.type === "ok.json" && result.data.message ) { returnObj.mode = "unknown";  }
 			return returnObj;
 		});
-		return response; } }
+		return response;
+	}
+}
