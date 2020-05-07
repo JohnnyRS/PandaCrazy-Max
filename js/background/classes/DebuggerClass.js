@@ -48,7 +48,7 @@ class DebuggerClass {
     // now will be the exact date now. justDate is the date now without the time information
     let now = new Date(), justDate = now.toISOString().split("T")[0];
     // check if saving to file database is permitted by checking file number
-    if (fileNumber>=number) this.debugDB.addToDB( this.storeName, { "dateTime": now.getTime()+ Math.random(), "date": justDate, "class": theClass, "type": type, "number": number, "title": title, "description": description } )
+    if (fileNumber>=number) this.debugDB.addToDB( this.storeName, { "dateTime": now.getTime()+ Math.random(), "date": justDate, "class": theClass, "type": type, "number": number, "title": encodeURI(title), "description": encodeURI(description) } )
         .then( event => {} ) // do nothing if add to database was good.
         .catch( error => console.log(error.message) ); // show the error message if adding to database failed
     if (consoleNumber>=number) { // check if showing to console is permitted by checking console number
@@ -66,7 +66,7 @@ class DebuggerClass {
   }
   saveToFile() { // save this debug database to a file
     this.debugDB.getFromDBCursor( this.storeName, (cursor) => {
-      return cursor.value.description + "\n";
+      return `${cursor.value.date} - ${decodeURI(cursor.value.description)}` + "\n";
     } ).then( result => { saveToFile(result); } )
       .catch( error => console.log(error.message) ); // show any error messages if getting from database failed
   }
