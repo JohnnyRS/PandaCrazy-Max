@@ -6,16 +6,22 @@ class MturkQueue extends MturkClass {
     this.queueUnique = null;
     this.queueUrl = new UrlClass("https://worker.mturk.com/tasks");
     this.queueResults = [];
-    this.portQueue = null;
     this.loggedOff = false;
     this.authenticityToken = null;
+		queueTimer.setMyClass(this);				// Tell timer what class is using it so it can send information back
 		queueTimer.setTimer(timer);
   }
-  sendQueueResults() { chrome.runtime.sendMessage( {command:"gotNewQueue", queueResults:this.queueResults,authenticityToken:this.authenticityToken } ); }
+  timerInfo(infoObj) {}
+  sendQueueResults() {
+    myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
+    mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
+  }
   setTimer(timer) { this.timer = timer; }
   startQueueMonitor() {
-    gDebugLog.logThis(1, "MturkQueue", "Starting Queue Monitor.");
-		if (!queueTimer.running) this.queueUnique = queueTimer.addToQueue(-1, this, (unique, elapsed, myId, obj) => { obj.goFetch(obj.queueUrl, unique, elapsed); }, (myId, obj) => { obj.stopQueueMonitor(); });
+    if (!queueTimer.running) {
+      gDebugLog.logThis(1, "MturkQueue", "Starting Queue Monitor.");
+      this.queueUnique = queueTimer.addToQueue(-1, this, (unique, elapsed, myId, obj) => { obj.goFetch(obj.queueUrl, unique, elapsed); }, (myId, obj) => { obj.stopQueueMonitor(); });
+    }
   }
 	stopQueueMonitor() {
     gDebugLog.logThis(1, "MturkQueue", `Stop queue monitor. delete ${this.queueUnique}`);
@@ -26,18 +32,18 @@ class MturkQueue extends MturkClass {
     if (gId!=="") total = this.queueResults.filter( item => item.project.hit_set_id===gId ).length;
     else if (rId!=="") total = this.queueResults.filter( item => item.project.requester_id===rId ).length;
     else total = parseFloat(this.queueResults.map( item => item.project.monetary_reward.amount_in_dollars )
-    .reduce( (acc, reward) => { return acc +  ( (reward>price) ? reward : 0 ); }, 0 )).toFixed(2);
+      .reduce( (acc, reward) => { return acc +  ( (reward>price) ? reward : 0 ); }, 0 )).toFixed(2);
     return total;
   }
   nowLoggedOff() {
     this.loggedOff = true; queueTimer.setTimer(this.loggedOffTimer);
-    pandaTimer.nowLoggedOff(); // show logged off warning on all running windows.
+    myPanda.nowLoggedOff(); mySearch.nowLoggedOff(); // show logged off warning on all running windows.
   }
   nowLoggedOn() {
     this.loggedOff = false; queueTimer.setTimer(this.timer);
-    pandaTimer.nowLoggedOn(); // remove logged off warning on all running windows.
+    myPanda.nowLoggedOn(); mySearch.nowLoggedOn(); // remove logged off warning on all running windows.
   }
-goFetch(objUrl, queueUnique, elapsed) { // Can deal with getting search results data.
+  goFetch(objUrl, queueUnique, elapsed) { // Can deal with getting search results data.
 		super.goFetch(objUrl).then(result => {
       gDebugLog.logThis(4, "MturkQueue", `going to fetch ${JSON.stringify(objUrl)}`);
 			if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
@@ -61,8 +67,6 @@ goFetch(objUrl, queueUnique, elapsed) { // Can deal with getting search results 
     });
   }
 }
-
-const myQueue = new MturkQueue(2000); // 2s for queue monitor by default
 
 if (chrome.runtime) {
   chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => {
