@@ -30,8 +30,10 @@ class PandaCard {
   }
   createCardButtonGroup(appendhere) {
     const group = $(`<div class="card-text" id="pcm_buttonGroup_${this.myId}"></div>`).appendTo(appendhere);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" id="pcm_collectButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Start Collecting this Panda Hit"></button>`).append(`<span>Collect</span>`).appendTo(group);
-    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Collect hits from this Panda only! Delayed ham mode can be turned on by clicking and holding this button."></button>`).append(`<span>GoHam</span>`).appendTo(group);
+    const textCollect = (this.pandaObj.search) ? "-Collecting-" : "Collect";
+    const classCollect = (this.pandaObj.search) ? "pcm_buttonOff pcm_searchCollect" : "pcm_buttonOff";
+    if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton ${classCollect} shadow-none" id="pcm_collectButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Start Collecting this Panda Hit"></button>`).append(`<span>${textCollect}</span>`).appendTo(group);
+    if (this.display>1 && !this.pandaObj.search) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Collect hits from this Panda only! Delayed ham mode can be turned on by clicking and holding this button."></button>`).append(`<span>GoHam</span>`).appendTo(group);
     if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Display and edit all options for this Panda."></button>`).append(`<span>Details</span>`).appendTo(group);
     if (this.display>1) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="Delete this Panda hit. [CTRL] click to delete multiple hits."></button>`).append(`<span>X</span>`).appendTo(group);
   }
@@ -41,7 +43,8 @@ class PandaCard {
   }
   createCard(appendHere) {
     const oneLine = (this.display===0) ? " pcm_oneLine" : "";
-    const card = $(`<div class="card text-light border pcm_pandaCard${oneLine}" id="pcm_pandaCard_${this.myId}"></div>`).data("pandaObj",this.pandaObj).data("pandaObj",this.pandaObj).appendTo(appendHere);
+    const searchCard = (this.pandaObj.search) ? " pcm_searching" : "";
+    const card = $(`<div class="card text-light border pcm_pandaCard${oneLine}${searchCard}" id="pcm_pandaCard_${this.myId}"></div>`).data("pandaObj",this.pandaObj).data("pandaObj",this.pandaObj).appendTo(appendHere);
     const body = $(`<div class="card-body p-0"></div>`).appendTo(card);
     const text = $(`<div class="card-text p-0" id="output_${this.myId}">`).appendTo(body);
     if (this.display===0) $(`<div class="pcm_nameGroup row h5 w-100"></div>`).append(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}"></span>`).append($(`<span class="pcm_dMenuButton btn dropdown-toggle text-white" type="button" data-toggle="dropdown" id="pcm_dMenuButton_${this.myId}"></span>`).append($(`<div class="dropdown-menu" aria-labelledby="pcm_dMenuButton_"></div>`).append(`<a class="dropdown-item" href="#">Action</a>`))).appendTo(text);
@@ -59,6 +62,15 @@ class PandaCard {
     $(`#pcm_pandaCard_${this.myId}`).effect('slide', { direction:'left', mode:'hide' }, 300, () => { 
       $(`#pcm_pandaCard_${this.myId}`).remove(); removeFunc.apply();
     });
+  }
+  pandaSearchingNow() {
+    $(`#pcm_collectButton_${this.myId}`).html("-Searching-").removeClass("pcm_searchCollect").addClass("pcm_searchOn");
+  }
+  pandaCollectingNow() {
+    $(`#pcm_collectButton_${this.myId}`).html("-Collecting-").removeClass("pcm_searchOn").addClass("pcm_searchCollect");
+  }
+  pandaDisabled() {
+    $(`#pcm_collectButton_${this.myId}`).html("-Disabled-").removeClass("pcm_searchOn").removeClass("pcm_searchCollect").addClass("pcm_searchDisable");
   }
   showDetailsModal(panda, successFunc=null) {
     const idName = modal.prepareModal(this.pandaObj, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", (changes) => {
