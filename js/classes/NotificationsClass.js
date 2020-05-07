@@ -6,7 +6,6 @@ class NotificationsClass {
       if (permission === "granted") this.granted = true;
       this.show("Notifications are on");
     });
-    console.log(this.enabled, this.granted);
   }
   isReady() { return this.enabled && this.granted; }
   show(message) {
