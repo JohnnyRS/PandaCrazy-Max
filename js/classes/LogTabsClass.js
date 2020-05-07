@@ -85,9 +85,9 @@ class LogTabsClass {
                 $(prevHits[prevDivIndex]).find(`.pcm_timeLeft`).html(timeLeft);
                 prevDivIndex++; // Point to the next previous job in queue.
               }
-              oldIds.push(prevAssignId);
+              oldIds.push(value);
             }
-          } else { console.log(value,$(prevHits[prevDivIndex]).data('assignId'));
+          } else {
             if ($(prevHits[prevDivIndex]).data('assignId') === value) {
               logThis(2,"LogTabsClass",`Job has been expired and still in previous.`);
               $(prevHits[prevDivIndex]).remove();
