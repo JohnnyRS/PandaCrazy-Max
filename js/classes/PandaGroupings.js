@@ -13,7 +13,7 @@ class PandaGroupings {
     return this.unique++;
   }
   createInstant(panda, andEdit=false) {
-    const collection = (panda.pandaUniques.filter( (value) => { return panda.pandaStats[value].collecting; })).map( (value) => { return [value,panda.info[value].autoTGoHam]; } );
+    const collection = (bgPandaClass.pandaUniques.filter( (value) => { return bgPandaClass.pandaStats[value].collecting; })).map( (value) => { return [value,bgPandaClass.info[value].autoTGoHam]; } );
     if (collection.length && !andEdit) {
       modal.showDialogModal("700px", "Create Grouping Instantly", "Do you really want to create an instant grouping for all the hits collecting now?", () => {
         this.addGroupings(`Grouping #${this.unique}`,"Instantly made so no description.", collection);
@@ -23,7 +23,7 @@ class PandaGroupings {
       modal.showDialogModal("700px", "Create Grouping Instantly", "You can only create an instant grouping if there are panda's collecting. Start collecting the panda's you want in the group or use the create by selection menu option.", null , false, false, null);
     } else if (andEdit) {
       const unique = this.addGroupings("","", collection);
-      modal.showgroupingEditModal(panda, unique, () => { this.showGroupingsModal(panda); }, () => { this.delete(unique); });
+      modal.showgroupingEditModal(pandaUI, unique, () => { this.showGroupingsModal(pandaUI); }, () => { this.delete(unique); });
     }
   }
   delete(unique) { delete this.store[unique]; }
@@ -31,9 +31,9 @@ class PandaGroupings {
   delayedToggle(panda, unique, index, keys) {
     if (index<keys.length) {
       console.log(keys[index],this.store[unique].group[keys[index]]);
-      if (this.store[unique].collecting) panda.startCollecting(keys[index]);
-      else panda.stopCollecting(keys[index], true);
-      setTimeout( () => { this.delayedToggle(panda, unique, ++index, keys); }, 30 )
+      if (this.store[unique].collecting) pandaUI.startCollecting(keys[index]);
+      else pandaUI.stopCollecting(keys[index], true);
+      setTimeout( () => { this.delayedToggle(pandaUI, unique, ++index, keys); }, 30 )
     }
   }
   toggle(panda, unique) {
@@ -41,7 +41,7 @@ class PandaGroupings {
     if (keys.length===0) return false;
     this.store[unique].collecting = !this.store[unique].collecting;
     let index = 0;
-    if (index<keys.length) setTimeout( () => { this.delayedToggle(panda, unique, index, keys); }, 30 );
+    if (index<keys.length) setTimeout( () => { this.delayedToggle(pandaUI, unique, index, keys); }, 30 );
     return this.store[unique].collecting;
   }
   stop() { return this.store[unique].group; }
@@ -53,12 +53,12 @@ class PandaGroupings {
       const bgColor = (this.store[grouping].collecting) ? "#066306" : ((Object.keys(this.store[grouping].group).length===0) ? "#800517" : "");
       displayObjectData([
         { string:`Grouping Name and Description`, type:"keyValue", key:"name", id:`pcm_nameDesc_${grouping}`, andKey:"description", andString:`<span class="small">{${Object.keys(this.store[grouping].group).length} Jobs}</span>`, unique:grouping, clickFunc: (e) => {
-            if (this.toggle(panda, e.data.unique)) $(e.target).closest("tr").css("background-color", "green");
+            if (this.toggle(pandaUI, e.data.unique)) $(e.target).closest("tr").css("background-color", "green");
             else $(e.target).closest("tr").css("background-color", (Object.keys(this.store[e.data.unique].group).length===0) ? "#800517" : "");
           }
         },
         { label:"Edit", type:"button", addClass:" btn-xxs", idStart:"pcm_editButton1_", width:"45px", unique:grouping, btnFunc: (e) => {
-          this.showgroupingEditModal(panda, grouping);
+          this.showgroupingEditModal(pandaUI, grouping);
         }},
         { label:"Del", type:"button", addClass:" btn-xxs", idStart:"pcm_deleteButton1_", width:"45px", unique:grouping, btnFunc: (e) => {
           this.delete(grouping);
@@ -69,7 +69,7 @@ class PandaGroupings {
       modal.showModal();
   }
   showgroupingEditModal(panda, grouping, afterFunc=null, cancelFunc=null) {
-    panda.showJobsModal("groupingEdit", grouping, this.store[grouping], (savedResults) => {
+    pandaUI.showJobsModal("groupingEdit", grouping, this.store[grouping], (savedResults) => {
       savedResults.name = $(`#pcm_groupingNameI`).val();
       if (savedResults.name == "") savedResults.name = `Grouping #${grouping}`;
       savedResults.description = $(`#pcm_groupingDescI`).val();
