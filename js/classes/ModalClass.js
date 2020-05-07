@@ -87,9 +87,9 @@ class ModalClass {
   }
   showJobsTable(panda, modalBody, jobs, checkboxFunc=null) {
     const divContainer = $(`<table class="table table-dark table-hover table-sm table-moreCondensed pcm_jobTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([ { string:"", type:"string" }, {string:"Requester Name", type:"string", noBorder:true}, {string:"Title", type:"string", noBorder:true}, {string:"Pay", type:"string", noBorder:true}, {string:"", type:"string"}, {string:"", type:"string"} ], divContainer, panda.info, true, true, "#0b716c");
+    displayObjectData([ { string:"", type:"string" }, {string:"Requester Name", type:"string", noBorder:true}, {string:"Title", type:"string", noBorder:true}, {string:"Pay", type:"string", noBorder:true}, {string:"", type:"string"}, {string:"", type:"string"} ], divContainer, bgPandaClass.info, true, true, "#0b716c");
     jobs.forEach(myId => {
-      const status = (panda.pandaStats[myId].collecting) ? "On" : "Off";
+      const status = (pandaUI.pandaStats[myId].collecting) ? "On" : "Off";
       displayObjectData([
         { string:"", type:"checkbox", width:"20px", unique:myId, inputClass:" pcm_checkbox", btnFunc:checkboxFunc },
         { string:"Requester Name", type:"keyValue", key:"reqName", orKey:"friendlyReqName", width:"155px", id:`pcm_RQN_${myId}` },
@@ -100,19 +100,19 @@ class ModalClass {
           }},
         { label:"Details", type:"button", addClass:" btn-xxs", idStart:"pcm_detailsButton1_", width:"62px", unique:myId, btnFunc: (e) => { 
             const myId = e.data.unique;
-            panda.pandaCard[myId].showDetailsModal(panda, (changes) => {
+            pandaUI.pandaCard[myId].showDetailsModal(bgPandaClass, (changes) => {
               $(`#pcm_RQN_${myId}`).text( (changes.friendlyReqName!=="") ? changes.friendlyReqName : changes.reqName );
               $(`#pcm_TTL_${myId}`).text( (changes.friendlyTitle!=="") ? changes.friendlyTitle : changes.title );
               $(`#pcm_Pay_${myId}`).text(changes.price);
             });
           }}
-      ], divContainer, panda.info[myId], true, true);
+      ], divContainer, bgPandaClass.info[myId], true, true);
     });
   }
   jobsFilter(panda, search, modalControl) {
-    return panda.pandaUniques.filter( (myId) => {
-      const value = panda.info[myId];
-      const stats = panda.pandaStats[myId];
+    return bgPandaClass.pandaUniques.filter( (myId) => {
+      const value = bgPandaClass.info[myId];
+      const stats = pandaUI.pandaStats[myId];
       let good = false;
       const radioChecked = $(modalControl).find(`input[name='theJobs']:checked`).val();
       if (radioChecked==="0") good = true;
@@ -147,21 +147,21 @@ class ModalClass {
     }, " pl-5");
     $(`<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>`).on( 'click', (e) => {
       $(modalBody).find(".pcm_jobTable").remove();
-      this.showJobsTable(panda, modalBody, this.jobsFilter(panda, $("#pcm_searchJobs").val(), modalControl), thisCheckFunc);
+      this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, $("#pcm_searchJobs").val(), modalControl), thisCheckFunc);
       if (type==="groupingEdit") Object.keys(groupings.store[thisUnique].group).forEach( (value) => { $(`#pcm_selection_${value}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === "jobs") $(`<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>`).click( (e) => {
       const selected = $(modalBody).find(`.pcm_checkbox:checked`).map((_,element) => { 
         return Number($(element).val()); }).get();
-      if (selected.length) panda.removeJobs(selected, () => {
+      if (selected.length) pandaUI.removeJobs(selected, () => {
           $(modalBody).find(".pcm_jobTable").remove();
-          this.showJobsTable(panda, modalBody, this.jobsFilter(panda, $("#pcm_searchJobs").val(), modalControl));
+          this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, $("#pcm_searchJobs").val(), modalControl));
         });
     }).appendTo(inputControl);
     $(modalControl).find("input:radio[name='theJobs']").click( (e) => {
       $(e.target).closest(".pcm_modalControl").find(".pcm_searchingJobs").click();
     } );
-    this.showJobsTable(panda, modalBody, this.jobsFilter(panda, "", modalControl), thisCheckFunc);
+    this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, "", modalControl), thisCheckFunc);
     this.showModal(cancelFunc);
   }
   showJobAddModal(panda) {
@@ -170,13 +170,13 @@ class ModalClass {
       if (gId === "") {
         $(`label[for='pcm_formAddGroupID'`).css('color', 'red');
         $(div).find('.pcm_inputError:first').html("Must fill in GroupID or URL!").data("gIdEmpty",true);
-      } else if (gId in panda.pandaGroupIds && !$(div).find('.pcm_inputError:first').data("gIdDup")) {
+      } else if (bgPandaClass.pandaGroupIds.includes(gId) && !$(div).find('.pcm_inputError:first').data("gIdDup")) {
         $(`label[for='pcm_formAddGroupID'`).css('color', 'yellow');
         $(div).find('.pcm_inputError:first').html("GroupID already added. Still want to add?").data("gIdDup",true);
       } else {
         let groupId = null, reqId = null;
         const groupVal = $(`#pcm_formAddGroupID`).val();
-        if (groupVal.includes(`://`)) [groupId, reqId] = panda.parsePandaUrl(groupVal);
+        if (groupVal.includes(`://`)) [groupId, reqId] = bgPandaClass.parsePandaUrl(groupVal);
         else groupId = groupVal;
         const reqName = ($(`#pcm_formReqName`).val()) ? $(`#pcm_formReqName`).val() : groupId;
         reqId = (reqId) ? reqId : $(`#pcm_formAddReqID`).val();
@@ -185,11 +185,11 @@ class ModalClass {
         const pay = ($(`#pcm_formAddPay`).val()) ? $(`#pcm_formAddPay`).val() : "0.00";
         const startNow = $(`#pcm_startCollecting`).is(':checked');
         const once = $(`#pcm_onlyOnce`).is(':checked'); 
-        const currentTab = panda.tabs.currentTab;
+        const currentTab = pandaUI.tabs.currentTab;
         this.closeModal();
         if (groupId) {
-          const myId = panda.addPanda(groupId, description, title, reqId, reqName, pay, once, 0, 0, false, 4000, -1, 0, 0, currentTab);
-          if (startNow) panda.startCollecting(myId);
+          const myId = pandaUI.addPanda(groupId, description, title, reqId, reqName, pay, once, null, 0, 0, false, 4000, -1, 0, 0, currentTab);
+          if (startNow) pandaUI.startCollecting(myId);
         } else if (reqId) console.log("Create Search Panda");
       }
     }, "invisible", "No", null, "visible btn-sm", "Cancel");
