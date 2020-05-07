@@ -2,7 +2,7 @@ class PandaStats {
   constructor(myId) {
     this.myId = myId;
     this.collecting = false;
-    this.fetched = { value:0, id:"#pcm_hitFetched", label:"Srch" };
+    this.fetched = { value:0, id:"#pcm_hitFetched", label:"Fetched" };
     this.accepted = { value:0, id:"#pcm_hitAccepted", label:"Acc" };
     this.noMore = { value:0, id:"#pcm_hitNoMore", label:"NM" };
     this.updateAllStats();
