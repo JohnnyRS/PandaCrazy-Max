@@ -89,7 +89,7 @@ class TimerClass {
 		} else { this.running = false; } // queue isn't running right now.
 	}
 	goTimer() { // start timer if it's not running
-		if (!this.running && this.timeout !== null && !this.paused && this.queue.length > 0) {
+		if (this.timeoutID === null && !this.running && this.timeout !== null && !this.paused && this.queue.length > 0) {
 			this.running = true; this.started = new Date().getTime();
 			this.timeoutID = setTimeout(this.privateLoop.bind(this), 0);
 		}
