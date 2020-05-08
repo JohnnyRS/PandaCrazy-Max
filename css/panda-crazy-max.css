@@ -35,11 +35,15 @@ html, body { height: 100%; }
   padding-right:3px !important;
   margin-left:5px !important;
 }
+#pcm_searching.pcm_searchOn { color: #a9fc79 !important; }
 .pcm_buttonOn { background-color: #008000; color: #FFFFFF; }
 .pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm_buttonOff { background-color: #D3D3D3; color: #000000; }
 .pcm_buttonOff.pcm_delayedHam { background-color: #087d9b; color: #f3e3e3; }
 .pcm_dropdownMenu { line-height:1.5; background-color: #cdd9f3; }
+.pcm_searching .pcm_searchCollect { background-color: #1ab71a; color: #FFFFFF; }
+.pcm_searching .pcm_searchOn { background-color: #1e581e; color: #a9fc79 !important; }
+.pcm_searching .pcm_searchDisable { background-color: #680e0e; color: #d7e0d1 !important; }
 .card {
   margin: 2px 2px 0 0 !important;
   border-color: #023bd6 !important;
@@ -49,6 +53,7 @@ html, body { height: 100%; }
   padding: 0 0 !important;
 }
 .pcm_pandaCard { background-color: #48D1CC; }
+.pcm_pandaCard.pcm_searching { background-color: #04a3a3; }
 .pcm_pandaCard.pcm_oneLine { min-width:350px !important; max-width:350px !important; }
 .card-text { line-height: 1.0 !important; padding-left:1px !important; }
 .pcm_checkbox { height:11px; }
