@@ -28,34 +28,40 @@ class PandaGroupings {
   }
   delete(unique) { delete this.store[unique]; }
   start(unique) { return this.store[unique].group; }
-  delayedToggle(panda, unique, index, keys) {
+  delayedToggle(unique, index, keys) {
     if (index<keys.length) {
-      console.log(keys[index],this.store[unique].group[keys[index]]);
       if (this.store[unique].collecting) pandaUI.startCollecting(keys[index]);
       else pandaUI.stopCollecting(keys[index], true);
-      setTimeout( () => { this.delayedToggle(pandaUI, unique, ++index, keys); }, 30 )
+      Object.keys(this.store).forEach( grouping => { this.goCheckGroup(grouping); });
+      setTimeout( () => { this.delayedToggle(unique, ++index, keys); }, 30 )
     }
   }
-  toggle(panda, unique) {
+  toggle(unique) {
     const keys = Object.keys(this.store[unique].group);
     if (keys.length===0) return false;
     this.store[unique].collecting = !this.store[unique].collecting;
+    if (this.store[unique].collecting) $(`#pcm_nameDesc_${unique}`).closest("tr").css("background-color", "green");
+    else $(`#pcm_nameDesc_${unique}`).closest("tr").css("background-color", (Object.keys(this.store[unique].group).length===0) ? "#800517" : "");
     let index = 0;
-    if (index<keys.length) setTimeout( () => { this.delayedToggle(pandaUI, unique, index, keys); }, 30 );
-    return this.store[unique].collecting;
-  }
+    if (index<keys.length) setTimeout( () => { this.delayedToggle(unique, index, keys); }, 30 );
+}
   stop() { return this.store[unique].group; }
+  goCheckGroup(grouping) {
+    let collecting = false, theGroup = this.store[grouping];
+    Object.keys(theGroup.group).forEach( (value) => {
+      collecting = (collecting || pandaUI.pandaStats[value].collecting);
+    });
+    if (theGroup.collecting && !collecting) { this.toggle(grouping); }
+  }
   showGroupingsModal(panda) {
-    const idName = modal.prepareModal(null, "1000px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
+    const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     Object.keys(this.store).forEach(grouping => {
+      this.goCheckGroup(grouping);
       const bgColor = (this.store[grouping].collecting) ? "#066306" : ((Object.keys(this.store[grouping].group).length===0) ? "#800517" : "");
       displayObjectData([
-        { string:`Grouping Name and Description`, type:"keyValue", key:"name", id:`pcm_nameDesc_${grouping}`, andKey:"description", andString:`<span class="small">{${Object.keys(this.store[grouping].group).length} Jobs}</span>`, unique:grouping, clickFunc: (e) => {
-            if (this.toggle(pandaUI, e.data.unique)) $(e.target).closest("tr").css("background-color", "green");
-            else $(e.target).closest("tr").css("background-color", (Object.keys(this.store[e.data.unique].group).length===0) ? "#800517" : "");
-          }
+        { string:`Grouping Name and Description`, type:"keyValue", key:"name", id:`pcm_nameDesc_${grouping}`, andKey:"description", andString:`<span class="small">{${Object.keys(this.store[grouping].group).length} Jobs}</span>`, unique:grouping, clickFunc: (e) => { this.toggle(e.data.unique); }
         },
         { label:"Edit", type:"button", addClass:" btn-xxs", idStart:"pcm_editButton1_", width:"45px", unique:grouping, btnFunc: (e) => {
           this.showgroupingEditModal(pandaUI, grouping);
