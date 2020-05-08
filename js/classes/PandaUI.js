@@ -59,8 +59,9 @@ class PandaUI {
     }
   }
 	showJobsModal(type="jobs", unique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null) {
-		modal.showJobsModal(this, type, unique, thisObj, saveFunc, checkFunc, cancelFunc); }
+		modal.showJobsModal(type, unique, thisObj, saveFunc, checkFunc, cancelFunc); }
 	startCollecting(myId, goHamStart=false, tempDuration=-1, tempGoHam=-1) {
+		if (this.pandaStats[myId].collecting) return;
 		this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
 		this.pandaStats[myId].collecting = true;
 		$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");

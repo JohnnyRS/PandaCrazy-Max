@@ -85,7 +85,7 @@ class ModalClass {
     this.showModal(cancelFunc);
     $(`#${idName}`).on("keypress", (e) => { if (e.which == 13) { this.closeModal(); deleteFunc.apply(); } })
   }
-  showJobsTable(panda, modalBody, jobs, checkboxFunc=null) {
+  showJobsTable(modalBody, jobs, checkboxFunc=null) {
     const divContainer = $(`<table class="table table-dark table-hover table-sm table-moreCondensed pcm_jobTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([ { string:"", type:"string" }, {string:"Requester Name", type:"string", noBorder:true}, {string:"Title", type:"string", noBorder:true}, {string:"Pay", type:"string", noBorder:true}, {string:"", type:"string"}, {string:"", type:"string"} ], divContainer, bgPandaClass.info, true, true, "#0b716c");
     jobs.forEach(myId => {
@@ -109,7 +109,7 @@ class ModalClass {
       ], divContainer, bgPandaClass.info[myId], true, true);
     });
   }
-  jobsFilter(panda, search, modalControl) {
+  jobsFilter(search, modalControl) {
     return bgPandaClass.pandaUniques.filter( (myId) => {
       const value = bgPandaClass.info[myId];
       const stats = pandaUI.pandaStats[myId];
@@ -124,7 +124,7 @@ class ModalClass {
       return good;
     } )
   }
-  showJobsModal(panda, type="jobs", thisUnique=-1, thisObj=null, thisSaveFunc=null, thisCheckFunc=null, cancelFunc=null) {
+  showJobsModal(type="jobs", thisUnique=-1, thisObj=null, thisSaveFunc=null, thisCheckFunc=null, cancelFunc=null) {
     const theTitle = (type==="groupingEdit") ? "Edit Groupings" : "List Jobs";
     const saveBtnStatus = (type==="groupingEdit") ? "visible btn-sm" : "invisible";
     const idName = this.prepareModal(thisObj, "1000px", "modal-header-info modal-lg", theTitle, "", "text-right bg-dark text-light", "modal-footer-info", saveBtnStatus, "Save Groupings", thisSaveFunc, "invisible", "No", null, "invisible", "Close");
@@ -147,7 +147,7 @@ class ModalClass {
     }, " pl-5");
     $(`<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>`).on( 'click', (e) => {
       $(modalBody).find(".pcm_jobTable").remove();
-      this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, $("#pcm_searchJobs").val(), modalControl), thisCheckFunc);
+      this.showJobsTable(modalBody, this.jobsFilter($("#pcm_searchJobs").val(), modalControl), thisCheckFunc);
       if (type==="groupingEdit") Object.keys(groupings.store[thisUnique].group).forEach( (value) => { $(`#pcm_selection_${value}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === "jobs") $(`<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>`).click( (e) => {
@@ -155,16 +155,16 @@ class ModalClass {
         return Number($(element).val()); }).get();
       if (selected.length) pandaUI.removeJobs(selected, () => {
           $(modalBody).find(".pcm_jobTable").remove();
-          this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, $("#pcm_searchJobs").val(), modalControl));
+          this.showJobsTable(modalBody, this.jobsFilter($("#pcm_searchJobs").val(), modalControl));
         });
     }).appendTo(inputControl);
     $(modalControl).find("input:radio[name='theJobs']").click( (e) => {
       $(e.target).closest(".pcm_modalControl").find(".pcm_searchingJobs").click();
     } );
-    this.showJobsTable(pandaUI, modalBody, this.jobsFilter(bgPandaClass, "", modalControl), thisCheckFunc);
+    this.showJobsTable(modalBody, this.jobsFilter("", modalControl), thisCheckFunc);
     this.showModal(cancelFunc);
   }
-  showJobAddModal(panda) {
+  showJobAddModal() {
     const idName = this.prepareModal(null, "900px", "modal-header-info modal-lg", "Add new Panda Info", "<h4>Enter New Panda Information. [GroupID is mandatory]</h4>", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Add new Panda Info", () => {
       const gId = $(`#pcm_formAddGroupID`).val();
       if (gId === "") {

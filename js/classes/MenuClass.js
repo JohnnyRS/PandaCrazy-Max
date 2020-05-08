@@ -37,7 +37,7 @@ class MenuClass {
     const topMenu = $(`<div class="btn-group text-left border border-info" id="pcm_topMenuGroup" role="group"></div>`).appendTo($(`#${this.topMenuId}`));
     this.addSubMenu(topMenu, "Vol:", "Change Volume of Alarms", () => {}, "min-width:3rem; text-align:center;", [{type:"rangeMax", label:"100"}, {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }}, {type:"rangeMin", label:"0"}]);
     this.addSubMenu(topMenu, "Jobs", "List all Panda Jobs Added", () => { pandaUI.showJobsModal(); }, "", 
-      [{type:"item", label:"Add", menuFunc: () => { modal.showJobAddModal(pandaUI); }, tooltip:"Add a new Panda Job"},
+      [{type:"item", label:"Add", menuFunc: () => { modal.showJobAddModal(); }, tooltip:"Add a new Panda Job"},
        {type:"item", label:"Stop All", menuFunc: () => { bgPandaClass.stopAll(); }, tooltip:"Stop All Collecting Panda's"},
        {type:"item", label:"Search Jobs", menuFunc: () => { pandaUI.showJobsModal(); }, tooltip:"Search the Panda Jobs Added"},
        {type:"item", label:"Search Mturk"},
@@ -60,7 +60,7 @@ class MenuClass {
     this.addMenu(group, "Pause", () => { /*pandaUI.portPanda.postMessage({command:"pauseToggle"});*/ }, "Pause Timer.");
     this.addMenu(group, "Start Group", () => { groupings.showGroupingsModal(pandaUI); } );
     this.addMenu(group, "Stop All", () => { bgPandaClass.stopAll(); }, "Stop All Collecting Panda's");
-    this.addMenu(group, "Add Job", () => { modal.showJobAddModal(pandaUI); }, "Add a Panda Job");
+    this.addMenu(group, "Add Job", () => { modal.showJobAddModal(); }, "Add a Panda Job");
     this.addSeparator(group, " - ");
     this.addMenu(group, "Reset Timer", () => {} );
     this.addMenu(group, "Search Jobs", () => { pandaUI.showJobsModal(); }, "Search the Panda Jobs Added" );
