@@ -62,6 +62,7 @@ function getTimeLeft(seconds) {
   if (displaying<2) returnString += `${("0" + plusSeconds).slice(-2)} seconds`;
   return returnString.trim();
 }
+function arrayMove(arr,from,to) { arr.splice(to, 0, arr.splice(from, 1)[0]); };
 function arrayRemove(arr,value) { return arr.filter( (item) => item !== value ); }
 function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
 

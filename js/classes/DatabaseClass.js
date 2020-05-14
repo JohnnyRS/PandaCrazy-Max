@@ -20,33 +20,60 @@ class DatabaseClass {
       }  
     });
   }
-  addToDB( storeName, data ) {
+  addToDB( storeName, data, key=null ) {
     return new Promise( (resolve, reject) => { // using a promise to make adding to database synchronous so it waits
+      let newId = null;
       let transaction = this.db.transaction( [storeName], "readwrite" ); // start tranasaction first with read/write
       let items = transaction.objectStore( storeName ); // create object store on transaction
-      let request = items.add(data); // request to add data to object store
-      request.onsuccess = e => { } // do nothing on success because transaction oncomplete will take care of it
+      let request = (key) ? items.put(data) : items.add(data); // request to add data to object store
+      request.onsuccess = e => { newId = e.target.result; } // 
       request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
       transaction.onerror = e => { reject(e.target.error); } // reject promise if an error happened
-      transaction.oncomplete = e => { resolve("ADDED"); } // resolve promise on success
+      transaction.oncomplete = e => { resolve(newId); } // resolve promise on success
     });
   }
-  getFromDBCursor( storeName, doWithCursor ) {
+  updateDB(storeName, data, key) {
+    this.addToDB( storeName, data, key ).then( (id) => { return id; } ).catch( (error) => console.log(error) );
+  }
+  getFromDB(storeName, toDo, key, doWithCursor=null, useArray=true) {
     return new Promise( (resolve, reject) => { // using a promise to make getting from database synchronous so it waits
+      let myArray = [], myObject = {}, index = 0; // create an array and object to store the cursor data from database
+      const toDoReturn = (useArray) ? myArray : myObject;
       let transaction = this.db.transaction( [storeName], "readonly" ); // start transaction first with read only
       let store = transaction.objectStore( storeName ); // create object store on transaction
-      let myArray = ""; // create an array to store the data from database
-      let request = store.openCursor(); // let's open a curosr on transaction
+      let request = (toDo==="cursor") ? store.openCursor() : store.get(key); // let's open a cursor on transaction
       request.onsuccess = (e) => { // on success get cursor and call doWithCursor function
-        let cursor = e.target.result; // get cursor object
-        if (cursor) {
-          myArray += doWithCursor(cursor); // add to array with whatever returned from doWithCursor function
-          cursor.continue(); // continue with next cursor
-        }
+        if (toDo==="cursor") {
+          let cursor = e.target.result; // get cursor object
+          if (cursor) {
+            if (useArray) myArray.push(doWithCursor(cursor, index)); // add returned value to array
+            else Object.assign(myObject, doWithCursor(cursor, index));
+            index++;
+            cursor.continue(); // continue with next cursor
+          }
+        } else resolve(e.target.result);
       };
       request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
       transaction.onerror = e => reject(e.target.error); // reject promise if an error happened
-      transaction.oncomplete = e => resolve(myArray); // resolve promise on success
+      transaction.oncomplete = result => resolve( (toDo==="cursor") ? toDoReturn : result ); // resolve promise on success
+    });
+  }
+  deleteFromDB(storeName, key, indexName=null) {
+    return new Promise( (resolve, reject) => { // using a promise to make adding to database synchronous so it waits
+      let transaction = this.db.transaction( [storeName], "readwrite" ); // start tranasaction first with read/write
+      let store = transaction.objectStore(storeName); // create object store on transaction
+      if (indexName) {
+        const index = store.index(indexName);
+        const listDel = index.getAllKeys(key);
+        listDel.onsuccess = function(e) { e.target.result.forEach(mainKey => { store.delete(mainKey); }); }
+        listDel.onerror = e => console.log(e.target.error);
+      } else {
+        const request = store.delete(key); // request to delete data from object store
+        request.onsuccess = e => { } // do nothing on success
+        request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
+      }
+      transaction.onerror = e => { reject(e.target.error); } // reject promise if an error happened
+      transaction.oncomplete = e => { resolve("Done"); } // resolve promise on success
     });
   }
 }

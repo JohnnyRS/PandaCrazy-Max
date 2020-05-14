@@ -1,6 +1,7 @@
 class PandaGOptions {
   constructor() {
     this.general = {
+      category:"general",
       showHelpTooltips:true, // done
       disableCaptchaAlert:false,
       captchaCountText:true, // done
@@ -13,6 +14,7 @@ class PandaGOptions {
       debugger:0
     };
     this.timers = {
+      category:"timers",
       mainTimer:1000,
       secondTimer:1400,
       thirdTimer:2100,
@@ -25,25 +27,30 @@ class PandaGOptions {
       timerAutoIncrease:10,
       stopAutoSlow:false,
       autoSlowDown:false
-     };
+    };
     this.alarms = {
-      alarmVolume:80,
+      category:"alarms",
+      volume:80,
       showAlertNotify:true,
       fastSearch:false,
-      unfocusDeThrottle:false
-     };
-    this.alarmsLessThan2 = {filename:"sword-hit-01.mp3", payRate:"0.02", lessMinutes:99},
-    this.alarmsLessThan2Short = {filename:"less2Short.mp3", payRate:"0.02", lessMinutes:2},
-    this.alarmsLessThan5 = {filename:"lessthan5.mp3", payRate:"0.05", lessMinutes:99},
-    this.alarmsLessThan5Short = {filename:"lessthan5short.mp3", payRate:"0.05", lessMinutes:5},
-    this.alarmsLessThan15 = {filename:"lessthan15.mp3", payRate:"0.15", lessMinutes:99},
-    this.alarmsLessThan15Short = {filename:"lessthan15Short.mp3", payRate:"0.15", lessMinutes:8},
-    this.alarmsMoreThan15 = {filename:"higher-alarm.mp3", payRate:"0.15", lessMinutes:99},
-    this.alarmsQueueFull = {filename:"Your queue is full - Paul.mp3", payRate:"", lessMinutes:99},
-    this.alarmsQueueAlert = {filename:"Ship_Brass_Bell.mp3", payRate:"", lessMinutes:3},
-    this.alarmsLoggedOut = {filename:"CrowCawSynthetic.wav", payRate:"", lessMinutes:99}
+      unfocusDeThrottle:false,
+    };
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
+  }
+  prepare(afterFunc) {
+    bgPanda.db.getFromDB(bgPanda.optionsStore, "cursor", null, (cursor) => { return cursor.value; })
+      .then( (result) => {
+        if (result.length) { console.log(JSON.stringify(result)); afterFunc.apply(this); }
+        else { // Add default values to the options database
+          bgPanda.db.addToDB(bgPanda.optionsStore, this.general)
+            .then( () => { bgPanda.db.addToDB(bgPanda.optionsStore, this.timers)
+              .then( () => { bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms)
+                .then( () => { afterFunc.apply(this); });
+              })
+            });
+        }
+      })
   }
   update() {
     if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
@@ -120,7 +127,7 @@ class PandaGOptions {
     let returnValue = false, saveMinutes = true;
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
     const minutes = Math.trunc(seconds/60);
-    if (this.alarmsQueueAlert.lessMinutes*60 > seconds) {
+    if (alarms.data.queueAlert.lessThan*60 > seconds) {
       if (this.lastQueueAlert===-1 || this.lastQueueAlert>minutes) { returnValue = true; }
       this.lastQueueAlert = minutes;
     } else this.lastQueueAlert = -1;

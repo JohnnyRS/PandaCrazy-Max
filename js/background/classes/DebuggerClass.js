@@ -65,14 +65,14 @@ class DebuggerClass {
      return this.addDebugItem(number, theClass, description, title, "error", this.fileLogE, this.consoleLogE, bg);
   }
   saveToFile() { // save this debug database to a file
-    this.debugDB.getFromDBCursor( this.storeName, (cursor) => {
+    this.debugDB.getFromDB( this.storeName, "cursor", null, (cursor) => {
       return `${cursor.value.date} - ${decodeURI(cursor.value.description)}` + "\n";
-    } ).then( result => { saveToFile(result); } )
+    } ).then( result => { saveToFile(result.toString()); } )
       .catch( error => console.log(error.message) ); // show any error messages if getting from database failed
   }
 }
 
-let debuggerGood = false, debuggerErrorMessage="", gDebugLog = new DebuggerClass("debugTest", "debug", 1);
+let debuggerGood = false, debuggerErrorMessage="", gDebugLog = new DebuggerClass("Pcm_Debug", "debug", 1);
 gDebugLog.openDebuggerDB().then( e => { debuggerGood = true; })
   .catch(error => { console.log(error.message); debuggerErrorMessage=error.message; });
 // global functions so popup pages can use it instead of messaging.
