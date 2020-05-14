@@ -2,15 +2,20 @@ class LogTabsClass {
   constructor() {
     this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
     this.ids = [];
+    this.assignIds = [];
+    this.taskInfo = {};
+    this.queueTab = null;
+    this.queueContent = null;
+  }
+  prepare() {
+    this.tabs.prepare();
     this.tabs.tabIds += "l";
     this.ids.push(this.tabs.addTab("Accepted")); // ids[0]
     this.ids.push(this.tabs.addTab("Status log")); // ids[1]
     this.ids.push(this.tabs.addTab("Queue Watch", true)); // ids[2]
-    this.assignIds = [];
-    this.taskInfo = {};
     this.queueTab = $(`#${this.ids[2].tabId}`);
     this.queueContent = $(`<div class="pcm_queueResults"></div>`).appendTo(`#${this.ids[2].tabContent}`);
-  }
+}
   addToLog(panda, newInfo, key, element, index, indexAdd, appendTo=true) {
     const hitInfo = newInfo[key], timeLeft = getTimeLeft(hitInfo.secondsLeft);
     const toAdd = $(`<div class="pcm_q01">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('assignId',key);
@@ -36,11 +41,11 @@ class LogTabsClass {
     logThis(3, "LogTabsClass",`new to queue: {title: ${escape(hitInfo.project.title)}, hit_set_id: ${hitInfo.project.hit_set_id}, requester_id: ${hitInfo.project.requester_id}, requester_name: ${escape(hitInfo.project.requester_name)}}`);
     return index;
   }
-  addIntoQueue(panda, hitInfo, hitInfo2, task_url="") {
+  addIntoQueue(panda, hitInfo, hitInfo2, data, task_url="") {
     if (this.assignIds.includes(hitInfo.taskId)) return null; // Hit already in queue so don't add.
     let found =this.assignIds.findIndex( key => { return this.taskInfo[key].secondsLeft>hitInfo.assignedTime; } );
     this.assignIds.splice( ((found===-1) ? this.assignIds.length-1 : found-1), 0, hitInfo.taskId );
-    const newInfo = { project: { assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo.assignedTime, creation_time:hitInfo2.creationTime, description:hitInfo.description, latest_expiration_time:hitInfo.expires, monetary_reward:{amount_in_dollars:hitInfo.price}, requester_name:hitInfo.reqName, title:hitInfo.title}, secondsLeft:hitInfo.assignedTime, task_id:hitInfo.task_id, task_url:task_url.replace("&auto_accept=true","")};
+    const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
     this.taskInfo[hitInfo.taskId] = newInfo;
     if (found===-1) this.addToLog(panda, this.taskInfo, hitInfo.taskId, this.queueContent, 0, false, true);
     else this.addToLog(panda, this.taskInfo, hitInfo.taskId, $(this.queueContent).find("div")[found], 0, false, false);
