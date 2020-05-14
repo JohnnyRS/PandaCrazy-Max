@@ -1,7 +1,7 @@
 const bgPage = chrome.extension.getBackgroundPage(); // Get background page for extension
 const searchUI = new SearchUI();
 const bgSearchClass = bgPage.gSetSearchUI(searchUI);
-const bgQueueClass = bgPage.gReturnQueueClass();
+const bgQueue = bgPage.gGetQueue();
 const modal = new ModalClass(); // set up a modal class for a options, warnings or details
 
 function startSearchCrazy() {

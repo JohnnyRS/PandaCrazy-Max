@@ -88,7 +88,7 @@ class MturkHitSearch extends MturkClass {
 		return false;
 	}
 	sendToPanda(item,triggerInfo) {
-		if (extPandaUI) extPandaUI.addAndRunPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, -1, triggerInfo.duration, triggerInfo.tempGoHam);
+		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, false, -1, -1, 0, 0, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
 	}
 	checkTriggers(item) {
 		for (const trigger of this.liveTriggers) {

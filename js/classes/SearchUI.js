@@ -30,7 +30,7 @@ class SearchUI {
 		let gidRow = $(`<div class="row mx-0"></div>`).appendTo(`#pcm_groupTriggers`);
 		$(gidRow).append(`<div class="col-4 px-0 my-1"><div class="list-group list-group-flush" id="pcm_gidListTab" role="tablist"></div></div><div class="col-8 pl-1 mx-0"><div class="tab-content" id="nav-gidTabContent"></div></div>`);
 		if (bgSearchClass.searchGStats.isSearchOn()) { bgSearchClass.openUI(); }
-	if (bgSearchClass.isPandaUI()) bgQueueClass.startQueueMonitor();
+		if (bgSearchClass.isPandaUI()) bgQueue.startQueueMonitor();
   }
   updateStatus(statusName,status) {
     if (statusName === "hits found") $("#pcm_searchHitsFound").html(status);
