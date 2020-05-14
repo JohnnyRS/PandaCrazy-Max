@@ -138,7 +138,7 @@ class TimerClass {
 	stopAll() {
 		if (this.queue.length) {
 			if (this.timeoutID!==null) clearTimeout(this.timeoutID);
-			this.timeoutDoing = null;
+			this.timeoutDoing = this.timeoutID = null;
 			Object.keys(this.queueObject).forEach( key => {
 				let thisItem = this.queueObject[key];
 				thisItem.funcAfter.apply(this, [thisItem.myId, thisItem.obj, false]);
