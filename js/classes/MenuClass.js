@@ -10,7 +10,7 @@ class MenuClass {
   addMenu(appendHere, label, btnFunc, tooltip="") {
     const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
     $(`<button type="button" class="btn text-dark btn-xs border-danger ml-1 pcm-quickBtn"${addtip}>${label}</button>`).click( (e) => {
-      btnFunc.apply(this, e);
+      btnFunc.apply(this, [e]);
     } ).appendTo(appendHere);
   }
   addSeparator(appendHere, text) { $(`<span class="mx-2">${text}</span>`).appendTo(appendHere); }
@@ -38,7 +38,7 @@ class MenuClass {
     this.addSubMenu(topMenu, "Vol:", "Change Volume of Alarms", () => {}, "min-width:3rem; text-align:center;", [{type:"rangeMax", label:"100"}, {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }}, {type:"rangeMin", label:"0"}]);
     this.addSubMenu(topMenu, "Jobs", "List all Panda Jobs Added", () => { pandaUI.showJobsModal(); }, "", 
       [{type:"item", label:"Add", menuFunc: () => { modal.showJobAddModal(); }, tooltip:"Add a new Panda Job"},
-       {type:"item", label:"Stop All", menuFunc: () => { bgPandaClass.stopAll(); }, tooltip:"Stop All Collecting Panda's"},
+       {type:"item", label:"Stop All", menuFunc: () => { bgPanda.stopAll(); }, tooltip:"Stop All Collecting Panda's"},
        {type:"item", label:"Search Jobs", menuFunc: () => { pandaUI.showJobsModal(); }, tooltip:"Search the Panda Jobs Added"},
        {type:"item", label:"Search Mturk"},
        {type:"divider"}, {type:"item", label:"Export"}, {type:"item", label:"Import"}]);
@@ -48,18 +48,18 @@ class MenuClass {
        {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(pandaUI,true); } },
        {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(pandaUI); } },
        {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } }]);
-    this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { bgPandaClass.timerChange(globalOpt.getTimer1()); }, "",
+    this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { bgPanda.timerChange(globalOpt.getTimer1()); }, "",
       [{type:"item", label:"Edit Timers", menuFunc: () => { globalOpt.showTimerOptions(); } }, {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}],
-      "2", () => { bgPandaClass.timerChange(globalOpt.getTimer2()); },
-      "3", () => { bgPandaClass.timerChange(globalOpt.getTimer3()); });
+      "2", () => { bgPanda.timerChange(globalOpt.getTimer2()); },
+      "3", () => { bgPanda.timerChange(globalOpt.getTimer3()); });
     this.addSubMenu(topMenu, "Options", "Change Global, Alarms or timer Options ", function() { globalOpt.showGeneralOptions(); }, "", [{type:"item", label:"General", menuFunc:() => { globalOpt.showGeneralOptions(); }}, {type:"item", label:"Edit Timers", menuFunc:function() { globalOpt.showTimerOptions(); }}, {type:"item", label:"Edit Alarms", menuFunc:() => { modal.showAlarmOptions(); }}]);
   }
   createQuickMenu() {
     const quickMenu = $(`<div class="btn-group text-left w-100 py-1" role="group"></div>`).appendTo($(`#${this.quickMenuId}`));
     const group = $(`<div class="btn-group py-0 my-0"></div>`).appendTo(quickMenu);
-    this.addMenu(group, "Pause", () => { /*pandaUI.portPanda.postMessage({command:"pauseToggle"});*/ }, "Pause Timer.");
+    this.addMenu(group, "Pause", (e) => { if (bgPanda.pauseToggle()) $(e.target).html("Unpause"); else $(e.target).html("Pause"); }, "Pause Timer.");
     this.addMenu(group, "Start Group", () => { groupings.showGroupingsModal(pandaUI); } );
-    this.addMenu(group, "Stop All", () => { bgPandaClass.stopAll(); }, "Stop All Collecting Panda's");
+    this.addMenu(group, "Stop All", () => { bgPanda.stopAll(); }, "Stop All Collecting Panda's");
     this.addMenu(group, "Add Job", () => { modal.showJobAddModal(); }, "Add a Panda Job");
     this.addSeparator(group, " - ");
     this.addMenu(group, "Reset Timer", () => {} );
