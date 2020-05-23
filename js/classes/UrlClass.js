@@ -1,8 +1,15 @@
+/**
+ * @param  {string} thisUrl
+ */
 class UrlClass {
 	constructor(thisUrl) {
 		this.url = thisUrl;
 	}
+	/**
+	 */
 	returnUrl() { return this.url; }
+	/**
+	 */
 	async goFetch() {
 		try {
 			const response = await fetch(this.url, { credentials: `include` });

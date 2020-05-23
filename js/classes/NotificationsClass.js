@@ -1,3 +1,5 @@
+/**
+ */
 class NotificationsClass {
   constructor() {
     this.enabled = "Notification" in window;
@@ -7,7 +9,12 @@ class NotificationsClass {
       this.show("Notifications are on");
     });
   }
+  /**
+   */
   isReady() { return this.enabled && this.granted; }
+  /**
+   * @param  {string} message
+   */
   show(message) {
     const n = ( this.isReady() ) ? new Notification(message) : null;
   }

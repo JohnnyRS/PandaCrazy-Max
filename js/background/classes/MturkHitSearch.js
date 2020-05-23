@@ -1,3 +1,7 @@
+/**
+ * This class takes care of the search trigger data. Also handles dealing with the database to get data.
+ * @param  {number} timer
+ */
 class MturkHitSearch extends MturkClass {
   constructor(timer) {
     super();
@@ -12,38 +16,57 @@ class MturkHitSearch extends MturkClass {
 		this.triggersAdded = 0;
 		this.pandaCollecting = [];								// Array of all panda gId's collecting now
 		this.searchGStats =  new SearchGStats();	// global search stats
-		this.dataUnique = 0;            	// Unique number for each hit data that it finds
-		this.searchUrl = null;          	// Url class for search url
-		this.pageSize = 25;             	// Only 25 hits to show on page by default
-		this.onlyQualified = true;      	// Show only qualified hits in search results
-		this.onlyMasters = false;       	// Show only master hits in search results
-		this.minReward = 0.01;          	// The minimum reward will be $0.01 by default
-		this.json = true;               	// Format json in url or not
-		this.loggedOff = false;         	// Are we logged off from mturk?
+		this.dataUnique = 0;            					// Unique number for each hit data that it finds
+		this.searchUrl = null;          					// Url class for search url
+		this.pageSize = 25;             					// Only 25 hits to show on page by default
+		this.onlyQualified = true;      					// Show only qualified hits in search results
+		this.onlyMasters = false;       					// Show only master hits in search results
+		this.minReward = 0.01;          					// The minimum reward will be $0.01 by default
+		this.json = true;               					// Format json in url or not
+		this.loggedOff = false;         					// Are we logged off from mturk?
 		this.closing = false;
-    this.sort = "updated_desc";     	// Sort by updated_desc by default
-    this.sorting = ["updated_desc", 	// Set up sort array with all sorting options
+    this.sort = "updated_desc";     					// Sort by updated_desc by default
+    this.sorting = ["updated_desc", 					// Set up sort array with all sorting options
 			"updated_asc", "reward_asc", "reward_desc", "hits_asc", "hits_desc"];
-		searchTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
-		searchTimer.setTimer(timer);    	// Set timer for this timer
+		searchTimer.setMyClass(this);							// Tell timer what class is using it so it can send information back
+		searchTimer.setTimer(timer);    					// Set timer for this timer
 		this.prepareSearch();
 	}
-	is(key1, key2) { if (!(this.triggerInfo.hasOwnProperty(key1))) return false; if (!(this.triggerInfo[key1].hasOwnProperty(key2)) ) return false; return true; }
+	/**
+	 * @param  {string} key1
+	 * @param  {string} key2
+	 */
+	is(key1, key2) {
+		if (!(this.triggerInfo.hasOwnProperty(key1))) return false;
+		if (!(this.triggerInfo[key1].hasOwnProperty(key2)) ) return false; return true;
+	}
+	/**
+	 */
 	isPandaUI() { return (extPandaUI!==null); }
-	timerInfo(infoObj) {}
+	/**
+	 */
 	unPauseTimer() { searchTimer.unPauseTimer(); }
+	/**
+	 */
 	gotNewQueue() { this.nowLoggedOn(); }
+	/**
+	 */
 	nowLoggedOff() {
     searchTimer.pauseTimer(); this.loggedOff = true;
     if (extSearchUI) extSearchUI.nowLoggedOff();
 	}
+	/**
+	 */
 	nowLoggedOn() {
     searchTimer.unPauseTimer(); this.loggedOff = false;
     if (extSearchUI) extSearchUI.nowLoggedOn();
 	}
+  /**
+   * @param  {object} w
+   */
   fillData(w) {
 		this.hitSearchResults.unshift(this.dataUnique);
-		if (this.hitRequesters.includes(w.requester_id)) {
+		if (this.hitRequesters.hasOwnProperty(w.requester_id)) {
       this.hitRequesters[w.requester_id].unshift(this.dataUnique);
     } else {
       this.hitRequesters[w.requester_id] = [this.dataUnique];
@@ -51,14 +74,18 @@ class MturkHitSearch extends MturkClass {
 		this.hitSearchObjects[this.dataUnique] = { hitId:w.hit_set_id, reqId:w.requester_id, reqName:w.requester_name, title:w.title, description:w.description, duration:w.assignment_duration_in_seconds, hitCount:w.assignable_hits_count, allowed:w.caller_meets_requirements, prevAllowed:w.caller_meets_preview_requirements, reward:w.monetary_reward.amount_in_dollars, acceptUrl:w.accept_project_task_url, reqUrl:w.requester_url, prevUrl:w.project_tasks_url, dateAdded: new Date(), creationDate:w.creation_time, expireDate:w.latest_expiration_time };
 		this.dataUnique++;
 	}
+	/**
+	 */
 	startSearching() {
 		if (this.timerUnique) return;
 		console.log("startsearching: add this");
 		this.searchGStats.searchingOn();
-		this.timerUnique = searchTimer.addToQueue(-1, this, (timerUnique, elapsed) => { 
+		this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed) => { 
       this.goFetch(this.searchUrl, timerUnique, elapsed); // do this every cycle
 		}, () => { this.stopSearching(); }); // do after when timer is removed from queue
 	}
+	/**
+	 */
 	stopSearching() {
 		if (this.timerUnique) {
 			console.log("stopsearching: delete " + this.timerUnique);
@@ -67,6 +94,10 @@ class MturkHitSearch extends MturkClass {
 			this.searchGStats.searchingOff();
 		}
 	}
+	/**
+	 * @param  {string} gId
+	 * @param  {bool} status
+	 */
 	pandaStatus(gId,status) {
 		if (this.triggerInfo["gid"].hasOwnProperty(gId)) {
 			const info = this.triggerInfo["gid"][gId];
@@ -78,18 +109,33 @@ class MturkHitSearch extends MturkClass {
 			}
 		}
 	}
+	/**
+	 * @param  {object} trigger
+	 * @param  {string} gId
+	 */
 	requesterTempBlockGid(trigger, gId) {
 		if (!(trigger.hasOwnProperty("tempBlockGid"))) trigger.tempBlockGid = [];
 		if (!trigger.tempBlockGid.includes(gId)) trigger.tempBlockGid.push(gId);
 	}
+	/**
+	 * @param  {object} trigger
+	 * @param  {string} gId
+	 */
 	isGidBlocked(trigger, gId) {
 		if (trigger.hasOwnProperty("tempBlockGid") && trigger.tempBlockGid.includes(gId)) return true;
 		else if (trigger.hasOwnProperty("blockGid") && trigger.blockGid.includes(gId)) return true;
 		return false;
 	}
+	/**
+	 * @param  {object} item
+	 * @param  {object} triggerInfo
+	 */
 	sendToPanda(item,triggerInfo) {
-		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, false, -1, -1, 0, 0, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
-	}
+		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, false, -1, -1, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
+		}
+	/**
+	 * @param  {object} item
+	 */
 	checkTriggers(item) {
 		for (const trigger of this.liveTriggers) {
 			const idString = `[${item.hit_set_id}][${item.requester_id}]`;
@@ -106,6 +152,12 @@ class MturkHitSearch extends MturkClass {
 			}
 		}
 	}
+	/**
+	 * @param  {string} key2
+	 * @param  {object} info
+	 * @param  {bool} tempDisabled=false
+	 * @param  {bool} moveIt=true
+	 */
 	toggleDisabled(key2, info, tempDisabled=false, moveIt=true) {
 		// toggle disabled value and live or disabled trigger.
 		// if moveIt=false then removes from trigger arrays and leaves disabled value alone.
@@ -123,6 +175,11 @@ class MturkHitSearch extends MturkClass {
 			}
 		}
 	}
+	/**
+	 * @param  {bool} checkWithThis
+	 * @param  {string} key1
+	 * @param  {string} key2
+	 */
 	checkTrigger(checkWithThis,key1,key2) {
 		const info = this.triggerInfo[key1][key2];
 		if (info.disabled === checkWithThis) {
@@ -130,14 +187,30 @@ class MturkHitSearch extends MturkClass {
 			if (extSearchUI) extSearchUI.updateTrigger(null,info,false);
 		}
 	}
+	/**
+	 * @param  {string} key1
+	 * @param  {string} key2
+	 */
 	disableTrigger(key1, key2) { if (this.is(key1,key2)) this.checkTrigger(false, key1, key2);  }
+	/**
+	 * @param  {string} key1
+	 * @param  {string} key2
+	 */
 	enableTrigger(key1, key2) { if (this.is(key1,key2)) this.checkTrigger(true, key1, key2);  }
+  /**
+   * @param  {object} hitData
+   */
   foundNewHit(hitData) {
 		if (this.liveTriggers.length) this.checkTriggers(hitData);
       //this.fillData(thisItem);
     // else
     // 	continueNow = false;
 	}
+	/**
+	 * @param  {string} type
+	 * @param  {string} value
+	 * @param  {object} info
+	 */
 	addTrigger(type, value, info) {
 		// requesterid, groupid, price, titlekeyword, descriptionkeyword, duration, hitcount, allowed, prevallowed, dateadded
 		this.triggersAdded++;
@@ -161,6 +234,10 @@ class MturkHitSearch extends MturkClass {
 		if (this.searchGStats.isSearchOn() && this.liveTriggers.length>0) this.startSearching();
 		return this.triggersAdded;
 	}
+	/**
+	 * @param  {string} type
+	 * @param  {string} value
+	 */
 	removeTrigger(type, value) {
 		if (this.triggerInfo[type][value]) {
 			let info = this.triggerInfo[type][value];
@@ -170,6 +247,9 @@ class MturkHitSearch extends MturkClass {
 		}
 		if (this.searchGStats.isSearchOn() && this.liveTriggers.length===0) this.stopSearching();
 	}
+	/**
+	 * @param  {string} origin="pandaUI"
+	 */
 	openUI(origin="pandaUI") {
 		Object.keys(this.triggerInfo).forEach( key => {
 			Object.keys(this.triggerInfo[key]).forEach( key2 => {
@@ -182,6 +262,9 @@ class MturkHitSearch extends MturkClass {
 		});
 		this.searchGStats.searchingOn();
 	}
+	/**
+	 * @param  {string} origin="searchUI"
+	 */
 	closedUI(origin="searchUI") {
 		Object.keys(this.triggerInfo).forEach( key => {
 			Object.keys(this.triggerInfo[key]).forEach( key2 => {
@@ -189,10 +272,16 @@ class MturkHitSearch extends MturkClass {
 			});
 		});
 	}
+  /**
+   * @param  {object} objUrl
+   * @param  {number} timerUnique
+   * @param  {number} elapsed
+   */
   goFetch(objUrl, timerUnique, elapsed) {
     // Can deal with getting search results data.
 		this.searchGStats.setSearchElapsed(elapsed); // Pass elapsed time to global search stats
     super.goFetch(objUrl).then(result => { // Go fetch this url and bring back results from a promise
+      if (!result) return null;
 			this.searchGStats.addTotalSearchFetched(); // Increment counter for total searches fetched
 			if (result.mode === "logged out" && timerUnique !== null) this.nowLoggedOff();
 			else if (result.type === "ok.json") {
@@ -218,10 +307,20 @@ class MturkHitSearch extends MturkClass {
 			 }
     });
   }
+	/**
+	 */
 	createSearchUrl() { // return search url with all options added
 		const formatJson = (this.json) ? "&format=json" : ""; // add format json or not?
 		return `https://worker.mturk.com/?page_size=${this.pageSize}&filters%5Bqualified%5D=${this.onlyQualified}&filters%5Bmasters%5D=${this.onlyMasters}&sort=${this.sort}&filters%5Bmin_reward%5D=${this.minReward}${formatJson}`;
 	}
+	/**
+	 * @param  {bool} json=true
+	 * @param  {number} pageSize=35
+	 * @param  {bool} onlyQual=true
+	 * @param  {bool} onlyMasters=false
+	 * @param  {string} sort="updated_desc"
+	 * @param  {string} minReward="0.01"
+	 */
 	prepareSearch(json=true, pageSize=35, onlyQual=true, onlyMasters=false, sort="updated_desc", minReward="0.01") {
 		this.sort = (this.sorting.includes(sort)) ? sort : this.sorting[0];// set up sorting with passed value or default
 		this.json = json; this.pageSize = pageSize; this.onlyQualified = onlyQual;

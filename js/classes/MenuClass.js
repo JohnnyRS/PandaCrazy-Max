@@ -1,3 +1,6 @@
+/**
+ * @param  {string} id
+ */
 class MenuClass {
   constructor(id) {
     this.quickMenuId = id;
@@ -7,13 +10,35 @@ class MenuClass {
     this.createQuickMenu();
     this.showQuickMenu();
   }
+  /**
+   * @param  {object} appendHere
+   * @param  {string} label
+   * @param  {function} btnFunc
+   * @param  {string} tooltip=""
+   */
   addMenu(appendHere, label, btnFunc, tooltip="") {
     const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
     $(`<button type="button" class="btn text-dark btn-xs border-danger ml-1 pcm-quickBtn"${addtip}>${label}</button>`).click( (e) => {
       btnFunc.apply(this, [e]);
     } ).appendTo(appendHere);
   }
+  /**
+   * @param  {object} appendHere
+   * @param  {string} text
+   */
   addSeparator(appendHere, text) { $(`<span class="mx-2">${text}</span>`).appendTo(appendHere); }
+  /**
+   * @param  {object} appendHere
+   * @param  {string} label
+   * @param  {string} tooltip
+   * @param  {function} labelFunc
+   * @param  {string} dropdownStyle
+   * @param  {array} dropdownInfo
+   * @param  {string} label2=null
+   * @param  {function} label2Func
+   * @param  {string} label3=null
+   * @param  {function} label3Func
+   */
   addSubMenu(appendHere, label, tooltip, labelFunc, dropdownStyle, dropdownInfo, label2=null, label2Func, label3=null, label3Func) {
     const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
     const btnGroup = $(`<div class="btn-group py-0"></div>`).appendTo(appendHere);
@@ -33,6 +58,8 @@ class MenuClass {
       else if (info.type==="divider") $(`<div class="dropdown-divider"></div>`).appendTo(dropdownMenu);
     });
   }
+  /**
+   */
   createTopMenu() {
     const topMenu = $(`<div class="btn-group text-left border border-info" id="pcm_topMenuGroup" role="group"></div>`).appendTo($(`#${this.topMenuId}`));
     this.addSubMenu(topMenu, "Vol:", "Change Volume of Alarms", () => {}, "min-width:3rem; text-align:center;", [{type:"rangeMax", label:"100"}, {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }}, {type:"rangeMin", label:"0"}]);
@@ -45,8 +72,8 @@ class MenuClass {
     this.addSubMenu(topMenu, "Display", "Change Panda Display Size", () => {}, "", [{type:"item", label:"Normal"}, {type:"item", label:"Minimal Info"}, {type:"item", label:"One Line Info"}]);
     this.addSubMenu(topMenu, "Grouping", "List all Groupings Added", () => { groupings.showGroupingsModal(pandaUI); }, "",
       [{type:"item", label:"Start/Stop", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } },
-       {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(pandaUI,true); } },
-       {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(pandaUI); } },
+       {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(true); } },
+       {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(); } },
        {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } }]);
     this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { bgPanda.timerChange(globalOpt.getTimer1()); }, "",
       [{type:"item", label:"Edit Timers", menuFunc: () => { globalOpt.showTimerOptions(); } }, {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}],
@@ -54,6 +81,8 @@ class MenuClass {
       "3", () => { bgPanda.timerChange(globalOpt.getTimer3()); });
     this.addSubMenu(topMenu, "Options", "Change Global, Alarms or timer Options ", function() { globalOpt.showGeneralOptions(); }, "", [{type:"item", label:"General", menuFunc:() => { globalOpt.showGeneralOptions(); }}, {type:"item", label:"Edit Timers", menuFunc:function() { globalOpt.showTimerOptions(); }}, {type:"item", label:"Edit Alarms", menuFunc:() => { modal.showAlarmOptions(); }}]);
   }
+  /**
+   */
   createQuickMenu() {
     const quickMenu = $(`<div class="btn-group text-left w-100 py-1" role="group"></div>`).appendTo($(`#${this.quickMenuId}`));
     const group = $(`<div class="btn-group py-0 my-0"></div>`).appendTo(quickMenu);
@@ -66,6 +95,10 @@ class MenuClass {
     this.addMenu(group, "Search Jobs", () => { pandaUI.showJobsModal(); }, "Search the Panda Jobs Added" );
     this.addMenu(group, "Search Mturk", () => {} );
   }
+  /**
+   */
   showQuickMenu() { $(`#${this.quickMenuId}`).show(); }
+  /**
+   */
   hideQuickMenu() { $(`#${this.quickMenuId}`).hide(); }
 }
