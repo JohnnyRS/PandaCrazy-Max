@@ -1,5 +1,7 @@
 /**
- * @param  {string} id
+ * This class deals with the different menus and which methods to call.
+ * @param  {string} id    The id name of the quick menu on the UI to use to append.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MenuClass {
   constructor(id) {

@@ -146,7 +146,7 @@ class PandaCard {
    */
   async showDetailsModal(successFunc=null) {
     await bgPanda.getDbData(this.myId);
-    const hitInfo = bgPanda.info[this.myId]; console.dir(hitInfo.data);
+    const hitInfo = bgPanda.info[this.myId];
     const idName = modal.prepareModal(hitInfo.data, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       hitInfo.data = Object.assign(hitInfo.data, changes);
       hitInfo.data.duration *= 60000; bgPanda.timerDuration(this.myId);

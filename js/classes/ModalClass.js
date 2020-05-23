@@ -293,7 +293,7 @@ class ModalClass {
         const currentTab = pandaUI.tabs.currentTab;
         this.closeModal();
         if (groupId) {
-          pandaUI.addPanda(groupId, description, title, reqId, reqName, pay, once, null, 0, 0, 0, false, 4000, -1, 0, currentTab, false, '', '', startNow);
+          pandaUI.addPanda(groupId, description, title, reqId, reqName, pay, once, null, 0, 0, 0, false, 4000, 0, 0, currentTab, false, '', '', startNow);
           } else if (reqId) console.log('Create Search Panda');
       } else {
         $('label[for="pcm_formAddGroupID"]').css('color', 'red');

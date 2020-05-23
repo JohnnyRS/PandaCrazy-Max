@@ -1,8 +1,8 @@
 /**
  * Class for using datbases with promises for operations so it can wait for completion of function.
- * @author JohnnyRS
  * @param {string} dbName      Name of the database to be used.
  * @param {number} dbVersion   Version number for this database.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class DatabaseClass {
   constructor(dbName, dbVersion) {

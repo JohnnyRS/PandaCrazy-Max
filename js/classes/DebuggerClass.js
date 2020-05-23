@@ -1,6 +1,7 @@
 /**
  * Class dealing with any debug logging or error logging.
  * From options it will know when to show a log or error on console. Will even halt program if needed.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class DebuggerClass {
   constructor() {
@@ -22,7 +23,7 @@ class DebuggerClass {
       * 4-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
       */
     this.classesLog = { // Name of classes to log only or log all.
-      'all':true, 'Main':false, 'TimerClass':false, 'LogTabsClass':false, 'MturkQueue':false
+      'all':true, 'Main':false, 'TimerClass':false, 'LogTabsClass':false, 'MturkQueue':false, 'MturkPanda':false
     }
   }
   /**
@@ -56,51 +57,10 @@ class DebuggerClass {
    * @return {bool}               Returns true if good to show message.
    */
   checkLogDebug(lLevel, className) { return this.checkDebug(-1, lLevel, className); }
-  /**
-   * @param  {number} number
-   * @param  {string} theClass
-   * @param  {string} description
-   * @param  {string} title
-   * @param  {string} type
-   * @param  {number} consoleNumber
-   * @param  {bool} bg
-   */
-  addDebugItem(number, theClass, description, title, type, consoleNumber, bg) {
-    let now = new Date(), justDate = now.toISOString().split('T')[0];
-    // check if saving to file database is permitted by checking file number
-    if (consoleNumber>=number) { // check if showing to console is permitted by checking console number
-      if (bg) console.log(description); else return true; // show description on bg console or current window console
-    }
-    return false;
-  }
-  /**
-   * @param  {number} number
-   * @param  {string} theClass
-   * @param  {string} description
-   * @param  {string} title='log'
-   * @param  {bool} bg=true
-   */
-  logThis(number, theClass, description, title='log', bg=true) { // for logging or debugging info
-    if (!this.checkLogDebug(number,theClass)) return; // check if logging is permitted for this number level
-    return this.addDebugItem(number, theClass, description, title, 'log', this.logLevel, bg);
-  }
-  /**
-   * @param  {number} number
-   * @param  {string} theClass
-   * @param  {string} description
-   * @param  {string} title='error'
-   * @param  {bool} bg=true
-   */
-  logError(number, theClass, description, title='error', bg=true) { // for error or warning info
-    if (!this.checkErrorDebug(number,theClass)) return; // check if error logging is permitted for thie number level
-     return this.addDebugItem(number, theClass, description, title, 'error', this.errorLevel, bg);
-  }
 }
 
 const gDebugLog = new DebuggerClass();
 
-// global functions so popup pages can use it instead of messaging.
-function logThis(num, theClass, desc, title) { return gDebugLog.logThis(num, theClass, desc, title, false); }
-function logError(num, theClass, desc, title) { return gDebugLog.logError(num, theClass, desc, title, false); }
+// global functions so popup pages can use it in a short format instead of using debugger class name.
 function dError(levelNumber, className) { return gDebugLog.checkErrorDebug(levelNumber, className); }
 function dLog(levelNumber, className) { return gDebugLog.checkLogDebug(levelNumber, className); }

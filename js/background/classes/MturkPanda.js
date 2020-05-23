@@ -6,6 +6,7 @@
  * When a panda is going to collect or get edited then the data will load back into memory.
  * @param  {number} timer				Time to use for the timer to get next panda.
  * @param  {number} hamTimer		Time to use for the ham timer.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MturkPanda extends MturkClass {
 	constructor(timer,hamTimer) {
@@ -422,7 +423,7 @@ class MturkPanda extends MturkClass {
         if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalPandaFetched();
 				extPandaUI.highlightEffect_gid(myId);
-				const savedData = this.info[myId].data;
+				const savedData = this.info[myId].data; // Save data just in case it gets removed on stop.
 				let stopped = this.checkIfLimited(myId, false);
 				if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
 				else if (result.mode === "pre") { extPandaUI.pandaGStats.addPandaPRE(); }
@@ -440,14 +441,21 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
+	 * (0)-fatal = Errors that can crash or stall program.
+   * (1)-error = Errors that shouldn't be happening but may not be fatal.
+   * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
 	 * @param  {number} levelNumber			Level number for this error.
 	 * @return {bool}										True if this error is permitted to show.
 	 */
-	dError(levelNumber) { return dError(levelNumber, 'TimeClass'); }
+	dError(levelNumber) { return dError(levelNumber, 'MturkPanda'); }
 	/**
 	 * Checks if this debug message is allowed to show depending on user options and class name.
-	 * @param  {} levelNumber						Level number for this debug message.
+   * (1)-info = Shows basic information of progress of program.
+   * (2)-debug = Shows the flow of the program with more debugging information.
+   * (3)-trace = More details shown including variable contents and functions being called.
+   * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
+	 * @param  {number} levelNumber			Level number for this debug message.
 	 * @return {bool}										True if this message is permitted to show.
 	 */
-	dLog(levelNumber) { return dLog(levelNumber, 'TimerClass'); }
+	dLog(levelNumber) { return dLog(levelNumber, 'MturkPanda'); }
 }

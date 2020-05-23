@@ -6,6 +6,7 @@
  * @param  {number} timer=900						Do jobs after this time in milliseconds has elapsed.
  * @param  {number} hamTimeout=700			Do jobs a bit faster than normal for a specified amount of time.
  * @param  {string} timerName='none'		The name of this timer.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class TimerClass {
 	constructor(timer=900, hamTimeout=700, timerName='none') {
@@ -97,9 +98,9 @@ class TimerClass {
 			if (thisItem) {
 				if (thisItem.timeStarted===null) thisItem.timeStarted = new Date().getTime();
 				if (thisItem.timeRestarted===null) thisItem.timeRestarted = new Date().getTime();
-				if (thisItem.duration!==-1 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
-				if (thisItem.tduration!==-1 && (end-thisItem.timeRestarted) > thisItem.tduration ) stopFor = thisItem.tduration;
-				if (thisItem.tGoHam!==-1) { // Is this just a temporary go ham job and item just started then init hamstarted
+				if (thisItem.duration>0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
+				if (thisItem.tDuration>0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
+				if (thisItem.tGoHam>0) { // Is this just a temporary go ham job and item just started then init hamstarted
 					if (thisItem.hamstarted===null) thisItem.hamstarted = new Date().getTime();
 					else if ( (end - thisItem.hamstarted) > thisItem.tGoHam ) { turnOffHam=true; thisItem.tGoHam = -1; thisItem.hamstarted = null; }
 				}
@@ -269,7 +270,7 @@ class TimerClass {
 	 */
 	resetTimeStarted(queueUnique) {
 		if (this.dLog(2)) console.info(`%c[${this.timerName}] is trying to reset time started: ${queueUnique}`, CONSOLE_INFO);
-		if (this.queueObject.hasOwnProperty(queueUnique) && ( this.queueObject[queueUnique].tDuration!==-1 || this.queueObject[queueUnique].duration!==-1) ) this.queueObject[queueUnique].timeRestarted=null;
+		if (this.queueObject.hasOwnProperty(queueUnique) && ( this.queueObject[queueUnique].tDuration>0 || this.queueObject[queueUnique].duration>0) ) this.queueObject[queueUnique].timeRestarted=null;
 	}
 	/**
 	 * Add a new job to the queue for this timer. Also will remove job when duration has elapsed.
@@ -278,18 +279,18 @@ class TimerClass {
 	 * @param  {function} doFunc					Do this function every cycle of the timer.
 	 * @param  {function} funcAfter				Do this function after this job gets removed from queue.
 	 * @param  {bool} goHamStart=false		Go ham at start?
-	 * @param  {number} duration=-1				The duration for this job to run.
-	 * @param  {number} tDuration=-1			Temporary duration for this job used for external panda adds.
-	 * @param  {number} tGoHam=-1					Temporary go ham duration for this job used for external panda adds.
+	 * @param  {number} duration=0				The duration for this job to run.
+	 * @param  {number} tDuration=0				Temporary duration for this job used for external panda adds.
+	 * @param  {number} tGoHam=0					Temporary go ham duration for this job used for external panda adds.
 	 * @param  {bool} skipped=false				Should skip it at beginning?
 	 * @return {number}										Returns a unique number for this job in queue.
 	 */
-	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=-1, tDuration=-1, tGoHam=-1, skipped=false) {
+	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=0, tDuration=0, tGoHam=0, skipped=false) {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item
 		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
-		tDuration = (duration!==-1 && tDuration>duration) ? -1 : tDuration;
+		tDuration = (duration>0 && tDuration>duration) ? 0 : tDuration;
 		this.queueObject[thisUnique] = { theFunction:doFunc, funcAfter:funcAfter, myId:myId, duration:duration, tDuration:tDuration, tGoHam:tGoHam, timeStarted:null, timeRestarted:null, hamstarted:null, skipped:skipped };
-		if ( (tGoHam!==-1 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique); }
+		if ( (tGoHam>0 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique); }
 		if (skipped) this.skipThis(thisUnique);
 		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} tGoHam: ${tGoHam}`, CONSOLE_INFO);
 		if (!this.running) this.goTimer();
@@ -313,13 +314,20 @@ class TimerClass {
 	}
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
+	 * (0)-fatal = Errors that can crash or stall program.
+   * (1)-error = Errors that shouldn't be happening but may not be fatal.
+   * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
 	 * @param  {number} levelNumber			Level number for this error.
 	 * @return {bool}										True if this error is permitted to show.
 	 */
 	dError(levelNumber) { return dError(levelNumber, 'TimeClass'); }
 	/**
 	 * Checks if this debug message is allowed to show depending on user options and class name.
-	 * @param  {} levelNumber						Level number for this debug message.
+   * (1)-info = Shows basic information of progress of program.
+   * (2)-debug = Shows the flow of the program with more debugging information.
+   * (3)-trace = More details shown including variable contents and functions being called.
+   * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
+	 * @param  {number} levelNumber			Level number for this debug message.
 	 * @return {bool}										True if this message is permitted to show.
 	 */
 	dLog(levelNumber) { return dLog(levelNumber, 'TimerClass'); }

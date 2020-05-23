@@ -1,6 +1,7 @@
 /**
  * This class takes care of the search trigger data. Also handles dealing with the database to get data.
- * @param  {number} timer
+ * @param  {number} timer			Time to use for the timer to get next hit search results.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MturkHitSearch extends MturkClass {
   constructor(timer) {
@@ -212,7 +213,6 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} info
 	 */
 	addTrigger(type, value, info) {
-		// requesterid, groupid, price, titlekeyword, descriptionkeyword, duration, hitcount, allowed, prevallowed, dateadded
 		this.triggersAdded++;
 		info.tempDisabled = false; // tempDisabled is used for temporary disabling trigger if it's running in PandaCrazy
 		info.key1 = type; // key1 will be for the type of trigger

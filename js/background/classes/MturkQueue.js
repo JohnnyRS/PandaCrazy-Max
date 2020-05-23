@@ -3,6 +3,7 @@
  * It will try to get queue at a slower rate if logged off and then wait for log on to message other classes.
  * @param  {number} timer                   Time to use for the timer to get queue results.
  * @param  {number} loggedOffTimer=5000     Time to use for the timer when logged off to get queue results.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MturkQueue extends MturkClass {
 	constructor(timer, loggedOffTimer=5000) {
@@ -108,13 +109,20 @@ class MturkQueue extends MturkClass {
   }
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
+	 * (0)-fatal = Errors that can crash or stall program.
+   * (1)-error = Errors that shouldn't be happening but may not be fatal.
+   * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
 	 * @param  {number} levelNumber			Level number for this error.
 	 * @return {bool}										True if this error is permitted to show.
 	 */
 	dError(levelNumber) { return dError(levelNumber, 'MturkQueue'); }
 	/**
 	 * Checks if this debug message is allowed to show depending on user options and class name.
-	 * @param  {} levelNumber						Level number for this debug message.
+   * (1)-info = Shows basic information of progress of program.
+   * (2)-debug = Shows the flow of the program with more debugging information.
+   * (3)-trace = More details shown including variable contents and functions being called.
+   * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
+	 * @param  {number} levelNumber			Level number for this debug message.
 	 * @return {bool}										True if this message is permitted to show.
 	 */
 	dLog(levelNumber) { return dLog(levelNumber, 'MturkQueue'); }

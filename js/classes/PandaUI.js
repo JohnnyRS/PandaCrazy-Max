@@ -59,7 +59,7 @@ class PandaUI {
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			// Use initializing default if database wasn't created yet.
-			if (bgPanda.useDefault) await this.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, true, 4000, -1, 0);
+			if (bgPanda.useDefault) await this.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, true, 4000, 0, 0);
 			else err = await bgPanda.getAllPanda(); // Not using initializing default value so load from database
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
@@ -176,10 +176,10 @@ class PandaUI {
 	/**
 	 * @param  {number} myId
 	 * @param  {bool} goHamStart=false
-	 * @param  {number} tempDuration=-1
-	 * @param  {number} tempGoHam=-1
+	 * @param  {number} tempDuration=0
+	 * @param  {number} tempGoHam=0
 	 */
-	startCollecting(myId, goHamStart=false, tempDuration=-1, tempGoHam=-1) {
+	startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
 		if (this.pandaStats[myId].collecting) return;
 		this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
 		this.pandaStats[myId].startCollecting();
@@ -308,7 +308,7 @@ class PandaUI {
 		const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
 		const run = (msg.command!=="addOnlyJob"); // Run this job after adding
 		const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
-		this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, false, -1, -1, 0, -1, false, "", "", run, true, duration, 4000);
+		this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, false, 0, 0, 0, -1, false, "", "", run, true, duration, 4000);
 	}
 	/**
 	 * @param  {object} r
@@ -331,8 +331,8 @@ class PandaUI {
 	 * @param  {number} limitNumQueue=0
 	 * @param  {number} limitTotalQueue=0
 	 * @param  {bool} autoGoHam=false
-	 * @param  {number} hamDuration=-1
-	 * @param  {number} duration=-1
+	 * @param  {number} hamDuration=0
+	 * @param  {number} duration=0
 	 * @param  {number} acceptLimit=0
 	 * @param  {number} tabUnique=-1
 	 * @param  {bool} autoAdded=false
@@ -340,10 +340,10 @@ class PandaUI {
 	 * @param  {string} friendlyReqName=""
 	 * @param  {bool} run=false
 	 * @param  {bool} external=false
-	 * @param  {number} tempDuration=-1
-	 * @param  {number} tempGoHam=-1
+	 * @param  {number} tempDuration=0
+	 * @param  {number} tempGoHam=0
 	 */
-	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, autoGoHam=false, hamDuration=-1, duration=-1, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=-1, tempGoHam=-1) {
+	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, autoGoHam=false, hamDuration=0, duration=0, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=0, tempGoHam=0) {
 		const dated = new Date().getTime(); // get the date that this job was added.
 		if (external && bgPanda.pandaGroupIds.hasOwnProperty(groupId)) {
 			const myId=bgPanda.pandaGroupIds[groupId][0], hitInfo=bgPanda.info[myId];
