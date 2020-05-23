@@ -1,20 +1,24 @@
 /**
+ * A class that deals with the queue watch, accepted hits and status log on the bottom.
+ * It will also take care of how the logs are displayed on the UI page.
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class LogTabsClass {
   constructor() {
     this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
-    this.ids = [];
-    this.assignIds = [];
-    this.taskInfo = {};
-    this.queueTab = null;
-    this.queueContent = null;
+    this.ids = [];                // Array of the id names of the log tabs on the bottom.
+    this.assignIds = [];          // Array of the assignment id's of the hits in the queue for queue watch.
+    this.taskInfo = {};           // Object of all the hits in the queue for queue watch.
+    this.queueTab = null;         // The tab for the queue watch.
+    this.queueContent = null;     // The contents for the queue watch.
   }
   /**
+   * Prepare the tabs on the bottom and placing the id names in an array.
    */
   async prepare() {
     let [success, err] = await this.tabs.prepare();
     if (!err) {
-      this.tabs.tabIds += "l";
+      this.tabs.tabIds += "l"; // Adds a l letter to the id tab names representing these are log tabs.
       this.ids.push(await this.tabs.addTab("Accepted")); // ids[0]
       this.ids.push(await this.tabs.addTab("Status log")); // ids[1]
       this.ids.push(await this.tabs.addTab("Queue Watch", true)); // ids[2]
@@ -24,27 +28,29 @@ class LogTabsClass {
     return [success, err];
   }
   /**
-   * @param  {object} newInfo
-   * @param  {string} key
-   * @param  {object} element
-   * @param  {number} index
-   * @param  {bool} indexAdd
-   * @param  {bool} appendTo=true
+   * Add the hit information to the log and either append or before element passed.
+   * @param  {object} newInfo         // Object with information of the new hit being added to the log.
+   * @param  {string} assignId        // The assignment id of the hit in the queue results.
+   * @param  {object} element         // Element to append this hit to in the log tab.
+   * @param  {bool} appendTo=true     // Should this be appended to element or before element?
    */
-  addToLog(newInfo, key, element, index, indexAdd, appendTo=true) {
-    const hitInfo = newInfo[key], timeLeft = getTimeLeft(hitInfo.secondsLeft);
-    const toAdd = $(`<div class="pcm_q01">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('assignId',key);
+  addToLog(hitInfo, assignId, element, appendTo=true) {
+    const timeLeft = getTimeLeft(hitInfo.secondsLeft);
+    const toAdd = $(`<div class="pcm_q01">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('assignId',assignId);
     if (appendTo) $(toAdd).appendTo(element);
     else $(toAdd).insertBefore(element);
     $(toAdd).append(" :: ");
     createLink(toAdd, "pcm_returnLink", "#", "Return", "_blank", (e) => {
-      const returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
-      console.log(returnLink,bgPanda.authenticityToken)
-      fetch(returnLink, { method: 'POST', credentials: `include`,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
-        body: "_method=delete&authenticity_token=" + encodeURIComponent(bgPanda.authenticityToken)
-      }).then( res => { logThis(1, "LogTabsClass", `Returned hit: ${res}`); console.log(res); }
-      ).catch( error => { logError(2, "LogTabsClass", `Returned hit error: ${error}`); console.log(res); } );
+      modal.showDialogModal("700px", "Return this hit?", `Do you really want to return this hit:<br> ${hitInfo.project.requester_name} - ${hitInfo.project.title}`, () => {
+        const returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
+        fetch(returnLink, { method: 'POST', credentials: `include`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+          body: "_method=delete&authenticity_token=" + encodeURIComponent(bgPanda.authenticityToken)
+        }).then( res => {
+          if (this.dLog(1)) console.info(`%cReturned hit status: ${res.status} : ${res.url}`,CONSOLE_INFO);
+          modal.closeModal();
+        }).catch( error => { if (this.dError(2)) console.error(`Returned hit error: ${error}`); });
+      }, true, true);
       e.preventDefault();
     });
     $(toAdd).append(" :: ");
@@ -53,27 +59,30 @@ class LogTabsClass {
         window.open($(e.target).attr("href"),"_blank","width=" + theWidth + ",height=" +  theHeight + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes");
         e.preventDefault();
     });
-    if (indexAdd) index++;
-    logThis(3, "LogTabsClass",`new to queue: {title: ${escape(hitInfo.project.title)}, hit_set_id: ${hitInfo.project.hit_set_id}, requester_id: ${hitInfo.project.requester_id}, requester_name: ${escape(hitInfo.project.requester_name)}}`);
-    return index;
+    if (this.dLog(3)) console.info(`%cNew to queue: {title: ${escape(hitInfo.project.title)}, hit_set_id: ${hitInfo.project.hit_set_id}, requester_id: ${hitInfo.project.requester_id}, requester_name: ${escape(hitInfo.project.requester_name)}}`,CONSOLE_DEBUG);
   }
   /**
-   * @param  {object} hitInfo
-   * @param  {object} hitInfo2
-   * @param  {object} data
-   * @param  {string} task_url=""
+   * Add a new hit accepted into the queue in the correct position accroding to seconds left.
+   * @param  {object} hitInfo         // Object of the panda job from panda class.
+   * @param  {object} hitInfo2        // Hit information from mturk queue results.
+   * @param  {object} data            // Saved data from panda class just in case it gets removed.
+   * @param  {string} task_url=""     // The task url from the fetch results.
    */
   addIntoQueue(hitInfo, hitInfo2, data, task_url="") {
-    if (this.assignIds.includes(hitInfo.taskId)) return null; // Hit already in queue so don't add.
-    let found =this.assignIds.findIndex( key => { return this.taskInfo[key].secondsLeft>hitInfo.assignedTime; } );
-    this.assignIds.splice( ((found===-1) ? this.assignIds.length-1 : found-1), 0, hitInfo.taskId );
-    const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
-    this.taskInfo[hitInfo.taskId] = newInfo;
-    if (found===-1) this.addToLog(this.taskInfo, hitInfo.taskId, this.queueContent, 0, false, true);
-    else this.addToLog(this.taskInfo, hitInfo.taskId, $(this.queueContent).find("div")[found], 0, false, false);
+    if (!this.assignIds.includes(hitInfo.taskId)) { // Make sure hit not in queue already.
+      let found =this.assignIds.findIndex( key => { return this.taskInfo[key].secondsLeft>data.assignedTime; } );
+      this.assignIds.splice( ((found===-1) ? this.assignIds.length-1 : found-1), 0, hitInfo.taskId );
+      const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
+      this.taskInfo[hitInfo.taskId] = newInfo;
+      if (found===-1) this.addToLog(newInfo, hitInfo.taskId, this.queueContent, true);
+      else this.addToLog(newInfo, hitInfo.taskId, $(this.queueContent).find("div")[found], false);
+    }
   }
   /**
-   * @param  {object} queueResults
+   * Update the queue watch with newer hits and update time left in the queue watch.
+   * This will figure out if there are any new hits and add it in the correct position.
+   * Also will figure out if a hit was removed from queue and remove it from queue watch.
+   * @param  {object} queueResults      // Object of all the hits on the mturk queue.
    */
   updateQueue(queueResults) {
     let prevHits = $(this.queueContent).find("div");
@@ -84,54 +93,56 @@ class LogTabsClass {
       if (prevHits.length > 0) {
         // Some previous jobs are still in queue. Let's compare and find out if something was added or removed.
         let prevDivIndex = 0, addedToEnd = false;
-        newIds.forEach( (value, index) => {
+        newIds.forEach( (value) => {
           if (newInfo[value].secondsLeft!==-1) { // make sure job isn't expired.
             let prevAssignId = $(prevHits[prevDivIndex]).data('assignId');
-            if (oldIds.includes(prevAssignId)) 
-              logError(0,"LogTabsClass",`Duplication error found. Not adding job to queue.`);
+            if (oldIds.includes(prevAssignId))
+              if (this.dError(1)) console.info('%cDuplication error found. Not adding job to queue.',CONSOLE_WARN);
             else if (prevDivIndex >= prevHits.length) { // There are more jobs in new queue than old queue.
-              logThis(2,"LogTabsClass",`Add job to end of queue.`);
+              if (this.dLog(2)) console.info('%cAdd job to end of queue.',CONSOLE_DEBUG);
               addedToEnd = true;
-              prevDivIndex = this.addToLog(newInfo, value, this.queueContent, prevDivIndex, true, true);
+              this.addToLog(newInfo[value], value, this.queueContent, true);
+              prevDivIndex++;
             } else {
               // Look for a difference between previous queue and new queue.
               if (value != prevAssignId) { // found something that is different.
                 if (!this.assignIds.includes(value)) {
                   // Work was added here at prevDivIndex because this new work is not in previous queue.
-                  logThis(2,"LogTabsClass",`Add job in queue.`);
-                  prevDivIndex = this.addToLog(newInfo, value, prevHits[prevDivIndex], prevDivIndex, true, false);
+                  if (this.dLog(2)) console.info('%cAdd job in queue.',CONSOLE_DEBUG);
+                  this.addToLog(newInfo[value], value, prevHits[prevDivIndex], false);
+                  prevDivIndex++;
                   prevHits = $(this.queueContent).find("div");
                 } else { // Previous jobs were returned at prevDivIndex because the new work was in previous queue
                   do {
-                    logThis(2,"LogTabsClass",`Remove job from queue because it was returned.`);
+                    if (this.dLog(2)) console.info('%cRemove job because it was returned or submitted.',CONSOLE_DEBUG);
                     $(prevHits[prevDivIndex]).remove();
-                    prevHits = $(this.queueContent).find("div");
+                    prevHits = $(this.queueContent).find('div');
                     prevAssignId = $(prevHits[prevDivIndex]).data('assignId');
-                  } while (prevAssignId !== value); // for multiple jobs returned at once.
+                  } while (prevAssignId !== value); // For multiple jobs returned at once.
                 }
               }
               if (prevAssignId === value) { // Update the time left for this job
                 const timeLeft = getTimeLeft(newInfo[value].secondsLeft);
-                $(prevHits[prevDivIndex]).find(`.pcm_timeLeft`).html(timeLeft);
+                $(prevHits[prevDivIndex]).find('.pcm_timeLeft').html(timeLeft);
                 prevDivIndex++; // Point to the next previous job in queue.
               }
               oldIds.push(value);
             }
           } else {
             if ($(prevHits[prevDivIndex]).data('assignId') === value) {
-              logThis(2,"LogTabsClass",`Job has been expired and still in previous.`);
+              if (this.dLog(2)) console.info('%cJob has been expired so don\'t show it.',CONSOLE_DEBUG);
               $(prevHits[prevDivIndex]).remove();
               prevHits = $(this.queueContent).find("div");
             }
           }
         });
-        // check if previous jobs were returned from end of queue so need to be removed manually.
+        // Check if previous jobs were returned from end of queue so need to be removed manually.
         if (!addedToEnd && newIds.length < prevHits.length) $(prevHits[newIds.length-1]).nextAll('div').remove();
       } else if (newIds.length > 0) {
         // Previous queue is empty and new queue has something so just add the new work.
-        newIds.forEach( (key) => { // make sure ALL work is added
-          logThis(2,"LogTabsClass",`Add jobs to empty queue.`);
-          if (newInfo[key].secondsLeft!==-1) this.addToLog(newInfo, key, this.queueContent, 0, false, true);
+        newIds.forEach( (key) => { // Make sure ALL work is added
+          if (this.dLog(2)) console.info('%cAdd jobs to empty queue.',CONSOLE_DEBUG);
+          if (newInfo[key].secondsLeft!==-1) this.addToLog(newInfo[key], key, this.queueContent, true);
         });
       }
       this.assignIds = Array.from(newIds); this.taskInfo = Object.assign({}, newInfo);
@@ -144,9 +155,29 @@ class LogTabsClass {
     } else if (prevHits.length>0) { $(this.queueContent).empty(); this.assignIds.length = 0; this.taskInfo = Object.assign({}, {}); }
   }
   /**
-   * @param  {number} captchaCount
+   * Update the queue watch captcha counter.
+   * @param  {number} captchaCount    // The counter for the captcha text in queue watch.
    */
   updateCaptcha(captchaCount) {
     if (captchaCount!==null) this.tabs.updateCaptcha(captchaCount);
   }
+	/**
+	 * Checks if this error is allowed to show depending on user options and class name.
+	 * (0)-fatal = Errors that can crash or stall program.
+   * (1)-error = Errors that shouldn't be happening but may not be fatal.
+   * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
+   * @param  {number} levelNumber			Level number for this error.
+	 * @return {bool}										True if this error is permitted to show.
+	 */
+	dError(levelNumber) { return dError(levelNumber, 'LogTabsClass'); }
+	/**
+	 * Checks if this debug message is allowed to show depending on user options and class name.
+   * (1)-info = Shows basic information of progress of program.
+   * (2)-debug = Shows the flow of the program with more debugging information.
+   * (3)-trace = More details shown including variable contents and functions being called.
+   * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
+	 * @param  {number} levelNumber			Level number for this debug message.
+	 * @return {bool}										True if this message is permitted to show.
+	 */
+	dLog(levelNumber) { return dLog(levelNumber, 'LogTabsClass'); }
 }
