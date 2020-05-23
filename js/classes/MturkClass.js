@@ -16,15 +16,15 @@ class MturkClass {
 		$(statObj.id).html(statObj.value);
 	}
 	/**
-	*/
- addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
- /**
-	*/
- addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
- /**
-	* @param  {object} objUrl
-	*/
- async goFetch(objUrl) {
+	 */
+	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
+	/**
+	 */
+	addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
+	/**
+	 * @param  {object} objUrl
+	 */
+	async goFetch(objUrl) {
 		// Can deal with Pre's, maxxed out and logged out for any mturk URL;
 		const response = objUrl.goFetch().then(result => {
 			if (!result) return null;

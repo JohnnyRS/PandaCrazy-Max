@@ -1,13 +1,27 @@
+/**
+ */
 class SearchUI {
   constructor () {
 		this.ridRow = null; this.ridColumn1 = null; this.ridListGroup1 = null;
 	}
+  /**
+   */
   stopSearching() { bgSearchClass.stopSearching(); }
+  /**
+   */
   startSearching() { bgSearchClass.startSearching(); }
+  /**
+   */
 	nowLoggedOff() {
 		modal.showLoggedOffModal( () => { bgSearchClass.unPauseTimer(); } );
 	}
+  /**
+   */
 	nowLoggedOn() { modal.closeModal(); }
+	/**
+	 * @param  {object} statObj
+	 * @param  {string} text
+	 */
 	updateStatNav(statObj,text) {
 		if (text==="") {
 			if (statObj.disabled===null) statObj.disabled = ($(statObj.id).length) ? false : true;
@@ -17,6 +31,8 @@ class SearchUI {
 		if (statObj.addClass && statObj.value) $(statObj.id).addClass(statObj.addClass);
 		else if (statObj.addClass) $(statObj.id).removeClass(statObj.addClass);
 	}
+  /**
+   */
   prepareSearch() {
 		$("#pcm_saveToFile").click( (e) => { saveToFile(bgSearchClass.hitSearchObjects); });
 		$("#pcm_searchNow").click( (e) => {
@@ -32,11 +48,20 @@ class SearchUI {
 		if (bgSearchClass.searchGStats.isSearchOn()) { bgSearchClass.openUI(); }
 		if (bgSearchClass.isPandaUI()) bgQueue.startQueueMonitor();
   }
-  updateStatus(statusName,status) {
+  /**
+   * @param  {string} statusName
+   * @param  {string} status
+   */
+  updateStatus(statusName, status) {
     if (statusName === "hits found") $("#pcm_searchHitsFound").html(status);
     else if (statusName === "total results") $("#pcm_searchResults").html(status);
 	}
-	updateTrigger(thetrigger=null, passInfo=null, toggle=true) { console.log("passInfo", JSON.stringify(passInfo));
+	/**
+	 * @param  {object} thetrigger=null
+	 * @param  {} passInfo=null
+	 * @param  {bool} toggle=true
+	 */
+	updateTrigger(thetrigger=null, passInfo=null, toggle=true) {
 		if (thetrigger===null && passInfo===null) return;
 		const theTarget = (thetrigger) ? thetrigger : $(`#list-t${passInfo.key1}${passInfo.count}-list`);
 		const theInfo = $(theTarget).data("info"); console.log("theinfo", JSON.stringify(theInfo));
@@ -46,6 +71,10 @@ class SearchUI {
 		const disabledText = (theInfo.disabled) ? ` <span class="text-danger pcm_disabledText">(Disabled)</span>` : ` <span class="text-success pcm_disabledText">(Enabled)</span>`;
 		$(`#list-t${theInfo.key1}${theInfo.count} .pcm_disabledText`).html(disabledText);
 	}
+	/**
+	 * @param  {object} info
+	 * @param  {number} index
+	 */
 	addToColumn1(info,index) {
 		const disabledClass = (info.disabled) ? " pcm_disabled" : "";
 		const active = (Number(index)===1) ? " show active" : "";
@@ -57,6 +86,10 @@ class SearchUI {
 			this.updateTrigger(theTarget);
 		});
 	}
+	/**
+	 * @param  {object} info
+	 * @param  {number} index
+	 */
 	addToColumn2(info,index) {
 		const disabledText = (info.disabled) ? ` <span class="text-danger pr-2 pcm_disabledText">(Disabled)</span>` : ` <span class="text-success pr-2 pcm_disabledText">(Enabled)</span>`;
 		const active = (Number(index)===1) ? " show active" : "";
@@ -71,9 +104,17 @@ class SearchUI {
 			{ label:"Temporary GoHam Time on Auto: ", type:"text", key:"tempGoHam", disable:true } 
 		], tabPane, bgSearchClass.triggerInfo[key1][key2]);
 	}
+	/**
+	 * @param  {object} info
+	 * @param  {number} index
+	 */
 	addToUI(info, index) {
 		this.addToColumn1(info,index); this.addToColumn2(info,index);
 	}
+	/**
+	 * @param  {string} key1
+	 * @param  {number} count
+	 */
 	removeTrigger(key1, count) {
 		const active = $(`#nav-${key1}TabContent div.active`);
 		if ($(active).get(0).id === `list-t${key1}${count}`) {
