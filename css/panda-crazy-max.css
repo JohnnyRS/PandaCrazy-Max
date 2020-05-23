@@ -151,12 +151,14 @@ html, body { height: 100%; }
 .modal-header-info .close { color: #ffffff !important; }
 .modal-header-info .modal-title { font-size: 1.4em !important; }
 .modal-header-info .modal-body { font-size: 0.7em !important; text-align:left !important; }
+.modal-content .modal-body h4 { margin-bottom: 0; }
 .modal-header-primary {
   color:#fff;
   padding:9px 15px;
   border-bottom:1px solid #eee;
   background-color: #428bca;
 }
+.pcm_inputDiv-question { margin-left:90px; }
 .pcm_jobTable { margin-bottom:5px !important; }
 .pcm_detailsTable tr { line-height: 0.8; font-size: 0.8em; }
 .pcm_detailsTable tr output { width:30px !important; font-size: 0.7rem !important; height:20px; padding:0 6px; }
@@ -165,6 +167,12 @@ html, body { height: 100%; }
 .pcm_detailsTable tr select { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_inputText { height:17px !important; margin-left:2px; font-size:0.9em !important; width:300px; padding-left:4px; }
 .pcm_inputText-md { height:19px !important; margin-left:2px; padding-top:2px; font-size:0.9em !important; width:350px !important; }
+.pcm_inputDate-md { height:18px !important; margin-left:2px; padding-top:6px; font-size:0.7em !important; width:80px !important; }
+.pcm_inputEndHours, .pcm_inputEndMinutes { height:18px !important; margin-left:0 !important; padding-left:2px !important; padding-right:0 !important; font-size:0.7em !important; width:25px !important; }
+.pcm-inputClearIcon { display: flex; padding: .15rem .30rem; color: #495057; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: .25rem; margin-top: 0; margin-left:2px; }
+.pcm_timeLabel { font-size:0.8em; margin-left:15px; }
+.pcm_hoursLabel { font-size:0.8em; margin-left:30px; }
+.pcm_minutesLabel { font-size:0.8em; margin-left:2px; }
 .pcm_inputDiv-url input { width: 600px !important; }
 .pcm_inputRangeText { height:13px !important; margin-left:2px; font-size:0.7em !important; width:30px; }
 .pcm_inputRange { height:7px !important; }

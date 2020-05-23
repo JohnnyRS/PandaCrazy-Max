@@ -1,79 +1,129 @@
+/**
+ * Class for using datbases with promises for operations so it can wait for completion of function.
+ * @author JohnnyRS
+ * @param {string} dbName      Name of the database to be used.
+ * @param {number} dbVersion   Version number for this database.
+ */
 class DatabaseClass {
-  constructor( dbName, dbVersion ) {
-    this.db = null; // database pointer
-    this.dbName = dbName; // name of database to be used
-    this.dbVersion = dbVersion; // the version number for this database
+  constructor(dbName, dbVersion) {
+    this.db = null; // Database variable to the indexedDB object.
+    this.dbName = dbName;
+    this.dbVersion = dbVersion;
     this.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   }
-  openDB( deleteFirst, upgrade ) {
-    return new Promise( (resolve, reject) => { // using a promise to make opening database synchronous so it waits
-      if (!this.indexedDB) reject(Error("indexedDB is Not supported")); // if no indexedDB then big fail
+  /**
+   * Opens this database using dbName and dbVersion properties of class.
+   * Assigns db property to opened database request.
+   * @param {bool} deleteFirst    Delete database before opening or creating it?
+   * @param {function} upgrade    Function to be used when upgrade is needed because newer version.
+   * @return {promise}            Database version in resolve. Error object in reject.
+   */
+  openDB(deleteFirst, upgrade) {
+    return new Promise( (resolve, reject) => {
+      if (!this.indexedDB) reject(new Error("indexedDB is Not supported"));
       else {
-        if (deleteFirst) { // used to delete database but temporary for testing purposes
-          let deleteRequest = this.indexedDB.deleteDatabase( this.dbName ); // delete database
-          deleteRequest.onerror = e => { console.log(e.target.error.message); } // show error if deleting database failed
+        if (deleteFirst) { // Used to delete database before opening so upgrade is used.
+          let deleteRequest = this.indexedDB.deleteDatabase( this.dbName );
+          deleteRequest.onerror = () => { // If request to delete fails then send error to console.
+            console.error(new Error(`Delete: ${this.dbName} error: ${deleteRequest.error.message}`));
+          }
         }
-        let openRequest = this.indexedDB.open( this.dbName, this.dbVersion ); // try to open databse
+        let openRequest = this.indexedDB.open( this.dbName, this.dbVersion );
         openRequest.onupgradeneeded = e => { upgrade(e); } // if need to upgrade then call upgrade function
-        openRequest.onsuccess = e => { this.db = e.target.result; resolve("OPENED"); } // set database pointer on success
-        openRequest.onerror = error => { reject(error); } // reject promise if open database failed
+        openRequest.onsuccess = () => { this.db = openRequest.result; resolve("OPENED"); } // set database pointer
+        openRequest.onerror = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
+        openRequest.onabort = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
       }  
     });
   }
-  addToDB( storeName, data, key=null ) {
-    return new Promise( (resolve, reject) => { // using a promise to make adding to database synchronous so it waits
+  /**
+   * Adds data to database with a key in data or next key available.
+   * @param {string} storeName    Store name to be used for adding data to.
+   * @param {object} data         Data to be added to the store name database.
+   * @param {bool} update=false   True to use put for add or update data. False to use add only and error if key exists.
+   * @return {promise}            Database key or new key in resolve. Error object in reject.
+   */
+  addToDB(storeName, data, update=false) {
+    return new Promise( (resolve, reject) => {
       let newId = null;
-      let transaction = this.db.transaction( [storeName], "readwrite" ); // start tranasaction first with read/write
-      let items = transaction.objectStore( storeName ); // create object store on transaction
-      let request = (key) ? items.put(data) : items.add(data); // request to add data to object store
-      request.onsuccess = e => { newId = e.target.result; } // 
-      request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
-      transaction.onerror = e => { reject(e.target.error); } // reject promise if an error happened
-      transaction.oncomplete = e => { resolve(newId); } // resolve promise on success
+      let transaction = this.db.transaction( [storeName], "readwrite" );
+      let items = transaction.objectStore( storeName );
+      let request = (update) ? items.put(data) : items.add(data);
+      request.onsuccess = e => { newId = request.result; } // Set newId to the key used to add item.
+      transaction.onabort = () => { reject(new Error(`Add to: ${storeName} error: ${transaction.error.message}`)); }
+      transaction.oncomplete = () => { resolve(newId); }
     });
   }
-  updateDB(storeName, data, key) {
-    this.addToDB( storeName, data, key ).then( (id) => { return id; } ).catch( (error) => console.log(error) );
+  /**
+   * Updates data in database with a key in data or if key not found then it adds data.
+   * @param {string} storeName  Store name to be used for adding data to.
+   * @param {object} data       Data to be added to the store name database.
+   * @return {promise}          Database key or new key in resolve. Error object in reject.
+   */
+  updateDB(storeName, data) {
+    return new Promise( (resolve, reject) => {
+      this.addToDB( storeName, data, true ).then( id => { resolve(id); }, rejected => reject(rejected) );
+    });
   }
-  getFromDB(storeName, toDo, key, doWithCursor=null, useArray=true) {
-    return new Promise( (resolve, reject) => { // using a promise to make getting from database synchronous so it waits
-      let myArray = [], myObject = {}, index = 0; // create an array and object to store the cursor data from database
-      const toDoReturn = (useArray) ? myArray : myObject;
-      let transaction = this.db.transaction( [storeName], "readonly" ); // start transaction first with read only
-      let store = transaction.objectStore( storeName ); // create object store on transaction
-      let request = (toDo==="cursor") ? store.openCursor() : store.get(key); // let's open a cursor on transaction
-      request.onsuccess = (e) => { // on success get cursor and call doWithCursor function
-        if (toDo==="cursor") {
-          let cursor = e.target.result; // get cursor object
+  /**
+   * Get an array or object of items from database with a key. Using arrays is by default.
+   * @param {string} storeName            Store name to be used for adding data to.
+   * @param {string} key                  Get the item with this key.
+   * @param {bool} doCursor=false         Use cursor to get multiple items with the key.
+   * @param {function} cursorFunc=null    Function to use for each item got with cursor.
+   * @param {bool} useArray=true          Use array or false to save returned value from cursorFunc to object.
+   * @return {promise}                    Array or object in resolve. Error object in reject.
+   */
+  getFromDB(storeName, key, doCursor=false, cursorFunc=null, useArray=true) {
+    return new Promise( (resolve, reject) => {
+      let myArray = [], myObject = {}, index = 0;
+      let theResult = null;
+      const returnThis = (useArray) ? myArray : myObject; // Return an array or object?
+      let transaction = this.db.transaction( [storeName], "readonly" );
+      let store = transaction.objectStore( storeName );
+      let request = (doCursor) ? store.openCursor() : store.get(key); // Open cursor or just get an item?
+      request.onsuccess = (e) => {
+        if (doCursor) { // Get multiple items with cursor.
+          let cursor = request.result;
           if (cursor) {
-            if (useArray) myArray.push(doWithCursor(cursor, index)); // add returned value to array
-            else Object.assign(myObject, doWithCursor(cursor, index));
+            if (useArray) myArray.push(cursorFunc(cursor, index)); // Add value from cursorFunc to an array.
+            else Object.assign(myObject, cursorFunc(cursor, index)); // Add value from cursorFunc to an object.
             index++;
-            cursor.continue(); // continue with next cursor
+            cursor.continue();
           }
-        } else resolve(e.target.result);
+        } else theResult = request.result; // Return just the one item.
       };
-      request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
-      transaction.onerror = e => reject(e.target.error); // reject promise if an error happened
-      transaction.oncomplete = result => resolve( (toDo==="cursor") ? toDoReturn : result ); // resolve promise on success
+      transaction.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${transaction.error.message}`)); }
+      transaction.oncomplete = () => resolve( (doCursor) ? returnThis : theResult );
     });
   }
+  /**
+   * Delete an item or items from a database with a key using an index if necessary.
+   * @param {string} storeName        Store name to be used for adding data to.
+   * @param {string} key              Delete the item with this key.
+   * @param {string} indexName=null   Use index name and delete all items with key.
+   * @return {promise}                Key in resolve. Error object in reject.
+   */
   deleteFromDB(storeName, key, indexName=null) {
-    return new Promise( (resolve, reject) => { // using a promise to make adding to database synchronous so it waits
-      let transaction = this.db.transaction( [storeName], "readwrite" ); // start tranasaction first with read/write
-      let store = transaction.objectStore(storeName); // create object store on transaction
-      if (indexName) {
+    return new Promise( (resolve, reject) => {
+      let completed = false, error = "";
+      let transaction = this.db.transaction( [storeName], "readwrite" );
+      let store = transaction.objectStore(storeName);
+      if (indexName) { // Should an index be used for the key?
         const index = store.index(indexName);
-        const listDel = index.getAllKeys(key);
-        listDel.onsuccess = function(e) { e.target.result.forEach(mainKey => { store.delete(mainKey); }); }
-        listDel.onerror = e => console.log(e.target.error);
+        const listDel = index.getAllKeys(key); // Get all items with this key in index.
+        listDel.onsuccess = e => { completed = true; listDel.result.forEach(mainKey => { store.delete(mainKey); }); }
+        listDel.onerror = e => { error = listDel.error.message; } // Error when problems with index happen.
       } else {
-        const request = store.delete(key); // request to delete data from object store
-        request.onsuccess = e => { } // do nothing on success
-        request.onerror = e => { } // do nothing on error because transaction onerror will take care of it
+        let count = store.count(key); count.onsuccess = () => { // Get number of items with Key
+          if (count.result>0) { const request = store.delete(key); request.onsuccess = () => { completed = true; } }
+          else { error = `Key: [${key}] not found in ${storeName}`; } // Error if key not found.
+        }
       }
-      transaction.onerror = e => { reject(e.target.error); } // reject promise if an error happened
-      transaction.oncomplete = e => { resolve("Done"); } // resolve promise on success
+      transaction.onabort = e => { reject(new Error(`Del from: ${storeName} error: ${transaction.error.message}`)); }
+      transaction.oncomplete = e => {
+        if (completed) resolve(key); else reject(new Error(`Del from: ${storeName} error: ${error}`));
+      }
     });
   }
 }

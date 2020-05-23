@@ -1,3 +1,5 @@
+/**
+ */
 class AlarmsClass {
   constructor() {
     this.alarmFolder = "alarms";
@@ -15,31 +17,48 @@ class AlarmsClass {
     };
     this.myAudio = null;
   }
-  prepareAlarms(data, fromDB, afterFunc) {
-    let saveValue={};
-    Object.entries(data).forEach( async ([key, value]) => {
+  /**
+   * @param  {object} data
+   * @param  {bool} fromDB
+   */
+  async prepareAlarms(data, fromDB) {
+    // Sets the Audio src value if not defined or saves default alarm to database.
+    let saveValue = {}, goodSave = true, err = null;
+    await Object.entries(data).forEach( async ([key, value]) => {
       if (!fromDB) {
-        // Because this is a forEach loop then I must make a copy of the value so database can work
-        // asynchronous without having to pause the loop which is not needed.
-        saveValue = JSON.parse(JSON.stringify(value)); saveValue.name=key; // Make copy of default value
-        bgPanda.db.addToDB(bgPanda.alarmsStore, saveValue).then( () => {} ); // Save into Database
+        // Need to make a clone of value because audio obj has methods which can not be saved.
+        saveValue = JSON.parse(JSON.stringify(value)); saveValue.name=key;
+        await bgPanda.db.addToDB(bgPanda.alarmsStore, saveValue)
+        .then( null, rejected => err = rejected );
       }
       if (Object.keys(value.obj).length===0) // If no audio obj then set up src with default filename
-        value.obj.src = chrome.extension.getURL(`${this.alarmFolder}/${value.filename}`);
+        value.obj.src = chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`);
     });
-    afterFunc.apply(this);
+    return err;
   }
-  prepare(afterFunc) {
-    bgPanda.db.getFromDB(bgPanda.alarmsStore, "cursor", null, (cursor) => { 
-        const key = cursor.value.name; delete cursor.value.name;
-        return {[key]:cursor.value};
+  /**
+   * Loads up the alarms from the database or saves default values if no alarms are in the database.
+   * Saves any errors from trying to add to database and then sends a reject.
+   * Sends success array with messages and error object from any rejects to afterFunc.
+   * @param  {function} afterFunc   Function to call after done to send success array or error object.
+   */
+  async prepare(afterFunc) {
+    let success = [], err = null;
+    await bgPanda.db.getFromDB(bgPanda.alarmsStore, null, true, async (cursor) => { 
+        const key = cursor.value.name; delete cursor.value.name; // Don't need name in cursor return.
+        return {[key]:cursor.value}; // Return object.
       }, false)
-      .then( (result) => {
-        if (Object.keys(result).length !== 0) {
-          this.prepareAlarms(result, true, afterFunc);
-        } else this.prepareAlarms(this.data, false, afterFunc);
-      })
+    .then( async (result) => {
+      if (Object.keys(result).length !== 0) { // If alarms are already in database then load them up.
+        err = await this.prepareAlarms(result, true);
+      } else err = await this.prepareAlarms(this.data, false);
+      if (!err) success[0] = "All alarms have been loaded up.";
+    }, (rejected) => err = rejected );
+    afterFunc.call(this, success, err); // Sends any errors back to the after function for processing.
   }
+  /**
+   * @param  {string} alarmSound
+   */
   playSound(alarmSound) {
     const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
     if (isPlaying) {
@@ -50,7 +69,12 @@ class AlarmsClass {
     this.myAudio.currentTime = 0;
     this.myAudio.play();
   }
+  /**
+   */
   doQueueAlarm() { this.playSound("queueAlert"); }
+	/**
+	 * @param  {object} thisHit
+	 */
 	doAlarms(thisHit) {
 		const minutes = Math.floor(thisHit.assignedTime / 60);
 		if ( thisHit.price < parseFloat(this.data.less2.pay) ) {

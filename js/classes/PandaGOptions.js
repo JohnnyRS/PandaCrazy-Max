@@ -1,3 +1,7 @@
+/**
+ * Class for the global options and functions to change them.
+ * Breaks up the options into general, timers and alarms options.
+ */
 class PandaGOptions {
   constructor() {
     this.general = {
@@ -38,24 +42,40 @@ class PandaGOptions {
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
   }
-  prepare(afterFunc) {
-    bgPanda.db.getFromDB(bgPanda.optionsStore, "cursor", null, (cursor) => { return cursor.value; })
-      .then( (result) => {
-        if (result.length) { console.log(JSON.stringify(result)); afterFunc.apply(this); }
-        else { // Add default values to the options database
-          bgPanda.db.addToDB(bgPanda.optionsStore, this.general)
-            .then( () => { bgPanda.db.addToDB(bgPanda.optionsStore, this.timers)
-              .then( () => { bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms)
-                .then( () => { afterFunc.apply(this); });
-              })
-            });
+  /**
+   * Load up global options from database or use and save default options into database.
+   * Saves any errors from trying to add to database and then sends a reject.
+   * Sends success array with messages and error object from any rejects to afterFunc.
+   * @param {function} afterFunc    Function to call after done to send success array or error object.
+   */
+  async prepare(afterFunc) {
+    let success = [], err = null;
+    await bgPanda.db.getFromDB(bgPanda.optionsStore, null, true, (cursor) => { return cursor.value; })
+    .then( async result => {
+      if (result.length) { // Options were already saved in database so load and use them.
+        for (var i=0, keys=Object.keys(result); i < keys.length; i++) {
+          if (['general','timers','alarms'].includes(result[i].category)) this[result[i].category] = result[i];
         }
-      })
+        success[0] = "Loaded all global options from database";
+      } else { // Add default values to the options database and use them.
+        await bgPanda.db.addToDB(bgPanda.optionsStore, this.general)
+        .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.timers)
+          .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms)
+            .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
+          }, rejected => { err = rejected; })
+        }, rejected => err = rejected);
+      }
+    }, rejected => err = rejected);
+    afterFunc.call(this, success, err); // Sends good Messages or any errors in the after function for processing.
   }
+  /**
+   */
   update() {
     if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
     else { $('[data-toggle="tooltip"]').tooltip('disable'); $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable'); }
    }
+  /**
+   */
   showGeneralOptions() {
     const idName = modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.general = Object.assign(this.general, changes);
@@ -76,6 +96,8 @@ class PandaGOptions {
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
    }
+  /**
+   */
   showTimerOptions() {
     const idName = modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.timers = Object.assign(this.timers, changes);
@@ -97,6 +119,8 @@ class PandaGOptions {
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
    }
+  /**
+   */
   showAlarmOptions() {
     const idName = modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.alarms = Object.assign(this.alarms, changes);
@@ -116,13 +140,20 @@ class PandaGOptions {
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
    }
+  /**
+   */
   updateCaptcha() {
     if (this.general.captchaCountText) {
       this.captchaCounter = (this.general.captchaAt>this.captchaCounter) ? this.captchaCounter + 1 : 0;
       return this.captchaCounter;
     } else return null;
   }
+  /**
+   */
   resetCaptcha() { this.captchaCounter = 0; }
+  /**
+   * @param  {number} seconds
+   */
   checkQueueAlert(seconds) {
     let returnValue = false, saveMinutes = true;
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
@@ -133,10 +164,22 @@ class PandaGOptions {
     } else this.lastQueueAlert = -1;
     return returnValue;
   }
+  /**
+   */
   isQueueAlert() { return !this.general.disableQueueAlert; }
+  /**
+   */
   isQueueAlarm() { return !this.general.disableQueueAlarm; }
+  /**
+   */
   getTimer1() { return this.timers.mainTimer; }
+  /**
+   */
   getTimer2() { return this.timers.secondTimer; }
+  /**
+   */
   getTimer3() { return this.timers.thirdTimer; }
+  /**
+   */
   getCaptchaCount() { return this.captchaCounter; }
 }

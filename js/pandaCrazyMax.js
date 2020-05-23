@@ -1,48 +1,66 @@
 let globalOpt=null, modal=null, pandaUI=null, alarms=null, notify=null, groupings=null, menus=null;
-let bgPage = chrome.extension.getBackgroundPage(), bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue();
-function startPandaCrazy() {
-  if (bgPage.gCheckDebugger() && bgPage.gCheckPandaDB) {
-    window.addEventListener("beforeunload", (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
+let goodDB=false, errorObject = null;
+let bgPage = chrome.extension.getBackgroundPage(); // Get the background page object for easier access.
+let bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(); // Get objects to panda and queue class.
+
+/**
+ * Open a modal showing loading Data and then after it shows on screen go start Panda Crazy.
+ */
+function modalLoadingData() {
+  modal = new ModalClass();
+  modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
+    null , false, false, '', '', null, startPandaCrazy ); // Calls startPandaCrazy after modal shown.
+}
+/**
+ * Starts the process of loading data in the program and check for errors as it goes.
+ * Make sure to check for a good DB open and wait for slower computers.
+ */
+async function startPandaCrazy() {
+  await bgPage.gCheckPandaDB().then( result => { goodDB = result; }, rejected => errorObject = rejected );
+  if (goodDB) {
     globalOpt = new PandaGOptions();
-    globalOpt.prepare( () => {
-      modal = new ModalClass(); // set up a modal class for options, warnings or details
-      pandaUI = new PandaUI();
-      alarms = new AlarmsClass();
-      alarms.prepare( () => {
-        console.log("alarms loaded");
-        notify = new NotificationsClass();
-        groupings = new PandaGroupings();
-        groupings.prepare( () => {
-          console.log("groupings loaded");
-        });
-        menus = new MenuClass("pcm_quickMenu"); // set up a mturk class for a panda
-    
-        bgPage.gSetPandaUI(pandaUI);
-    
-        pandaUI.prepare( () => {
-          // ***************** Add Panda's Here for now *******************
-          // addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, autoGoHam=false, hamDuration=-1, duration=-1, acceptLimit=0, tabUnique=0, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=-1, tempGoHam=-1) {
-          // pandaUI.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, true, 4000, -1, 0);
-          // **************************************************************
-        
-          // groupings.add("1 group","My first grouping", [[0,"off"], [2,"off"]]);
-          // groupings.add("2 group","My second grouping", []);
-          // groupings.add("3 group","My third grouping", [[3,"off"], [1,"off"]]);
-          // groupings.add("4 group","My fourth grouping", [[2,"off"], [1,"off"], [0,"off"]]);
-          $('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'});
-          $(".sortable").sortable({connectWith: ".sortable"}).disableSelection();
-        });
-      });  
-    });
-  } else { displayDebuggerError(`Error opening database.`,error.message); }
+    await globalOpt.prepare( showMessages ); // Wait for global options to load and show message or error.
+    pandaUI = new PandaUI();
+    alarms = new AlarmsClass();
+    await alarms.prepare( showMessages ); // Wait for alarms to load and show message or error.
+    notify = new NotificationsClass();
+    groupings = new PandaGroupings();
+    await groupings.prepare( showMessages ); // Wait for groupings to load and show message or error.
+    menus = new MenuClass("pcm_quickMenu");
+    bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
+    await pandaUI.prepare( showMessages ); // Wait for panda jobs to load and show message or error.
+  
+    $('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}); // Enable all tooltips.
+    $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
+    showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
+    setTimeout( () => modal.closeModal('Loading Data'), 600); // Just a small delay so messages can be read by user.
+  } else { haltScript(errorObject, errorObject.message, "Problem with Database.", 'Error opening database:'); }
 }
-function displayDebuggerError(title,message) {
-  $(".pcm_top:first").html("");
-  console.log(message); $('#pcm_logSection').html(`<H1 style="text-align:center;">${title}</H1><H5 style="color:#FF3333; text-align:center;">${message}</H5>`);
+
+/** 
+ * Shows good messages in loading modal and console. Shows error message on page and console before halting script.
+ * @param {array} good    Array of good messages to display in the loading modal and console.
+ * @param {object} bad    If set then an error has happened so display it and stop script.
+ */
+function showMessages(good, bad) {
+  if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
+  if (good.length > 0) { // Does it have good messages?
+    good.forEach( value => { $('#pcm_modal_0 .modal-body').append($(`<div>${value}</div>`)); console.log(value); });
+  }
 }
-function logThis(num, cl, desc, title="log") { if (bgPage.gDebugLogThis(num, cl, desc, title)) console.log(desc); }
-function logError(num, Cl, desc, title="error") { if (bgPage.gDebugLogError(num, Cl, desc, title)) console.log(desc); }
-allTabs("/pandaCrazy.html", count => {
-  if (count<2) startPandaCrazy();
-  else displayDebuggerError(`Error starting PandaCrazy Max.`,`You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`);
+
+/** ================ First lines executed when page is loaded. ============================ **/
+allTabs('/pandaCrazy.html', count => { // Count how many Panda Crazy pages are opened.
+  if (count<2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
+  else haltScript(null, 'You have PandaCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting PandaCrazy Max', true);
+});
+
+/** ================ EventListener Section =============================================== **/
+/** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
+window.addEventListener('beforeunload', (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
+document.addEventListener('keydown', (e) => { // Disables sortable and selection on cards if ctrl key is pushed down.
+  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).disableSelection(); }
+});
+document.addEventListener("keyup", (e) => { // Enables sortable and selection on cards if ctrl key is let go.
+  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).disableSelection(); }
 });
