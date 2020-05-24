@@ -1,5 +1,4 @@
-# PandaCrazy-Max
-<h1 align="center">PandaCrazy Chrome Extension Version 0.8.1 for Amazon Mturk</h1>
+<h1 align="center">PandaCrazy Chrome Extension Ver. 0.8.1 for Amazon Mturk</h1>
 
 *This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.*
 
@@ -8,7 +7,7 @@
 1. Now you need to unzip the file into a folder which should be called: `PandaCrazy-Max-master`
 1. Go to the chrome extensions page (`chrome://extensions`).
 1. For this script to work for now you have to enable the Developer Mode switch at top.
-1. You can either push the load unpacked button and find the folder you just made or drag and drop the folder anywhere on the page.
+1. Push the load unpacked button and find the new folder or drag and drop the folder anywhere on the page.
 1. Make sure PandaCrazy Max extension is enabled on the extensions page.
 1. There should be an icon with PC Max on it at the top in the extension bar.
 1. Click on it and push the start pandacrazy link.

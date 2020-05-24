@@ -1,22 +1,26 @@
 /**
  * This class gets the queue from mturk and sends it out to other classes that need it.
  * It will try to get queue at a slower rate if logged off and then wait for log on to message other classes.
- * @param  {number} timer                   Time to use for the timer to get queue results.
- * @param  {number} loggedOffTimer=5000     Time to use for the timer when logged off to get queue results.
+ * @class MturkQueue
+ * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MturkQueue extends MturkClass {
-	constructor(timer, loggedOffTimer=5000) {
+	/**
+   * @param  {number} timer           - Time to use for the timer to get queue results.
+   * @param  {number} [OffTimer=5000] - Time to use for the timer when logged off to get queue results.
+	 */
+	constructor(timer, OffTimer=5000) {
     super();
-    this.timer = timer;
-    this.loggedOffTimer = loggedOffTimer;
-    this.queueUnique = null;
-    this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');
-    this.queueResults = [];
-    this.loggedOff = false;
-    this.authenticityToken = null;
-		queueTimer.setMyClass(this);				// Tell timer what class is using it so it can send information back
-		queueTimer.setTimer(timer);
+    this.timer = timer;               // Sets the time to use for the queue Timer cycle.
+    this.loggedOffTimer = OffTimer;   // Sets the timer to use for when it's logged off.
+    this.queueUnique = null;          // The unique number set by the timer class for this class.
+    this.queueResults = [];           // The results from mturk queue with all hits info.
+    this.loggedOff = false;           // Are we logged off or not?
+    this.authenticityToken = null;    // Keeps the authenticity token used for returning hits.
+		queueTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
+		queueTimer.setTimer(timer);       // Sets the timer for the timer class.
+    this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
   }
   /**
    * Sends queue results and authenticity token for returning jobs to the panda UI and search UI.
@@ -31,7 +35,7 @@ class MturkQueue extends MturkClass {
   startQueueMonitor() {
     if (!queueTimer.running) {
 			if (this.dLog(1)) console.info('%cStarting Queue Monitor.', CONSOLE_INFO);
-      this.queueUnique = queueTimer.addToQueue(-1, (unique, elapsed) => { this.goFetch(this.queueUrl, unique, elapsed); }, () => { this.stopQueueMonitor(); });
+      this.queueUnique = queueTimer.addToQueue(-1, (unique) => { this.goFetch(this.queueUrl, unique); }, () => { this.stopQueueMonitor(); });
     }
   }
 	/**
@@ -44,10 +48,10 @@ class MturkQueue extends MturkClass {
   /**
    * Will count how many hits in queue with the given group ID or requester ID.
    * If no ID's are given then it will get the total reward potential of all the hits in queue.
-   * @param  {string} rId=''      Requester ID to get total count from.
-   * @param  {string} gId=''      Group ID to get total count from.
-   * @param  {number} price=0     Any price higher than this amount will be totaled in reward total.
-   * @return {number}             Returns total counted value of given options.
+   * @param  {string} [rId='']  - Requester ID to get total count from.
+   * @param  {string} [gId='']  - Group ID to get total count from.
+   * @param  {number} [price=0] - Any price higher than this amount will be totaled in reward total.
+   * @return {number}           - Returns total counted value of given options.
    */
   totalResults(rId='', gId='', price=0) {
     let total = 0;
@@ -74,18 +78,17 @@ class MturkQueue extends MturkClass {
     myPanda.nowLoggedOn(); mySearch.nowLoggedOn(); // Remove logged off warning on all running UI's.
   }
   /**
-   * @param  {object} objUrl        Url object to use when fetching.
-   * @param  {number} queueUnique   Unique number for the job in timer queue.
-   * @param  {number} elapsed       Exact time it took for the queue timer to do next queue job.
+   * Fetches the url for the queue after timer class tells it to do so and handles mturk results.
+   * Can detect logged off, PRE's and good queue results.
+   * @param  {object} objUrl      - Url object to use when fetching.
+   * @param  {number} queueUnique - Unique number for the job in timer queue.
    */
-  goFetch(objUrl, queueUnique, elapsed) { // Can deal with getting search results data.
+  goFetch(objUrl, queueUnique) {
+    if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 		super.goFetch(objUrl).then(result => {
       if (!result) {
-        if (this.dError(1)) { 
-          console.error('Returned result from queue fetch was a null.', JSON.stringify(objUrl));
-        }
+        if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }
       } else {
-        if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
         if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
         else if (result.type === 'ok.text') {
           if (this.loggedOff) this.nowLoggedOn(); // Must be logged in if mturk sent relevant data.
@@ -112,8 +115,8 @@ class MturkQueue extends MturkClass {
 	 * (0)-fatal = Errors that can crash or stall program.
    * (1)-error = Errors that shouldn't be happening but may not be fatal.
    * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
-	 * @param  {number} levelNumber			Level number for this error.
-	 * @return {bool}										True if this error is permitted to show.
+	 * @param  {number} levelNumber - Level number for this error.
+	 * @return {bool}							  - True if this error is permitted to show.
 	 */
 	dError(levelNumber) { return dError(levelNumber, 'MturkQueue'); }
 	/**
@@ -122,8 +125,8 @@ class MturkQueue extends MturkClass {
    * (2)-debug = Shows the flow of the program with more debugging information.
    * (3)-trace = More details shown including variable contents and functions being called.
    * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
-	 * @param  {number} levelNumber			Level number for this debug message.
-	 * @return {bool}										True if this message is permitted to show.
+	 * @param  {number} levelNumber - Level number for this debug message.
+	 * @return {bool}							  - True if this message is permitted to show.
 	 */
 	dLog(levelNumber) { return dLog(levelNumber, 'MturkQueue'); }
 }

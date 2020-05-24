@@ -4,13 +4,17 @@
  * Allows multiple group ID's to be added if needed. Will handle the limit options for each panda.
  * If a panda is not collecting the data is removed from memory and loads data when needed.
  * When a panda is going to collect or get edited then the data will load back into memory.
- * @param  {number} timer				Time to use for the timer to get next panda.
- * @param  {number} hamTimer		Time to use for the ham timer.
+ * @class MturkPanda
+ * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MturkPanda extends MturkClass {
+	/**
+	 * @param {number} timer		- Time to use for the timer to get next panda.
+	 * @param {number} hamTimer - Time to use for the ham timer.
+	 */
 	constructor(timer,hamTimer) {
-		super();
+		super();																// Run the super extended constructor first.
 		this.dbName = "PandaCrazyMax";					// Name of the database used for all storage.
 		this.storeName = "pandaStore"; 					// Name of the store to be used for panda jobs.
 		this.tabsStore = "tabsStore";						// Name of the store for panda tabs.
@@ -31,24 +35,24 @@ class MturkPanda extends MturkClass {
 		pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
 		pandaTimer.setTimer(timer);         		// Set timer for this timer.
     pandaTimer.setHamTimer(hamTimer);   		// Set hamTimer for this timer.
-		this.db = new DatabaseClass(this.dbName, 1);
-		this.useDefault = false;
+		this.useDefault = false;								// Should we be using default values because no data in database?
+		this.db = new DatabaseClass(this.dbName, 1);  // Set up the database class.
 	}
 	/**
 	 * Creates a panda accept url for groupid.
-	 * @param  {string} groupId				The groupId of the panda to creat a url.
-	 * @return {string}								Returns the created string.
+	 * @param  {string} groupId - The groupId of the panda to creat a url.
+	 * @return {string}					- Returns the created string.
 	 */
 	createPandaUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks/accept_random`; }
 	/**
 	 * Creates a preview url for groupid.
-	 * @param  {string} groupId				The groupId of the panda to creat a url.
-	 * @return {string}								Returns the created string.
+	 * @param  {string} groupId - The groupId of the panda to creat a url.
+	 * @return {string}					- Returns the created string.
 	 */
 	createPreviewUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks`; }
   /**
 	 * Open database or create it with all storage objects. This uses a promise so program will wait.
-	 * @return {promise}			Resolves with the response and rejects with the error.
+	 * @return {promise} - Resolves with the response and rejects with the error.
    */
   openDB() {
     return new Promise( (resolve, reject) => {
@@ -70,7 +74,7 @@ class MturkPanda extends MturkClass {
 	/**
 	 * Loads data for this particular job with unique ID in the info object.
 	 * If database rejected then give error on console and on page before stopping script.
-	 * @param  {number} myId		The unique ID for a panda job.
+	 * @param  {number} myId - The unique ID for a panda job.
 	 */
 	async getDbData(myId) {
 		await this.db.getFromDB(this.storeName, this.info[myId].dbId)
@@ -81,7 +85,7 @@ class MturkPanda extends MturkClass {
 	/**
 	 * Adds data to the database and sets the id in info to the key resolved from database.
 	 * If database rejected then give error on console and on page before stopping script.
-	 * @param  {object} newData				The new data to be added to the database.
+	 * @param  {object} newData - The new data to be added to the database.
 	 */
 	async addToDB(newData) {
 		await this.db.addToDB(this.storeName, newData).then( id => newData.id = id,
@@ -91,8 +95,8 @@ class MturkPanda extends MturkClass {
 	/**
 	 * Updates the data for this panda using the unique ID. Key should already be in the data object.
 	 * If database rejected then give error on console and on page before stopping script.
-	 * @param  {number} myId						The unique ID for a panda job.
-	 * @param  {object} newData=null		Object to update panda with or use the data in the panda info object.
+	 * @param  {number} myId					 - The unique ID for a panda job.
+	 * @param  {object} [newData=null] - Object to update panda with or use the data in the panda info object.
 	 */
 	async updateDbData(myId, newData=null) {
 		await this.db.updateDB(this.storeName, (newData) ? newData : this.info[myId].data).then( id => newData.id = id,
@@ -103,7 +107,7 @@ class MturkPanda extends MturkClass {
 	/**
 	 * Delete the panda data and stats with this unique ID from the databases.
 	 * If database rejected then give an error message in the console and move on.
-	 * @param  {number} myId		The unique ID for a panda job.
+	 * @param  {number} myId - The unique ID for a panda job.
 	 */
 	async deleteDbData(myId) {
 		extPandaUI.deleteFromStats(myId, this.info[myId].dbId);
@@ -114,8 +118,8 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Load up data from the database for every panda added or add panda to the panda UI.
-	 * @param  {bool} addPanda=true			Should the data be added to panda UI or just adding data to memory?
-	 * @return {object}									Returns rejected object on database error.
+	 * @param  {bool} [addPanda=true] - Should the data be added to panda UI or just adding data to memory?
+	 * @return {object}								- Returns rejected object on database error.
 	 */
 	async getAllPanda(addPanda=true) {
 		let err = null;
@@ -138,7 +142,7 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Collects stats from timer and shows them on the panda UI.
-	 * @param  {object} infoObj
+	 * @param  {object} infoObj - The object with all the timer status.
 	 */
 	timerInfo(infoObj) {
 		if (extPandaUI) {
@@ -149,8 +153,8 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Changes the time for the panda timer and returns the time saved.
-	 * @param  {number} timer				The time to change the panda timer to.
-	 * @return {number}							Returns the panda timer time that was set.
+	 * @param  {number} timer - The time to change the panda timer to.
+	 * @return {number}				- Returns the panda timer time that was set.
 	 */
 	timerChange(timer) {
 		return pandaTimer.setTimer(timer);
@@ -161,7 +165,7 @@ class MturkPanda extends MturkClass {
 	stopAll() { pandaTimer.stopAll(); }
 	/**
 	 * Toggle the panda timer pause status.
-	 * @return {number}					Returns the status of the panda timer pause mode.
+	 * @return {number} - Returns the status of the panda timer pause mode.
 	 */
 	pauseToggle() { return pandaTimer.pauseToggle(); }
 	/**
@@ -169,41 +173,41 @@ class MturkPanda extends MturkClass {
 	 * On database rejected it will send error to console and page before stopping script.
 	 */
 	async removeAll() {
-		let err = await this.getAllPanda(false); // Just add data into memory so it can be used to remove it from panda UI.
+		let err = await this.getAllPanda(false); // Add data into memory so it can be used to remove it from panda UI.
 		if (!err) {
 			while(this.pandaUniques.length) { const i = this.pandaUniques.shift(); this.removePanda(i, false); }
 		}
 	}
 	/**
 	 * Finds out if the panda timer is in go ham mode and returns status.
-	 * @return {bool}			Returns true if timer is in ham mode.
+	 * @return {bool} - Returns true if timer is in ham mode.
 	 */
-	isTimerGoingHam() { return pandaTimer.isHamOn(); }
+	isTimerGoingHam() { return pandaTimer.goingHam; }
 	/**
 	 * Tell panda timer to go ham on this panda with the queue unique id and use the temporary ham duration.
-	 * @param  {number} queueUnique   Unique number for the panda in timer queue.
-	 * @param  {number} tGoHam				The temporary duration for the goHam timer.
+	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
+	 * @param  {number} tGoHam			- The temporary duration for the goHam timer.
 	 */
 	timerGoHam(queueUnique, tGoHam) { pandaTimer.goHam(queueUnique, tGoHam) }
 	/**
 	 * Turn off the go ham in panda timer for this panda with the queue unique id.
-	 * @param  {number} queueUnique   Unique number for the panda in timer queue.
+	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
 	 */
 	timerHamOff(queueUnique) { pandaTimer.hamOff(queueUnique); }
 	/**
 	 * Tell panda timer to reset the time started for the temporary duration.
-	 * @param  {number} queueUnique   Unique number for the panda in timer queue.
+	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
 	 */
 	resetTimerStarted(queueUnique) { pandaTimer.resetTimeStarted(queueUnique); }
 	/**
 	 * Unpause the panda timer.
 	 */
-	unPauseTimer() { pandaTimer.unPauseTimer(); }
+	unPauseTimer() { pandaTimer.paused = false; }
 	/**
 	 * When logged off this will pause the panda timer and let panda UI know it's logged off.
 	 */
 	nowLoggedOff() {
-		pandaTimer.pauseTimer(); this.loggedOff = true;
+		pandaTimer.paused = true; this.loggedOff = true;
 		if (extPandaUI) extPandaUI.nowLoggedOff();
 	}
 	/**
@@ -215,18 +219,18 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Send the collection status and group ID for this panda to the search class.
-	 * @param  {number} myId			The unique ID for a panda job.
-	 * @param  {bool} status			The collection status of this panda.
+	 * @param  {number} myId - The unique ID for a panda job.
+	 * @param  {bool} status - The collection status of this panda.
 	 */
 	sendStatusToSearch(myId, status) {
 		mySearch.pandaStatus(this.info[myId].data.groupId,status)
 	}
 	/**
 	 * Starts collecting the panda with the unique ID and send info to the panda timer.
-	 * @param  {number} myId							The unique ID for a panda job.
-	 * @param  {bool} goHamStart					Go ham at start?
-	 * @param  {number} tempDuration			Temporary duration for this job used for external panda adds.
-	 * @param  {number} tempGoHam					Temporary go ham duration for this job used for external panda adds.
+	 * @param  {number} myId				 - The unique ID for a panda job.
+	 * @param  {bool} goHamStart		 - Go ham at start?
+	 * @param  {number} tempDuration - Temporary duration for this job used for external panda adds.
+	 * @param  {number} tempGoHam		 - Temporary go ham duration for this job used for external panda adds.
 	 */
 	async startCollecting(myId, goHamStart, tempDuration, tempGoHam) {
 		await this.getDbData(myId);
@@ -254,11 +258,10 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Stops collecting this panda with this unique ID.
-	 * @param  {number} myId						The unique ID for a panda job.
-	 * @param  {string} whyStop=null		Reason why collecting is stopping.
+	 * @param  {number} myId					 - The unique ID for a panda job.
+	 * @param  {string} [whyStop=null] - Reason why collecting is stopping.
 	 */
 	stopCollecting(myId, whyStop=null) {
-		// myId = unique id of job, whyStop = Stopping for only once, limit accepted or manual stopped.
 		let info = this.info[myId], queueUnique = info.queueUnique;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
 		if (this.pandaSkipped.includes(myId)) this.pandaSkipped = this.pandaSkipped.filter( (value) => value !== myId );
@@ -274,11 +277,11 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Add a panda to the panda UI and save to database if it wasn't saved before.
-	 * @param  {object} dbInfo						Data info for panda to add.
-	 * @param  {number} hitsAvailable			Number of hits available to collect.
-	 * @param  {bool} autoAdded						Is this panda auto added by a script or manually?
-	 * @param  {bool} update=false				Should this panda be updated in database first?
-	 * @param  {bool} loaded=false				Was this panda loaded from database?
+	 * @param  {object} dbInfo				- Data info for panda to add.
+	 * @param  {number} hitsAvailable - Number of hits available to collect.
+	 * @param  {bool} autoAdded				- Is this panda auto added by a script or manually?
+	 * @param  {bool} [update=false]	- Should this panda be updated in database first?
+	 * @param  {bool} [loaded=false]	- Was this panda loaded from database?
 	 */
 	async addPanda(dbInfo, hitsAvailable, autoAdded, update=false, loaded=false) {
 		const myId = this.uniqueIndex++; // get the next unique ID for this new panda
@@ -295,8 +298,8 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Remove the panda with the unique ID and delete from database if necessary.
-	 * @param  {number} myId				The unique ID for a panda job.
-	 * @param  {bool} deleteDB			Should panda be deleted from database?
+	 * @param  {number} myId	 - The unique ID for a panda job.
+	 * @param  {bool} deleteDB - Should panda be deleted from database?
 	 */
 	async removePanda(myId, deleteDB) {
 		this.stopCollecting(myId, null);
@@ -314,14 +317,14 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Changes the duration on the panda timer for panda with myid.
-	 * @param  {number} myId					The unique ID for a panda job.
-	 * @param  {number} duration			The new duration to be changed on the timer.
+	 * @param  {number} myId		 - The unique ID for a panda job.
+	 * @param  {number} duration - The new duration to be changed on the timer.
 	 */
 	timerDuration(myId) { pandaTimer.changeDuration(this.info[myId].queueUnique, this.info[myId].data.duration); }
 	/**
 	 * Gets data from mturk hit details and assigns them to the panda info object.
-	 * @param  {object} details			Object with all the details from the hit.
-	 * @param  {number} myId				The unique ID for a panda job.
+	 * @param  {object} details - Object with all the details from the hit.
+	 * @param  {number} myId		- The unique ID for a panda job.
 	 */
 	parseHitDetails(details, myId) {
 		let thisHit = this.info[myId];
@@ -339,9 +342,9 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Checks if this panda has any limits and returns any relevant info.
-	 * @param  {number} myId      The unique ID for a panda job.
-	 * @param  {bool} accepted		Was a hit accepted right now?
-	 * @return {array}						Reason for stopping is first. If hit being skipped is second.
+	 * @param  {number} myId   - The unique ID for a panda job.
+	 * @param  {bool} accepted - Was a hit accepted right now?
+	 * @return {array}				 - Reason for stopping is first. If hit being skipped is second.
 	 */
 	checkIfLimited(myId, accepted) {
 		const thisHit = this.info[myId]; let addedHits = 0, unskip=false, skipIt=false, stopIt=null;
@@ -378,9 +381,9 @@ class MturkPanda extends MturkClass {
 		return stopIt;
 	}
 	/**
-	 * This function gets called when a new queue result from mturk was grabbed so variables can be updated.
-	 * @param  {object} queueResults					Object with all the jobs in mturk queue.
-	 * @param  {string} authenticityToken			Token given by mturk so hits can be returned.
+	 * This method gets called when a new queue result from mturk was grabbed so variables can be updated.
+	 * @param  {object} queueResults			- Object with all the jobs in mturk queue.
+	 * @param  {string} authenticityToken - Token given by mturk so hits can be returned.
 	 */
 	gotNewQueue(queueResults, authenticityToken) {
 		if (extPandaUI) { // Make sure there is a panda UI opened.
@@ -394,8 +397,8 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Get the group id and requester id from the preview or accept url.
-	 * @param  {string} url				The url to parse and return info from.
-	 * @return {array}						Group id is first in array. Requester Id is second in array.
+	 * @param  {string} url - The url to parse and return info from.
+	 * @return {array}			- Group id is first in array. Requester Id is second in array.
 	 */
 	parsePandaUrl(url) {
 		let groupId=null, reqId=null;
@@ -407,20 +410,21 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Fetches the url for this panda after timer class tells it to do so and handles mturk results.
-	 * @param  {object} objUrl					Url object to use when fetching.
-	 * @param  {number} queueUnique   	Unique number for the job in timer queue.
-	 * @param  {number} elapsed					Exact time it took for the panda timer to do next queue job.
-	 * @param  {number} myId						The unique ID for a panda job.
+	 * Can detect logged out, pre's, max hits, no more hits, no qual, blocked and accepted a hit.
+	 * @param  {object} objUrl			- Url object to use when fetching.
+	 * @param  {number} queueUnique - Unique number for the job in timer queue.
+	 * @param  {number} elapsed			- Exact time it took for the panda timer to do next queue job.
+	 * @param  {number} myId				- The unique ID for a panda job.
 	 */
 	goFetch(objUrl, queueUnique, elapsed, myId) {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
+		if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 		super.goFetch(objUrl).then(result => {
       if (!result) {
         if (this.dError(1)) { 
           console.error('Returned result from panda fetch was a null.', JSON.stringify(objUrl));
 				}
 			} else if (extPandaUI!==null && this.info[myId].data!==null) {
-        if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalPandaFetched();
 				extPandaUI.highlightEffect_gid(myId);
 				const savedData = this.info[myId].data; // Save data just in case it gets removed on stop.
@@ -444,8 +448,8 @@ class MturkPanda extends MturkClass {
 	 * (0)-fatal = Errors that can crash or stall program.
    * (1)-error = Errors that shouldn't be happening but may not be fatal.
    * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
-	 * @param  {number} levelNumber			Level number for this error.
-	 * @return {bool}										True if this error is permitted to show.
+	 * @param  {number} levelNumber - Level number for this error.
+	 * @return {bool}								- True if this error is permitted to show.
 	 */
 	dError(levelNumber) { return dError(levelNumber, 'MturkPanda'); }
 	/**
@@ -454,8 +458,8 @@ class MturkPanda extends MturkClass {
    * (2)-debug = Shows the flow of the program with more debugging information.
    * (3)-trace = More details shown including variable contents and functions being called.
    * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
-	 * @param  {number} levelNumber			Level number for this debug message.
-	 * @return {bool}										True if this message is permitted to show.
+	 * @param  {number} levelNumber - Level number for this debug message.
+	 * @return {bool}								- True if this message is permitted to show.
 	 */
 	dLog(levelNumber) { return dLog(levelNumber, 'MturkPanda'); }
 }
