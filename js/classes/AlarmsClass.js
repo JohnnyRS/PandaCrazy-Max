@@ -1,5 +1,6 @@
 /**
  * Class dealing with the playing of the different alarms and saving it in the database.
+ * @class AlarmsClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class AlarmsClass {
@@ -21,9 +22,10 @@ class AlarmsClass {
   }
   /**
    * Prepare the alarms by getting the src of the alarm url and save to database if using default values.
-   * @param  {object} data      The alarms data object that has all the alarms.
-   * @param  {bool} fromDB      Did these alarms come from the database or default values?
-   * @return {object}           Error object to return if erro happened.
+   * @async
+   * @param  {object} data - The alarms data object that has all the alarms.
+   * @param  {bool} fromDB - Did these alarms come from the database or default values?
+   * @return {object}      - Error object to return if error happened.
    */
   async prepareAlarms(data, fromDB) {
     let err = null;
@@ -40,10 +42,16 @@ class AlarmsClass {
     return err;
   }
   /**
+   * This is called after the alarm data are prepared and ready.
+   * @callback afterCallBack
+   * @param {array} success  - Array of successful messages.
+   * @param {object} err     - An error object if promise was rejected.
+   */
+  /**
    * Loads up the alarms from the database or saves default values if no alarms are in the database.
    * Saves any errors from trying to add to database and then sends a reject.
-   * Sends success array with messages and error object from any rejects to afterFunc.
-   * @param  {function} afterFunc   Function to call after done to send success array or error object.
+   * @async
+   * @param  {afterCallBack} afterFunc - Function to call after done to send success error.
    */
   async prepare(afterFunc) {
     let success = [], err = null;
@@ -57,11 +65,11 @@ class AlarmsClass {
       } else err = await this.prepareAlarms(this.data, false);
       if (!err) success[0] = "All alarms have been loaded up.";
     }, (rejected) => err = rejected );
-    afterFunc.call(this, success, err); // Sends any errors back to the after function for processing.
+    afterFunc(success, err); // Sends any errors back to the after function for processing.
   }
   /**
    * Play the sound with the name provided.
-   * @param  {string} alarmSound      The name of the alarm to sound from the alarms object.
+   * @param  {string} alarmSound - The name of the alarm to sound from the alarms object.
    */
   playSound(alarmSound) {
     const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
@@ -77,8 +85,8 @@ class AlarmsClass {
    */
   doQueueAlarm() { this.playSound("queueAlert"); }
 	/**
-   * Function to decide which alarm to play according to the hit minutes and price.
-	 * @param  {object} thisHit     The hit information to use to decide on alarm to sound.
+   * Method to decide which alarm to play according to the hit minutes and price.
+	 * @param  {object} thisHit - The hit information to use to decide on alarm to sound.
 	 */
 	doAlarms(thisHit) {
 		const minutes = Math.floor(thisHit.assignedTime / 60);

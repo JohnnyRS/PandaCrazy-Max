@@ -1,52 +1,49 @@
 /**
  * This class deals with the different menus and which methods to call.
- * @param  {string} id    The id name of the quick menu on the UI to use to append.
+ * @class MenuClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class MenuClass {
+  /**
+   * @param  {string} id    The id name of the quick menu on the UI to use to append.
+   */
   constructor(id) {
-    this.quickMenuId = id;
-    this.topMenuId = "pcm_topMenu";
-
+    this.quickMenuId = id;                // The id name of the quick menu element to add menu's to.
+    this.topMenuId = "pcm_topMenu";       // The top menu id name to add menu's to.
+  }
+  prepare() {
     this.createTopMenu();
     this.createQuickMenu();
     this.showQuickMenu();
   }
   /**
-   * @param  {object} appendHere
-   * @param  {string} label
-   * @param  {function} btnFunc
-   * @param  {string} tooltip=""
+   * This method will add a menu with a label and the function to use when button clicked.
+   * @param  {object} appendHere               - The element that this menu will append to.
+   * @param  {string} label                    - This is the name of the menu button to use.
+   * @param  {function} btnFunc                - Function to call when menu button is clicked.
+   * @param  {string} tooltip=""               - The message for a tooltip for this menu button.
+   * @param  {string} className="pcm-quickBtn" - Class name to use for the button.
    */
-  addMenu(appendHere, label, btnFunc, tooltip="") {
+  addMenu(appendHere, label, btnFunc, tooltip="", className="pcm-quickBtn") {
     const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
-    $(`<button type="button" class="btn text-dark btn-xs border-danger ml-1 pcm-quickBtn"${addtip}>${label}</button>`).click( (e) => {
+    $(`<button type="button" class="btn text-dark btn-xs border-danger ${className}"${addtip}>${label}</button>`).click( (e) => {
       btnFunc.apply(this, [e]);
     } ).appendTo(appendHere);
   }
   /**
-   * @param  {object} appendHere
-   * @param  {string} text
+   * This will add a separator span with a character to the provided element.
+   * @param  {object} appendHere - The element to add the separator to.
+   * @param  {string} text       - The character used for the separator.
    */
   addSeparator(appendHere, text) { $(`<span class="mx-2">${text}</span>`).appendTo(appendHere); }
   /**
-   * @param  {object} appendHere
-   * @param  {string} label
-   * @param  {string} tooltip
-   * @param  {function} labelFunc
-   * @param  {string} dropdownStyle
-   * @param  {array} dropdownInfo
-   * @param  {string} label2=null
-   * @param  {function} label2Func
-   * @param  {string} label3=null
-   * @param  {function} label3Func
+   * Adds a sub menu to a menu with dropdownstyle allowing for 3 submenus under the main menu.
+   * @param  {object} appendHere    - Append submenu to an added menu element.
+   * @param  {string} dropdownStyle - The css style of the dropdown when submenu arrow clicked.
+   * @param  {array} dropdownInfo   - The dropdown information for the rest of the submenus.
    */
-  addSubMenu(appendHere, label, tooltip, labelFunc, dropdownStyle, dropdownInfo, label2=null, label2Func, label3=null, label3Func) {
-    const addtip = (tooltip!=="") ? ` data-toggle="tooltip" data-placement="bottom" title="${tooltip}"` : ``;
+  addSubMenu(appendHere, dropdownStyle, dropdownInfo) {
     const btnGroup = $(`<div class="btn-group py-0"></div>`).appendTo(appendHere);
-    $(`<button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn"${addtip}>${label}</button>`).click( (e) => { labelFunc.apply(this, [e]); } ).appendTo(btnGroup);
-    if (label2) $(`<button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">${label2}</button>`).click( (e) => { label2Func.apply(this, [e]); } ).appendTo(btnGroup);
-    if (label3) $(`<button type="button" class="btn text-dark border-danger btn-xs pcm-topMenuBtn">${label3}</button>`).click( (e) => { label3Func.apply(this, [e]); } ).appendTo(btnGroup);
     $(`<button type="button" class="btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>`).append($(`<span class="sr-only">Toggle Dropdown</span>`)).appendTo(btnGroup);
     const dropdownMenu = $(`<div class="dropdown-menu pcm_dropdownMenu" style="${dropdownStyle}"></div>`).appendTo(btnGroup);
     dropdownInfo.forEach( (info) => {
@@ -61,29 +58,48 @@ class MenuClass {
     });
   }
   /**
+   * Create the top menu using addMenu and addSubMenu Methods.
    */
   createTopMenu() {
     const topMenu = $(`<div class="btn-group text-left border border-info" id="pcm_topMenuGroup" role="group"></div>`).appendTo($(`#${this.topMenuId}`));
-    this.addSubMenu(topMenu, "Vol:", "Change Volume of Alarms", () => {}, "min-width:3rem; text-align:center;", [{type:"rangeMax", label:"100"}, {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }}, {type:"rangeMin", label:"0"}]);
-    this.addSubMenu(topMenu, "Jobs", "List all Panda Jobs Added", () => { pandaUI.showJobsModal(); }, "", 
+    this.addMenu(topMenu, "Vol:", () => {}, "", "pcm-topMenuBtn");
+    this.addSubMenu(topMenu, "min-width:3rem; text-align:center;", 
+      [{type:"rangeMax", label:"100"},
+       {type:"slider", id:"pcm_volumeVertical", min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(ui.value); }, createFunc: (e, ui) => { $(e.target).find(".ui-slider-handle").text(50).css({left: "-.5em", width: "30px"}); }},
+       {type:"rangeMin", label:"0"}]);
+    this.addMenu(topMenu, "Jobs", () => { pandaUI.showJobsModal(); }, "List all Panda Jobs Added", "pcm-topMenuBtn");
+    this.addSubMenu(topMenu, "", 
       [{type:"item", label:"Add", menuFunc: () => { modal.showJobAddModal(); }, tooltip:"Add a new Panda Job"},
        {type:"item", label:"Stop All", menuFunc: () => { bgPanda.stopAll(); }, tooltip:"Stop All Collecting Panda's"},
        {type:"item", label:"Search Jobs", menuFunc: () => { pandaUI.showJobsModal(); }, tooltip:"Search the Panda Jobs Added"},
        {type:"item", label:"Search Mturk"},
-       {type:"divider"}, {type:"item", label:"Export"}, {type:"item", label:"Import"}]);
-    this.addSubMenu(topMenu, "Display", "Change Panda Display Size", () => {}, "", [{type:"item", label:"Normal"}, {type:"item", label:"Minimal Info"}, {type:"item", label:"One Line Info"}]);
-    this.addSubMenu(topMenu, "Grouping", "List all Groupings Added", () => { groupings.showGroupingsModal(pandaUI); }, "",
+       {type:"divider"},
+       {type:"item", label:"Export"}, {type:"item", label:"Import"}]);
+    this.addMenu(topMenu, "Display", () => {}, "", "pcm-topMenuBtn");
+    this.addSubMenu(topMenu, "",
+      [{type:"item", label:"Normal"},
+       {type:"item", label:"Minimal Info"},
+       {type:"item", label:"One Line Info"}]);
+    this.addMenu(topMenu, "Grouping", () => { groupings.showGroupingsModal(pandaUI); }, "List all Groupings Added", "pcm-topMenuBtn");
+    this.addSubMenu(topMenu, "",
       [{type:"item", label:"Start/Stop", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } },
        {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(true); } },
        {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(); } },
        {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } }]);
-    this.addSubMenu(topMenu, "1", "Change timer to the Main Timer", () => { bgPanda.timerChange(globalOpt.getTimer1()); }, "",
-      [{type:"item", label:"Edit Timers", menuFunc: () => { globalOpt.showTimerOptions(); } }, {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}],
-      "2", () => { bgPanda.timerChange(globalOpt.getTimer2()); },
-      "3", () => { bgPanda.timerChange(globalOpt.getTimer3()); });
-    this.addSubMenu(topMenu, "Options", "Change Global, Alarms or timer Options ", function() { globalOpt.showGeneralOptions(); }, "", [{type:"item", label:"General", menuFunc:() => { globalOpt.showGeneralOptions(); }}, {type:"item", label:"Edit Timers", menuFunc:function() { globalOpt.showTimerOptions(); }}, {type:"item", label:"Edit Alarms", menuFunc:() => { modal.showAlarmOptions(); }}]);
+    this.addMenu(topMenu, "1", () => { bgPanda.timerChange(globalOpt.getTimer1()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
+    this.addMenu(topMenu, "2", () => { bgPanda.timerChange(globalOpt.getTimer2()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
+    this.addMenu(topMenu, "3", () => { bgPanda.timerChange(globalOpt.getTimer3()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
+    this.addSubMenu(topMenu, "",
+      [{type:"item", label:"Edit Timers", menuFunc: () => { globalOpt.showTimerOptions(); } },
+       {type:"item", label:"Increase by 5ms"}, {type:"item", label:"Decrease by 5ms"}, {type:"item", label:"Reset Timers"}]);
+      this.addMenu(topMenu, "Options", () => { globalOpt.showGeneralOptions(); }, "Change Global, Alarms or timer Options", "pcm-topMenuBtn");
+      this.addSubMenu(topMenu, "",
+      [{type:"item", label:"General", menuFunc:() => { globalOpt.showGeneralOptions(); }},
+       {type:"item", label:"Edit Timers", menuFunc:function() { globalOpt.showTimerOptions(); }},
+       {type:"item", label:"Edit Alarms", menuFunc:() => { modal.showAlarmOptions(); }}]);
   }
   /**
+   * Create the quick menu buttons under the stats area.
    */
   createQuickMenu() {
     const quickMenu = $(`<div class="btn-group text-left w-100 py-1" role="group"></div>`).appendTo($(`#${this.quickMenuId}`));
@@ -98,9 +114,11 @@ class MenuClass {
     this.addMenu(group, "Search Mturk", () => {} );
   }
   /**
+   * This will show the quickMenu buttons.
    */
   showQuickMenu() { $(`#${this.quickMenuId}`).show(); }
   /**
+   * This will hide the quickMenu buttons.
    */
   hideQuickMenu() { $(`#${this.quickMenuId}`).hide(); }
 }

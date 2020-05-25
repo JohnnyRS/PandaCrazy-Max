@@ -1,22 +1,25 @@
 /**
  * Class for using datbases with promises for operations so it can wait for completion of function.
- * @param {string} dbName      Name of the database to be used.
- * @param {number} dbVersion   Version number for this database.
+ * @class DatabaseClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class DatabaseClass {
+  /**
+   * @param {string} dbName      Name of the database to be used.
+   * @param {number} dbVersion   Version number for this database.
+   */
   constructor(dbName, dbVersion) {
-    this.db = null; // Database variable to the indexedDB object.
-    this.dbName = dbName;
-    this.dbVersion = dbVersion;
+    this.db = null;                 // Database variable to the indexedDB object.
+    this.dbName = dbName;           // Database name for the indexedDB object.
+    this.dbVersion = dbVersion;     // Database version for the indexedDB object.
     this.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   }
   /**
    * Opens this database using dbName and dbVersion properties of class.
    * Assigns db property to opened database request.
-   * @param {bool} deleteFirst    Delete database before opening or creating it?
-   * @param {function} upgrade    Function to be used when upgrade is needed because newer version.
-   * @return {promise}            Database version in resolve. Error object in reject.
+   * @param {bool} deleteFirst - Delete database before opening or creating it?
+   * @param {function} upgrade - Function to be used when upgrade is needed because newer version.
+   * @return {promise}         - Database version in resolve. Error object in reject.
    */
   openDB(deleteFirst, upgrade) {
     return new Promise( (resolve, reject) => {
@@ -38,10 +41,10 @@ class DatabaseClass {
   }
   /**
    * Adds data to database with a key in data or next key available.
-   * @param {string} storeName    Store name to be used for adding data to.
-   * @param {object} data         Data to be added to the store name database.
-   * @param {bool} update=false   True to use put for add or update data. False to use add only and error if key exists.
-   * @return {promise}            Database key or new key in resolve. Error object in reject.
+   * @param {string} storeName    - Store name to be used for adding data to.
+   * @param {object} data         - Data to be added to the store name database.
+   * @param {bool} [update=false] - True to use put for add or update. False to use add only.
+   * @return {promise}            - Database key or new key in resolve. Error object in reject.
    */
   addToDB(storeName, data, update=false) {
     return new Promise( (resolve, reject) => {
@@ -56,9 +59,9 @@ class DatabaseClass {
   }
   /**
    * Updates data in database with a key in data or if key not found then it adds data.
-   * @param {string} storeName  Store name to be used for adding data to.
-   * @param {object} data       Data to be added to the store name database.
-   * @return {promise}          Database key or new key in resolve. Error object in reject.
+   * @param {string} storeName - Store name to be used for adding data to.
+   * @param {object} data      - Data to be added to the store name database.
+   * @return {promise}         - Database key or new key in resolve. Error object in reject.
    */
   updateDB(storeName, data) {
     return new Promise( (resolve, reject) => {
@@ -67,12 +70,12 @@ class DatabaseClass {
   }
   /**
    * Get an array or object of items from database with a key. Using arrays is by default.
-   * @param {string} storeName            Store name to be used for adding data to.
-   * @param {string} key                  Get the item with this key.
-   * @param {bool} doCursor=false         Use cursor to get multiple items with the key.
-   * @param {function} cursorFunc=null    Function to use for each item got with cursor.
-   * @param {bool} useArray=true          Use array or false to save returned value from cursorFunc to object.
-   * @return {promise}                    Array or object in resolve. Error object in reject.
+   * @param {string} storeName           - Store name to be used for adding data to.
+   * @param {string} key                 - Get the item with this key.
+   * @param {bool} [doCursor=false]      - Use cursor to get multiple items with the key.
+   * @param {function} [cursorFunc=null] - Function to use for each item got with cursor.
+   * @param {bool} [useArray=true]       - Use array or false to save returned value from cursorFunc to object.
+   * @return {promise}                   - Array or object in resolve. Error object in reject.
    */
   getFromDB(storeName, key, doCursor=false, cursorFunc=null, useArray=true) {
     return new Promise( (resolve, reject) => {
@@ -99,10 +102,10 @@ class DatabaseClass {
   }
   /**
    * Delete an item or items from a database with a key using an index if necessary.
-   * @param {string} storeName        Store name to be used for adding data to.
-   * @param {string} key              Delete the item with this key.
-   * @param {string} indexName=null   Use index name and delete all items with key.
-   * @return {promise}                Key in resolve. Error object in reject.
+   * @param {string} storeName        - Store name to be used for adding data to.
+   * @param {string} key              - Delete the item with this key.
+   * @param {string} [indexName=null] - Use index name and delete all items with key.
+   * @return {promise}                - Key in resolve. Error object in reject.
    */
   deleteFromDB(storeName, key, indexName=null) {
     return new Promise( (resolve, reject) => {

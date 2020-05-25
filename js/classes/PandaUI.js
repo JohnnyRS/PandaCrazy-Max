@@ -11,15 +11,13 @@ class PandaUI {
 		this.hamBtnColor = "";				// Default value for color of the ham button from css file
 		this.newAddInfo = {};					// Temporary storage for new panda adds
 		this.pandaStats = {};					// Object of PandaStats Class object with stats for each panda
+		this.tabs = null;
+		this.logTabs = null;
+		this.pandaGStats = null;
 		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database
 		this.collectStore = "collectionStore";	// Name for collection times storage in database
 		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database
-			this.dbStats = new DatabaseClass( this.dbStatsName, 1);
-		this.tabs = new TabbedClass(			// Add in all the panda tabbed ID's for easy access to UI
-			$(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
-		this.logTabs = new LogTabsClass(); 		// Functions dealing with the tabs in UI
-		this.logTabs.updateCaptcha(globalOpt.getCaptchaCount());			// Show captcha count on bottom tabs
-		this.pandaGStats =  new PandaGStats();												// Global stats for panda's
+		this.dbStats = new DatabaseClass( this.dbStatsName, 1);
 		chrome.runtime.onMessage.addListener( (request, sender) => { 	// used for external add buttons
 			if (request.command.substring(0, 3)==="add") { this.addFromExternal(request); }
 		});
@@ -51,11 +49,16 @@ class PandaUI {
 	 * If loaded up data is done then start queue monitor and removes panda data to save memory.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
-	 * @param  {function} afterFunc			Function to call after done to send success array or error object.
+	 * @param  {function} afterFunc - Function to call after done to send success array or error object.
 	 */
 	async prepare(afterFunc) {
 		// Prepare panda class before the UI
 		let success = [], err = null;
+		this.tabs = new TabbedClass(			// Add in all the panda tabbed ID's for easy access to UI
+			$(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
+		this.logTabs = new LogTabsClass(); 		// Functions dealing with the tabs in UI
+		this.logTabs.updateCaptcha(globalOpt.getCaptchaCount());			// Show captcha count on bottom tabs
+		this.pandaGStats =  new PandaGStats();												// Global stats for panda's
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			// Use initializing default if database wasn't created yet.

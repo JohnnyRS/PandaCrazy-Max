@@ -1,6 +1,8 @@
 /**
- * Class for the global options and functions to change them.
+ * Class for the global options and methods to change them.
  * Breaks up the options into general, timers and alarms options.
+ * @class PandaGOptions
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class PandaGOptions {
   constructor() {
@@ -46,7 +48,7 @@ class PandaGOptions {
    * Load up global options from database or use and save default options into database.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
-   * @param {function} afterFunc    Function to call after done to send success array or error object.
+   * @param {function} afterFunc - Function to call after done to send success array or error object.
    */
   async prepare(afterFunc) {
     let success = [], err = null;
@@ -66,15 +68,17 @@ class PandaGOptions {
         }, rejected => err = rejected);
       }
     }, rejected => err = rejected);
-    afterFunc.call(this, success, err); // Sends good Messages or any errors in the after function for processing.
+    afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /**
+   * Enables the tooltips or disabled the tooltips.
    */
   update() {
     if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
     else { $('[data-toggle="tooltip"]').tooltip('disable'); $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable'); }
    }
   /**
+   * Shows the general options in a modal for changes.
    */
   showGeneralOptions() {
     const idName = modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
@@ -97,6 +101,7 @@ class PandaGOptions {
     modal.showModal();
    }
   /**
+   * Shows the timer options in a modal for changes.
    */
   showTimerOptions() {
     const idName = modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
@@ -120,6 +125,7 @@ class PandaGOptions {
     modal.showModal();
    }
   /**
+   * Shows the alarm options in a modal for changes.
    */
   showAlarmOptions() {
     const idName = modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
@@ -141,6 +147,8 @@ class PandaGOptions {
     modal.showModal();
    }
   /**
+   * Updates the captcha text area with updated info.
+   * @return {number} - Returns the value in the captcha counter.
    */
   updateCaptcha() {
     if (this.general.captchaCountText) {
@@ -149,10 +157,13 @@ class PandaGOptions {
     } else return null;
   }
   /**
+   * Resets the captcha counter back down to 0.
    */
   resetCaptcha() { this.captchaCounter = 0; }
   /**
-   * @param  {number} seconds
+   * Checks to see if it's ok to sound the queue alarm or not.
+   * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
+   * @return {bool} - True if the queue alert should be sounded.
    */
   checkQueueAlert(seconds) {
     let returnValue = false, saveMinutes = true;
@@ -165,21 +176,33 @@ class PandaGOptions {
     return returnValue;
   }
   /**
+   * Is the queue alert disabled?
+   * @return {bool} - True if queue alert is disabled.
    */
   isQueueAlert() { return !this.general.disableQueueAlert; }
   /**
+   * Is the queue alarm disabled?
+   * @return {bool} - True if queue alarm is disabled.
    */
   isQueueAlarm() { return !this.general.disableQueueAlarm; }
   /**
+   * Gets the main timer value.
+   * @return {number} - 
    */
   getTimer1() { return this.timers.mainTimer; }
   /**
+   * Gets the second timer value.
+   * @return {number} - Returns the value for the main timer.
    */
   getTimer2() { return this.timers.secondTimer; }
   /**
+   * Gets the third timer value.
+   * @return {number} - Returns the value for the second timer.
    */
   getTimer3() { return this.timers.thirdTimer; }
   /**
+   * Gets the captcha counter.
+   * @return {number} - Returns the value for the third timer.
    */
   getCaptchaCount() { return this.captchaCounter; }
 }

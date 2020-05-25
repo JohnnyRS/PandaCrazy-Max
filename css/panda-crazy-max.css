@@ -17,6 +17,7 @@ html, body { height: 100%; }
 #pcm_quickMenu { line-height: 1.0; vertical-align: top; border-bottom: 4px solid #e0cdcb; background-color: #03043a; }
 .pcm_status { background-color:#03043a; color: #f3fd7d; padding-left: 10px; height:20px; line-height: 1.0; vertical-align: top; }
 .pcm-quickBtn, .pcm-topMenuBtn { background-color: #ebf1f5; font-size: 0.8em !important; }
+.pcm-quickBtn { margin-left: 2px !important; }
 .pcm_dMenuButton { background-color:#063e4d; vertical-align: bottom; width:17px; line-height:1.2; font-size: 13px; padding: 7px 4px 0 4px; }
 #pcm_pandaTabs .pcm_tabs { overflow-y:auto; height: calc(100vh - 260px); }
 #pcm_logTabs .pcm_tabs { overflow-y:auto; height: 140px; }

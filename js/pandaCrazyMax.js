@@ -1,4 +1,6 @@
-let globalOpt=null, modal=null, pandaUI=null, alarms=null, notify=null, groupings=null, menus=null;
+let globalOpt=new PandaGOptions(), modal = new ModalClass(), alarms = new AlarmsClass();
+let notify = new NotificationsClass(), groupings = new PandaGroupings(), pandaUI = new PandaUI();
+let menus = new MenuClass("pcm_quickMenu");
 let goodDB=false, errorObject = null;
 let bgPage = chrome.extension.getBackgroundPage(); // Get the background page object for easier access.
 let bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(); // Get objects to panda and queue class.
@@ -7,9 +9,8 @@ let bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(); // Get objects t
  * Open a modal showing loading Data and then after it shows on screen go start Panda Crazy.
  */
 function modalLoadingData() {
-  modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, startPandaCrazy ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, startPandaCrazy.bind(this) ); // Calls startPandaCrazy after modal shown.
 }
 /**
  * Starts the process of loading data in the program and check for errors as it goes.
@@ -18,15 +19,10 @@ function modalLoadingData() {
 async function startPandaCrazy() {
   await bgPage.gCheckPandaDB().then( result => { goodDB = result; }, rejected => errorObject = rejected );
   if (goodDB) {
-    globalOpt = new PandaGOptions();
     await globalOpt.prepare( showMessages ); // Wait for global options to load and show message or error.
-    pandaUI = new PandaUI();
-    alarms = new AlarmsClass();
     await alarms.prepare( showMessages ); // Wait for alarms to load and show message or error.
-    notify = new NotificationsClass();
-    groupings = new PandaGroupings();
     await groupings.prepare( showMessages ); // Wait for groupings to load and show message or error.
-    menus = new MenuClass("pcm_quickMenu");
+    menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
     await pandaUI.prepare( showMessages ); // Wait for panda jobs to load and show message or error.
   

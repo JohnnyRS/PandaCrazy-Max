@@ -1,14 +1,11 @@
 /**
  * Class dealing with any debug logging or error logging.
  * From options it will know when to show a log or error on console. Will even halt program if needed.
+ * @class DebuggerClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class DebuggerClass {
   constructor() {
-    this.onPage = true;
-    this.inModal = true;
-    this.consoleLogE = 
-    this.consoleLogL = 3; // console.log Log level
     this.errorLevel = 2; // Level number for reporting errors.
     /**
       * 0-fatal = Errors that can crash or stall program.
@@ -23,15 +20,15 @@ class DebuggerClass {
       * 4-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
       */
     this.classesLog = { // Name of classes to log only or log all.
-      'all':true, 'Main':false, 'TimerClass':false, 'LogTabsClass':false, 'MturkQueue':false, 'MturkPanda':false
+      'all':true, 'Main':false, 'TimerClass':false, 'LogTabsClass':false, 'MturkQueue':false, 'MturkPanda':false, 'MturkHitSearch':false
     }
   }
   /**
    * Checks the error number, debug number and className for permission to display a message.
-   * @param {number} eLevel       Level error number for an error message.
-   * @param {number} lLevel       Level logging number for a debug message.
-   * @param {string} className    The name of the class logging a debug or error message.
-   * @return {bool}               Returns true if good to show message.
+   * @param {number} eLevel    - Level error number for an error message.
+   * @param {number} lLevel    - Level logging number for a debug message.
+   * @param {string} className - The name of the class logging a debug or error message.
+   * @return {bool}            - Returns true if good to show message.
    */
   checkDebug( eLevel, lLevel, className ) { 
     let returnValue = false;
@@ -45,16 +42,16 @@ class DebuggerClass {
   }
   /**
    * Checks the error number only for permission to display a message.
-   * @param  {number} eLevel      Level error number for an error message.
-   * @param  {string} className   The name of the class logging a debug or error message.
-   * @return {bool}               Returns true if good to show message.
+   * @param  {number} eLevel    - Level error number for an error message.
+   * @param  {string} className - The name of the class logging a debug or error message.
+   * @return {bool}             - Returns true if good to show message.
    */
   checkErrorDebug(eLevel, className) { return this.checkDebug(eLevel, -1, className); }
   /**
    * Checks the log number only for permission to display a message.
-   * @param  {number} lLevel      Level logging number for a debug message.
-   * @param  {string} className   The name of the class logging a debug or error message.
-   * @return {bool}               Returns true if good to show message.
+   * @param  {number} lLevel    - Level logging number for a debug message.
+   * @param  {string} className - The name of the class logging a debug or error message.
+   * @return {bool}             - Returns true if good to show message.
    */
   checkLogDebug(lLevel, className) { return this.checkDebug(-1, lLevel, className); }
 }
