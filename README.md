@@ -1,4 +1,4 @@
-<h1 align="center">PandaCrazy Chrome Extension Ver. 0.8.1 for Amazon Mturk</h1>
+<h1 align="center">PandaCrazy Chrome Extension Ver. 0.8.2 for Amazon Mturk</h1>
 
 *This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.*
 
