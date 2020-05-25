@@ -23,8 +23,8 @@ class MturkPanda extends MturkClass {
 		this.alarmsStore = "alarmsStore";				// Name of the store for saving user selected alarms.
 		this.uniqueIndex = 0;										// unique number for a panda.
 		this.pandaUniques = [];									// Array of all unique numbers being used now.
-		this.dbIds = {};												// Object of all dbId's for easy searching.
-		this.pandaGroupIds = {};								// Object of all groupId's for easy searching.
+		this.dbIds = {};												// Object of all dbId's with myId value for easy searching.
+		this.pandaGroupIds = {};								// Object of all groupId's with unique ID value for easy searching.
 		this.info = {};													// Object of panda info.
     this.pandaUrls = [];										// Array of panda objects for a panda with preview and accept links.
 		this.pandaSkipped = [];									// List of all panda's being skipped because of limits.
@@ -38,6 +38,12 @@ class MturkPanda extends MturkClass {
 		this.useDefault = false;								// Should we be using default values because no data in database?
 		this.db = new DatabaseClass(this.dbName, 1);  // Set up the database class.
 	}
+	/**
+	 * converts the unique database ID to the equivalent unique panda job ID.
+	 * @param  {number} dbId - The unique database ID for a panda job.
+	 * @return {number}			 - Returns the unique databse ID from a unique panda job ID.
+	 */
+	getMyId(dbId) { return this.dbIds[dbId]; }
 	/**
 	 * Creates a panda accept url for groupid.
 	 * @param  {string} groupId - The groupId of the panda to creat a url.
@@ -56,7 +62,7 @@ class MturkPanda extends MturkClass {
    */
   openDB() {
     return new Promise( (resolve, reject) => {
-      this.db.openDB( true, (e) => {
+      this.db.openDB( false, (e) => {
         if (e.oldVersion == 0) { // Had no database so let's initialise it.
           e.target.result.createObjectStore(this.storeName, {keyPath:"id", autoIncrement:"true"})
           	.createIndex("groupId", "groupId", {unique:false}); // GroupID is an index to search faster

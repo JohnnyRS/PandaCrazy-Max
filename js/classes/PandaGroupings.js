@@ -1,12 +1,20 @@
+/**
+ * @class PandaGroupings
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+ */
 class PandaGroupings {
   constructor() {
-    this.groups = {};        // 
-    this.groupStatus = {};
-    this.unique = 1;
-    this.startTimes = {};
-    this.endTimes = {};
-		this.thisDay = moment().date();
+    this.groups = {};                 // Object with all the data for all the groupings.
+    this.groupStatus = {};            // Object for the status of each grouping.
+    this.unique = 1;                  // A unique value for grouping starting at 1.
+    this.startTimes = {};             // Object with all the start times for groupings.
+    this.endTimes = {};               // Object with all the end times for groupings.
+		this.thisDay = moment().date();   // Used to check when the next day happens.
   }
+  /**
+   * Sets up the data for the start and end times for this grouping with the unique number.
+   * @param  {number} unique - The unique number for the grouping to set times for.
+   */
   setStartEndTimes(unique) {
     const thisGroup = this.groups[unique], startMoment = moment(thisGroup.startTime,"hh:mm A");
     const endSet = (thisGroup.endHours!=="0" || thisGroup.endMinutes!=="0");
@@ -14,6 +22,10 @@ class PandaGroupings {
     if (!endSet) this.endTimes[unique] = null;
     else this.endTimes[unique] = moment(startMoment).add({hour:thisGroup.endHours, minute:thisGroup.endMinutes});
 }
+  /**
+   * This resets the start and end times for all the groupings for next day or first start.
+   * @param  {bool} [fillStatus=true] - Should group status be filled in also? Only on first start.
+   */
   resetTimes(fillStatus=true) {
     for (var i=0, keys=Object.keys(this.groups); i < keys.length; i++) {
       if (this.groups[keys[i]].startTime !== "") this.setStartEndTimes(keys[i]);
@@ -24,10 +36,9 @@ class PandaGroupings {
    * Loads up any groupings saved in datbase.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
-   * @param  {function} afterFunc   Function to call after done to send success array or error object.
+   * @param  {function} afterFunc - Function to call after done to send success array or error object.
    */
   async prepare(afterFunc) {
-    // Gets groupings from the database
     let success = [], err = null;
     await bgPanda.db.getFromDB(bgPanda.groupingStore, null, true,
         async (cursor, index) => { return {[index]:cursor.value}; }, false) // Return object for cursor.
@@ -38,8 +49,11 @@ class PandaGroupings {
       }
       success[0] = "All Groupings have been loaded.";
     }, (rejected) => err = rejected );
-    afterFunc.call(this, success, err);
+    afterFunc(success, err);
   }
+  /**
+   * This method checks all the start times and starts groupings when necessary.
+   */
   checkStartTimes() {
     let day = moment().date();
     if (this.thisDay != day) this.resetTimes(false); // Reset start and end times object if new day.
@@ -49,7 +63,6 @@ class PandaGroupings {
       for (var i=0, keys=Object.keys(this.startTimes); i < keys.length; i++) {
         const startMoment = this.startTimes[keys[i]], endMoment = this.endTimes[keys[i]];
         if (!this.groupStatus[keys[i]].collecting) { // Is the group already collecting then skip check.
-          // Get the start time and find out if there is a end time.
           if (thisMoment.isSameOrAfter(startMoment) &&
             (!endMoment || (endMoment && thisMoment.isBefore(endMoment))) ) this.toggle(keys[i]);
         } else { // Group is collecting and has a start time so check end time
@@ -62,8 +75,14 @@ class PandaGroupings {
       }
     }
   }
-  addGroup(group, myIdInfo) { group[myIdInfo[0]] = {hamMode:myIdInfo[1]}; }
-  add(name, description, additions, delayedStart=false) {
+  /**
+   * Adds a grouping with the name, description and data for it.
+   * @param  {string} name        - The name for this new grouping.
+   * @param  {string} description - The description for this new grouping.
+   * @param  {object} additions   - An object with all data for the new grouping.
+   * @return {number}             - Returns the unique number for this new grouping.
+   */
+  add(name, description, additions) {
     let newGroup = {name:name, description:description, pandas:{}, sorted:[], startTime:"", endHours:0, endMinutes:0};
     const newUnique = this.unique;
     newGroup.pandas = additions;
@@ -71,8 +90,13 @@ class PandaGroupings {
     this.groups[newUnique] = newGroup;
     bgPanda.db.addToDB(bgPanda.groupingStore, newGroup).then( (id) => { this.groups[newUnique].id = id; } );
     this.groupStatus[newUnique] = {collecting:false};
+    if (this.groups[newUnique].startTime!=="") this.setStartEndTimes(newUnique);
     return this.unique++;
   }
+  /**
+   * Instantly create a grouping without user input for name or description.
+   * @param  {bool} [andEdit=false] - True if user can select the panda's in the grouping after creation.
+   */
   createInstant(andEdit=false) {
     let collection = {};
     let filtered = bgPanda.pandaUniques.filter( (value) => { return pandaUI.pandaStats[value].collecting; });
@@ -91,48 +115,87 @@ class PandaGroupings {
       this.showgroupingEditModal(unique, () => { this.showGroupingsModal(pandaUI); }, () => { this.delete(unique); });
     }
   }
-  delete(unique) {
-    bgPanda.db.deleteFromDB(bgPanda.groupingStore, this.groups[unique].id)
+  /**
+   * Delete this grouping with the unique number.
+   * @param  {number} grouping - The unique number for the grouping to be deleted.
+   */
+  async delete(grouping) {
+    await bgPanda.db.deleteFromDB(bgPanda.groupingStore, this.groups[grouping].id)
     .then( null, (rejected) => console.error(rejected));
-    delete this.groups[unique];
-    delete this.groupStatus[unique];
+    delete this.groups[grouping];
+    delete this.groupStatus[grouping];
+    delete this.startTimes[grouping];
+    delete this.endTimes[grouping];
   }
-  start(unique) { return this.groups[unique].pandas; }
-  delayedToggle(unique, index, keys) {
-    if (index<keys.length) {
-      if (this.groupStatus[unique].collecting) pandaUI.startCollecting(bgPanda.dbIds[keys[index]]);
-      else pandaUI.stopCollecting(bgPanda.dbIds[keys[index]]);
-      Object.keys(this.groups).forEach( grouping => { this.goCheckGroup(grouping); });
-      setTimeout( () => { this.delayedToggle(unique, ++index, keys); }, 30 )
+  /**
+   * If grouping has more than 1 panda to start it will stagger collection so timer won't get bombarded.
+   * @param  {number} grouping - The unique number for the grouping to be deleted.
+   * @param  {array} keys      - The array of panda dbId's to start collecting.
+   */
+  delayedToggle(grouping, keys) {
+    if (keys.length>0) {
+      let pandaDbKey = keys.shift(), myId = bgPanda.getMyId(pandaDbKey);
+      if (this.groupStatus[grouping].collecting) pandaUI.startCollecting(myId);
+      else pandaUI.stopCollecting(myId);
+      setTimeout( () => { this.delayedToggle(grouping, keys); }, 100 );
     }
   }
-  toggle(unique) {
-    const keys = Object.keys(this.groups[unique].pandas);
-    if (keys.length===0) return false;
-    this.groupStatus[unique].collecting = !this.groupStatus[unique].collecting;
-    if (this.groupStatus[unique].collecting) $(`#pcm_nameDesc_${unique}`).closest("tr").css("background-color", "green");
-    else { 
-      $(`#pcm_nameDesc_${unique}`).closest("tr").css("background-color", (Object.keys(this.groups[unique].pandas).length===0) ? "#800517" : "");
-      delete this.startTimes[unique]; this.endTimes[unique];
+  /**
+   * Toggles the collecting status for the grouping with the unique ID.
+   * @param  {number} grouping - The unique number for the grouping to be deleted.
+   */
+  toggle(grouping, noCheck=false) {
+    const keys = Object.keys(this.groups[grouping].pandas);
+    if (keys.length>0) {
+      this.groupStatus[grouping].collecting = !this.groupStatus[grouping].collecting;
+      if (this.groupStatus[grouping].collecting)
+        $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", "green");
+      else { 
+        $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", (keys.length===0) ? "#800517" : "");
+        delete this.startTimes[grouping]; delete this.endTimes[grouping];
+      }
+      if (!noCheck) Object.keys(this.groups).forEach( unique => { this.goCheckGroup(unique); });
+      setTimeout( () => { this.delayedToggle(grouping, keys); }, 10 );
     }
-    setTimeout( () => { this.delayedToggle(unique, 0, keys); }, 30 );
   }
-  stop() { return this.groups[unique].pandas; }
-  goCheckGroup(grouping) {
-    let collecting = false, theGroup = this.groupStatus[grouping];
+  /**
+   * Starts collecting the panda's from the group with the unique ID only if it's not collecting already.
+   * @param  {number} grouping - The unique number for the grouping to be started.
+   */
+  startCollecting(grouping) { if (!this.groupStatus[grouping].collecting) this.toggle(grouping, true); }
+  /**
+   * Stops collecting the panda's from the group with the unique ID only if it's collecting right now. 
+   * @param  {number} grouping - The unique number for the grouping to be stopped.
+   */
+  stopCollecting(grouping) { if (this.groupStatus[grouping].collecting) this.toggle(grouping, true); }
+  /**
+   * Check all panda jobs for a grouping to make sure it's not deleted and remove from grouping if it is.
+   * If all panda's are collecting in the grouping then make sure grouping is toggled on.
+   * If all panda's are not collecting in the grouping then make sure grouping is toggled off.
+   * @param  {object} grouping       - The unique number for the grouping to be deleted.
+   * @param  {bool} [doToggle=false] - True if toggle group when all panda's collecting or not collecting.
+   */
+  goCheckGroup(grouping, doToggle=false) {
+    let oneCollecting = false, allCollecting = true, theGroup = this.groupStatus[grouping];
     Object.keys(this.groups[grouping].pandas).forEach( (value, index, object) => {
-      if (bgPanda.dbIds.hasOwnProperty(value)) // Make sure panda isn't deleted.
-        collecting = (collecting || pandaUI.pandaStats[bgPanda.dbIds[value]].collecting);
-      else object.splice(index,1); // If panda deleted then remove from group.
+      let myId = bgPanda.getMyId(value);
+      if (myId !== undefined && doToggle) { // Make sure panda isn't deleted.
+        oneCollecting = (oneCollecting || pandaUI.pandaStats[myId].collecting);
+        allCollecting = (allCollecting && pandaUI.pandaStats[myId].collecting);
+      } else object.splice(index,1); // If panda deleted then remove from group.
     });
-    if (theGroup.collecting && !collecting) { this.toggle(grouping); }
+    if (doToggle && theGroup.collecting && !oneCollecting) { this.stopCollecting(grouping); }
+    if (doToggle && !theGroup.collecting && allCollecting) { this.startCollecting(grouping); }
   }
-  showGroupingsModal(panda) {
+  /**
+   * Show the groupings in a modal to toggle collecting or editing.
+   */
+  showGroupingsModal() {
     const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     Object.keys(this.groups).forEach(grouping => {
-      this.goCheckGroup(grouping);
+      this.goCheckGroup(grouping, true);
       const bgColor = (this.groupStatus[grouping].collecting) ? "#066306" : ((Object.keys(this.groups[grouping].pandas).length===0) ? "#800517" : "");
       displayObjectData([
         { string:`Grouping Name and Description`, type:"keyValue", key:"name", id:`pcm_nameDesc_${grouping}`, andKey:"description", andString:`<span class="small">{${Object.keys(this.groups[grouping].pandas).length} Jobs}</span>`, unique:grouping, clickFunc: (e) => { this.toggle(e.data.unique); }
@@ -144,11 +207,23 @@ class PandaGroupings {
           this.delete(grouping);
           $(e.target).closest("tr").remove();
         } }
-      ], divContainer, this.groups[grouping], true, true, bgColor);
-      });
-      modal.showModal();
+      ], divContainer, this.groups[grouping], true, true, bgColor); }
+    );
+    modal.showModal();
   }
-  momentTime(time) { return moment(`01-01-00 ${time}`, 'MM-DD-YY hh:mm A'); }
+  /**
+   * This is called after the saved button is clicked for changes.
+   * @callback afterCallBack
+   */
+  /**
+   * This is called after the cancel button is clicked.
+   * @callback cancelCallBack
+   */
+  /**
+   * @param  {number} grouping                  - The unique number for the grouping to be deleted.
+   * @param  {afterCallBack} [afterFunc=null]   - The function to call when saved button is clicked.
+   * @param  {cancelCallBack} [cancelFunc=null] - The function to call when cancel button is clicked.
+   */
   showgroupingEditModal(grouping, afterFunc=null, cancelFunc=null) {
     pandaUI.showJobsModal("groupingEdit", grouping, this.groups[grouping], (savedResults) => {
       const name = $(`#pcm_groupingNameI`).val(), description = $(`#pcm_groupingDescI`).val();;
@@ -166,7 +241,7 @@ class PandaGroupings {
       $(`#pcm_nameDesc_${grouping}`).html(`${this.groups[grouping].name} - ${this.groups[grouping].description} - <span class="small">{${jobNumbers} Jobs}</span>`)
       $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", bgColor).effect( "highlight", {color:"#3CB371"}, 1500);
       bgPanda.db.updateDB(bgPanda.groupingStore, this.groups[grouping]);
-      if (afterFunc!==null) setTimeout( () => { afterFunc.apply(this); }, 300 );
+      if (afterFunc!==null) setTimeout( () => { afterFunc(); }, 300 );
     }, (e) => {
       if ($(e.target).prop('checked')) {
         $(e.target).closest("tr").effect( "highlight", {color:"#3CB371"}, 800, () => {

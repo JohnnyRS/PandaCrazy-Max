@@ -46,12 +46,12 @@ class ModalClass {
     $(`.modal-backdrop`).each( (index, element) => { $(element).css("zIndex",1050+(index*2)).css("opacity",0.8); } );
     $(`#${idName}`).on('hide.bs.modal', (e) => { // hide.bs.modal used when modal is about to be hidden or closed.
       this.tempObject = [];
-      if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc.call();
-      if (afterClose!==null) afterClose.call();
+      if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc();
+      if (afterClose!==null) afterClose();
       $(e.target).remove(); // Remove the modal from document.
       this.modals.pop(); // Remove this modal from array of modals.
     });
-    if (afterShow) $(`#${idName}`).on('shown.bs.modal', () => { afterShow.call(); });
+    if (afterShow) $(`#${idName}`).on('shown.bs.modal', () => { afterShow(); });
   }
   /**
    * Will close a modal with the title name or the last modal shown.

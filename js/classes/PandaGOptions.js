@@ -1,6 +1,6 @@
 /**
  * Class for the global options and methods to change them.
- * Breaks up the options into general, timers and alarms options.
+ * Breaks up the options into general, timers and alarm options.
  * @class PandaGOptions
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
@@ -87,7 +87,7 @@ class PandaGOptions {
       this.update();
     });
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody); console.log(modal.tempObject[idName]);
+    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([
       { label:"Show Help Tooltips:", type:"trueFalse", key:"showHelpTooltips", min:0, max:24 }, 
       { label:"Disable Captcha Alert:", type:"trueFalse", key:"disableCaptchaAlert", min:0, max:24 }, 
@@ -99,7 +99,7 @@ class PandaGOptions {
       { label:"Show Unfocused window warning:", type:"trueFalse", key:"unfocusWarning" }
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
-   }
+  }
   /**
    * Shows the timer options in a modal for changes.
    */
@@ -123,7 +123,7 @@ class PandaGOptions {
       { label:"Timer Auto Slowdown Increase:", type:"text", key:"timerAutoIncrease" }
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
-   }
+  }
   /**
    * Shows the alarm options in a modal for changes.
    */
@@ -145,7 +145,7 @@ class PandaGOptions {
       { label:"Show Unfocused window warning:", type:"text", key:"hamDuration" }
     ], divContainer, modal.tempObject[idName], true);
     modal.showModal();
-   }
+  }
   /**
    * Updates the captcha text area with updated info.
    * @return {number} - Returns the value in the captcha counter.
@@ -163,7 +163,7 @@ class PandaGOptions {
   /**
    * Checks to see if it's ok to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
-   * @return {bool} - True if the queue alert should be sounded.
+   * @return {bool}           - True if the queue alert should be sounded.
    */
   checkQueueAlert(seconds) {
     let returnValue = false, saveMinutes = true;
@@ -176,33 +176,33 @@ class PandaGOptions {
     return returnValue;
   }
   /**
-   * Is the queue alert disabled?
-   * @return {bool} - True if queue alert is disabled.
+   * Is the queue alert enabled?
+   * @return {bool} - True if queue alert is enabled.
    */
   isQueueAlert() { return !this.general.disableQueueAlert; }
   /**
-   * Is the queue alarm disabled?
-   * @return {bool} - True if queue alarm is disabled.
+   * Is the queue alarm enabled?
+   * @return {bool} - True if queue alarm is enabled.
    */
   isQueueAlarm() { return !this.general.disableQueueAlarm; }
   /**
    * Gets the main timer value.
-   * @return {number} - 
+   * @return {number} - Returns the value for the main timer.
    */
   getTimer1() { return this.timers.mainTimer; }
   /**
    * Gets the second timer value.
-   * @return {number} - Returns the value for the main timer.
+   * @return {number} - Returns the value for the second timer.
    */
   getTimer2() { return this.timers.secondTimer; }
   /**
    * Gets the third timer value.
-   * @return {number} - Returns the value for the second timer.
+   * @return {number} - Returns the value for the third timer.
    */
   getTimer3() { return this.timers.thirdTimer; }
   /**
    * Gets the captcha counter.
-   * @return {number} - Returns the value for the third timer.
+   * @return {number} - Returns the number for the captcha counter.
    */
   getCaptchaCount() { return this.captchaCounter; }
 }
