@@ -15,6 +15,7 @@ class LogTabsClass {
   }
   /**
    * Prepare the tabs on the bottom and placing the id names in an array.
+   * @return {array}
    */
   async prepare() {
     let [success, err] = await this.tabs.prepare();

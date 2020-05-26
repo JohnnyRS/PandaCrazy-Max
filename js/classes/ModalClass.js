@@ -119,7 +119,7 @@ class ModalClass {
     if (this.modalLoggedOff === 0) {
       this.modalLoggedOff++;
       const idName = this.prepareModal(null, '600px', 'modal-header-warning', `Program Paused!`, '<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href="https://worker.mturk.com/" target="_blank" title="https://worker.mturk.com/" class="pcm_mturkLink">https://worker.mturk.com/</a></h5>', 'text-center');
-      this.showModal(null, null, () => { this.modalLoggedOff=0; if (afterClose) afterClose.call(); });
+      this.showModal(null, null, () => { this.modalLoggedOff=0; if (afterClose) afterClose(); });
       $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
@@ -198,7 +198,7 @@ class ModalClass {
    * @param  {function} [saveFunc=null]   - Function to call when save button clicked.
    * @param  {function} [checkFunc=null]  - Function to call when checkbox clicked on a job.
    * @param  {function} [cancelFunc=null] - Function to call when cancel button clicked.
-   * @param  {function} [afterShow=null]  - Function to call when modal is shown after cnimations stopped.
+   * @param  {function} [afterShow=null]  - Function to call when modal is shown after animations stopped.
    */
   showJobsModal(type='jobs', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null) {
     const theTitle = (type==='groupingEdit') ? 'Edit Groupings' : 'List Jobs';

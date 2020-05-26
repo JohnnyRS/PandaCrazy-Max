@@ -1,14 +1,23 @@
 /**
- * @param  {string} thisUrl
+ * A class that deals with the basic url object.
+ * @class UrlClass
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class UrlClass {
+	/**
+ * @param  {string} thisUrl - The url string that is being used for this class.
+	 */
 	constructor(thisUrl) {
 		this.url = thisUrl;
 	}
 	/**
+	 * Gets the url being used by this class.
+	 * @return {string} - The url string that this class is using.
 	 */
 	returnUrl() { return this.url; }
 	/**
+	 * Fetches the url and handles mturk results.
+	 * Detects json result and text result.
 	 */
 	async goFetch() {
 		try {

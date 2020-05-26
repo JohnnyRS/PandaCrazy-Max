@@ -62,7 +62,7 @@ class MturkPanda extends MturkClass {
    */
   openDB() {
     return new Promise( (resolve, reject) => {
-      this.db.openDB( false, (e) => {
+      this.db.openDB( true, (e) => {
         if (e.oldVersion == 0) { // Had no database so let's initialise it.
           e.target.result.createObjectStore(this.storeName, {keyPath:"id", autoIncrement:"true"})
           	.createIndex("groupId", "groupId", {unique:false}); // GroupID is an index to search faster
@@ -74,7 +74,7 @@ class MturkPanda extends MturkClass {
 					e.target.result.createObjectStore(this.groupingStore, {keyPath:"id", autoIncrement:"true"});
 					this.useDefault = true; // If data initialized then let other classes know to use default values.
         }
-      } ).then( response => resolve(response), rejected => console.error(rejected) );
+      } ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
     });
 	}
 	/**

@@ -11,6 +11,9 @@ class MenuClass {
     this.quickMenuId = id;                // The id name of the quick menu element to add menu's to.
     this.topMenuId = "pcm_topMenu";       // The top menu id name to add menu's to.
   }
+  /**
+   * Prepares the page with all the menus on the page shown.
+   */
   prepare() {
     this.createTopMenu();
     this.createQuickMenu();

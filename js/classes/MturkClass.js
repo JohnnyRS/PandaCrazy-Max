@@ -32,6 +32,7 @@ class MturkClass {
 	 * Fetches the url in url object and handles mturk results.
 	 * Can deal with Pre's, maxxed out and logged out for any mturk URL;
 	 * TODO #2 might want to deal with reject results from the fetch function.
+	 * @async
 	 * @param  {object} objUrl - The url object to use for fetching.
 	 * @return {object} 			 - Returns data in an object or null if got nothing.
 	 */

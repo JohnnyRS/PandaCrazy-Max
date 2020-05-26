@@ -1,32 +1,38 @@
 /**
- * @param  {object} element
- * @param  {string} divId
- * @param  {string} ulId
- * @param  {string} contentId
+ * A class that works with the tabbed areas of the page for panda's and logging.
+ * @class TabbedClass
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class TabbedClass {
+/**
+ * @param  {object} element   - The element on page that the tab structure should be appended to.
+ * @param  {string} divId     - The div id name for the tab structure of page.
+ * @param  {string} ulId      - The ul id name for the tab structure of page.
+ * @param  {string} contentId - The contetn id name for the content area of page.
+ */
 	constructor(element, divId, ulId, contentId) {
-    this.unique = 0;
-    this.tabObject = {};
-    this.attachedTo = element;
-    this.ulId = ulId;
-    this.dbIds = {};
-    this.uniques = {};
-    this.contentId = contentId;
-    this.tabIds = "pcm-t";
+    this.unique = 0;                  // Unique id of a tab initialized at 0.
+    this.dataTabs = {};               // The data for the tabs on this page.
+    this.tabsArr = [];                // The array of all the tab unique ID's.
+    this.attachedTo = element;        // The element that the tab structure should be appended to.
+    this.ulId = ulId;                 // The ul id name for the tab structure of page.
+    this.contentId = contentId;       // The content id name for the content area of page.
+    this.tabIds = "pcm-t";            // The tab id name of the tab area of page.
     this.addButton = false;           // Can users add tabs by using an add button?
     this.renameTab = false;           // Can users rename a tab?
     this.deleteTab = false;           // Can users delete a tab?
     this.draggable = false;           // Are objects in tabs draggable?
-    this.dataTabs = {};
-    this.tabsArr = [];
     this.defaultTabs = [{title:"Main", position:0, list:[]}, {title:"Daily", position:1, list:[]}];
     this.tabStructure(this.attachedTo, divId, ulId, contentId);
   }
 	/**
+   * Gets the current active tab unique number
+   * @returns {number} - The unique number for the active tab.
 	 */
 	get currentTab() { return $('.nav-tabs .active').closest('li').data('unique') }
   /**
+   * Prepare the tabbed areas on this page at the start up of the program.
+   * @return {array.<Object>} - Returns an array of success messages or Error object for rejections.
    */
   async prepare() {
     let success = "", err = null;
@@ -54,16 +60,18 @@ class TabbedClass {
     return [success, err];
   }
   /**
-   * @param  {object} element
-   * @param  {string} divId
-   * @param  {string} ulId
-   * @param  {string} contentId
+   * Creates the tab structure with the supplied id names and element appended to it.
+   * @param  {object} element   - The jquery element to append to the tab structure.
+   * @param  {string} divId     - The div id name for the div element of the tab structure.
+   * @param  {string} ulId      - The ul id name for the ul of the tab structure.
+   * @param  {string} contentId - The content id name for the content area.
    */
   tabStructure(element, divId, ulId, contentId) {
     $(`<div id="${divId}" class="h-100 p-0"></div>`).append($(`<ul class="nav nav-tabs" id="${ulId}" role="tablist"></ul>`)).append($(`<div id="${contentId}" class="tab-content"></div>`)).appendTo($(element));
   }
   /**
-   * @param  {object} tabElement
+   * Creates an add button and adds it to the tab area.
+   * @param  {object} tabElement - The jquery element to append the add button.
    */
   addAddButton(tabElement) {
     this.addButton = true;
@@ -78,9 +86,10 @@ class TabbedClass {
     } )).appendTo($(tabElement));
   }
   /**
-   * @param  {string} name
-   * @param  {bool} active=false
-   * @param  {bool} manualAdd=false
+   * Add tab to the page with name and active status. Only used for manual additions to get unique ID.
+   * @param  {string} name            - The name of this new tab.
+   * @param  {bool} [active=false]    - Is this tab active?
+   * @param  {bool} [manualAdd=false] - Was tab manually added?
    */
   async addTab(name, active=false, manualAdd=false) {
     const unique = this.tabsArr.length, arrPos = this.tabsArr.length; this.tabsArr.push(unique);
@@ -90,11 +99,12 @@ class TabbedClass {
     return await this.addTab2(unique, active);
   }
   /**
-   * @param  {number} unique
-   * @param  {bool} active
+   * Add a tab to the page with the unique number and active status.
+   * This method is called when tab data is first loaded or when a new tab is created by user.
+   * @param  {number} unique - The unique tab number for the new tab.
+   * @param  {bool} active   - Shows that this tab is active if true.
    */
   async addTab2(unique, active) {
-    this.tabObject[unique] = {label:this.dataTabs[unique].title};
     const activeText = (active) ? " active" : "";
     const start = $(`<li class="nav-item"></li>`).data("unique", unique);
     if (this.addButton) $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_addTab`))
@@ -108,7 +118,7 @@ class TabbedClass {
           modal.showDialogModal("700px", "Rename Tab Title", "Type in the title of this tab you want renamed.", () => {
             e.preventDefault(); e.stopPropagation();
             const label = $('#pcm_formQuestion').val();
-            if (label && label!=="") { this.tabObject[unique] = {label:label}; $(e.target).html(label); }
+            if (label && label!=="") { this.dataTabs[unique].title = label; $(e.target).html(label); }
             modal.closeModal();
           }, true, true, "Title: ", $(e.target).text(), 10);
         }
@@ -121,7 +131,8 @@ class TabbedClass {
         e.preventDefault(); e.stopPropagation();
         const unique = $(e.target).closest('li').data("unique");
         $(e.target).closest('li').remove();
-        delete this.tabObject[unique];
+        delete this.dataTabs[unique];
+        arrayRemove(this.tabsArr, unique);
         modal.closeModal();
       }, true, true);
       }));
@@ -135,9 +146,11 @@ class TabbedClass {
     return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
   }
   /**
-   * @param  {object} e
-   * @param  {object} ui
-   * @param  {string} action
+   * Handles the dragging of the card from a sortable or droppable area.
+   * It will set the new position or set the new tab for this card.
+   * @param  {object} e      - The event object from a sortable or droppable area.
+   * @param  {object} ui     - The ui jquery element from a sortable or droppable area.
+   * @param  {string} action - Which action is the card being dragged for?
    */
   async cardDragged(e, ui, action) {
     const theItem = (action === "sortable") ? ui.item : ui.draggable;
@@ -159,23 +172,25 @@ class TabbedClass {
     }
   }
   /**
-   * @param  {number} captchaCount
+   * Updates the captcha number in the bottom area of the page.
+   * @param  {number} captchaCount - The captcha counter that needs to be updated on page.
    */
   updateCaptcha(captchaCount) {
     $(`#${this.ulId} .pcm_captchaText:first`).html(`Captcha Count: ${captchaCount}`)
   }
   /**
-   * @param  {number} tabUnique
-   * @param  {string} id
-   * @param  {bool} update=false
+   * Sets the panda with the unique ID to the tab unique ID and then saves to database.
+   * @param  {number} tabUnique - The tab unique ID that the panda should be positioned in.
+   * @param  {string} id        - The unique ID for the panda that is being positioned.
    */
-  setPosition(tabUnique, id, update=false) { console.log("setting position: ", tabUnique, id);
+  setPosition(tabUnique, id) {
     this.dataTabs[tabUnique].list.push(id);
     bgPanda.db.updateDB(bgPanda.tabsStore, this.dataTabs[tabUnique]);
   }
   /**
-   * @param  {number} tabUnique
-   * @param  {string} id
+   * Removes the panda from this tab unique ID and then saves the updated positions to database.
+   * @param  {number} tabUnique - The tab unique ID that the panda should be removed from.
+   * @param  {string} id        - The unique ID for the panda that is being removed from position.
    */
   removePosition(tabUnique, id) {
     this.dataTabs[tabUnique].list = arrayRemove(this.dataTabs[tabUnique].list, id);

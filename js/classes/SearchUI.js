@@ -1,16 +1,24 @@
 /**
+ * A class dealing with the search UI so the user can more easily enable or disable triggers.
+ * @class SearchUI
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class SearchUI {
   constructor () {
-		this.ridRow = null; this.ridColumn1 = null; this.ridListGroup1 = null;
+		this.ridRow = null;
+		this.ridColumn1 = null;
+		this.ridListGroup1 = null;
 	}
   /**
+	 * Stops the searching process.
    */
   stopSearching() { bgSearchClass.stopSearching(); }
   /**
+	 * Starts the searching prcoess.
    */
   startSearching() { bgSearchClass.startSearching(); }
   /**
+	 * Shows logged off modal and will unpause the timer when logged off modal closes.
    */
 	nowLoggedOff() {
 		modal.showLoggedOffModal( () => { bgSearchClass.unPauseTimer(); } );
@@ -19,8 +27,9 @@ class SearchUI {
    */
 	nowLoggedOn() { modal.closeModal(); }
 	/**
-	 * @param  {object} statObj
-	 * @param  {string} text
+	 * Updates the stat object with the text provided or the stat value.
+	 * @param  {object} statObj - The object of the stat that needs to be updated.
+	 * @param  {string} text		- The text to display in the stat area.
 	 */
 	updateStatNav(statObj,text) {
 		if (text==="") {
@@ -32,6 +41,8 @@ class SearchUI {
 		else if (statObj.addClass) $(statObj.id).removeClass(statObj.addClass);
 	}
   /**
+	 * Prepare the search page with button events and set up the columns for triggers to use.
+	 * If the panda UI is opened then it will start the queue monitor too.
    */
   prepareSearch() {
 		$("#pcm_saveToFile").click( (e) => { saveToFile(bgSearchClass.hitSearchObjects); });
@@ -49,22 +60,24 @@ class SearchUI {
 		if (bgSearchClass.isPandaUI()) bgQueue.startQueueMonitor();
   }
   /**
-   * @param  {string} statusName
-   * @param  {string} status
+	 * Update the status bar with the hits found value or the search results value.
+   * @param  {string} statusName - The status name to update with the status value.
+   * @param  {string} status		 - The status value that should be display in the status bar.
    */
   updateStatus(statusName, status) {
     if (statusName === "hits found") $("#pcm_searchHitsFound").html(status);
     else if (statusName === "total results") $("#pcm_searchResults").html(status);
 	}
 	/**
-	 * @param  {object} thetrigger=null
-	 * @param  {} passInfo=null
-	 * @param  {bool} toggle=true
+	 * This method will update the passed element with the info from the passed trigger info.
+	 * @param  {object} [thetrigger=null] - The jquery element where the updated data should be placed.
+	 * @param  {object} [passInfo=null]	  - The info from the trigger that needs to display updates.
+	 * @param  {bool} [toggle=true]				- Should this trigger be toggled?
 	 */
 	updateTrigger(thetrigger=null, passInfo=null, toggle=true) {
 		if (thetrigger===null && passInfo===null) return;
 		const theTarget = (thetrigger) ? thetrigger : $(`#list-t${passInfo.key1}${passInfo.count}-list`);
-		const theInfo = $(theTarget).data("info"); console.log("theinfo", JSON.stringify(theInfo));
+		const theInfo = $(theTarget).data("info");
 		if (toggle) bgSearchClass.toggleDisabled(theInfo.key2, theInfo, false)
 		if ($(theTarget).hasClass("pcm_disabled")) $(theTarget).removeClass("pcm_disabled");
 		else $(theTarget).addClass("pcm_disabled");
@@ -72,8 +85,9 @@ class SearchUI {
 		$(`#list-t${theInfo.key1}${theInfo.count} .pcm_disabledText`).html(disabledText);
 	}
 	/**
-	 * @param  {object} info
-	 * @param  {number} index
+	 * Display the info for a trigger in the column 2 detail area.
+	 * @param  {object} info  - The info about this trigger that is needed to be added to this column.
+	 * @param  {number} index - The unique index number for this trigger.
 	 */
 	addToColumn1(info,index) {
 		const disabledClass = (info.disabled) ? " pcm_disabled" : "";
@@ -87,8 +101,9 @@ class SearchUI {
 		});
 	}
 	/**
-	 * @param  {object} info
-	 * @param  {number} index
+	 * Display the info for a trigger in the column 2 detail area.
+	 * @param  {object} info  - The info about this trigger that is needed to be added to this column.
+	 * @param  {number} index - The unique index number for this trigger.
 	 */
 	addToColumn2(info,index) {
 		const disabledText = (info.disabled) ? ` <span class="text-danger pr-2 pcm_disabledText">(Disabled)</span>` : ` <span class="text-success pr-2 pcm_disabledText">(Enabled)</span>`;
@@ -105,27 +120,29 @@ class SearchUI {
 		], tabPane, bgSearchClass.triggerInfo[key1][key2]);
 	}
 	/**
-	 * @param  {object} info
-	 * @param  {number} index
+	 * Add the trigger info to the page in column 1 and column 2.
+	 * @param  {object} info  - The info about this trigger that is needed to be added to the page.
+	 * @param  {number} index	- The unique index number for this trigger.
 	 */
 	addToUI(info, index) {
 		this.addToColumn1(info,index); this.addToColumn2(info,index);
 	}
 	/**
-	 * @param  {string} key1
-	 * @param  {number} count
+	 * Remove the trigger with the type and group ID or requester ID from the search UI.
+	 * @param  {string} type  - Type of the trigger [group ID or requester ID].
+	 * @param  {number} value - Group ID or Requester ID for value depending on type.
 	 */
-	removeTrigger(key1, count) {
-		const active = $(`#nav-${key1}TabContent div.active`);
-		if ($(active).get(0).id === `list-t${key1}${count}`) {
+	removeTrigger(type, value) {
+		const active = $(`#nav-${type}TabContent div.active`);
+		if ($(active).get(0).id === `list-t${type}${value}`) {
 			if ($(active).next().length>0) { 
 				$(active).next().tab('show');
-				$(`#pcm_${key1}ListTab a.active`).next().tab('show');
+				$(`#pcm_${type}ListTab a.active`).next().tab('show');
 			} else if ($(active).prev().length>0) {
 				$(active).prev().tab('show');
-				$(`#pcm_${key1}ListTab a.active`).prev().tab('show');
+				$(`#pcm_${type}ListTab a.active`).prev().tab('show');
 			}
 		}
-		$(`#list-t${key1}${count}-list`).remove(); $(`#list-t${key1}${count}`).remove();
+		$(`#list-t${type}${value}-list`).remove(); $(`#list-t${type}${value}`).remove();
 	}
 }

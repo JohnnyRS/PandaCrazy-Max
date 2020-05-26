@@ -35,8 +35,8 @@ async function startPandaCrazy() {
 
 /** 
  * Shows good messages in loading modal and console. Shows error message on page and console before halting script.
- * @param {array} good    Array of good messages to display in the loading modal and console.
- * @param {object} bad    If set then an error has happened so display it and stop script.
+ * @param {array} good - Array of good messages to display in the loading modal and console.
+ * @param {object} bad - If set then an error has happened so display it and stop script.
  */
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
@@ -54,9 +54,11 @@ allTabs('/pandaCrazy.html', count => { // Count how many Panda Crazy pages are o
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
-document.addEventListener('keydown', (e) => { // Disables sortable and selection on cards if ctrl key is pushed down.
+/** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
+document.addEventListener('keydown', (e) => {
   if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).disableSelection(); }
 });
-document.addEventListener("keyup", (e) => { // Enables sortable and selection on cards if ctrl key is let go.
+/** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
+document.addEventListener("keyup", (e) => {
   if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).disableSelection(); }
 });

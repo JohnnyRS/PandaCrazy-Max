@@ -1,16 +1,17 @@
 /**
  * Creates a Jquery input object and returns it and appends to element if appendHere is passed.
- * @param {object} appendHere     The jquery element to append the input div to.
- * @param {string} divAddClass    Class name for the div surrounding the input.
- * @param {string} id             Id name for the input itself.
- * @param {string} label          Label name used for the label for input.
- * @param {string} placeholder    Placeholder used to show in input field when empty.
- * @param {function} enterFunc    Function to call when enter is pressed in input.
- * @param {string} labelClass     Class name for the label for input.
- * @param {string} value          The initial value for the input field.
- * @param {number} width          The width of the div using bootstrap.
- * @param {bool} noTab            If true then user can't tab to the input field.
- * @param {string} max            The maximum length of the characters allowed in input field.
+ * @param  {object} appendHere  - The jquery element to append the input div to.
+ * @param  {string} divAddClass - Class name for the div surrounding the input.
+ * @param  {string} id          - Id name for the input itself.
+ * @param  {string} label       - Label name used for the label for input.
+ * @param  {string} placeholder - Placeholder used to show in input field when empty.
+ * @param  {function} enterFunc - Function to call when enter is pressed in input.
+ * @param  {string} labelClass  - Class name for the label for input.
+ * @param  {string} value       - The initial value for the input field.
+ * @param  {number} width       - The width of the div using bootstrap.
+ * @param  {bool} noTab         - If true then user can't tab to the input field.
+ * @param  {string} max         - The maximum length of the characters allowed in input field.
+ * @return {object}             - The Jquery object of the input element.
  */
 function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=null, labelClass="", value="", width="100", noTab=false, max=null) {
   const noIndex = (noTab) ? ` tabindex="-1"` : "", maxlength = (max) ? ` maxlength=${max}` : "";
@@ -20,26 +21,30 @@ function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=
   return theInput;
 }
 /**
- * @param  {object} appendHere
- * @param  {string} addClass
- * @param  {string} theUrl
- * @param  {string} theText
- * @param  {string} theTarget
- * @param  {function} clickFunc=null
+ * Creates a Jquery link and returns it and appends it to element passed.
+ * @param  {object} appendHere         - The element to append the link to.
+ * @param  {string} addClass           - The class name used for the link.
+ * @param  {string} theUrl             - The url used for the link.
+ * @param  {string} theText            - The text shown for the link.
+ * @param  {string} theTarget          - The target string of the link.
+ * @param  {function} [clickFunc=null] - The function to call when link is clicked.
+ * @return {object}                    - The Jquery object of the link element.
  */
 function createLink(appendHere, addClass, theUrl, theText, theTarget, clickFunc=null) {
   let theLink = $(`<a class="${addClass}" target="${theTarget}" href="${theUrl}">${theText}</a>`).appendTo(appendHere);
-  if (clickFunc!==null) $(theLink).click( (e) => { clickFunc.call(this, e); } )
+  if (clickFunc!==null) $(theLink).click( (e) => { clickFunc(e); } )
   return theLink;
 }
 /**
- * @param  {object} appendHere
- * @param  {string} label
- * @param  {string} id
- * @param  {string} value
- * @param  {bool} checked
- * @param  {string} divClass=""
- * @param  {string} inputClass=""
+ * Creates a Jquery checkbox with a label, id name and classes of elements.
+ * @param  {object} appendHere      - The element to append the checkbox to.
+ * @param  {string} label           - The label used for this checkbox.
+ * @param  {string} id              - The id name used for the checkbox.
+ * @param  {string} value           - The value for this checkbox.
+ * @param  {bool} checked           - Should this checkbox be checked or not?
+ * @param  {string} [divClass=""]   - The class name to use for the div element surrounding the input.
+ * @param  {string} [inputClass=""] - The class name to use for the input element.
+ * @return {object}                 - The Jquery object of the checkbox element.
  */
 function createCheckBox(appendHere, label, id, value, checked, divClass="", inputClass="") {
   const checkedText = (checked) ? " checked" : "";
@@ -49,19 +54,24 @@ function createCheckBox(appendHere, label, id, value, checked, divClass="", inpu
   return formCheck;
 }
 /**
- * @param  {object} appendHere
- * @param  {string} nameGroup
- * @param  {string} value
- * @param  {string} label
- * @param  {bool} checked
+ * Creates a Jquery radio button with a name group, label and value.
+ * @param  {object} appendHere - The element to append the radio button to.
+ * @param  {string} nameGroup  - The name group for this radio button.
+ * @param  {string} value      - The value for this radio button.
+ * @param  {string} label      - The label for this radio button.
+ * @param  {bool} checked      - Should this radio button be check or not?
+ * @return {object}            - The Jquery object for the radio button.
  */
 function radioButtons(appendHere, nameGroup, value, label, checked) {
   const checkedText = (checked) ? " checked" : "";
-  $(`<label class="radio-inline my-0 mx-3 small"><input type="radio"${checkedText} name="${nameGroup}" size="sm" id="id" value="${value}" class="radio-xxs">${label}</input></label>`).appendTo(appendHere);
+  let radioButton = $(`<label class="radio-inline my-0 mx-3 small"><input type="radio"${checkedText} name="${nameGroup}" size="sm" id="id" value="${value}" class="radio-xxs">${label}</input></label>`).appendTo(appendHere);
+  return radioButton;
 }
 /**
- * @param  {string} label
- * @param  {string} id
+ * Creates a time input using a datetimepicker from tempus dominus plugin.
+ * @param  {string} label - The label for the time input to use.
+ * @param  {string} id    - The id name for the time input.
+ * @return {object}       - The Jquery object for the time input.
  */
 function createTimeInput(label, id) {
   let input = $(`<div class="input-group"><label for="${id}" class="px-2 text-right pcm_timeLabel">${label}</label><input type="text" class="form-control datetimepicker-input pcm_inputDate-md" id="${id}" data-toggle="datetimepicker" data-target="#${id}" tabindex="-1" placeholder="None"/></div>`);
@@ -69,14 +79,17 @@ function createTimeInput(label, id) {
   return input;
 }
 /**
- * @param  {number} val
- * @param  {number} low
- * @param  {number} high
+ * Limits a value to a low limit and hight limit.
+ * @param  {number} val  - The value to limit for.
+ * @param  {number} low  - The low limit to use.
+ * @param  {number} high - The high limit to use.
+ * @return {number}      - Returns the new value in the limit range.
  */
 function limitRange(val, low, high) { return val < low ? low : (val > high ? high : val); }
 /**
- * @param  {string} hourValue
- * @param  {string} minuteValue
+ * Shows the hour value and the minute value in two inputs so user can edit them.
+ * @param  {string} hourValue   - The hour value to use for hour input.
+ * @param  {string} minuteValue - The minute value to use for minute input.
  */
 function createTimeElapse(hourValue, minuteValue) {
   let input = createInput(null, " hour", "pcm_endHours", `Ends after hours: `, "0", null, " pcm_hoursLabel", hourValue, "10", true);
@@ -90,11 +103,13 @@ function createTimeElapse(hourValue, minuteValue) {
   return $(input).append(input2);
 }
 /**
- * @param  {string} theFormat
- * @param  {object} theDate
- * @param  {string} theTimeZone
+ * Returns the date in a readable format according to the provided format and timezone.
+ * @param  {string} theFormat   - The format to show the dat in.
+ * @param  {object} theDate     - The date to show in the readable format.
+ * @param  {string} theTimeZone - The timezone to use for the date.
+ * @return {string}             - Returns the string of the date in a more readable format.
  */
-function formatAMPM(theFormat,theDate,theTimeZone) {
+function formatAMPM(theFormat, theDate, theTimeZone) {
   var d = (theDate) ? theDate : new Date();
   if (theTimeZone === "mturk") {
     let mturkTZOffset = -8, today = new Date(); if (today.dst()) mturkTZOffset++;
@@ -112,26 +127,9 @@ function formatAMPM(theFormat,theDate,theTimeZone) {
   else return days[d.getDay()]+' '+months[d.getMonth()]+' '+d.getDate()+' '+d.getFullYear()+' '+hours+':'+minutes+ampm;
 }
 /**
- * @param  {bool} resetNow
- * @param  {string} thisDigit
- * @param  {string} timeString
- * @param  {string} lastDigit
- */
-function formatTimeLeft(resetNow,thisDigit,timeString,lastDigit) {
-	formatTimeLeft.timeFill = formatTimeLeft.timeFill || 0;
-	if (resetNow) formatTimeLeft.timeFill = 0;
-	var missingDigit = (lastDigit!="0" && thisDigit=="0") ? true : false;
-	if (( thisDigit!="0" || missingDigit) && formatTimeLeft.timeFill<2) {
-		formatTimeLeft.timeFill++;
-		if (missingDigit) { return "00 " + timeString + "s"; }
-		else {
-			var addZero = (thisDigit<10) ? ((formatTimeLeft.timeFill==1) ? false : true) : false, plural = (thisDigit==1) ? true : true;
-			return ((addZero) ? "0" : "") + thisDigit + " " + ((plural) ? (timeString+"s") : timeString) + " ";
-		}
-	} else return "";
-}
-/**
- * @param  {number} seconds
+ * Convert seconds into the number of weeks, days, hours, minutes and seconds.
+ * @param  {number} seconds - The number of seconds to be converted.
+ * @return {string}         - The converted time in a string format.
  */
 function getTimeLeft(seconds) {
 	let weeks = Math.floor(seconds/604800); seconds = seconds - (weeks*604800);
@@ -147,51 +145,59 @@ function getTimeLeft(seconds) {
   return returnString.trim();
 }
 /**
- * @param  {array} arr
- * @param  {number} from
- * @param  {number} to
+ * Moves a value in an array from one position to another. The array is changed by splice so need to return array.
+ * @param  {array} arr   - The array that will be changed with a move action.
+ * @param  {number} from - The position of the value that needs to be moved.
+ * @param  {number} to   - The position the value in the from position to move to.
  */
 function arrayMove(arr,from,to) { arr.splice(to, 0, arr.splice(from, 1)[0]); }
 /**
- * @param  {array} arr
- * @param  {string} value
+ * Remove a value in an array provided. Must return array because filter doesn't change the array.
+ * @param  {array} arr    - The array that needs to be changed with a remove action.
+ * @param  {string} value - The value to search for and remove from the array.
+ * @return {array}        - The new array that has the value removed.
  */
 function arrayRemove(arr,value) { return arr.filter( (item) => item !== value ); }
 /**
- * @param  {string} gId
+ * Shorten the group ID into a 2 letters then "..." and 4 letters at end.
+ * @param  {string} gId - The group ID to shorten.
+ * @return {string}     - The shortened string for the group ID.
  */
 function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
 /**
- * @param  {object} thisObject
- * @param  {object} target
- * @param  {object} element
- * @param  {string} theValue
- * @param  {bool} editMe=null
- * @param  {string} textBorder
- * @param  {string} textColor
+ * Toggles showing a text or a text input of a value for editing purposes.
+ * @param  {object} thisObject      - The object with the value that may be edited.
+ * @param  {object} target          - The element which will be changed to a text or input.
+ * @param  {object} obj             - The object with the key and info for value to be shown or edited.
+ * @param  {string} theValue        - The value of the data to be shown or edited.
+ * @param  {bool} [editMe=null]     - Should the input text be shown or just the text value?
+ * @param  {string} [textBorder=""] - The bootstrap border to add to element.
+ * @param  {string} [textColor=""]  - The bootstrap color to add to element.
  */
-function textToggle(thisObject, target, element, theValue, editMe=null, textBorder, textColor) {
+function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="", textColor="") {
   let parent = $(target).parent();
   if (editMe) {
-    $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${element.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => textToggle(thisObject, e.target, element, theValue, false, textBorder, textColor)).focus( (e) => $(e.target).select() ));
-    $(`#pcm_${element.key}DetailI`).focus();
+    $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${obj.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => textToggle(thisObject, e.target, obj, theValue, false, textBorder, textColor)).focus( (e) => $(e.target).select() ));
+    $(`#pcm_${obj.key}DetailI`).focus();
   } else {
-    if (editMe!==null) thisObject[element.key] = theValue = $(target).val();
+    if (editMe!==null) thisObject[obj.key] = theValue = $(target).val(); // Null is on first call of function.
     if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
-    let theSpan = $(`<span id="pcm_${element.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`);
+    let theSpan = $(`<span id="pcm_${obj.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`);
     $(parent).empty().append(theSpan);
-    if (!element.disable) $(theSpan).on('click', (e) => { 
-      textToggle(thisObject, e.target, element, theValue, true, textBorder, textColor);
+    if (!obj.disable) $(theSpan).on('click', (e) => { 
+      textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
     });
   }
 }
 /**
- * @param  {array} thisArrayObject
- * @param  {object} divContainer
- * @param  {object} thisObject
- * @param  {bool} table=false
- * @param  {bool} horizontal=false
- * @param  {string} trBgColor=""
+ * Displays an array of objects line by line in different ways and allows for toggling an edit input
+ * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
+ * @param  {array} thisArrayObject   - The array with object data to display line by line.
+ * @param  {object} divContainer     - The div container that all these elements should be appened to.
+ * @param  {object} thisObject       - The object with the values to be displayed on page.
+ * @param  {bool} [table=false]      - Should the elements be listed in a table?
+ * @param  {bool} [horizontal=false] - Should the values be displayed horizontally?
+ * @param  {string} [trBgColor=""]   - The background color for the tr element.
  */
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor="") {
   let row=null;
@@ -240,9 +246,14 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
   });
 }
 /**
+ * This is called after the alarm data are prepared and ready.
+ * @callback afterCallBack
+ * @param {number} count - The number of tabs counted with the search term.
+ */
+/**
  * Gets all the tabs opened in browser and will count how many page urls that includes the search term.
- * @param {string} search       Search term to use for all tabs opened in browser.
- * @param {function} doAfter    Function to call after counting tabs for search term.
+ * @param {string} search    - Search term to use for all tabs opened in browser.
+ * @param {afterCallBack} doAfter - Function to call after counting tabs for search term.
  */
 function allTabs(search, doAfter) {
   let count = 0;
@@ -253,11 +264,12 @@ function allTabs(search, doAfter) {
         if (tab.url.includes(search)) count++;
       }
     }
-    doAfter.call(this, count);
+    doAfter(count);
   });
 }
 /**
- * @param  {object} theData
+ * Save object to a file.
+ * @param  {object} theData - The data to write to a file.
  */
 function saveToFile(theData) {
   var blob = new Blob( [theData], {type: "text/plain"}), dl = document.createElement("A");
@@ -265,14 +277,14 @@ function saveToFile(theData) {
   document.body.appendChild(dl); dl.click(); dl.remove();
 }
 /**
- * @param  {object} error
- * @param  {string} alertMessage
- * @param  {string} consoleMessage=null
- * @param  {string} title='...'
- * @param  {bool} warn=false
- * @param  {bool} throwError=false
+ * Halt the script with error messages or just warn and continue script.
+ * @param  {object} error                 - The error object that needs to be displayed.
+ * @param  {string} alertMessage          - The message to show on page or in console or a warning.
+ * @param  {string} [consoleMessage=null] - The message which will display on the console.
+ * @param  {string} [title='...']         - The title to be shown on page.
+ * @param  {bool} [warn=false]            - True if just a warning and don't stop the script yet!
  */
-function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false, throwError=false) {
+function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false) {
   $('.pcm_top:first').html(''); $('#pcm_quickMenu').html(''); $('.panel').html('');
   $('.panel:first').append(`<H1 style="text-align:center;">${title}</H1><H5 style="color:#FF3333; text-align:center; margin:0 100px;">${alertMessage}</H5>`);
   if (!warn && error) { // Only show message on console as an error if it's not a warning.
@@ -283,6 +295,7 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
   } else console.log('Warning: ' + alertMessage); // Show a warning alert message on the console.
 }
 
+/** Constant values for console coloring. */
 const CONSOLE_WARN = 'color: red;'
 const CONSOLE_INFO = 'color: purple;'
 const CONSOLE_DEBUG = 'color: blue;'

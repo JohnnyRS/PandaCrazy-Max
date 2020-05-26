@@ -38,8 +38,8 @@ class MturkHitSearch extends MturkClass {
 	}
 	/**
 	 * Find out if a trigger has been added the with key 1 and key 2 values.
-	 * @param  {string} type  - Type of the trigger [group ID or requester ID] for key 1
-	 * @param  {string} value - Group ID or Requester ID for value depending on key 1.
+	 * @param  {string} type  - Type of the trigger [group ID or requester ID].
+	 * @param  {string} value - Group ID or Requester ID for value depending on type.
 	 * @return {bool}				  - True if trigger has been added.
 	 */
 	is(type, value) {
