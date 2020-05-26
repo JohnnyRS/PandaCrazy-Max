@@ -62,7 +62,7 @@ class MturkPanda extends MturkClass {
    */
   openDB() {
     return new Promise( (resolve, reject) => {
-      this.db.openDB( true, (e) => {
+      this.db.openDB( false, (e) => {
         if (e.oldVersion == 0) { // Had no database so let's initialise it.
           e.target.result.createObjectStore(this.storeName, {keyPath:"id", autoIncrement:"true"})
           	.createIndex("groupId", "groupId", {unique:false}); // GroupID is an index to search faster
