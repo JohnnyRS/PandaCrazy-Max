@@ -29,7 +29,10 @@ async function startPandaCrazy() {
     $('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}); // Enable all tooltips.
     $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
-    setTimeout( () => modal.closeModal('Loading Data'), 600); // Just a small delay so messages can be read by user.
+    setTimeout( () => {
+      modal.closeModal('Loading Data'); 
+      bgQueue.startQueueMonitor();
+    }, 600); // Just a small delay so messages can be read by user.
   } else { haltScript(errorObject, errorObject.message, "Problem with Database.", 'Error opening database:'); }
 }
 

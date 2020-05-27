@@ -78,7 +78,6 @@ class PandaUI {
 				[success[1], err] = await this.logTabs.prepare();
 				if (!err) {
 					bgPanda.useDefault = false;
-					bgQueue.startQueueMonitor();
 					bgPanda.nullData();
 				}
 			}

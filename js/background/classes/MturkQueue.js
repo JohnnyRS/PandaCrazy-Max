@@ -23,6 +23,11 @@ class MturkQueue extends MturkClass {
     this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
   }
   /**
+   * Returns the value of loggedOff value;
+   * @return {bool} - True if logged off.
+   */
+  isLoggedOff() { return this.loggedOff; }
+  /**
    * Sends queue results and authenticity token for returning jobs to the panda UI and search UI.
    */
   sendQueueResults() {

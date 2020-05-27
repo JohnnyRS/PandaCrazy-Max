@@ -83,12 +83,10 @@ class ModalClass {
   /**
    * Workaround for popup unload not working when crossed domains. (www.mturk.com vs worker.mturk.com)
    * Recursively will keep checking until popup window closes. Used for login popup window.
-   * @param  {object} obj - Object popup window to check if it's null.
-   * @param  {bool} again - True if it should check popup window again.
    */
-  isPopup(obj, again) { 
-    if (!obj.popup.window) { $(`#${obj.idName}`).modal('hide'); }
-    else if (again) setTimeout(obj.isPopup, 500, obj, true);
+  isPopup() {
+    if (!this.popup.closed && bgQueue.isLoggedOff()) setTimeout(this.isPopup.bind(this), 500);
+    else bgQueue.nowLoggedOn();
   }
   /**
    * This is called after the save button is clicked and can save data.
@@ -144,7 +142,7 @@ class ModalClass {
       $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
-        setTimeout(this.isPopup, 500, this, true); // check if popup is null continously
+        setTimeout(this.isPopup.bind(this), 500); // check if popup is null continously
       } )
     }
   }
