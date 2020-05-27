@@ -51,7 +51,7 @@ class PandaUI {
 	}
   /**
    * This is called after the alarm data are prepared and ready.
-   * @callback afterCallBack
+   * @callback afterPCallBack
    * @param {array} success  - Array of successful messages.
    * @param {object} err     - An error object if promise was rejected.
    */
@@ -60,7 +60,7 @@ class PandaUI {
 	 * If loaded up data is done then start queue monitor and removes panda data to save memory.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
-	 * @param  {afterCallBack} afterFunc - Function to call after done to send success array or error object.
+	 * @param  {afterPCallBack} afterFunc - Function to call after done to send success array or error object.
 	 */
 	async prepare(afterFunc) {
 		let success = [], err = null;
@@ -190,32 +190,32 @@ class PandaUI {
   }
   /**
    * This is called after the save button is clicked.
-   * @callback saveCallBack
+   * @callback savePCallBack
    * @param {object} saved - The object with the new changes to be saved to the data object.
    */
   /**
    * This is called after a checkbox is clicked
-   * @callback checkCallBack
+   * @callback checkPCallBack
    * @param {object} element - The element button's click event object.
    */
   /**
    * This is called when the cancel button is clicked.
-   * @callback cancelCallBack
+   * @callback cancelPCallBack
    */
   /**
    * This is called after the modal is shown with all the animation effects finished.
-   * @callback after2CallBack
+   * @callback showPCallBack
    */
 	/**
 	 * Show the jobs modal for editing panda jobs or panda jobs in a grouping.
 	 * It will also load all panda's from the database and wait for successful load.
-	 * @param  {string} [type="jobs"]							- The type of data that is being edited.
-	 * @param  {number} [groupings=-1]						- The unique ID for the grouping that will be edited.
-	 * @param  {object} [thisObj=null]						- The grouping object that is being edited.
-	 * @param  {saveCallBack} [saveFunc=null]		  - Function to call when the save button is clicked.
-	 * @param  {checkCallBack} [checkFunc=null]   - Function to call when checkbox clicked on a job.
-	 * @param  {cancelCallBack} [cancelFunc=null] - Function to call when the cancel button is clicked.
-	 * @param  {after2CallBack} [afterShow=null]  - Function to call when modal is shown after animation effects.
+	 * @param  {string} [type="jobs"]							 - The type of data that is being edited.
+	 * @param  {number} [groupings=-1]						 - The unique ID for the grouping that will be edited.
+	 * @param  {object} [thisObj=null]						 - The grouping object that is being edited.
+	 * @param  {savePCallBack} [saveFunc=null]		 - Function to call when the save button is clicked.
+	 * @param  {checkPCallBack} [checkFunc=null]   - Function to call when checkbox clicked on a job.
+	 * @param  {cancelPCallBack} [cancelFunc=null] - Function to call when the cancel button is clicked.
+	 * @param  {showPCallBack} [afterShow=null]    - Function to call when modal is shown after animation effects.
 	 */
 	async showJobsModal(type="jobs", groupings=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null) {
 		let err = await bgPanda.getAllPanda(false); // Just loading all panda data into memory.

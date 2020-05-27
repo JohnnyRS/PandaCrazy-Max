@@ -213,16 +213,16 @@ class PandaGroupings {
   }
   /**
    * This is called after the saved button is clicked for changes.
-   * @callback afterCallBack
+   * @callback afterGCallBack
    */
   /**
    * This is called after the cancel button is clicked.
-   * @callback cancelCallBack
+   * @callback cancelGCallBack
    */
   /**
-   * @param  {number} grouping                  - The unique number for the grouping to be deleted.
-   * @param  {afterCallBack} [afterFunc=null]   - The function to call when saved button is clicked.
-   * @param  {cancelCallBack} [cancelFunc=null] - The function to call when cancel button is clicked.
+   * @param  {number} grouping                   - The unique number for the grouping to be deleted.
+   * @param  {afterGCallBack} [afterFunc=null]   - The function to call when saved button is clicked.
+   * @param  {cancelGCallBack} [cancelFunc=null] - The function to call when cancel button is clicked.
    */
   showgroupingEditModal(grouping, afterFunc=null, cancelFunc=null) {
     pandaUI.showJobsModal("groupingEdit", grouping, this.groups[grouping], (savedResults) => {

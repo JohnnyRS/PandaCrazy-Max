@@ -43,7 +43,7 @@ class AlarmsClass {
   }
   /**
    * This is called after the alarm data are prepared and ready.
-   * @callback afterCallBack
+   * @callback afterACallBack
    * @param {array} success  - Array of successful messages.
    * @param {object} err     - An error object if promise was rejected.
    */
@@ -51,7 +51,7 @@ class AlarmsClass {
    * Loads up the alarms from the database or saves default values if no alarms are in the database.
    * Saves any errors from trying to add to database and then sends a reject.
    * @async
-   * @param  {afterCallBack} afterFunc - Function to call after done to send success error.
+   * @param  {afterACallBack} afterFunc - Function to call after done to send success error.
    */
   async prepare(afterFunc) {
     let success = [], err = null;

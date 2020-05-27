@@ -230,11 +230,11 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       }).appendTo(valueCol);
     } else if (element.type==="button") {
       const button = $(`<button class="btn btn-primary${element.addClass}" id="${element.idStart}_${element.unique}">${element.label}</button>`);
-      if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc.apply(this, [e]); });
+      if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
       $(button).appendTo(valueCol);
     } else if (element.type==="checkbox") {
         const theCheckBox = createCheckBox(valueCol, "", `pcm_selection_${element.unique}`, element.unique, "", " m-0", element.inputClass);
-        if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc.apply(this, [e]); });
+        if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
     } else if (element.type==="keyValue") {
         const id = (element.id) ? ` id=${element.id}` : ``;
         const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css("cursor", "default").appendTo(valueCol);
@@ -247,13 +247,13 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
 }
 /**
  * This is called after the alarm data are prepared and ready.
- * @callback afterCallBack
+ * @callback doAfterCallBack
  * @param {number} count - The number of tabs counted with the search term.
  */
 /**
  * Gets all the tabs opened in browser and will count how many page urls that includes the search term.
- * @param {string} search    - Search term to use for all tabs opened in browser.
- * @param {afterCallBack} doAfter - Function to call after counting tabs for search term.
+ * @param {string} search           - Search term to use for all tabs opened in browser.
+ * @param {doAfterCallBack} doAfter - Function to call after counting tabs for search term.
  */
 function allTabs(search, doAfter) {
   let count = 0;

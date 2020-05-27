@@ -292,22 +292,22 @@ class TimerClass {
    */
 	/**
    * This is called after the alarm data are prepared and ready.
-   * @callback afterCallBack
+   * @callback afterTCallBack
    * @param {number} myId - Unique number for the job in timer queue.
    * @param {bool} hamOff - Exact time it took for the timer cycle to do next queue job.
    */
 	/**
 	 * Add a new job to the queue for this timer. Also will remove job when duration has elapsed.
 	 * Can go ham at start and have a duration for the go ham too. Can also be skipped at beginning.
-	 * @param  {number} myId					 	 - Unique id of panda job only used for panda timer.
-	 * @param  {doCallBack} doFunc			 - Do this function every cycle of the timer.
-	 * @param  {afterCallBack} funcAfter - Do this function after this job gets removed from queue.
-	 * @param  {bool} [goHamStart=false] - Go ham at start?
-	 * @param  {number} [duration=0]		 - The duration for this job to run.
-	 * @param  {number} [tDuration=0]		 - Temporary duration for this job used for external panda adds.
-	 * @param  {number} [tGoHam=0]			 - Temporary go ham duration for this job used for external panda adds.
-	 * @param  {bool} [skipped=false]		 - Should skip it at beginning?
-	 * @return {number}								 	 - Returns a unique number for this job in queue.
+	 * @param  {number} myId					  	- Unique id of panda job only used for panda timer.
+	 * @param  {doCallBack} doFunc			  - Do this function every cycle of the timer.
+	 * @param  {afterTCallBack} funcAfter - Do this function after this job gets removed from queue.
+	 * @param  {bool} [goHamStart=false]  - Go ham at start?
+	 * @param  {number} [duration=0]		  - The duration for this job to run.
+	 * @param  {number} [tDuration=0]		  - Temporary duration for this job used for external panda adds.
+	 * @param  {number} [tGoHam=0]			  - Temporary go ham duration for this job used for external panda adds.
+	 * @param  {bool} [skipped=false]	    - Should skip it at beginning?
+	 * @return {number}								 	  - Returns a unique number for this job in queue.
 	 */
 	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=0, tDuration=0, tGoHam=0, skipped=false) {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item

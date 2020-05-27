@@ -35,10 +35,22 @@ class ModalClass {
     return idName;
   }
   /**
+   * This is called after the cancel button is clicked.
+   * @callback cancelCallBack
+   */
+  /**
+   * This is called after the modal is shown after the animations are completed.
+   * @callback showCallBack
+   */
+  /**
+   * This is called after the close button is clicked.
+   * @callback closeCallBack
+   */
+  /**
    * Show this modal dialog to user allowing multiple modals to be shown with zIndex.
-   * @param {function} [cancelFunc=null] - Function to call when the cancel button is clicked.
-   * @param {function} [afterShow=null]  - Function to call after the modal dialog is shown with animations stopped.
-   * @param {function} [afterClose=null] - Function to call when the modal dialog is about to close.
+   * @param {cancelCallBack} [cancelFunc=null] - Function to call when the cancel button is clicked.
+   * @param {showCallBack} [afterShow=null]    - Function to call after the modal dialog animations stopped.
+   * @param {closeCallBack} [afterClose=null]  - Function to call when the modal dialog is about to close.
    */
   showModal(cancelFunc=null, afterShow=null, afterClose=null) {
     const idName = this.modals.slice(-1)[0]; // Get the last modal id name opened.
@@ -79,6 +91,15 @@ class ModalClass {
     else if (again) setTimeout(obj.isPopup, 500, obj, true);
   }
   /**
+   * This is called after the save button is clicked and can save data.
+   * @callback saveCallBack
+   * @param {object} saved - The object with the new changes to be saved to the data object.
+   */
+  /**
+   * This is called after the no button is clicked.
+   * @callback noCallBack
+   */
+  /**
    * Prepare a modal dialog for showing data with different buttons.
    * @param {object} dataObject                 - Cloned data so original won't get changed until saved.
    * @param {number} width                      - Width of the modal dialog.
@@ -89,10 +110,10 @@ class ModalClass {
    * @param {string} footerClass                - Class name used for the foot of the modal.
    * @param {string} [saveButton='invisible']   - Class name to be added to the save button. Invisible is default.
    * @param {string} [saveText='Save']          - Text to show on the save button.
-   * @param {function} [saveFunc=null]          - Function to be called when the save button is clicked.
+   * @param {saveCallBack} [saveFunc=null]      - Function to be called when the save button is clicked.
    * @param {string} [noButton='invisible']     - Class name to be added to the no button. Invisible is default.
    * @param {string} [noText='No']              - Text to show on the no button.
-   * @param {function} [noFunc=null]            - Function to be called when the no button is clicked.
+   * @param {noCallBack} [noFunc=null]          - Function to be called when the no button is clicked.
    * @param {string} [cancelButton='invisible'] - Class name to be added to the cancel button. Invisible is default.
    * @param {string} [cancelText='Cancel']      - Text to show on the cancel button.
    * @return {string}                           - Id name of modal prepared.
@@ -106,14 +127,14 @@ class ModalClass {
     $(`#${idName} .${this.classModalTitle}`).html(title);
     $(`#${idName} .${this.classModalBody}`).addClass(bodyClass).html(body);
     $(`#${idName} .${this.classModalFooter}`).addClass(footerClass);
-    $(`#${idName} .${this.classSaveButton}`).removeClass('invisible visible').addClass(saveButton).html(saveText).unbind('click').click( () => { if (saveFunc!==null) saveFunc.apply(this, [this.tempObject[idName]]); });
-    $(`#${idName} .${this.classNoButton}`).removeClass('invisible visible').addClass(noButton).html(noText).unbind('click').click( () => { if (noFunc) noFunc.apply(); });
+    $(`#${idName} .${this.classSaveButton}`).removeClass('invisible visible').addClass(saveButton).html(saveText).unbind('click').click( () => { if (saveFunc!==null) saveFunc(this.tempObject[idName]); });
+    $(`#${idName} .${this.classNoButton}`).removeClass('invisible visible').addClass(noButton).html(noText).unbind('click').click( () => { if (noFunc) noFunc(); });
     $(`#${idName} .${this.classCancelButton}`).removeClass('invisible visible').addClass(cancelButton).html(cancelText);
     return idName;
   }
   /**
    * Shows a modal informing user that they are logged off from mturk.
-   * @param  {function} [afterClose=null] - Function to call after close animation is completed.
+   * @param  {closeCallBack} [afterClose=null] - Function to call after close animation is completed.
    */
   showLoggedOffModal(afterClose=null) {
     if (this.modalLoggedOff === 0) {
@@ -128,22 +149,31 @@ class ModalClass {
     }
   }
   /**
+   * This is called after the cancel button is clicked.
+   * @callback deleteCallBack
+   */
+  /**
    * Shows a modal to verify the jobs user wants to be deleted.
-   * @param  {string} hitDetails   - Short details of hit or hits to be deleted.
-   * @param  {function} deleteFunc - Function to call after delete button is clicked.
-   * @param  {function} noFunc     - Function to call after the no button is clicked.
-   * @param  {function} cancelFunc - Function to call after the cancel button is clicked.
+   * @param  {string} hitDetails         - Short details of hit or hits to be deleted.
+   * @param  {deleteCallBack} deleteFunc - Function to call after delete button is clicked.
+   * @param  {noCallBack} noFunc         - Function to call after the no button is clicked.
+   * @param  {cancelCallBack} cancelFunc - Function to call after the cancel button is clicked.
    */
   showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc) {
     const idName = this.prepareModal(null, "600px", "modal-header-danger modal-lg", "Deleting a Panda Hit!", `<h4>Are you sure you want me to delete this job?</h4><h5 class="text-primary">${hitDetails}</h5>`, "text-center", "", "visible", "Yes", deleteFunc, "visible", "No", noFunc, "visible", "Cancel");
     this.showModal(cancelFunc);
-    $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc.call(); } });
+    $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc(); } });
   }
   /**
+   * This is called after a checkbox is clicked.
+   * @callback checkCallBack
+   * @param  {object} e - The event from a jquery click event.
+   */
+  /**
    * Shows jobs in a table with a checkbox, collect button and details button.
-   * @param  {object} modalBody             - The Jquery element of the modal body to append to.
-   * @param  {array} jobs                   - An array of all the jobs to display.
-   * @param  {function} [checkboxFunc=null] - Function to call when checkbox is clicked.
+   * @param  {object} modalBody                  - The Jquery element of the modal body to append to.
+   * @param  {array} jobs                        - An array of all the jobs to display.
+   * @param  {checkCallBack} [checkboxFunc=null] - Function to call when checkbox is clicked.
    */
   showJobsTable(modalBody, jobs, checkboxFunc=null) {
     const divContainer = $(`<table class="table table-dark table-hover table-sm table-moreCondensed pcm_jobTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
@@ -195,10 +225,10 @@ class ModalClass {
    * @param  {string} [type='jobs']       - Showing just jobs or jobs for grouping?
    * @param  {number} [groupUnique=-1]    - Only used for editing grouping jobs with this unique number.       
    * @param  {object} [thisObj=null]      - Only used for editing grouping jobs so it saves when user wants.
-   * @param  {function} [saveFunc=null]   - Function to call when save button clicked.
-   * @param  {function} [checkFunc=null]  - Function to call when checkbox clicked on a job.
-   * @param  {function} [cancelFunc=null] - Function to call when cancel button clicked.
-   * @param  {function} [afterShow=null]  - Function to call when modal is shown after animations stopped.
+   * @param  {saveCallBack} [saveFunc=null]   - Function to call when save button clicked.
+   * @param  {checkCallBack} [checkFunc=null]  - Function to call when checkbox clicked on a job.
+   * @param  {cancelCallBack} [cancelFunc=null] - Function to call when cancel button clicked.
+   * @param  {showCallBack} [afterShow=null]  - Function to call when modal is shown after animations stopped.
    */
   showJobsModal(type='jobs', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null) {
     const theTitle = (type==='groupingEdit') ? 'Edit Groupings' : 'List Jobs';
@@ -247,7 +277,7 @@ class ModalClass {
    */
   showJobAddModal() {
     const idName = this.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', () => {
-        checkGroupID.apply(this);
+        checkGroupID();
       }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
       const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>');
       createInput(div, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
@@ -260,7 +290,7 @@ class ModalClass {
       createInput(div, '', 'pcm_formAddPay', 'Pay Amount: ', 'default: 0.00');
       $(`#${idName} .${this.classModalBody}`).append(div);
       $('#pcm_formAddGroupID').keypress( (e) => {
-        if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID.apply(this);
+        if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID();
       }
     );
     this.showModal(null, () => { $('#pcm_formAddGroupID').focus(); });
@@ -311,7 +341,7 @@ class ModalClass {
    * @param {string} [question='']      - Quesion to be asked before the input field as label.
    * @param {string} [defAns='']        - Default answer in input field initially.
    * @param {number} [max=null]         - Maximum characters allowed in input field.
-   * @param {function} [afterShow=null] - Function to run after the dialog is shown after animation is stopped. 
+   * @param {showCallBack} [afterShow=null] - Function to run after the dialog is shown after animation is stopped. 
    */
   showDialogModal(width, title, body, addFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null) {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
@@ -320,7 +350,7 @@ class ModalClass {
     if (question!=='') { // Should an input field be shown with a question?
       createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max);
       $('#pcm_formQuestion').keypress( (e) => { // If enter key pressed then run the addFunc function.
-        if ( (event.keyCode ? event.keyCode : event.which) == '13' ) addFunc.call(); // Return key pressed.
+        if ( (event.keyCode ? event.keyCode : event.which) == '13' ) addFunc(); // Return key pressed.
       });
     } 
     this.showModal(null, () => { $('#pcm_formQuestion').focus().select(); if (afterShow) afterShow(); });
