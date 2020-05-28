@@ -274,22 +274,20 @@ class ModalClass {
    * Shows a modal for adding panda or search jobs
    */
   showJobAddModal() {
-    const idName = this.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', () => {
-        checkGroupID();
-      }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
-      const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>');
-      createInput(div, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
-      createCheckBox(div, 'Start Collecting', 'pcm_startCollecting', '', true);
-      createCheckBox(div, 'Collect Only Once', 'pcm_onlyOnce', '');
-      createInput(div, ' pt-3 border-top border-info', 'pcm_formReqName', 'Requester Name: ', 'default: group ID shown');
-      createInput(div, '', 'pcm_formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2');
-      createInput(div, '', 'pcm_formAddTitle', 'Title: ', 'default: group ID shown');
-      createInput(div, '', 'pcm_formAddDesc', 'Description: ', 'default: group ID shown');
-      createInput(div, '', 'pcm_formAddPay', 'Pay Amount: ', 'default: 0.00');
-      $(`#${idName} .${this.classModalBody}`).append(div);
-      $('#pcm_formAddGroupID').keypress( (e) => {
-        if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID();
-      }
+    const idName = this.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
+    const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>');
+    createInput(div, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
+    createCheckBox(div, 'Start Collecting', 'pcm_startCollecting', '', true);
+    createCheckBox(div, 'Collect Only Once', 'pcm_onlyOnce', '');
+    createInput(div, ' pt-3 border-top border-info', 'pcm_formReqName', 'Requester Name: ', 'default: group ID shown');
+    createInput(div, '', 'pcm_formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2');
+    createInput(div, '', 'pcm_formAddTitle', 'Title: ', 'default: group ID shown');
+    createInput(div, '', 'pcm_formAddDesc', 'Description: ', 'default: group ID shown');
+    createInput(div, '', 'pcm_formAddPay', 'Pay Amount: ', 'default: 0.00');
+    $(`#${idName} .${this.classModalBody}`).append(div);
+    $('#pcm_formAddGroupID').keypress( (e) => {
+      if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID();
+    }
     );
     this.showModal(null, () => { $('#pcm_formAddGroupID').focus(); });
     /**

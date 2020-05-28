@@ -9,7 +9,6 @@ class PandaGroupings {
     this.unique = 1;                  // A unique value for grouping starting at 1.
     this.startTimes = {};             // Object with all the start times for groupings.
     this.endTimes = {};               // Object with all the end times for groupings.
-		this.thisDay = moment().date();   // Used to check when the next day happens.
   }
   /**
    * Sets up the data for the start and end times for this grouping with the unique number.
@@ -55,9 +54,7 @@ class PandaGroupings {
    * This method checks all the start times and starts groupings when necessary.
    */
   checkStartTimes() {
-    let day = moment().date();
-    if (this.thisDay != day) this.resetTimes(false); // Reset start and end times object if new day.
-    this.thisDay = day; // Save day to compare for next day detection.
+    if (isNewDay()) this.resetTimes(false); // Reset start and end times object if new day.
     if (Object.keys(this.startTimes).length > 0) { // Are there any startTimes to check?
       const thisMoment = moment();
       for (var i=0, keys=Object.keys(this.startTimes); i < keys.length; i++) {

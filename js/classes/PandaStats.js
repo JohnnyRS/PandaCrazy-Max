@@ -16,6 +16,7 @@ class PandaStats {
     this.collectStart = null;                 // Time that this panda started the collecting session.
     this.collectAccepted = 0;                 // The number of hits accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
+    this.dailyAccepted = 0;
     this.collectStore = "collectionStore";    // The store name for the collection stat storage.
     this.acceptedStore = "acceptedStore";     // The store name for the accepted stat storage.
     this.fetched = { value:0, id:"#pcm_hitFetched", label:"Fetched" };
@@ -23,6 +24,15 @@ class PandaStats {
     this.noMore = { value:0, id:"#pcm_hitNoMore", label:"NM" };
     this.updateAllStats();
   }
+  /**
+   * Will return the number of accepted hits from this panda job for this day.
+   * @return {number} - The number of accepted hits for this day.
+   */
+  getDailyAccepted() { return this.dailyAccepted; }
+  /**
+   * Will reset any daily stats if a new day has happened.
+   */
+  resetDailyStats() { this.dailyAccepted = 0; }
   /**
    * Stores the data in the collect stats database for collecting times of panda jobs.
    * @param  {object} data - The data to store in the database stats for collecting.
@@ -80,7 +90,7 @@ class PandaStats {
    * Also adds the accepted time in the stats database.
    */
   addAccepted() {
-    this.accepted.value++; this.addToacceptedTimes();
+    this.accepted.value++; this.dailyAccepted++; this.addToacceptedTimes();
     this.collectAccepted++; this.updateHitStat(this.accepted);
   }
   /**

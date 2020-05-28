@@ -1,3 +1,5 @@
+let todayDay = moment().date();
+
 /**
  * Creates a Jquery input object and returns it and appends to element if appendHere is passed.
  * @param  {object} appendHere  - The jquery element to append the input div to.
@@ -293,6 +295,15 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
     if (bgQueue) bgQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
   } else console.log('Warning: ' + alertMessage); // Show a warning alert message on the console.
+}
+/**
+ * Checks if it's a new day.
+ * @return {bool} - True if it's a new day.
+ */
+function isNewDay() {
+  let day = moment().date();
+  if (todayDay != day) { todayDay = day; return true; }
+  else return false;
 }
 
 /** Constant values for console coloring. */

@@ -12,9 +12,16 @@ class LogTabsClass {
     this.taskInfo = {};           // Object of all the hits in the queue for queue watch.
     this.queueTab = null;         // The tab for the queue watch.
     this.queueContent = null;     // The contents for the queue watch.
+    this.queueTotal = 0;
   }
   /**
+   * Gets the total hits in the queue.
+   * @return {number} - Total hits in the queue.
+   */
+  getQueueTotal() { return this.queueTotal; }
+  /**
    * Prepare the tabs on the bottom and placing the id names in an array.
+   * @async
    * @return {array}
    */
   async prepare() {
@@ -74,10 +81,11 @@ class LogTabsClass {
     if (!this.taskIds.includes(data.taskId)) { // Make sure hit not in queue already.
       let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft>data.assignedTime; } );
       this.taskIds.splice( ((found===-1) ? this.taskIds.length-1 : found-1), 0, data.taskId );
-      const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
+      const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
       this.taskInfo[data.taskId] = newInfo;
       if (found===-1) this.addToLog(newInfo, data.taskId, this.queueContent, true);
       else this.addToLog(newInfo, data.taskId, $(this.queueContent).find("div")[found], false);
+      this.queueTotal++;
     }
   }
   /**
@@ -88,8 +96,9 @@ class LogTabsClass {
    */
   updateQueue(queueResults) {
     let prevHits = $(this.queueContent).find("div");
-    $(this.queueTab).find("span").html(`Queue Watch - ${queueResults.length}`);
-    if (queueResults.length > 0) {
+    this.queueTotal = queueResults.length;
+    $(this.queueTab).find("span").html(`Queue Watch - ${this.queueTotal}`);
+    if (this.queueTotal > 0) {
       let newIds = [], newInfo = {}, oldIds = []; // oldIds is used for duplication error checking
       queueResults.forEach( (value) => { newIds.push(value.task_id); newInfo[value.task_id] = {project:value.project, secondsLeft:value.time_to_deadline_in_seconds, task_id:value.taskId, task_url:value.task_url.replace(".json","")}; } );
       if (prevHits.length > 0) {

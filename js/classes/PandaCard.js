@@ -187,7 +187,7 @@ class PandaCard {
       { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
       { label:"Limit # of total Hits in queue:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
       { label:"Accept Only Once:", type:"trueFalse", key:"once" }, 
-      { label:"Hits # Accepted Limit:", type:"text", key:"acceptLimit" }, 
+      { label:"Daily Accepted Hit Limit:", type:"text", key:"acceptLimit" }, 
       { label:"Stop Collecting After Minutes:", type:"text", key:"duration" }, 
       { label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam" }, 
       { label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration" }, 
