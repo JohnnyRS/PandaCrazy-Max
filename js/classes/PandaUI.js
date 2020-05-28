@@ -24,7 +24,12 @@ class PandaUI {
 			if (request.command.substring(0, 3)==="add") { this.addFromExternal(request); }
 		});
 		this.openStatsDB(); // Open the database first.
-  }
+	}
+	/**
+   * Gets the total hits in the queue.
+   * @return {number} - Total hits in the queue.
+	 */
+	getQueueTotal() { return this.logTabs.getQueueTotal(); }
 	/**
 	 * Opens the stat database and creates the stores if needed.
 	 * @return {Promise<response|Error>} - 
@@ -507,16 +512,26 @@ class PandaUI {
     bgPanda.authenticityToken = $(html).find(`input[name="authenticity_token"]:first`).val();
     const hitDetails = JSON.parse(rawProps).modalOptions;
     bgPanda.parseHitDetails(hitDetails, myId);
+    this.logTabs.addIntoQueue(pandaInfo, hitDetails, data, result.url.replace("https://worker.mturk.com",""));
     bgPanda.checkIfLimited(myId, true);
     alarms.doAlarms(pandaInfo);
-    this.logTabs.addIntoQueue(pandaInfo, hitDetails, data, result.url.replace("https://worker.mturk.com",""));
 	}
 	/**
-	 * Check the grouping start times for any that needs to start and save the queue results.
+	 * Does any resetting of any values needed when the new day happens.
+	 */
+	resetDailyStats() {
+		for (const key in this.pandaStats) {
+			this.pandaStats[key].resetDailyStats();
+		}
+	}
+	/**
+	 * Save the queue results received after making sure the groupings are checked for start times to start.
+	 * Also detects if a new day happened and then will reset any daily values that need to be reset.
 	 * @param  {object} queueResults - Object from the mturk queue with all the hits information.
 	 */
 	gotNewQueue(queueResults) {
 		groupings.checkStartTimes();
+		if (isNewDay()) this.resetDailyStats();
 		this.logTabs.updateQueue(queueResults);
 	}
 	/**

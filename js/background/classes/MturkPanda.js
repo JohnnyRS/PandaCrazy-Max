@@ -29,8 +29,8 @@ class MturkPanda extends MturkClass {
     this.pandaUrls = [];										// Array of panda objects for a panda with preview and accept links.
 		this.pandaSkipped = [];									// List of all panda's being skipped because of limits.
 		this.queueAdds = {};										// Object of panda accepted hits so it can limit number of accepts.
-		this.queueResults = [];									// The real queue with hits from mturk.
 		this.loggedOff = false;									// Are we logged off from mturk?
+		this.resultsBack = true;
 		this.authenticityToken = null;					// The authenticity token from mturk so hits can be returned.
 		pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
 		pandaTimer.setTimer(timer);         		// Set timer for this timer.
@@ -241,7 +241,8 @@ class MturkPanda extends MturkClass {
 	async startCollecting(myId, goHamStart, tempDuration, tempGoHam) {
 		await this.getDbData(myId);
 		const info = this.info[myId];
-		if (!this.checkIfLimited(myId,false, true)) { // If there was a limit to stop then don't add to queue.
+		const stopReason = this.checkIfLimited(myId,false, true);
+		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			info.queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
 				this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle
 			}, (myId) => {
@@ -260,7 +261,10 @@ class MturkPanda extends MturkClass {
 			this.sendStatusToSearch(myId,true);
 			if (info.data.autoGoHam) extPandaUI.startAutoGoHam(myId);
 			if (this.dLog(3)) console.info(`%cStarting to collect ${myId}.`,CONSOLE_INFO);
-		} else { extPandaUI.stopCollecting(myId); }
+		} else {
+			if (this.dLog(2)) console.info(`%cStopping. Limit reached. Reason: ${stopReason} on ${myId}.`,CONSOLE_WARN);
+			extPandaUI.stopCollecting(myId);
+		}
 	}
 	/**
 	 * Stops collecting this panda with this unique ID.
@@ -353,29 +357,28 @@ class MturkPanda extends MturkClass {
 	 * @return {array}				 - Reason for stopping is first. If hit being skipped is second.
 	 */
 	checkIfLimited(myId, accepted) {
-		const thisHit = this.info[myId]; let addedHits = 0, unskip=false, skipIt=false, stopIt=null;
-		if (accepted && thisHit.data.once) stopIt = "once"; // Panda is limited to collecting only once so stop it.
+		const thisHit = this.info[myId], data = thisHit.data, totalInQueue = extPandaUI.getQueueTotal();
+		let addedHits = 0, unskip=false, skipIt=false, stopIt=null;
+		if (accepted && data.once) stopIt = "once"; // Panda is limited to collecting only once so stop it.
 		else if (accepted && thisHit.autoAdded && thisHit.hitsAvailable===1) stopIt = "oneHitAvailable";
-		else if (accepted && thisHit.data.acceptLimit>0 && 
-			thisHit.data.acceptLimit<=extPandaUI.pandaStats[myId].accepted.value) stopIt = "acceptLimit";
+		else if (data.acceptLimit>0 &&  data.acceptLimit<=extPandaUI.pandaStats[myId].getDailyAccepted()) stopIt = "acceptLimit";
 		else {
 			if (accepted && this.queueAdds.hasOwnProperty(myId)) addedHits = this.queueAdds[myId];
-			let hits = myQueue.totalResults(null, thisHit.data.groupId); // Get how many hits from this panda is in queue
+			let hits = myQueue.totalResults(null, data.groupId); // Get how many hits from this panda is in queue
 			hits += ((accepted) ? addedHits : 0); // Add on the hits just accepted and may not be in queue yet
 			if (thisHit.skipped) { // This panda is being skipped so check if it should be unskipped.
-				if (thisHit.data.limitNumQueue>0 && hits<thisHit.data.limitNumQueue) unskip=true;
-				if (thisHit.data.limitTotalQueue>0 && this.queueResults.length<thisHit.data.limitTotalQueue) unskip=true;
-				else if (thisHit.data.limitTotalQueue>0) unskip=false;
+				if (data.limitNumQueue>0 && hits<data.limitNumQueue) unskip=true;
+				if (data.limitTotalQueue>0 && totalInQueue<data.limitTotalQueue) unskip=true;
+				else if (data.limitTotalQueue>0) unskip=false;
 				if (unskip) { // If panda doesn't need to be skipped anymore.
 					extPandaUI.cardEffectPreviousColor(myId,false); // Go back to previous background color.
 					pandaTimer.unSkipThis(thisHit.queueUnique); // Unskip this panda in timer.
 					this.pandaSkipped = arrayRemove(this.pandaSkipped, myId); thisHit.skipped = false; // This hit not skipped
 				}
 			} else { // if panda not being skipped
-				if (thisHit.data.limitNumQueue>0 && thisHit.data.limitNumQueue<=hits) skipIt=true;
-				else if (thisHit.data.limitTotalQueue>0 && thisHit.data.limitTotalQueue<=this.queueResults.length) skipIt=true;
+				if (data.limitNumQueue>0 && data.limitNumQueue<=hits) skipIt=true;
+				else if (data.limitTotalQueue>0 && data.limitTotalQueue<=totalInQueue) skipIt=true;
 				if (skipIt) { // if panda needs to be skipped.
-					console.log("checkIfLimited: delete " + thisHit.queueUnique);
 					extPandaUI.cardEffectPreviousColor(myId, true, "#ffa691"); // Change color of panda background.
 					pandaTimer.hamOff(thisHit.queueUnique); // Make sure go ham is off if this panda was going ham.
 					this.pandaSkipped.push(myId); thisHit.skipped = true; // This hit skipped.
@@ -395,10 +398,9 @@ class MturkPanda extends MturkClass {
 		if (extPandaUI) { // Make sure there is a panda UI opened.
 			if (this.loggedOff) this.nowLoggedOn(); // If mturk gave queue results then user is logged on.
 			this.authenticityToken = authenticityToken;
-			this.queueResults = queueResults;
 			this.queueAdds = {};
 			if (this.pandaSkipped.length) this.pandaSkipped.forEach( item => this.checkIfLimited(item,false) );
-			extPandaUI.gotNewQueue(this.queueResults);
+			extPandaUI.gotNewQueue(queueResults);
 		}
 	}
 	/**
@@ -425,29 +427,39 @@ class MturkPanda extends MturkClass {
 	goFetch(objUrl, queueUnique, elapsed, myId) {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
 		if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
-		super.goFetch(objUrl).then(result => {
-      if (!result) {
-        if (this.dError(1)) { 
-          console.error('Returned result from panda fetch was a null.', JSON.stringify(objUrl));
+		let hitInfo = this.info[myId];
+		const onceCheck = (hitInfo.data.once && this.resultsBack===true);
+		const totalCheck = (hitInfo.data.limitTotalQueue>0 && this.resultsBack===true);
+		/** If this job should only get one hit then be sure it received last fetch results. */
+		if ( onceCheck || totalCheck || !hitInfo.data.once || hitInfo.data.limitTotalQueue===0) {
+			this.resultsBack = false;
+			super.goFetch(objUrl).then(result => {
+				if (!result) {
+					if (this.dError(1)) { console.error('Result from panda fetch was a null.', JSON.stringify(objUrl)); }
+				} else if (extPandaUI!==null && this.info[myId].data!==null) {
+					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalPandaFetched();
+					extPandaUI.highlightEffect_gid(myId);
+					const savedData = this.info[myId].data; // Save data just in case it gets removed on stop.
+					if (result.type === "ok.text" && result.url.includes("assignment_id="))
+						extPandaUI.hitAccepted(myId, queueUnique, result, savedData);
+					else {
+						let stopped = this.checkIfLimited(myId, false);
+						if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
+						else if (result.mode === "pre") { extPandaUI.pandaGStats.addPandaPRE(); }
+						else if (result.mode === "maxxedOut") { console.log("Maxxed out dude"); }
+						else if (result.mode === "noMoreHits") { extPandaUI.pandaGStats.addTotalPandaNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
+						else if (result.mode === "noQual" && stopped===null) { console.log("Not qualified"); extPandaUI.stopItNow(myId, true, stopped, "#DDA0DD"); }
+						else if (result.mode === "blocked") { console.log("You are blocked"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
+						else if (result.mode === "notValid") { console.log("Group ID not found"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
+						else if (result.mode === "unknown") { console.log("unknown message: ",result.data.message); }
+						else if (result.type === "ok.text") { console.log("captcha found"); globalOpt.resetCaptcha(); }
+					}
 				}
-			} else if (extPandaUI!==null && this.info[myId].data!==null) {
-				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalPandaFetched();
-				extPandaUI.highlightEffect_gid(myId);
-				const savedData = this.info[myId].data; // Save data just in case it gets removed on stop.
-				let stopped = this.checkIfLimited(myId, false);
-				if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
-				else if (result.mode === "pre") { extPandaUI.pandaGStats.addPandaPRE(); }
-				else if (result.mode === "maxxedOut") { console.log("Maxxed out dude"); }
-				else if (result.mode === "noMoreHits") { extPandaUI.pandaGStats.addTotalPandaNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
-				else if (result.mode === "noQual" && stopped===null) { console.log("Not qualified"); extPandaUI.stopItNow(myId, true, stopped, "#DDA0DD"); }
-				else if (result.mode === "blocked") { console.log("You are blocked"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
-				else if (result.mode === "notValid") { console.log("Group ID not found"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
-				else if (result.mode === "unknown") { console.log("unknown message: ",result.data.message); }
-				else if (result.type === "ok.text" && result.url.includes("assignment_id=")) {
-					extPandaUI.hitAccepted(myId, queueUnique, result, savedData);
-				} else if (result.type === "ok.text") { console.log("captcha found"); globalOpt.resetCaptcha(); }
-			}
-		});
+				this.resultsBack = true;
+			});
+		} else {
+			if (this.dLog(2)) console.debug(`%cNo results from last fetch for job only accepting one hit.`,CONSOLE_WARN);
+		}
 	}
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
