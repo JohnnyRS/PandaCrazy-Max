@@ -50,6 +50,9 @@ class MturkClass {
 			else if ( result.type === "ok.json" && result.data.message && result.data.message.includes("address is not valid") ) { returnObj.mode = "notValid"; returnObj.data = null; }
 			else if ( result.type === "ok.json" && result.data.message && result.data.message.includes("prevent you from working") ) { returnObj.mode = "blocked"; returnObj.data = null; }
 			else if ( result.type === "ok.json" && result.data.message ) { returnObj.mode = "unknown";  }
+			else if ( result.type === "bad.request.text" && result.data.includes("Header Or Cookie Too Large") ) {
+				returnObj.mode = "cookies.large"; returnObj.data = null;
+			}
 			return returnObj;
 		}, rejected => { console.error("error has occured"); });
 		return response;

@@ -31,9 +31,11 @@ class MturkPanda extends MturkClass {
 		this.queueAdds = {};										// Object of panda accepted hits so it can limit number of accepts.
 		this.loggedOff = false;									// Are we logged off from mturk?
 		this.resultsBack = true;
+		this.tempPaused = false;
 		this.authenticityToken = null;					// The authenticity token from mturk so hits can be returned.
 		pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
 		pandaTimer.setTimer(timer);         		// Set timer for this timer.
+		pandaTimer.pleaseSendBack();         		// Set timer for this timer.
     pandaTimer.setHamTimer(hamTimer);   		// Set hamTimer for this timer.
 		this.useDefault = false;								// Should we be using default values because no data in database?
 		this.db = new DatabaseClass(this.dbName, 1);  // Set up the database class.
@@ -191,10 +193,10 @@ class MturkPanda extends MturkClass {
 	isTimerGoingHam() { return pandaTimer.goingHam; }
 	/**
 	 * Tell panda timer to go ham on this panda with the queue unique id and use the temporary ham duration.
-	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
-	 * @param  {number} tGoHam			- The temporary duration for the goHam timer.
+	 * @param  {number} queueUnique   - Unique number for the panda in timer queue.
+	 * @param  {number} [tGoHam=null] - The temporary duration for the goHam timer.
 	 */
-	timerGoHam(queueUnique, tGoHam) { pandaTimer.goHam(queueUnique, tGoHam) }
+	timerGoHam(queueUnique, tGoHam=null) { pandaTimer.goHam(queueUnique, tGoHam) }
 	/**
 	 * Turn off the go ham in panda timer for this panda with the queue unique id.
 	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
@@ -351,6 +353,45 @@ class MturkPanda extends MturkClass {
 		thisHit.data.expires = details.expirationTime; extPandaUI.pandaCard[myId].updateAllCardInfo(thisHit);
 	}
 	/**
+	 * If there is a queue limit for this hit with the unique ID then skip it.
+	 * @param  {number} myId - The unique ID for a panda job.
+	 * @return {bool} 			 - True if there is a number hit or total queue limit.
+	 */
+	checkQueueLimit(myId) {
+		if (!this.info[myId].skipped) {
+			const thisHit = this.info[myId], data = thisHit.data, hits = myQueue.totalResults(null, data.groupId);
+			let skipIt=false;
+			if (data.limitNumQueue>0 && data.limitNumQueue<=hits) skipIt=true;
+			if (data.limitTotalQueue>0 && data.limitTotalQueue<=extPandaUI.getQueueTotal() ) skipIt=true;
+			if (skipIt) {
+				extPandaUI.cardEffectPreviousColor(myId, true, "#ffa691");
+				pandaTimer.hamOff(thisHit.queueUnique); // Make sure go ham is off if this panda was going ham.
+				this.pandaSkipped.push(myId); thisHit.skipped = true;
+				pandaTimer.skipThis(thisHit.queueUnique);
+				return true;
+			} else return false;
+		} else return true;
+	}
+	/**
+	 * If this hit with unique ID was being skipped then check if it should be unskipped.
+	 * @param  {number} myId - The unique ID for a panda job.
+	 * @return {bool}				 - True if this hit is being unskipped now.
+	 */
+	checkSkipped(myId) {
+		const thisHit = this.info[myId], data = thisHit.data, hits = myQueue.totalResults(null, data.groupId);
+		let unskip = false;
+		if (data.limitNumQueue > 0 && hits < data.limitNumQueue) unskip=true;
+		if (data.limitTotalQueue > 0 && extPandaUI.getQueueTotal() < data.limitTotalQueue) unskip=true;
+		else if (data.limitTotalQueue > 0) unskip=false;
+		if (unskip) {
+			extPandaUI.cardEffectPreviousColor(myId,false);
+			pandaTimer.unSkipThis(thisHit.queueUnique); // Unskip this panda in timer.
+			if (this.pandaSkipped.includes(myId)) this.pandaSkipped = arrayRemove(this.pandaSkipped, myId);
+			thisHit.skipped = false; // This hit not skipped
+			return true;
+		} else return false;
+}
+	/**
 	 * Checks if this panda has any limits and returns any relevant info.
 	 * @param  {number} myId   - The unique ID for a panda job.
 	 * @param  {bool} accepted - Was a hit accepted right now?
@@ -366,25 +407,8 @@ class MturkPanda extends MturkClass {
 			if (accepted && this.queueAdds.hasOwnProperty(myId)) addedHits = this.queueAdds[myId];
 			let hits = myQueue.totalResults(null, data.groupId); // Get how many hits from this panda is in queue
 			hits += ((accepted) ? addedHits : 0); // Add on the hits just accepted and may not be in queue yet
-			if (thisHit.skipped) { // This panda is being skipped so check if it should be unskipped.
-				if (data.limitNumQueue>0 && hits<data.limitNumQueue) unskip=true;
-				if (data.limitTotalQueue>0 && totalInQueue<data.limitTotalQueue) unskip=true;
-				else if (data.limitTotalQueue>0) unskip=false;
-				if (unskip) { // If panda doesn't need to be skipped anymore.
-					extPandaUI.cardEffectPreviousColor(myId,false); // Go back to previous background color.
-					pandaTimer.unSkipThis(thisHit.queueUnique); // Unskip this panda in timer.
-					this.pandaSkipped = arrayRemove(this.pandaSkipped, myId); thisHit.skipped = false; // This hit not skipped
-				}
-			} else { // if panda not being skipped
-				if (data.limitNumQueue>0 && data.limitNumQueue<=hits) skipIt=true;
-				else if (data.limitTotalQueue>0 && data.limitTotalQueue<=totalInQueue) skipIt=true;
-				if (skipIt) { // if panda needs to be skipped.
-					extPandaUI.cardEffectPreviousColor(myId, true, "#ffa691"); // Change color of panda background.
-					pandaTimer.hamOff(thisHit.queueUnique); // Make sure go ham is off if this panda was going ham.
-					this.pandaSkipped.push(myId); thisHit.skipped = true; // This hit skipped.
-					pandaTimer.skipThis(thisHit.queueUnique); // Tell timer this panda is skipped.
-				}
-			}
+			if (thisHit.skipped) unskip = this.checkSkipped(myId);
+			else skipIt = this.checkQueueLimit(myId);
 		}
 		if (stopIt!==null) { extPandaUI.stopItNow(myId,false,stopIt); } // Stop this panda if needs to be stopped by limits.
 		return stopIt;
@@ -397,11 +421,28 @@ class MturkPanda extends MturkClass {
 	gotNewQueue(queueResults, authenticityToken) {
 		if (extPandaUI) { // Make sure there is a panda UI opened.
 			if (this.loggedOff) this.nowLoggedOn(); // If mturk gave queue results then user is logged on.
-			this.authenticityToken = authenticityToken;
-			this.queueAdds = {};
-			if (this.pandaSkipped.length) this.pandaSkipped.forEach( item => this.checkIfLimited(item,false) );
+			if (this.tempPaused) { pandaTimer.paused = false; this.tempPaused = false; }
+			this.authenticityToken = authenticityToken; this.queueAdds = {};
 			extPandaUI.gotNewQueue(queueResults);
 		}
+	}
+	/**
+	 * When something new is in queue then check skipped hits to see if they can be unskipped.
+	 */
+	doNewChecks() {
+		/**
+		 * Recursion function which checks the first hit in skipped array and then places it back in array
+		 * if it needs to skip again. Uses a timeout to call the function again for each hit in skipped array.
+		 * @param  {number} count  - The current counter for next skipped hit to check.
+		 * @param  {number} length - The length of the skipped hit array to limit recursion.
+		 */
+		function donext(count, length) {
+			const nextSkipped = this.pandaSkipped.shift();
+			if (!this.checkSkipped(nextSkipped)) this.pandaSkipped.push(nextSkipped);
+		  if (count<=length && this.pandaSkipped.length>0)	setTimeout( donext.bind(this), 200, ++count, length );
+		}
+		console.log(JSON.stringify(this.pandaSkipped));
+		if (this.pandaSkipped.length) donext.call(this, 0, this.pandaSkipped.length);
 	}
 	/**
 	 * Get the group id and requester id from the preview or accept url.
@@ -426,13 +467,13 @@ class MturkPanda extends MturkClass {
 	 */
 	goFetch(objUrl, queueUnique, elapsed, myId) {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
-		if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
-		let hitInfo = this.info[myId];
-		const onceCheck = (hitInfo.data.once && this.resultsBack===true);
-		const totalCheck = (hitInfo.data.limitTotalQueue>0 && this.resultsBack===true);
-		/** If this job should only get one hit then be sure it received last fetch results. */
-		if ( onceCheck || totalCheck || !hitInfo.data.once || hitInfo.data.limitTotalQueue===0) {
+		const hitInfo = this.info[myId], data = hitInfo.data;
+		/** If this job has accepted or queue limit then be sure it received last fetch results. */
+		let resultsBack = true;
+		if ((data.once || data.limitTotalQueue>0) && !this.resultsBack) resultsBack = false;
+		if (!this.checkQueueLimit(myId) && resultsBack) {
 			this.resultsBack = false;
+			if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 			super.goFetch(objUrl).then(result => {
 				if (!result) {
 					if (this.dError(1)) { console.error('Result from panda fetch was a null.', JSON.stringify(objUrl)); }
@@ -452,15 +493,17 @@ class MturkPanda extends MturkClass {
 						else if (result.mode === "blocked") { console.log("You are blocked"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
 						else if (result.mode === "notValid") { console.log("Group ID not found"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f"); }
 						else if (result.mode === "unknown") { console.log("unknown message: ",result.data.message); }
-						else if (result.type === "ok.text") { console.log("captcha found"); globalOpt.resetCaptcha(); }
+						else if (result.mode === "cookies.large") {
+							console.log("cookie large problem"); this.tempPaused = true; pandaTimer.paused = true;
+						} else if (result.type === "ok.text") { console.log("captcha found"); globalOpt.resetCaptcha(); }
 					}
 				}
 				this.resultsBack = true;
 			});
-		} else {
+		} else if (!resultsBack) {
 			if (this.dLog(2)) console.debug(`%cNo results from last fetch for job only accepting one hit.`,CONSOLE_WARN);
 		}
-	}
+}
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
 	 * (0)-fatal = Errors that can crash or stall program.

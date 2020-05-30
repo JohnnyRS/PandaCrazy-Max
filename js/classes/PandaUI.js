@@ -7,7 +7,6 @@ class PandaUI {
 		this.pandaCard = {};								// Object of PandaCard Class object for panda display in UI
 		this.ctrlDelete = [];								// List of panda's selected for deletion by using ctrl key
 		this.hitQueue = [];									// Array of panda's to add delayed when multiple panda's get added at once
-		this.hitsDelayed = false;						// Multiple panda's added at once so adding is delayed.
 		this.lastAdded = null;							// The time the last hit got added to delay adding hits slowly
 		this.hamBtnBgColor = "";						// Default value for background color of the ham button from css file
 		this.hamBtnColor = "";							// Default value for color of the ham button from css file
@@ -16,6 +15,7 @@ class PandaUI {
 		this.tabs = null;										// The tabbed area where the panda card will go to.
 		this.logTabs = null;								// The log tabs on the bottom of the page with queue watch.
 		this.pandaGStats = null;						// The global stats for all the panda's and display stats to status area.
+		this.delayedTimeout = null;
 		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database
 		this.collectStore = "collectionStore";	// Name for collection times storage in database
 		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database
@@ -303,22 +303,20 @@ class PandaUI {
 	 * This is a recursive method which will go through the delayed hitqueue and began collecting one by one.
 	 * @param  {number} [diff=null] - The difference of time since the last panda was added.
 	 */
-	nextInDelayedQueue(diff=null) { console.log("i'm  in next: ", this);
+	nextInDelayedQueue(diff=null) {
 		if (this.hitQueue.length>0) {
-			if (diff===null) diff = new Date().getTime() - this.lastAdded;
-			if (diff>=1600) { // Wait for 1600 milliseconds to collect next panda.
+			if (diff === null) diff = new Date().getTime() - this.lastAdded;
+			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
 				const obj = this.hitQueue.shift();
 				this.lastAdded = new Date().getTime();
 				bgPanda.info[obj.myId].data.autoAdded = true;
 				bgPanda.info[obj.myId].hitsAvailable = obj.hitsAvailable;
 				this.pandaCard[obj.myId].updateAllCardInfo(bgPanda.info[obj.myId]);
 				this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
-				if (this.hitsDelayed) {
-					if (this.hitQueue.length===0) this.hitsDelayed = false;
-					if (this.hitsDelayed) setTimeout(this.nextInDelayedQueue, 500);
-				}
-			} else setTimeout(this.nextInDelayedQueue, 500);
-		}
+				if (this.hitQueue.length===0) { this.lastAdded = null; this.delayedTimeout = null; }
+				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
+			} else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
+		} else this.delayedTimeout = null;
 	}
 	/**
 	 * Show that this ham button was clicked or went into go ham mode automatically.
@@ -352,22 +350,21 @@ class PandaUI {
 	 * @param  {number} tempDuration - The temporary duration to use for this panda job.
 	 * @param  {number} tempGoHam		 - The temporary go ham duration to use for this panda job.
 	 */
-	runThisPanda(myId, tempDuration, tempGoHam) {
-		let hitInfo = bgPanda.info[myId], diff = 0;
-		if (hitInfo.data.once && this.pandaStats[myId].accepted.value>0) return null;
+	runThisPanda(myId, tempDuration, tempGoHam, thisNew=true) {
+		let hitInfo = bgPanda.info[myId], diff = null;
+		// if (hitInfo.data.once && this.pandaStats[myId].accepted.value>0) return null;
+		const stopReason = bgPanda.checkIfLimited(myId,false, true); console.log("stopReason: ",stopReason);
 		if (!this.pandaStats[myId].collecting) {
 			const nowDate = new Date().getTime();
-			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.hitsAvailable, tempDuration:tempDuration, tempGoHam:tempGoHam, delayedAt:nowDate});
-			if (this.lastAdded!==null) diff = nowDate - this.lastAdded;
-			else diff = 10000;
-			if (diff<2000) {
-				if (this.hitQueue.length > 1) this.hitQueue.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-				this.hitsDelayed = true;
-				bgPanda.sendStatusToSearch(myId,true);
-				setTimeout(this.nextInDelayedQueue, 1000, diff);
-				return null;
-			}
-			this.nextInDelayedQueue(diff);
+			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.hitsAvailable, tempDuration: 40000/* tempDuration */, tempGoHam:30000/* tempGoHam */, delayedAt:nowDate, lowestDur:Math.min(40000, 30000)});
+			if (this.lastAdded!==null) {
+				diff = nowDate - this.lastAdded;
+				if (diff < this.hitQueue[0].lowestDur) {
+					if (this.hitQueue.length > 1) this.hitQueue.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+					bgPanda.sendStatusToSearch(myId,true); 
+					if (!this.delayedTimeout) this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500, diff);
+				} else this.nextInDelayedQueue(diff);
+			} else this.nextInDelayedQueue(-1);
 		} else { this.pandaCard[myId].updateAllCardInfo(hitInfo); }
 		this.newAddInfo = {};
 	}
@@ -502,7 +499,7 @@ class PandaUI {
     this.pandaStats[myId].addAccepted();
 		let pandaInfo = bgPanda.info[myId];
     if (pandaInfo.autoTGoHam !== "disable" &&
-       (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam == "on")) {
+       (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
       bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration);
     }
     bgPanda.resetTimerStarted(queueUnique);

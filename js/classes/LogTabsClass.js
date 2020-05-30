@@ -13,7 +13,16 @@ class LogTabsClass {
     this.queueTab = null;         // The tab for the queue watch.
     this.queueContent = null;     // The contents for the queue watch.
     this.queueTotal = 0;
+    this._queueIsNew = false;
   }
+	/**
+	 * @type {bool} - True if timer is running.
+	 */
+	get queueIsNew() { return this._queueIsNew; }
+	/**
+	 * @param {bool} v - Set timer as running or not.
+	 */											
+	set queueIsNew(v) { this._queueIsNew = v; if (v) { bgPanda.doNewChecks(); } }
   /**
    * Gets the total hits in the queue.
    * @return {number} - Total hits in the queue.
@@ -95,7 +104,7 @@ class LogTabsClass {
    * @param  {object} queueResults - Object of all the hits on the mturk queue.
    */
   updateQueue(queueResults) {
-    let prevHits = $(this.queueContent).find("div");
+    let prevHits = $(this.queueContent).find("div"); this.queueIsNew = false;
     this.queueTotal = queueResults.length;
     $(this.queueTab).find("span").html(`Queue Watch - ${this.queueTotal}`);
     if (this.queueTotal > 0) {
@@ -111,7 +120,7 @@ class LogTabsClass {
               if (this.dError(1)) console.info('%cDuplication error found. Not adding job to queue.',CONSOLE_WARN);
             } else if (prevDivIndex >= prevHits.length) { // There are more jobs in new queue than old queue.
               if (this.dLog(2)) console.info('%cAdd job to end of queue.',CONSOLE_DEBUG);
-              addedToEnd = true;
+              addedToEnd = true; this.queueIsNew = true;
               this.addToLog(newInfo[value], value, this.queueContent, true);
               prevDivIndex++;
             } else {
@@ -131,6 +140,7 @@ class LogTabsClass {
                     prevAssignId = $(prevHits[prevDivIndex]).data('taskId');
                   } while (prevAssignId !== value); // For multiple jobs returned at once.
                 }
+                this.queueIsNew = true;
               }
               if (prevAssignId === value) { // Update the time left for this job
                 const timeLeft = getTimeLeft(newInfo[value].secondsLeft);
@@ -151,6 +161,7 @@ class LogTabsClass {
         if (!addedToEnd && newIds.length < prevHits.length) $(prevHits[newIds.length-1]).nextAll('div').remove();
       } else if (newIds.length > 0) {
         // Previous queue is empty and new queue has something so just add the new work.
+        this.queueIsNew = true;
         newIds.forEach( (key) => { // Make sure ALL work is added
           if (this.dLog(2)) console.info('%cAdd jobs to empty queue.',CONSOLE_DEBUG);
           if (newInfo[key].secondsLeft!==-1) this.addToLog(newInfo[key], key, this.queueContent, true);

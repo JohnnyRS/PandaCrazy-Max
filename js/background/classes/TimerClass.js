@@ -53,13 +53,17 @@ class TimerClass {
 	get paused() { return this._paused; } 												
 	/**
 	 * @param {bool} v - Set timer as paused or not.
-	 */											
+	 */
 	set paused(v) {
 		const oldPaused = this._paused;
 		this._paused = v; // Set private property to change.
 		if (oldPaused) this.goTimer(); // If it was paused then start timer.
 		if (v != oldPaused) this.sendBackInfo(); // If paused was changed then send back info to class.
-	}			
+	}
+	/**
+	 * Tells timer to send back information about timer status to class attached.
+	 */
+	pleaseSendBack() { this.sendBack = true; }
 	/**
 	 * Set the myClass property so timer can send back timer info.
 	 * @param  {object} myClass			Class object which is using this timer.
@@ -128,6 +132,7 @@ class TimerClass {
 					if (thisItem.hamstarted===null) thisItem.hamstarted = new Date().getTime();
 					else if ( (end - thisItem.hamstarted) > thisItem.tGoHam ) { turnOffHam=true; thisItem.tGoHam = -1; thisItem.hamstarted = null; }
 				}
+				if (!stopFor && this.goingHam===null) this.queue.push(queueUnique);
 				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
 					thisItem.theFunction(queueUnique, elapsed, thisItem.myId);
 					this.started = new Date().getTime();
@@ -140,7 +145,6 @@ class TimerClass {
 					newTimer = 0;	// Pass to next item in queue
 				}
 				// Put this item back on the bottom of the queue if it's not going ham and good to go back on queue
-				if (!stopFor && this.goingHam===null) this.queue.push(queueUnique);
 				if (turnOffHam) this.hamOff(queueUnique); // If turning off ham then make sure ham is really off.
 				this.timeoutDoing = null;
 				this.timeoutID = setTimeout(this.privateLoop.bind(this), Math.max(newTimer, 0)); // Timeout never under 0

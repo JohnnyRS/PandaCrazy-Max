@@ -22,21 +22,25 @@ class UrlClass {
 	async goFetch() {
 		try {
 			const response = await fetch(this.url, { credentials: `include` });
-			if (response.ok || response.status === 422 || response.status === 429) {
+			let thisResult = "ok", dataType = "", theData=null;
+			if (response.ok || response.status === 422 || response.status === 429 || response.status === 400) {
 				// sorts response into json or text
 				const type = response.headers.get('Content-Type');
+				if (response.status === 400) thisResult = "bad.request";
 				if (type.includes("application/json")) {
-					const json = await response.json();
-					return { type: "ok.json", url: response.url, status: response.status, data: json };
+					theData = await response.json(); dataType = "json";
 				}
 				else {
-					const text = await response.text();
-					return { type: "ok.text", url: response.url, status: response.status, data: text };
+					theData = await response.text(); dataType = "text";
 				}
+				return { type: `${thisResult}.${dataType}`, url: response.url, status: response.status, data: theData };
 			}
 			else {
-				console.log("Fetch responses was not OK."); console.log(response);
-				return { type: "not.ok", url: response.url, status: response.status, data: null };
+				console.log("Fetch responses was not OK.");
+				const type = response.headers.get('Content-Type'); console.log(type);
+				if (type.includes("application/json")) console.log(await response.json());
+				else console.log(await response.text());
+				return { type: "unknown.result", url: response.url, status: response.status, data: null };
 			}
 		}
 		catch (e) {
