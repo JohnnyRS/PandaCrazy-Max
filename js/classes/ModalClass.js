@@ -331,7 +331,7 @@ class ModalClass {
    * @param {number} width              - Size of the modal dialog.
    * @param {string} title              - Title of the modal dialog.
    * @param {string} body               - Html to be displayed in the body section of dialog.
-   * @param {function} addFunc          - Function to call after yes button is pressed.
+   * @param {function} yesFunc          - Function to call after yes button is pressed.
    * @param {bool} yesBtn               - Show the yes button or not.
    * @param {bool} noBtn                - Show the no button or not.
    * @param {string} [question='']      - Quesion to be asked before the input field as label.
@@ -339,16 +339,18 @@ class ModalClass {
    * @param {number} [max=null]         - Maximum characters allowed in input field.
    * @param {showCallBack} [afterShow=null] - Function to run after the dialog is shown after animation is stopped. 
    */
-  showDialogModal(width, title, body, addFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null) {
+  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null) {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, 'Yes', addFunc, noClass, 'No');
+    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, 'Yes', yesFunc, noClass, 'No');
+    let docKeys = "";
     if (question!=='') { // Should an input field be shown with a question?
       createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max);
-      $('#pcm_formQuestion').keypress( (e) => { // If enter key pressed then run the addFunc function.
-        if ( (event.keyCode ? event.keyCode : event.which) == '13' ) addFunc(); // Return key pressed.
-      });
-    } 
+      docKeys = '#pcm_formQuestion,';
+    }
+    $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
+      if ( (event.keyCode ? event.keyCode : event.which) == '13' ) yesFunc(); // Return key pressed.
+    });
     this.showModal(null, () => { $('#pcm_formQuestion').focus().select(); if (afterShow) afterShow(); });
   }
 }

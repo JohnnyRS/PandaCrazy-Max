@@ -32,6 +32,7 @@ class MturkPanda extends MturkClass {
 		this.loggedOff = false;									// Are we logged off from mturk?
 		this.resultsBack = true;
 		this.tempPaused = false;
+		this.skippedDonext = false;
 		this.authenticityToken = null;					// The authenticity token from mturk so hits can be returned.
 		pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
 		pandaTimer.setTimer(timer);         		// Set timer for this timer.
@@ -196,12 +197,12 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} queueUnique   - Unique number for the panda in timer queue.
 	 * @param  {number} [tGoHam=null] - The temporary duration for the goHam timer.
 	 */
-	timerGoHam(queueUnique, tGoHam=null) { pandaTimer.goHam(queueUnique, tGoHam) }
+	timerGoHam(queueUnique, tGoHam=null) { if (queueUnique) pandaTimer.goHam(queueUnique, tGoHam) }
 	/**
 	 * Turn off the go ham in panda timer for this panda with the queue unique id.
 	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
 	 */
-	timerHamOff(queueUnique) { pandaTimer.hamOff(queueUnique); }
+	timerHamOff(queueUnique=null) { pandaTimer.hamOff(queueUnique); }
 	/**
 	 * Tell panda timer to reset the time started for the temporary duration.
 	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
@@ -235,6 +236,7 @@ class MturkPanda extends MturkClass {
 	}
 	/**
 	 * Starts collecting the panda with the unique ID and send info to the panda timer.
+	 * @async
 	 * @param  {number} myId				 - The unique ID for a panda job.
 	 * @param  {bool} goHamStart		 - Go ham at start?
 	 * @param  {number} tempDuration - Temporary duration for this job used for external panda adds.
@@ -255,7 +257,7 @@ class MturkPanda extends MturkClass {
 					extPandaUI.searchingNow(myId);
 					mySearch.startSearching();
 					let value = (info.data.search === "gid") ? info.data.groupId : info.data.reqId;
-					mySearch.addTrigger(info.data.search, value, {"name":info.data.title, "duration":tempDuration, "once":info.data.once, "limitNumQueue":info.data.limitNumQueue, "limitTotalQueue":info.data.limitTotalQueue, "tempGoHam":tempGoHam, "disabled":false, "from":"pandaUI"});
+					mySearch.addTrigger(info.data.search, value, {"name":info.data.title, "duration":tempDuration, "once":info.data.once, "limitNumQueue":info.data.limitNumQueue, "limitTotalQueue":info.data.limitTotalQueue, "autoGoHam":false, goHamDuration:0, "tempGoHam":tempGoHam, "disabled":false, "from":"pandaUI"});
 				}
 				this.info[myId].data = null;
 			}, goHamStart, info.data.duration, tempDuration, tempGoHam, info.skipped);
@@ -292,10 +294,11 @@ class MturkPanda extends MturkClass {
 	 * @param  {object} dbInfo				- Data info for panda to add.
 	 * @param  {number} hitsAvailable - Number of hits available to collect.
 	 * @param  {bool} autoAdded				- Is this panda auto added by a script or manually?
+	 * @param  {object} passInfo			- Information being passed to next method in pandaUI.
 	 * @param  {bool} [update=false]	- Should this panda be updated in database first?
 	 * @param  {bool} [loaded=false]	- Was this panda loaded from database?
 	 */
-	async addPanda(dbInfo, hitsAvailable, autoAdded, update=false, loaded=false) {
+	async addPanda(dbInfo, hitsAvailable, autoAdded, passInfo, update=false, loaded=false) {
 		const myId = this.uniqueIndex++; // get the next unique ID for this new panda
 		if (update) await this.updateDbData(null, dbInfo); // Updates panda if it was added by default.
     this.pandaUniques.push(myId); // put unique ID on the panda unique array
@@ -306,7 +309,7 @@ class MturkPanda extends MturkClass {
 		this.info[myId] = {queueUnique:null, hitsAvailable:hitsAvailable, autoAdded:autoAdded, dbId:dbInfo.id, skipped:false, autoTGoHam:"off", data:dbInfo };
 		const pandaUrl = this.createPandaUrl(dbInfo.groupId); // create the panda url for this panda
 		this.pandaUrls[myId] = {preview: this.createPreviewUrl(dbInfo.groupId), accept: pandaUrl, urlObj: new UrlClass(pandaUrl + "?format=json")}; // set up this panda list of urls with preview url too.
-		extPandaUI.addPandaToUI(myId, this.info[myId], loaded);
+		extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
 	}
 	/**
 	 * Remove the panda with the unique ID and delete from database if necessary.
@@ -437,12 +440,13 @@ class MturkPanda extends MturkClass {
 		 * @param  {number} length - The length of the skipped hit array to limit recursion.
 		 */
 		function donext(count, length) {
+			this.skippedDonext = true;
 			const nextSkipped = this.pandaSkipped.shift();
 			if (!this.checkSkipped(nextSkipped)) this.pandaSkipped.push(nextSkipped);
-		  if (count<=length && this.pandaSkipped.length>0)	setTimeout( donext.bind(this), 200, ++count, length );
+			if (count<=length && this.pandaSkipped.length>0)	setTimeout( donext.bind(this), 200, ++count, length );
+			else this.skippedDonext = false;
 		}
-		console.log(JSON.stringify(this.pandaSkipped));
-		if (this.pandaSkipped.length) donext.call(this, 0, this.pandaSkipped.length);
+		if (this.pandaSkipped.length && !this.skippedDonext) donext.call(this, 0, this.pandaSkipped.length);
 	}
 	/**
 	 * Get the group id and requester id from the preview or accept url.

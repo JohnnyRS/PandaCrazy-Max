@@ -10,7 +10,6 @@ class PandaUI {
 		this.lastAdded = null;							// The time the last hit got added to delay adding hits slowly
 		this.hamBtnBgColor = "";						// Default value for background color of the ham button from css file
 		this.hamBtnColor = "";							// Default value for color of the ham button from css file
-		this.newAddInfo = {};								// Temporary storage for new panda adds
 		this.pandaStats = {};								// Object of PandaStats Class object with stats for each panda
 		this.tabs = null;										// The tabbed area where the panda card will go to.
 		this.logTabs = null;								// The log tabs on the bottom of the page with queue watch.
@@ -29,7 +28,7 @@ class PandaUI {
    * Gets the total hits in the queue.
    * @return {number} - Total hits in the queue.
 	 */
-	getQueueTotal() { return this.logTabs.getQueueTotal(); }
+	getQueueTotal() { return this.logTabs.queueTotal; }
 	/**
 	 * Opens the stat database and creates the stores if needed.
 	 * @return {Promise<response|Error>} - 
@@ -120,7 +119,7 @@ class PandaUI {
 	/**
 	 * Enable all the ham buttons on the page.
 	 */
-	enableAllHamButtons() { $(".pcm_hamButton").removeClass("disabled").addClass("pcm_buttonOff"); }
+	enableAllHamButtons() { $(".pcm_hamButton").removeClass("disabled").removeClass("pcm_buttonOn").addClass("pcm_buttonOff"); }
 	/**
 	 * Disable all other ham buttons which don't use the unique ID for the panda job.
 	 * @param  {number} [myId=null] - The unique ID for a panda job.
@@ -231,22 +230,24 @@ class PandaUI {
 	/**
 	 * Start panda job collecting with this unique ID and set the duration for collecting and go ham.
 	 * Also starts the goham at start if neccesary.
+	 * @async
 	 * @param  {number} myId 						 - The unique ID for a panda job.
 	 * @param  {bool} [goHamStart=false] - Should the panda go ham at the start?
 	 * @param  {number} [tempDuration=0] - The duration for this panda job to collect for.
 	 * @param  {number} [tempGoHam=0]		 - The duration for the temporary go ham to stay on.
 	 */
-	startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
+	async startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
 		if (!this.pandaStats[myId].collecting) { // Make sure this panda is not collecting.
 			this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
 			this.pandaStats[myId].startCollecting();
 			$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 			$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-			bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
+			await bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
 		}
 	}
 	/**
 	 * Stop panda job collecting with this unique ID and delete from database if needed.
+	 * @async
 	 * @param  {number} myId 						- The unique ID for a panda job.
 	 * @param  {string} [whyStop=null]	- The reason why the panda job is stopping.
 	 * @param  {bool} [deleteData=true]	- Should the data in the database be deleted also?
@@ -320,14 +321,15 @@ class PandaUI {
 	}
 	/**
 	 * Show that this ham button was clicked or went into go ham mode automatically.
+	 * @async														- So it waits to get the queueUnique before using it.
 	 * @param  {number} myId 						- The unique ID for a panda job.
 	 * @param  {object} targetBtn				- The ham button that was clicked.
 	 * @param  {bool} [autoGoHam=false] - Should this ham button show it started automatically?
 	 */
-	hamButtonClicked(myId, targetBtn, autoGoHam=false) {
-		if (!this.pandaStats[myId].collecting) { this.startCollecting(myId, !autoGoHam); }
-		if (!autoGoHam && $(targetBtn).hasClass("pcm_buttonOff")) bgPanda.timerGoHam(bgPanda.info[myId].queueUnique);
-		else if (!autoGoHam) bgPanda.timerHamOff();
+	async hamButtonClicked(myId, targetBtn, autoGoHam=false) {
+		if (!this.pandaStats[myId].collecting) { await this.startCollecting(myId, !autoGoHam); }
+		else if (targetBtn.hasClass("pcm_buttonOff") && targetBtn.hasClass("pcm_delayedHam")) bgPanda.timerGoHam(bgPanda.info[myId].queueUnique);
+		else bgPanda.timerHamOff();
 	}
 	/**
 	 * Show that this panda search job is collecting in panda mode.
@@ -356,7 +358,7 @@ class PandaUI {
 		const stopReason = bgPanda.checkIfLimited(myId,false, true); console.log("stopReason: ",stopReason);
 		if (!this.pandaStats[myId].collecting) {
 			const nowDate = new Date().getTime();
-			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.hitsAvailable, tempDuration: 40000/* tempDuration */, tempGoHam:30000/* tempGoHam */, delayedAt:nowDate, lowestDur:Math.min(40000, 30000)});
+			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.hitsAvailable, tempDuration: tempDuration, tempGoHam:tempGoHam, delayedAt:nowDate, lowestDur:Math.min(tempDuration, tempGoHam)});
 			if (this.lastAdded!==null) {
 				diff = nowDate - this.lastAdded;
 				if (diff < this.hitQueue[0].lowestDur) {
@@ -366,7 +368,6 @@ class PandaUI {
 				} else this.nextInDelayedQueue(diff);
 			} else this.nextInDelayedQueue(-1);
 		} else { this.pandaCard[myId].updateAllCardInfo(hitInfo); }
-		this.newAddInfo = {};
 	}
 	/**
 	 * Add panda job from an external source like forums, script or panda buttons on mturk.
@@ -387,10 +388,11 @@ class PandaUI {
 	addPandaDB(r) {
 		let update = false;
 		if (!this.tabs.dataTabs.hasOwnProperty(r.tabUnique)) { r.tabUnique = this.tabs.tabsArr[0]; update = true; }
-		bgPanda.addPanda(r, 0, false, update, true);
+		bgPanda.addPanda(r, 0, false, {}, update, true);
 	}
 	/**
 	 * Add a new panda job with lot of information and options to the panda area and database.
+	 * Search class uses this to add hits.
 	 * @param  {string} groupId							 - The group ID for this panda.
 	 * @param  {string} description					 - The description for this panda.
 	 * @param  {string} title								 - The title for this panda.
@@ -427,9 +429,8 @@ class PandaUI {
 			if (tabUnique === -1) tabUnique = this.tabs.dataTabs[this.tabs.currentTab].id;
 			let dbInfo = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, assignedTime:null, expires:null, dateAdded: dated, tabUnique:tabUnique, positionNum:null, once:once, search:search, acceptLimit:acceptLimit, totalSeconds:0, totalAccepted:0 };
 			// save these values in a temporary array to come back to them after adding panda info in panda class
-			this.newAddInfo.tempDuration = tempDuration; this.newAddInfo.tempGoHam = tempGoHam;
-			this.newAddInfo.run = run;
-			await bgPanda.addPanda(dbInfo, hitsAvailable, autoAdded);
+			let newAddInfo = {'tempDuration':tempDuration, 'tempGoHam':tempGoHam, 'run':run};
+			await bgPanda.addPanda(dbInfo, hitsAvailable, autoAdded, newAddInfo);
 		}
 	}
 	/**
@@ -439,7 +440,7 @@ class PandaUI {
 	 * @param  {bool} [loaded=false] - Was this loaded from the database or not?
 	 * @return {number}							 - The unique ID for this panda job.
 	 */
-	addPandaToUI(myId, pandaInfo, loaded=false) {
+	addPandaToUI(myId, pandaInfo, newAddInfo, loaded=false) {
 		this.pandaCard[myId] = new PandaCard(myId, pandaInfo, this.tabs, pandaInfo.data.tabUnique, loaded);
 		this.hamBtnBgColor = $(`#pcm_hamButton_${myId}`).css("background-color");
     this.hamBtnColor = $(`#pcm_hamButton_${myId}`).css("color");
@@ -482,7 +483,7 @@ class PandaUI {
 			this.removeJobs(this.ctrlDelete);
 		});
 		$(`#pcm_detailsButton_${myId}`).click(() => { this.pandaCard[myId].showDetailsModal(); });
-		if (this.newAddInfo.run) this.runThisPanda(myId, this.newAddInfo.tempDuration, this.newAddInfo.tempGoHam);
+		if (newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
     return myId;
   }
   /**

@@ -12,26 +12,33 @@ class LogTabsClass {
     this.taskInfo = {};           // Object of all the hits in the queue for queue watch.
     this.queueTab = null;         // The tab for the queue watch.
     this.queueContent = null;     // The contents for the queue watch.
-    this.queueTotal = 0;
+    this._queueTotal = 0;
     this._queueIsNew = false;
   }
 	/**
-	 * @type {bool} - True if timer is running.
+   * Getter to return if the queue has actually changed.
+	 * @return {bool} - True if there was anything new that changed in mturk queue.
 	 */
 	get queueIsNew() { return this._queueIsNew; }
 	/**
-	 * @param {bool} v - Set timer as running or not.
+   * Setter to change if queue has actually changed. If it did change then do skipped check on jobs.
+	 * @param {bool} v - Set if there was anything new that changed in mturk queue.
 	 */											
 	set queueIsNew(v) { this._queueIsNew = v; if (v) { bgPanda.doNewChecks(); } }
   /**
    * Gets the total hits in the queue.
    * @return {number} - Total hits in the queue.
    */
-  getQueueTotal() { return this.queueTotal; }
+  get queueTotal() { return this._queueTotal; }
+	/**
+   * Setter to change the total amount of hits in queue. If changed then do skipped check on jobs.
+	 * @param {bool} v - Set the total number of hits in queue.
+	 */											
+	set queueTotal(v) { if (v !== this._queueTotal) { bgPanda.doNewChecks(); this._queueTotal = v;  } }
   /**
    * Prepare the tabs on the bottom and placing the id names in an array.
    * @async
-   * @return {array}
+   * @return {array} - Success message array and then error object in an array.
    */
   async prepare() {
     let [success, err] = await this.tabs.prepare();

@@ -149,8 +149,8 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} item				- The panda item to send to panda UI for collecting.
 	 * @param  {object} triggerInfo	- The trigger object that found this panda item.
 	 */
-	sendToPanda(item,triggerInfo) {
-		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, false, -1, -1, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
+	sendToPanda(item, triggerInfo) {
+		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, triggerInfo.autoGoHam, triggerInfo.goHamDuration, 0, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
 		}
 	/**
 	 * Check all live triggers for this item.

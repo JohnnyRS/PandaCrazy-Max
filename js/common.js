@@ -204,8 +204,9 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor="") {
   let row=null;
   const trStyle = (trBgColor!=="") ? ` style="background-color:${trBgColor}"` : "";
-  if (horizontal) row = $(`<tr${trStyle}></tr>`).appendTo(divContainer);
-  thisArrayObject.forEach(element => {
+  if (horizontal) row = $(`<tr${trStyle}></tr>`);
+  for (let i=0, len=thisArrayObject.length; i<len; i++) {
+    const element = thisArrayObject[i];
     let textColor = "", padding="pl-0", valueCol=null, textBorder = "bottom-dotted";
     let theValue = (element.orKey && thisObject[element.orKey]!=="") ? thisObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${thisObject[element.key]} - ${thisObject[element.andKey]}` : thisObject[element.key]) : "");
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
@@ -217,17 +218,20 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     const pre = (element.pre) ? element.pre : "", addSpan = (element.type==="text") ? "<span></span>" : "";
     const tdWidth = (element.width) ? `width:${element.width} !important;` : "";
     const tdStyle = ` style="padding-right:1px !important; max-width:320px; ${tdWidth}"`;
-    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append(`<td class="col-4 text-right">${element.label}</td>`).appendTo(divContainer);
-    else if (!horizontal) row = $(`<div>`).append($(`<span class="${padding}">${element.label}</span>`)).appendTo(divContainer);
-    if (table) valueCol = $(`<td class="font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate"${tdStyle}>${addSpan}</td>`).appendTo(row);
-    else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data("edit","off").appendTo(row);
+    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append(`<td class="col-4 text-right">${element.label}</td>`);
+    else if (!horizontal) row = $(`<div>`).append($(`<span class="${padding}">${element.label}</span>`));
+    if (table) valueCol = $(`<td class="font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate"${tdStyle}>${addSpan}</td>`);
+    else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data("edit","off");
     if (element.type==="range") {
-      $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => { $(`#pcm_${element.key}Detail`).val(($(e.target).val())); thisObject[element.key] = $(e.target).val(); } ).appendTo(valueCol);
+      $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => {
+        $(`#pcm_${element.key}Detail`).val(($(e.target).val())); thisObject[element.key] = $(e.target).val();
+      } ).appendTo(valueCol);
       $(`<input class="pcm_inputRangeText" id="pcm_${element.key}Detail" type="text" value="${theValue}" size="2"></input>`).appendTo(valueCol);
     } else if (element.type==="text") {
         textToggle(thisObject, $(valueCol).find("span"), element, theValue, null, textBorder, textColor);
     } else if (element.type==="trueFalse") {
-      $(`<span id="pcm_${element.key}Detail" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`).on('click', (e) => {
+      $(`<span id="pcm_${element.key}Detail" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`)
+      .on('click', (e) => {
         $(e.target).html( ($(e.target).html() === "true") ? "false" : "true" ); thisObject[element.key] = ($(e.target).html() === 'true');
       }).appendTo(valueCol);
     } else if (element.type==="button") {
@@ -235,17 +239,19 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
       $(button).appendTo(valueCol);
     } else if (element.type==="checkbox") {
-        const theCheckBox = createCheckBox(valueCol, "", `pcm_selection_${element.unique}`, element.unique, "", " m-0", element.inputClass);
-        if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
+      const theCheckBox = createCheckBox(valueCol, "", `pcm_selection_${element.unique}`, element.unique, "", " m-0", element.inputClass);
+      if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
     } else if (element.type==="keyValue") {
-        const id = (element.id) ? ` id=${element.id}` : ``;
-        const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css("cursor", "default").appendTo(valueCol);
-        if (element.clickFunc) valueSpan.closest("td").on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
+      const id = (element.id) ? ` id=${element.id}` : ``;
+      const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css("cursor", "default").appendTo(valueCol);
+      if (element.clickFunc) valueSpan.closest("td").on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
     } else if (element.type==="string") {
       const border = (element.noBorder) ? "" : " class='border'";
       if (element.string!=="") $(`<span${border}>${element.string}</span>`).appendTo(valueCol);
     }
-  });
+    valueCol.appendTo(row);
+    row.appendTo(divContainer);
+  }
 }
 /**
  * This is called after the alarm data are prepared and ready.

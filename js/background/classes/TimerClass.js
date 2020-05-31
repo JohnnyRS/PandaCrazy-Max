@@ -23,7 +23,7 @@ class TimerClass {
 		this.queueSkipped = [];					// An array with all the jobs being skipped over.
 		this.unique = 1;								// A unique value for job in the timer queue.
 		this._running = false;					// Is this timer running or not?
-		this._goingHam = null;					// Is this timer going ham?
+		this._goingHam = null;					// The queue unique number that is going ham right now.
 		this._paused = false;						// Is this timer paused?
 		this.started = null;						// The time that the timeout started.
 		this.myClass = null;						// The class object that is using this timer.
@@ -74,10 +74,11 @@ class TimerClass {
 	 */
 	sendBackInfo() {
 		let goingHamNow = this._goingHam;
-		if (goingHamNow && this.queueObject[goingHamNow]===undefined) return
-		const passThis = {running:this._running, goingHam:this._goingHam, paused:this._paused, myIdHam:(this._goingHam!==null) ? this.queueObject[this._goingHam].myId : -1};
-		if (this.sendBack) this.myClass.timerInfo(passThis);
-		if (this.dLog(3)) console.debug("%c"+JSON.stringify(passThis), CONSOLE_DEBUG);
+		if ( (goingHamNow && this.queueObject.hasOwnProperty(goingHamNow)) || !goingHamNow) {
+			const passThis = {running:this._running, goingHam:this._goingHam, paused:this._paused, myIdHam:(this._goingHam!==null) ? this.queueObject[this._goingHam].myId : 0};
+			if (this.sendBack) this.myClass.timerInfo(passThis);
+			if (this.dLog(3)) console.debug("%c"+JSON.stringify(passThis), CONSOLE_DEBUG);
+		}
 	}
 	/**
 	 * Set a new time for this timer. If new time is lower than last time elapsed than do job now.
@@ -128,9 +129,9 @@ class TimerClass {
 				if (thisItem.timeRestarted===null) thisItem.timeRestarted = new Date().getTime();
 				if (thisItem.duration>0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
 				if (thisItem.tDuration>0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
-				if (thisItem.tGoHam>0) { // Is this just a temporary go ham job and item just started then init hamstarted
+				if (thisItem.dGoHam>0) { // Is this just a temporary go ham job and item just started then init hamstarted
 					if (thisItem.hamstarted===null) thisItem.hamstarted = new Date().getTime();
-					else if ( (end - thisItem.hamstarted) > thisItem.tGoHam ) { turnOffHam=true; thisItem.tGoHam = -1; thisItem.hamstarted = null; }
+					else if ( (end - thisItem.hamstarted) > thisItem.dGoHam ) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamstarted = null; }
 				}
 				if (!stopFor && this.goingHam===null) this.queue.push(queueUnique);
 				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
@@ -208,13 +209,13 @@ class TimerClass {
 	/**
 	 * Start to go ham on the job with this unique number and use a temporary go ham duration if necessary.
 	 * If ham time is higher than last time elapsed then take the difference and use it to complete the time needed.
-	 * @param  {number} queueUnique 	- Unique number for job to go ham.
-	 * @param  {number} [tGoHam=null] - Temporary duration to go ham.
+	 * @param  {number} queueUnique - Unique number for job to go ham.
+	 * @param  {number} [dGoHam=0] - Temporary duration to go ham.
 	 */
-	goHam(queueUnique, tGoHam=null) {
+	goHam(queueUnique, dGoHam=0) {
 		if (this.goingHam===null) { // If it's already going ham then do nothing.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is now going ham for ${queueUnique}: ${this.hamTimeout}`);
-			if (tGoHam!==null) this.queueObject[queueUnique].tGoHam = tGoHam;
+			this.queueObject[queueUnique].dGoHam = dGoHam;
 			this.goingHam=queueUnique; this.adjustTimer(this.hamTimeout);
 		}
 	}
@@ -226,10 +227,10 @@ class TimerClass {
 	 */
 	hamOff(queueUnique=null) {
 		const thisUnique = (queueUnique) ? queueUnique : this.goingHam;
-		if (thisUnique===this.goingHam) {
+		if (thisUnique===this.goingHam && thisUnique) {
 			this.goingHam = null; this.adjustTimer(this.timeout);
 			if (this.dLog(3)) console.log(`[${this.timerName}] is turning ham off for ${thisUnique}`);
-			if (this.queueObject.hasOwnProperty(thisUnique)) this.queueObject[thisUnique].tGoHam = null;
+			if (this.queueObject.hasOwnProperty(thisUnique)) this.queueObject[thisUnique].dGoHam = 0;
 		}
 		return thisUnique;
 	}
@@ -242,7 +243,7 @@ class TimerClass {
 	 * Remove all jobs from queue and stop the timer.
 	 */
 	stopAll() {
-		if (this.queue.length) {
+		if (this.queue.length || this.queueSkipped.length) {
 			if (this.timeoutID!==null) clearTimeout(this.timeoutID);
 			this.timeoutDoing = this.timeoutID = null;
 			Object.keys(this.queueObject).forEach( key => {
@@ -250,7 +251,7 @@ class TimerClass {
 				thisItem.funcAfter(thisItem.myId, false);
 				this.deleteFromQueue(key);
 			});
-			if (this.dLog(2)) console.log(`%c[${this.timerName}] is trying to stop all jobs`);
+			if (this.dLog(2)) console.log(`%c[${this.timerName}] is trying to stop all jobs`,CONSOLE_INFO);
 			this.goingHam = null; this.running = false; this.queue = [], this.queueSkipped = [];
 		}
 	}
@@ -309,18 +310,18 @@ class TimerClass {
 	 * @param  {bool} [goHamStart=false]  - Go ham at start?
 	 * @param  {number} [duration=0]		  - The duration for this job to run.
 	 * @param  {number} [tDuration=0]		  - Temporary duration for this job used for external panda adds.
-	 * @param  {number} [tGoHam=0]			  - Temporary go ham duration for this job used for external panda adds.
+	 * @param  {number} [dGoHam=0]			  - Temporary go ham duration for this job used for external panda adds.
 	 * @param  {bool} [skipped=false]	    - Should skip it at beginning?
 	 * @return {number}								 	  - Returns a unique number for this job in queue.
 	 */
-	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=0, tDuration=0, tGoHam=0, skipped=false) {
+	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=0, tDuration=0, dGoHam=0, skipped=false) {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item
 		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
 		tDuration = (duration>0 && tDuration>duration) ? 0 : tDuration;
-		this.queueObject[thisUnique] = { theFunction:doFunc, funcAfter:funcAfter, myId:myId, duration:duration, tDuration:tDuration, tGoHam:tGoHam, timeStarted:null, timeRestarted:null, hamstarted:null, skipped:skipped };
-		if ( (tGoHam>0 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique); }
+		this.queueObject[thisUnique] = { theFunction:doFunc, funcAfter:funcAfter, myId:myId, duration:duration, tDuration:tDuration, dGoHam:dGoHam, timeStarted:null, timeRestarted:null, hamstarted:null, skipped:skipped };
+		if ( (dGoHam>0 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique); }
 		if (skipped) this.skipThis(thisUnique);
-		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} tGoHam: ${tGoHam}`, CONSOLE_INFO);
+		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} dGoHam: ${dGoHam}`, CONSOLE_INFO);
 		if (!this.running) this.goTimer();
 		else this.sendBackInfo();
 		return thisUnique;
