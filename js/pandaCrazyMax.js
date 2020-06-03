@@ -25,8 +25,7 @@ async function startPandaCrazy() {
     menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
     await pandaUI.prepare( showMessages ); // Wait for panda jobs to load and show message or error.
-  
-    $('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}); // Enable all tooltips.
+    $('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'}); // Enable all tooltips.
     $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
     setTimeout( () => {

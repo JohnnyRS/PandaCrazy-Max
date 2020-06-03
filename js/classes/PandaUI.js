@@ -235,14 +235,18 @@ class PandaUI {
 	 * @param  {bool} [goHamStart=false] - Should the panda go ham at the start?
 	 * @param  {number} [tempDuration=0] - The duration for this panda job to collect for.
 	 * @param  {number} [tempGoHam=0]		 - The duration for the temporary go ham to stay on.
+	 * @return {bool}										 -
 	 */
 	async startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
 		if (!this.pandaStats[myId].collecting) { // Make sure this panda is not collecting.
-			this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
-			this.pandaStats[myId].startCollecting();
-			$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-			$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-			await bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
+			let goodCollect = await bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
+			if (goodCollect) {
+				this.logTabs.addToStatus(bgPanda.info[myId].data, this.pandaStats[myId], myId);
+				this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
+				this.pandaStats[myId].startCollecting();
+				$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
+				$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
+			}
 		}
 	}
 	/**
@@ -254,6 +258,7 @@ class PandaUI {
 	 */
 	async stopCollecting(myId, whyStop=null, deleteData=true) {
 		const hitInfo = bgPanda.info[myId];
+		if (whyStop === 'manual') this.pandaCard[myId].collectTipChange('');
     bgPanda.stopCollecting(myId, whyStop);
 		if (this.pandaStats[myId].collecting) this.pandaGStats.subCollecting();
 		const theStats = this.pandaStats[myId].stopCollecting();
@@ -262,9 +267,10 @@ class PandaUI {
 		$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOn").addClass("pcm_buttonOff");
 		$(`#pcm_hamButton_${myId}`).removeClass("pcm_delayedHam");
 		const previousColor = $(`#pcm_pandaCard_${myId}`).data("previousColor");
-		if (previousColor) $(`#pcm_pandaCard_${myId}`).stop(true,true).removeData("previousColor").animate({"backgroundColor":previousColor},{duration:1000});
+		if (previousColor && !hitInfo.skipped) $(`#pcm_pandaCard_${myId}`).stop(true,true).removeData("previousColor").animate({"backgroundColor":previousColor},{duration:1000});
 		await bgPanda.updateDbData(myId, hitInfo.data);
-		if (deleteData) bgPanda.info[myId].data = null;
+		this.logTabs.removeFromStatus(myId);
+		if (deleteData && !hitInfo.skipped) bgPanda.info[myId].data = null;
 		hitInfo.queueUnique = null; hitInfo.autoTGoHam = "off";
 	}
   /**
@@ -449,10 +455,10 @@ class PandaUI {
     this.pandaGStats.addPanda();
 		$(`#pcm_pandaCard_${myId}`).click( e => {
 			const targetBtn = $(e.target).closest(".pcm_pandaCard").find(".pcm_deleteButton");
-			$(targetBtn).css("background-color", "");
+			targetBtn.css("background-color", "");
 			if (e.ctrlKey) {
-				if (this.ctrlDelete.includes(myId)) { $(targetBtn).css("background-color", ""); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
-				else { $(targetBtn).css("background-color", "red"); this.ctrlDelete.push(myId); }
+				if (this.ctrlDelete.includes(myId)) { targetBtn.css("background-color", ""); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
+				else { targetBtn.css("background-color", "red"); this.ctrlDelete.push(myId); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $(".pcm_deleteButton").css("background-color", ""); }
 		})
 		$(`#pcm_collectButton_${myId}`).click((e) => {
@@ -464,17 +470,17 @@ class PandaUI {
 		if (pandaInfo.data.search && loaded) this.searchDisabled(myId);
 		$(`#pcm_hamButton_${myId}`).click((e) => { 
 			const targetBtn = $(e.target).closest(".btn");
-			if ($(targetBtn).data("longClicked")) { $(targetBtn).removeData("longClicked"); $(targetBtn).css({"background-color": "", "color": ""});}
+			if (targetBtn.data("longClicked")) { targetBtn.removeData("longClicked"); targetBtn.css({"background-color": "", "color": ""});}
 			else { this.hamButtonClicked(myId, targetBtn); }
 		}).mayTriggerLongClicks( { delay: 1200 }).on('longClick', (e) => {
 				const targetBtn = $(e.target).closest(".btn");
-				$(targetBtn).data("longClicked",true);
-				if ($(targetBtn).hasClass("pcm_delayedHam")) {
-					$(targetBtn).css({"background-color":this.hamBtnBgColor, "color":this.hamBtnColor}).removeClass("pcm_delayedHam");
+				targetBtn.data("longClicked",true);
+				if (targetBtn.hasClass("pcm_delayedHam")) {
+					targetBtn.css({"background-color":this.hamBtnBgColor, "color":this.hamBtnColor}).removeClass("pcm_delayedHam");
 					pandaInfo.autoTGoHam = (pandaInfo.data.autoGoHam) ? "disable" : "off";
 				} else { 
 					pandaInfo.autoTGoHam = "on";
-					$(targetBtn).css({"background-color": "#097e9b", "color":"#FFFFFF"}).addClass("pcm_delayedHam");
+					targetBtn.css({"background-color": "#097e9b", "color":"#FFFFFF"}).addClass("pcm_delayedHam");
 					this.hamButtonClicked(myId, targetBtn, true);
 				}
 			});
@@ -506,11 +512,17 @@ class PandaUI {
     bgPanda.resetTimerStarted(queueUnique);
     const html = $.parseHTML( result.data );
     const targetDiv = $(html).find(".project-detail-bar .task-project-title").next("div");
-    const rawProps = $(targetDiv).find("span").attr("data-react-props");
-    bgPanda.authenticityToken = $(html).find(`input[name="authenticity_token"]:first`).val();
-    const hitDetails = JSON.parse(rawProps).modalOptions;
-    bgPanda.parseHitDetails(hitDetails, myId);
-    this.logTabs.addIntoQueue(pandaInfo, hitDetails, data, result.url.replace("https://worker.mturk.com",""));
+		const rawProps = targetDiv.find("span").attr("data-react-props");
+		const auth_token = $(html).find(`input[name="authenticity_token"]:first`);
+		const url = auth_token.closest('form').attr('action');
+		const urlInfo = url.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
+    bgPanda.authenticityToken = auth_token.val();
+		const hitDetails = JSON.parse(rawProps).modalOptions;
+		hitDetails.task_id = urlInfo[2];
+		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId);
+		bgPanda.queueAddAccepted(pandaInfo, hitDetails);
+		this.logTabs.addIntoQueue(pandaInfo, hitDetails, data, result.url.replace("https://worker.mturk.com",""));
+		this.logTabs.addToLog(data);
     bgPanda.checkIfLimited(myId, true);
     alarms.doAlarms(pandaInfo);
 	}
@@ -521,6 +533,12 @@ class PandaUI {
 		for (const key in this.pandaStats) {
 			this.pandaStats[key].resetDailyStats();
 		}
+	}
+	/**
+	 * @param  {} myId
+	 */
+	updateLogStatus(myId, seconds) {
+		this.logTabs.updateLogStatus(this.pandaStats[myId], myId, seconds);
 	}
 	/**
 	 * Save the queue results received after making sure the groupings are checked for start times to start.

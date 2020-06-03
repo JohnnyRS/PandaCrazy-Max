@@ -191,6 +191,7 @@ class PandaGroupings {
     const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    let df = document.createDocumentFragment();
     Object.keys(this.groups).forEach(grouping => {
       this.goCheckGroup(grouping, true);
       const bgColor = (this.groupStatus[grouping].collecting) ? "#066306" : ((Object.keys(this.groups[grouping].pandas).length===0) ? "#800517" : "");
@@ -204,9 +205,11 @@ class PandaGroupings {
           this.delete(grouping);
           $(e.target).closest("tr").remove();
         } }
-      ], divContainer, this.groups[grouping], true, true, bgColor); }
+      ], df, this.groups[grouping], true, true, bgColor); }
     );
-    modal.showModal();
+  modal.showModal(null, () => {
+    });
+    divContainer.append(df);
   }
   /**
    * This is called after the saved button is clicked for changes.

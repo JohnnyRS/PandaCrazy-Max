@@ -131,7 +131,9 @@ class TimerClass {
 				if (thisItem.tDuration>0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
 				if (thisItem.dGoHam>0) { // Is this just a temporary go ham job and item just started then init hamstarted
 					if (thisItem.hamstarted===null) thisItem.hamstarted = new Date().getTime();
-					else if ( (end - thisItem.hamstarted) > thisItem.dGoHam ) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamstarted = null; }
+					else if ( (end - thisItem.hamstarted) > thisItem.dGoHam ) {
+						turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamstarted = null;
+					}
 				}
 				if (!stopFor && this.goingHam===null) this.queue.push(queueUnique);
 				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
@@ -272,8 +274,8 @@ class TimerClass {
 	 * @param  {number} queueUnique - Unique number of job to be unskipped.
 	 */
 	unSkipThis(queueUnique) {
-		if (this.dLog(3)) console.log(`[${this.timerName}] is trying to unskip: ${queueUnique}`);
 		if (this.queueSkipped.includes(queueUnique)) {
+			if (this.dLog(3)) console.log(`[${this.timerName}] is trying to unskip: ${queueUnique}`);
 			this.removeFromQueueSkipped(queueUnique); // Remove item unique ID from the skipped queue.
 			this.queueObject[queueUnique].skipped = false; // Set flag to show it is not skipped in object data.
 			this.queue.unshift(queueUnique); // Put item unique ID back on the queue.
@@ -319,7 +321,7 @@ class TimerClass {
 		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
 		tDuration = (duration>0 && tDuration>duration) ? 0 : tDuration;
 		this.queueObject[thisUnique] = { theFunction:doFunc, funcAfter:funcAfter, myId:myId, duration:duration, tDuration:tDuration, dGoHam:dGoHam, timeStarted:null, timeRestarted:null, hamstarted:null, skipped:skipped };
-		if ( (dGoHam>0 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique); }
+		if ( (dGoHam>0 || goHamStart) && this.goingHam===null) { this.goHam(thisUnique, dGoHam); }
 		if (skipped) this.skipThis(thisUnique);
 		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} dGoHam: ${dGoHam}`, CONSOLE_INFO);
 		if (!this.running) this.goTimer();

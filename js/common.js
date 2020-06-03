@@ -204,9 +204,8 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor="") {
   let row=null;
   const trStyle = (trBgColor!=="") ? ` style="background-color:${trBgColor}"` : "";
-  if (horizontal) row = $(`<tr${trStyle}></tr>`);
-  for (let i=0, len=thisArrayObject.length; i<len; i++) {
-    const element = thisArrayObject[i];
+  if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
+  for (const element of thisArrayObject) {
     let textColor = "", padding="pl-0", valueCol=null, textBorder = "bottom-dotted";
     let theValue = (element.orKey && thisObject[element.orKey]!=="") ? thisObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${thisObject[element.key]} - ${thisObject[element.andKey]}` : thisObject[element.key]) : "");
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
@@ -222,6 +221,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     else if (!horizontal) row = $(`<div>`).append($(`<span class="${padding}">${element.label}</span>`));
     if (table) valueCol = $(`<td class="font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate"${tdStyle}>${addSpan}</td>`);
     else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data("edit","off");
+    valueCol.appendTo(row);
     if (element.type==="range") {
       $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => {
         $(`#pcm_${element.key}Detail`).val(($(e.target).val())); thisObject[element.key] = $(e.target).val();
@@ -249,8 +249,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       const border = (element.noBorder) ? "" : " class='border'";
       if (element.string!=="") $(`<span${border}>${element.string}</span>`).appendTo(valueCol);
     }
-    valueCol.appendTo(row);
     row.appendTo(divContainer);
+    $(row).show();
   }
 }
 /**

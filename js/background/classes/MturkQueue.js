@@ -16,6 +16,7 @@ class MturkQueue extends MturkClass {
     this.loggedOffTimer = OffTimer;   // Sets the timer to use for when it's logged off.
     this.queueUnique = null;          // The unique number set by the timer class for this class.
     this.queueResults = [];           // The results from mturk queue with all hits info.
+    this.queueAdd = [];
     this.loggedOff = false;           // Are we logged off or not?
     this.authenticityToken = null;    // Keeps the authenticity token used for returning hits.
 		queueTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
@@ -60,12 +61,19 @@ class MturkQueue extends MturkClass {
    */
   totalResults(rId='', gId='', price=0) {
     let total = 0;
-    if (gId!=='') total = this.queueResults.filter( item => item.project.hit_set_id===gId ).length;
-    else if (rId!=='') total = this.queueResults.filter( item => item.project.requester_id===rId ).length;
-    else total = parseFloat(this.queueResults.map( item => item.project.monetary_reward.amount_in_dollars )
+    if (gId!=='') {
+      total = this.queueResults.filter( item => item.project.hit_set_id===gId ).length;
+      if (this.queueAdd.length) total += this.queueAdd.filter( item => item.groupId===gId ).length;
+    } else if (rId!=='') {
+      total = this.queueResults.filter( item => item.project.requester_id===rId ).length;
+      if (this.queueAdd.length) total += this.queueAdd.filter( item => item.reqId===rId ).length;
+    } else total = parseFloat(this.queueResults.map( item => item.project.monetary_reward.amount_in_dollars )
       .reduce( (acc, reward) => { return acc +  ( (reward>price) ? reward : 0 ); }, 0 )).toFixed(2);
     return total;
   }
+  /**
+   */
+  addAccepted(pandaInfo, hitDetails) { this.queueAdd.push(pandaInfo.data); }
   /**
    * Changes the timer to a longer time and informs panda and search class when logged off.
    */
@@ -109,6 +117,7 @@ class MturkQueue extends MturkClass {
             const authenticityToken = $(html).filter('meta[name="csrf-token"]')[0].content;
             if (authenticityToken) this.authenticityToken = authenticityToken;
             this.queueResults = JSON.parse(rawProps).bodyData;
+            this.queueAdd = [];
             this.sendQueueResults();
           }
         }
