@@ -234,7 +234,8 @@ class ModalClass {
     const idName = this.prepareModal(thisObj, '1000px', 'modal-header-info modal-lg', theTitle, '', 'text-right bg-dark text-light', 'modal-footer-info', saveBtnStatus, 'Save Groupings', saveFunc, 'invisible', 'No', null, 'invisible', 'Close');
     const addClass = (type === 'groupingEdit') ? 'pcm_groupingsEditModalBody' : 'pcm_jobsModalBody';
     const modalBody = $(`#${idName} .${this.classModalBody}`); $(modalBody).addClass(addClass);
-    const modalControl = $('<div class="pcm_modalControl w-100"></div>').insertBefore(modalBody);
+    let df = document.createDocumentFragment();
+    let modalControl = $('<div class="pcm_modalControl w-100"></div>').appendTo(df);
     if (type==='groupingEdit') {
       $('<div class="small text-warning font-weight-bold pl-1"></div>').append('Select the jobs you want in this grouping below:').append(`<span class="ml-2 text-info pcm_jobsInGroup">Jobs in Group: ${Object.keys(thisObj.pandas).length}</span>`).appendTo(modalControl);
       createInput(modalControl, '', 'pcm_groupingNameI', 'Grouping Name: ', `default: Grouping #${groupUnique}`, null, ' pl-5 text-warning', this.tempObject[idName].name).append(createTimeInput('Start Time', 'datetimepicker1'));
@@ -264,32 +265,42 @@ class ModalClass {
           this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl));
         });
     }).appendTo(inputControl);
-    $(modalControl).find('input:radio[name="theJobs"]').click( (e) => {
+    $(df).find('input:radio[name="theJobs"]').click( (e) => {
       $(e.target).closest('.pcm_modalControl').find('.pcm_searchingJobs').click();
     } );
-    this.showJobsTable(modalBody, this.jobsFilter('', modalControl), checkFunc);
-    this.showModal(cancelFunc, afterShow);
+    this.showModal(cancelFunc, () => {
+      $('<div class="pcm_modalControl w-100"></div>').append(df).insertBefore(modalBody);
+      let df2 = document.createDocumentFragment();
+      this.showJobsTable(df2, this.jobsFilter('', modalControl), checkFunc);
+      $(df2).appendTo(modalBody);
+      if (afterShow) afterShow(this);
+    });
   }
   /**
    * Shows a modal for adding panda or search jobs
    */
   showJobAddModal() {
     const idName = this.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
-    const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>');
-    createInput(div, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
-    createCheckBox(div, 'Start Collecting', 'pcm_startCollecting', '', true);
-    createCheckBox(div, 'Collect Only Once', 'pcm_onlyOnce', '');
-    createInput(div, ' pt-3 border-top border-info', 'pcm_formReqName', 'Requester Name: ', 'default: group ID shown');
-    createInput(div, '', 'pcm_formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2');
-    createInput(div, '', 'pcm_formAddTitle', 'Title: ', 'default: group ID shown');
-    createInput(div, '', 'pcm_formAddDesc', 'Description: ', 'default: group ID shown');
-    createInput(div, '', 'pcm_formAddPay', 'Pay Amount: ', 'default: 0.00');
-    $(`#${idName} .${this.classModalBody}`).append(div);
-    $('#pcm_formAddGroupID').keypress( (e) => {
-      if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID();
-    }
-    );
-    this.showModal(null, () => { $('#pcm_formAddGroupID').focus(); });
+    const modalBody = $(`#${idName} .${this.classModalBody}`);
+    let df = document.createDocumentFragment();
+    $('<div><div class="pcm_inputError">&nbsp;</div></div>').appendTo(df);
+    createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
+    createCheckBox(df, 'Start Collecting', 'pcm_startCollecting', '', true);
+    createCheckBox(df, 'Collect Only Once', 'pcm_onlyOnce', '');
+    createInput(df, ' pt-3 border-top border-info', 'pcm_formReqName', 'Requester Name: ', 'default: group ID shown');
+    createInput(df, '', 'pcm_formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2');
+    createInput(df, '', 'pcm_formAddTitle', 'Title: ', 'default: group ID shown');
+    createInput(df, '', 'pcm_formAddDesc', 'Description: ', 'default: group ID shown');
+    createInput(df, '', 'pcm_formAddPay', 'Pay Amount: ', 'default: 0.00');
+    this.showModal(null, () => {
+      modalBody.append(df);
+      $('#pcm_formAddGroupID').keypress( (e) => {
+        if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID.call(this);
+      });
+      $('#pcm_startCollecting').click( e => $('#pcm_formAddGroupID').focus() );
+      $('#pcm_onlyOnce').click( e => $('#pcm_formAddGroupID').focus() );
+      $('#pcm_formAddGroupID').focus();
+    });
     /**
      * Verifies that the groupID inputted is correct.
      */
@@ -343,14 +354,17 @@ class ModalClass {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, 'Yes', yesFunc, noClass, 'No');
-    let docKeys = "";
-    if (question!=='') { // Should an input field be shown with a question?
-      createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max);
-      docKeys = '#pcm_formQuestion,';
-    }
-    $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
-      if ( (event.keyCode ? event.keyCode : event.which) == '13' ) yesFunc(); // Return key pressed.
+    this.showModal(null, () => {
+      let docKeys = "";
+      if (question!=='') { // Should an input field be shown with a question?
+        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max);
+        docKeys = '#pcm_formQuestion,';
+      }
+      $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
+        if ( (event.keyCode ? event.keyCode : event.which) == '13' ) yesFunc(); // Return key pressed.
+      });
+        $('#pcm_formQuestion').focus().select();
+      if (afterShow) afterShow();
     });
-    this.showModal(null, () => { $('#pcm_formQuestion').focus().select(); if (afterShow) afterShow(); });
   }
 }

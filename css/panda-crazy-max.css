@@ -94,8 +94,10 @@ html, body { height: 100%; }
   line-height: 1.2 !important;
   font-size:0.6em !important;
 }
-.pcm_queueResults { font-size:11px; line-height: 1.2; padding-top:2px; padding-bottom:2px; font-weight: 600; color:#dbdbd2; }
-.pcm_queueResults span { color:#47cdcd; }
+.pcm_queueResults, .pcm_acceptedHits, .pcm_hitStatus { font-size:11px; line-height: 1.2; padding-top:2px; padding-bottom:2px; font-weight: 600; color:#dbdbd2; }
+.pcm_queueResults span, .pcm_acceptedHits span { color:#47cdcd; }
+#pcm_logTabContents .time { color:#18e656; }
+#pcm_logTabContents .pcm_emp { color:#47cdcd; }
 .table-moreCondensed>tbody>tr>td { padding-right:1px !important; font-size: 11px; }
 .table-xs { font-size: .575rem !important; line-height: .1 !important; }
 .text-xs { font-size: .575rem !important; color: #FFF5EE; }
@@ -158,6 +160,9 @@ html, body { height: 100%; }
   padding:9px 15px;
   border-bottom:1px solid #eee;
   background-color: #428bca;
+}
+.fade {
+  transition: opacity 5ms;
 }
 .pcm_inputDiv-question { margin-left:90px; }
 .pcm_jobTable { margin-bottom:5px !important; }

@@ -7,13 +7,16 @@
 class LogTabsClass {
   constructor() {
     this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
-    this.ids = [];                // Array of the id names of the log tabs on the bottom.
-    this.taskIds = [];            // Array of the task id's of the hits in the queue for queue watch.
-    this.taskInfo = {};           // Object of all the hits in the queue for queue watch.
-    this.queueTab = null;         // The tab for the queue watch.
-    this.queueContent = null;     // The contents for the queue watch.
+    this.ids = [];                      // Array of the id names of the log tabs on the bottom.
+    this.taskIds = [];                  // Array of the task id's of the hits in the queue for queue watch.
+    this.taskInfo = {};                 // Object of all the hits in the queue for queue watch.
+    this.queueTab = null;               // The tab for the queue watch.
+    this.queueContent = null;           // The contents for the queue watch.
+    this.acceptContent = null;          // The contents for the accepted tab.
+    this.statusContent = null;          // The contents for the status tab.
     this._queueTotal = 0;
     this._queueIsNew = false;
+    this.updatingQueueStatus = false;
   }
 	/**
    * Getter to return if the queue has actually changed.
@@ -34,7 +37,7 @@ class LogTabsClass {
    * Setter to change the total amount of hits in queue. If changed then do skipped check on jobs.
 	 * @param {bool} v - Set the total number of hits in queue.
 	 */											
-	set queueTotal(v) { if (v !== this._queueTotal) { bgPanda.doNewChecks(); this._queueTotal = v;  } }
+	set queueTotal(v) { if (v !== this._queueTotal) { this._queueTotal = v; bgPanda.doNewChecks(); } }
   /**
    * Prepare the tabs on the bottom and placing the id names in an array.
    * @async
@@ -48,6 +51,8 @@ class LogTabsClass {
       this.ids.push(await this.tabs.addTab("Status log")); // ids[1]
       this.ids.push(await this.tabs.addTab("Queue Watch", true)); // ids[2]
       this.queueTab = $(`#${this.ids[2].tabId}`);
+      this.acceptContent = $(`<div class="pcm_acceptedHits"></div>`).appendTo(`#${this.ids[0].tabContent}`)
+      this.statusContent = $(`<div class="pcm_hitStatus"></div>`).appendTo(`#${this.ids[1].tabContent}`)
       this.queueContent = $(`<div class="pcm_queueResults"></div>`).appendTo(`#${this.ids[2].tabContent}`);
     }
     return [success, err];
@@ -59,12 +64,12 @@ class LogTabsClass {
    * @param  {object} element       - Element to append this hit to in the log tab.
    * @param  {bool} [appendTo=true] - Should this be appended to element or before element?
    */
-  addToLog(hitInfo, taskId, element, appendTo=true) {
+  addToWatch(hitInfo, element, appendTo=true) {
     const timeLeft = getTimeLeft(hitInfo.secondsLeft);
-    const toAdd = $(`<div class="pcm_q01">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',taskId);
-    if (appendTo) $(toAdd).appendTo(element);
-    else $(toAdd).insertBefore(element);
-    $(toAdd).append(" :: ");
+    const toAdd = $(`<div class="pcm_queue">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',hitInfo.task_id);
+    if (appendTo) toAdd.appendTo(element);
+    else toAdd.insertBefore(element);
+    toAdd.append(" :: ");
     createLink(toAdd, "pcm_returnLink", "#", "Return", "_blank", (e) => {
       modal.showDialogModal("700px", "Return this hit?", `Do you really want to return this hit:<br> ${hitInfo.project.requester_name} - ${hitInfo.project.title}`, () => {
         const returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
@@ -78,13 +83,13 @@ class LogTabsClass {
       }, true, true);
       e.preventDefault();
     });
-    $(toAdd).append(" :: ");
+    toAdd.append(" :: ");
     createLink(toAdd, "pcm_continueLink", "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "from_queue=true"), "Continue Work", "_blank", (e) => {
         const theHeight=window.outerHeight-80, theWidth=window.outerWidth-10;
         window.open($(e.target).attr("href"),"_blank","width=" + theWidth + ",height=" +  theHeight + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes");
         e.preventDefault();
     });
-    if (this.dLog(3)) console.info(`%cNew to queue: {title: ${escape(hitInfo.project.title)}, task_id: ${taskId}, hit_set_id: ${hitInfo.project.hit_set_id}, requester_id: ${hitInfo.project.requester_id}, requester_name: ${escape(hitInfo.project.requester_name)}}`,CONSOLE_DEBUG);
+    if (this.dLog(3)) console.info(`%cNew to queue: {title: ${escape(hitInfo.project.title)}, task_id:${hitInfo.task_id}, hit_set_id:${hitInfo.project.hit_set_id}, assignment_id:${hitInfo.assignment_id}, requester_id:${hitInfo.project.requester_id}, requester_name:${escape(hitInfo.project.requester_name)}}`,CONSOLE_DEBUG);
   }
   /**
    * Add a new hit accepted into the queue in the correct position accroding to seconds left.
@@ -94,14 +99,19 @@ class LogTabsClass {
    * @param  {string} [task_url=""] - The task url from the fetch results.
    */
   addIntoQueue(hitInfo, hitInfo2, data, task_url="") {
-    if (!this.taskIds.includes(data.taskId)) { // Make sure hit not in queue already.
-      let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft>data.assignedTime; } );
-      this.taskIds.splice( ((found===-1) ? this.taskIds.length-1 : found-1), 0, data.taskId );
-      const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:data.taskId, task_url:task_url.replace("&auto_accept=true","")};
-      this.taskInfo[data.taskId] = newInfo;
-      if (found===-1) this.addToLog(newInfo, data.taskId, this.queueContent, true);
-      else this.addToLog(newInfo, data.taskId, $(this.queueContent).find("div")[found], false);
-      this.queueTotal++;
+    this.addIntoQueue.counter = (this.addIntoQueue.counter) ? this.addIntoQueue.counter++ : 0;
+    if (this.updatingQueueStatus && this.addIntoQueue.counter<1000) // Check if currently updating queue.
+      setTimeout(this.addIntoQueue.bind(this), 50, hitInfo, hitInfo2, data, task_url);
+    else { // If not currently updating queue then add hit to queue watch.
+      if (!this.taskIds.includes(data.taskId)) { // Make sure hit not in queue already.
+        let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft>data.assignedTime; } );
+        this.taskIds.splice( ((found===-1) ? this.taskIds.length-1 : found-1), 0, data.taskId );
+        const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:hitInfo2.task_id, assignment_id:hitInfo2.assignment_id, task_url:task_url.replace("&auto_accept=true","")};
+        this.taskInfo[data.taskId] = newInfo;
+        if (found===-1) this.addToWatch(newInfo, this.queueContent, true);
+        else this.addToWatch(newInfo, this.queueContent.find("div")[found], false);
+        this.queueTotal++;
+      }
     }
   }
   /**
@@ -111,12 +121,13 @@ class LogTabsClass {
    * @param  {object} queueResults - Object of all the hits on the mturk queue.
    */
   updateQueue(queueResults) {
-    let prevHits = $(this.queueContent).find("div"); this.queueIsNew = false;
+    let prevHits = this.queueContent.find("div"); this.queueIsNew = false;
     this.queueTotal = queueResults.length;
-    $(this.queueTab).find("span").html(`Queue Watch - ${this.queueTotal}`);
+    this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
     if (this.queueTotal > 0) {
+      this.updatingQueueStatus = true;
       let newIds = [], newInfo = {}, oldIds = []; // oldIds is used for duplication error checking
-      queueResults.forEach( (value) => { newIds.push(value.task_id); newInfo[value.task_id] = {project:value.project, secondsLeft:value.time_to_deadline_in_seconds, task_id:value.taskId, task_url:value.task_url.replace(".json","")}; } );
+      queueResults.forEach( (value) => { newIds.push(value.task_id); newInfo[value.task_id] = {project:value.project, secondsLeft:value.time_to_deadline_in_seconds, task_id:value.task_id, assignment_id:value.assignment_id, task_url:value.task_url.replace(".json","")}; } );
       if (prevHits.length > 0) {
         // Some previous jobs are still in queue. Let's compare and find out if something was added or removed.
         let prevDivIndex = 0, addedToEnd = false;
@@ -128,7 +139,7 @@ class LogTabsClass {
             } else if (prevDivIndex >= prevHits.length) { // There are more jobs in new queue than old queue.
               if (this.dLog(2)) console.info('%cAdd job to end of queue.',CONSOLE_DEBUG);
               addedToEnd = true; this.queueIsNew = true;
-              this.addToLog(newInfo[value], value, this.queueContent, true);
+              this.addToWatch(newInfo[value], this.queueContent, true);
               prevDivIndex++;
             } else {
               // Look for a difference between previous queue and new queue.
@@ -136,14 +147,14 @@ class LogTabsClass {
                 if (!this.taskIds.includes(value)) {
                   // Work was added here at prevDivIndex because this new work is not in previous queue.
                   if (this.dLog(2)) console.info('%cAdd job in queue.',CONSOLE_DEBUG);
-                  this.addToLog(newInfo[value], value, prevHits[prevDivIndex], false);
+                  this.addToWatch(newInfo[value], prevHits[prevDivIndex], false);
                   prevDivIndex++;
-                  prevHits = $(this.queueContent).find("div");
+                  prevHits = this.queueContent.find("div");
                 } else { // Previous jobs were returned at prevDivIndex because the new work was in previous queue
                   do {
                     if (this.dLog(2)) console.info('%cRemove job because it was returned or submitted.',CONSOLE_DEBUG);
                     $(prevHits[prevDivIndex]).remove();
-                    prevHits = $(this.queueContent).find('div');
+                    prevHits = this.queueContent.find('div');
                     prevAssignId = $(prevHits[prevDivIndex]).data('taskId');
                   } while (prevAssignId !== value); // For multiple jobs returned at once.
                 }
@@ -160,7 +171,7 @@ class LogTabsClass {
             if ($(prevHits[prevDivIndex]).data('taskId') === value) {
               if (this.dLog(2)) console.info('%cJob has been expired so don\'t show it.',CONSOLE_DEBUG);
               $(prevHits[prevDivIndex]).remove();
-              prevHits = $(this.queueContent).find("div");
+              prevHits = this.queueContent.find("div");
             }
           }
         });
@@ -171,17 +182,18 @@ class LogTabsClass {
         this.queueIsNew = true;
         newIds.forEach( (key) => { // Make sure ALL work is added
           if (this.dLog(2)) console.info('%cAdd jobs to empty queue.',CONSOLE_DEBUG);
-          if (newInfo[key].secondsLeft!==-1) this.addToLog(newInfo[key], key, this.queueContent, true);
+          if (newInfo[key].secondsLeft!==-1) this.addToWatch(newInfo[key], this.queueContent, true);
         });
       }
       this.taskIds = Array.from(newIds); this.taskInfo = Object.assign({}, newInfo);
       // Let's find out if an alarm should be alerted because of a low timer
       let firstTimeLeft = queueResults[0].time_to_deadline_in_seconds;
       if (firstTimeLeft!==-1 && globalOpt.checkQueueAlert(firstTimeLeft)) { // -1 means expired
-        if (globalOpt.isQueueAlert()) $(this.queueContent).closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
+        if (globalOpt.isQueueAlert()) this.queueContent.closest(".tab-pane").stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
         if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
       }
-    } else if (prevHits.length>0) { $(this.queueContent).empty(); this.taskIds.length = 0; this.taskInfo = Object.assign({}, {}); }
+    } else if (prevHits.length>0) { this.queueContent.empty(); this.taskIds.length = 0; this.taskInfo = Object.assign({}, {}); }
+    this.updatingQueueStatus = false;
   }
   /**
    * Update the queue watch captcha counter.
@@ -189,6 +201,42 @@ class LogTabsClass {
    */
   updateCaptcha(captchaCount) {
     if (captchaCount!==null) this.tabs.updateCaptcha(captchaCount);
+  }
+  /**
+   * Add accepted hit to the accepted log and limit it to a maximum hits shown.
+   * @param  {object} data - The data for the job to display that was accepted.
+   */
+  addToLog(data) {
+    let divHits = this.acceptContent.find('div');
+    if (divHits.length > 100) divHits[divHits.length - 1].remove();
+    const now = moment().format('ddd hh:mma');
+    const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
+    const title = (data.friendlyTitle) ? data.friendlyTitle : data.title;
+    this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
+  }
+  /**
+   * @param  {object}
+   * @param  {number}
+   */
+  addToStatus(data, stats, myId) {
+    const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
+    this.statusContent.append(`<div class='pcm_${myId}'><span class='pcm_emp'>Requester:</span> ${requester} | <span class='pcm_emp'>Pay:</span> $${data.price} | <span class='pcm_emp'>Mode:</span> panda | <span class='pcm_emp'>Accepted:</span> <span class='accepted'>${stats.accepted.value}</span> | <span class='pcm_emp'>Fetched:</span> <span class='fetched'>${stats.fetched.value}</span> | <span class='pcm_emp'>Elapsed:</span> <span class='elapsed'>0.0s</span></div>`);
+  }
+  updateLogStatus(stats, myId, seconds) {
+    this.statusContent.find(`.pcm_${myId} .fetched:first`).html(stats.fetched.value);
+    this.statusContent.find(`.pcm_${myId} .accepted:first`).html(stats.accepted.value);
+    let elapsedSeconds = (Math.round( (seconds / 1000) * 10 ) / 10).toFixed(1);
+    this.statusContent.find(`.pcm_${myId} .elapsed:first`).html(elapsedSeconds + 's');
+  }
+  /**
+   * @param  {number} myId
+   */
+  removeFromStatus(myId) {
+    this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`)
+      .css('background-color', '#260000');
+    setTimeout( () => { 
+      this.statusContent.find(`.pcm_${myId}-stop`).remove();
+    }, 8000);
   }
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.
