@@ -18,6 +18,7 @@ class UrlClass {
 	/**
 	 * Fetches the url and handles mturk results.
 	 * Detects json result and text result.
+	 * @async - To wait for the responses to be received after a fetch.
 	 */
 	async goFetch() {
 		try {

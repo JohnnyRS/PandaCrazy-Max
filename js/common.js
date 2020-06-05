@@ -211,6 +211,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
     if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
     if (theValue===-1) { theValue = "0"; }
+    if (theValue===undefined) { theValue = element.default; }
     if (element.format==="date") { theValue = formatAMPM("short",new Date(theValue)); }
     if (element.disable) { textColor = " text-warning"; textBorder = ""; }
     if (element.label!=="") { padding = " pl-4"; }

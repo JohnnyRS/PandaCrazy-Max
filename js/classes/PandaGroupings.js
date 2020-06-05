@@ -35,6 +35,7 @@ class PandaGroupings {
    * Loads up any groupings saved in datbase.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
+   * @async                       - To wait for the groupings to be loaded from the database.
    * @param  {function} afterFunc - Function to call after done to send success array or error object.
    */
   async prepare(afterFunc) {
@@ -114,6 +115,7 @@ class PandaGroupings {
   }
   /**
    * Delete this grouping with the unique number.
+   * @async                    - To wait for the deletion of the panda job from the database.
    * @param  {number} grouping - The unique number for the grouping to be deleted.
    */
   async delete(grouping) {

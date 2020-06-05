@@ -64,6 +64,7 @@ class PandaUI {
 	 * If loaded up data is done then start queue monitor and removes panda data to save memory.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
+	 * @async															- To wait for the tabs to completely load from the database.
 	 * @param  {afterPCallBack} afterFunc - Function to call after done to send success array or error object.
 	 */
 	async prepare(afterFunc) {
@@ -76,7 +77,7 @@ class PandaUI {
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			// Use initializing default if database wasn't created yet.
-			if (bgPanda.useDefault) await this.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, true, 4000, 0, 0);
+			if (bgPanda.useDefault) await this.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, 0, true, 4000);
 			else err = await bgPanda.getAllPanda(); // Not using initializing default value so load from database
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
@@ -212,6 +213,7 @@ class PandaUI {
 	/**
 	 * Show the jobs modal for editing panda jobs or panda jobs in a grouping.
 	 * It will also load all panda's from the database and wait for successful load.
+	 * @async																			 - To wait for all the data for panda's to be loaded from database.
 	 * @param  {string} [type="jobs"]							 - The type of data that is being edited.
 	 * @param  {number} [groupings=-1]						 - The unique ID for the grouping that will be edited.
 	 * @param  {object} [thisObj=null]						 - The grouping object that is being edited.
@@ -230,7 +232,7 @@ class PandaUI {
 	/**
 	 * Start panda job collecting with this unique ID and set the duration for collecting and go ham.
 	 * Also starts the goham at start if neccesary.
-	 * @async
+	 * @async														 - To wait for the loading of the data from the database.
 	 * @param  {number} myId 						 - The unique ID for a panda job.
 	 * @param  {bool} [goHamStart=false] - Should the panda go ham at the start?
 	 * @param  {number} [tempDuration=0] - The duration for this panda job to collect for.
@@ -251,7 +253,7 @@ class PandaUI {
 	}
 	/**
 	 * Stop panda job collecting with this unique ID and delete from database if needed.
-	 * @async
+	 * @async														- To wait for the updating of the data to the database.
 	 * @param  {number} myId 						- The unique ID for a panda job.
 	 * @param  {string} [whyStop=null]	- The reason why the panda job is stopping.
 	 * @param  {bool} [deleteData=true]	- Should the data in the database be deleted also?
@@ -361,7 +363,7 @@ class PandaUI {
 	runThisPanda(myId, tempDuration, tempGoHam, thisNew=true) {
 		let hitInfo = bgPanda.info[myId], diff = null;
 		// if (hitInfo.data.once && this.pandaStats[myId].accepted.value>0) return null;
-		const stopReason = bgPanda.checkIfLimited(myId,false, true); console.log("stopReason: ",stopReason);
+		bgPanda.checkIfLimited(myId,false, true);
 		if (!this.pandaStats[myId].collecting) {
 			const nowDate = new Date().getTime();
 			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.hitsAvailable, tempDuration: tempDuration, tempGoHam:tempGoHam, delayedAt:nowDate, lowestDur:Math.min(tempDuration, tempGoHam)});
@@ -385,7 +387,7 @@ class PandaUI {
 		const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
 		const run = (msg.command!=="addOnlyJob"); // Run this job after adding
 		const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
-		this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, false, 0, 0, 0, -1, false, "", "", run, true, duration, 4000);
+		this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, 0, false, 0, 0, 0, -1, false, "", "", run, true, duration, 4000);
 	}
 	/**
 	 * Add panda from the database.
@@ -399,6 +401,7 @@ class PandaUI {
 	/**
 	 * Add a new panda job with lot of information and options to the panda area and database.
 	 * Search class uses this to add hits.
+	 * @async																 - To wait for the data to be loaded from database if needed.
 	 * @param  {string} groupId							 - The group ID for this panda.
 	 * @param  {string} description					 - The description for this panda.
 	 * @param  {string} title								 - The title for this panda.
@@ -410,6 +413,7 @@ class PandaUI {
 	 * @param  {number} [hitsAvailable=0]		 - The number of hits avaiable to collect in a batch?
 	 * @param  {number} [limitNumQueue=0]		 - Limit the number of this group id in the queue at once.
 	 * @param  {number} [limitTotalQueue=0]	 - Limit the total number of hits in the queue before collecting more.
+	 * @param  {number} [limitFetches=0]		 - Number of times to try to fetch panda before stopping.
 	 * @param  {bool} [autoGoHam=false]			 - Should this go ham automatically?
 	 * @param  {number} [hamDuration=0]			 - The duration used in go ham mode.
 	 * @param  {number} [duration=0]				 - The duration for this panda to collect before turning off.
@@ -423,7 +427,7 @@ class PandaUI {
 	 * @param  {number} [tempDuration=0]		 - The temporary duration to collect on the first collection run.
 	 * @param  {number} [tempGoHam=0]				 - The temporary duration to go ham for on the first collection run.
 	 */
-	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, autoGoHam=false, hamDuration=0, duration=0, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=0, tempGoHam=0) {
+	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, limitFetches=0, autoGoHam=false, hamDuration=0, duration=0, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=0, tempGoHam=0) {
 		const dated = new Date().getTime(); // get the date that this job was added.
 		if (external && bgPanda.pandaGroupIds.hasOwnProperty(groupId)) {
 			const myId=bgPanda.pandaGroupIds[groupId][0], hitInfo=bgPanda.info[myId];
@@ -433,7 +437,7 @@ class PandaUI {
 			this.runThisPanda(myId, tempDuration, tempGoHam);
 		} else {
 			if (tabUnique === -1) tabUnique = this.tabs.dataTabs[this.tabs.currentTab].id;
-			let dbInfo = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, assignedTime:null, expires:null, dateAdded: dated, tabUnique:tabUnique, positionNum:null, once:once, search:search, acceptLimit:acceptLimit, totalSeconds:0, totalAccepted:0 };
+			let dbInfo = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, limitFetches:limitFetches, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, assignedTime:null, expires:null, dateAdded: dated, tabUnique:tabUnique, positionNum:null, once:once, search:search, acceptLimit:acceptLimit, totalSeconds:0, totalAccepted:0 };
 			// save these values in a temporary array to come back to them after adding panda info in panda class
 			let newAddInfo = {'tempDuration':tempDuration, 'tempGoHam':tempGoHam, 'run':run};
 			await bgPanda.addPanda(dbInfo, hitsAvailable, autoAdded, newAddInfo);
@@ -499,7 +503,7 @@ class PandaUI {
    * @param  {object} result			- The result brought back from the fetch method.
    * @param  {object} data				- The saved data from the panda object just in case it gets deleted.
    */
-  hitAccepted(myId, queueUnique, result, data) {
+  hitAccepted(myId, queueUnique, result) {
     this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
     this.pandaGStats.addTotalAccepted();
     this.highlightEffect_card(myId);
@@ -521,8 +525,9 @@ class PandaUI {
 		hitDetails.task_id = urlInfo[2];
 		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId);
 		bgPanda.queueAddAccepted(pandaInfo, hitDetails);
-		this.logTabs.addIntoQueue(pandaInfo, hitDetails, data, result.url.replace("https://worker.mturk.com",""));
-		this.logTabs.addToLog(data);
+		this.logTabs.addIntoQueue(pandaInfo, hitDetails, pandaInfo.data, result.url.replace("https://worker.mturk.com",''));
+		this.logTabs.addToLog(pandaInfo.data);
+		this.updateLogStatus(myId, 0, pandaInfo.data);
     bgPanda.checkIfLimited(myId, true);
     alarms.doAlarms(pandaInfo);
 	}
@@ -537,8 +542,9 @@ class PandaUI {
 	/**
 	 * @param  {} myId
 	 */
-	updateLogStatus(myId, seconds) {
-		this.logTabs.updateLogStatus(this.pandaStats[myId], myId, seconds);
+	updateLogStatus(myId, milliseconds, changes=null) {
+		const stats = (changes) ? null : this.pandaStats[myId];
+		this.logTabs.updateLogStatus(stats, myId, milliseconds, changes);
 	}
 	/**
 	 * Save the queue results received after making sure the groupings are checked for start times to start.

@@ -16,10 +16,10 @@ class PandaStats {
     this.collectStart = null;                 // Time that this panda started the collecting session.
     this.collectAccepted = 0;                 // The number of hits accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
-    this.dailyAccepted = 0;
+    this.dailyAccepted = 0;                   // The number of accepted hits today.
     this.collectStore = "collectionStore";    // The store name for the collection stat storage.
     this.acceptedStore = "acceptedStore";     // The store name for the accepted stat storage.
-    this.fetched = { value:0, id:"#pcm_hitFetched", label:"Fetched" };
+    this.fetched = { value:0, session:0, id:"#pcm_hitFetched", label:"Fetched" };
     this.accepted = { value:0, id:"#pcm_hitAccepted", label:"Acc" };
     this.noMore = { value:0, id:"#pcm_hitNoMore", label:"NM" };
     this.updateAllStats();
@@ -84,7 +84,10 @@ class PandaStats {
   /**
    * Adds 1 to the fetched counter for this panda and updates stat on the panda card.
    */
-  addFetched() { this.fetched.value++; this.updateHitStat(this.fetched); }
+  addFetched() { this.fetched.value++; this.fetched.session++; this.updateHitStat(this.fetched); }
+  /**
+   */
+  getFetchedSession() { return this.fetched.session; }
   /**
    * Adds 1 to the total accepted and collected session for this panda and updates stat on the panda card.
    * Also adds the accepted time in the stats database.
@@ -100,7 +103,10 @@ class PandaStats {
   /**
    * Starts the stats for this collecting session.
    */
-  startCollecting() { this.collecting = true; this.collectStart = new Date().getTime(); this.collectAccepted = 0; }
+  startCollecting() {
+    this.collecting = true; this.collectStart = new Date().getTime();
+    this.collectAccepted = 0; this.fetched.session = 0;
+  }
   /**
    * @typedef {object} returnStats
    * @property {number} seconds  - The seconds the collection session was collecting.

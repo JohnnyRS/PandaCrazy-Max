@@ -32,6 +32,7 @@ class TabbedClass {
 	get currentTab() { return $('.nav-tabs .active').closest('li').data('unique') }
   /**
    * Prepare the tabbed areas on this page at the start up of the program.
+   * @async                   - To wait for the loading of the tab data from the database.
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections.
    */
   async prepare() {
@@ -87,6 +88,7 @@ class TabbedClass {
   }
   /**
    * Add tab to the page with name and active status. Only used for manual additions to get unique ID.
+   * @async                           - To wait for the loading of the data from database.
    * @param  {string} name            - The name of this new tab.
    * @param  {bool} [active=false]    - Is this tab active?
    * @param  {bool} [manualAdd=false] - Was tab manually added?
@@ -101,6 +103,7 @@ class TabbedClass {
   /**
    * Add a tab to the page with the unique number and active status.
    * This method is called when tab data is first loaded or when a new tab is created by user.
+   * @async                  - To wait for the updating of the tab data after repositioning in database.
    * @param  {number} unique - The unique tab number for the new tab.
    * @param  {bool} active   - Shows that this tab is active if true.
    */
@@ -109,7 +112,7 @@ class TabbedClass {
     const start = $(`<li class="nav-item"></li>`).data("unique", unique);
     if (this.addButton) $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_addTab`))
       .droppable( {tolerance:'pointer', over: (e, ui) => { $(e.target).find("a").click(); },
-        drop: async (e, ui) => { this.cardDragged(e, ui, "droppable"); }}
+        drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
       );
     else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_captchaText`));
     const label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).appendTo(start);
@@ -139,15 +142,16 @@ class TabbedClass {
     const tabPane = $(`<div class="tab-pane pcm_tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
     if (this.draggable) {
       $(tabPane).append($(`<div class="card-deck p-0 px-1"></div>`).data("unique",unique).sortable({ opacity:0.5, cursor:"move", appendTo: document.body, helper: "clone",
-        stop: async (e, ui) => { console.log("sortable stop"); this.cardDragged(e, ui, "sortable"); }}
+        stop: async (e, ui) => { await this.cardDragged(e, ui, "sortable"); }}
       ));
-      $(tabPane).droppable({tolerance:'pointer', drop: async (e, ui) => { this.cardDragged(e, ui, "droppable"); }});
+      $(tabPane).droppable({tolerance:'pointer', drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }});
     }
     return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
   }
   /**
    * Handles the dragging of the card from a sortable or droppable area.
    * It will set the new position or set the new tab for this card.
+   * @async                  - To wait for the updating the tab data for repositioning in database.
    * @param  {object} e      - The event object from a sortable or droppable area.
    * @param  {object} ui     - The ui jquery element from a sortable or droppable area.
    * @param  {string} action - Which action is the card being dragged for?

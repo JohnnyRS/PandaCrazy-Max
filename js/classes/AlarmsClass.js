@@ -22,7 +22,7 @@ class AlarmsClass {
   }
   /**
    * Prepare the alarms by getting the src of the alarm url and save to database if using default values.
-   * @async
+   * @async                - To wait for the alarm data to completely load into memory.
    * @param  {object} data - The alarms data object that has all the alarms.
    * @param  {bool} fromDB - Did these alarms come from the database or default values?
    * @return {object}      - Error object to return if error happened.
@@ -50,7 +50,7 @@ class AlarmsClass {
   /**
    * Loads up the alarms from the database or saves default values if no alarms are in the database.
    * Saves any errors from trying to add to database and then sends a reject.
-   * @async
+   * @async                             - To wait for the alarm data to be loaded from database.
    * @param  {afterACallBack} afterFunc - Function to call after done to send success error.
    */
   async prepare(afterFunc) {

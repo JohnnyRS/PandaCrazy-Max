@@ -150,7 +150,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} triggerInfo	- The trigger object that found this panda item.
 	 */
 	sendToPanda(item, triggerInfo) {
-		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, triggerInfo.autoGoHam, triggerInfo.goHamDuration, 0, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
+		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, triggerInfo.limitFetches, triggerInfo.autoGoHam, triggerInfo.goHamDuration, 0, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
 		}
 	/**
 	 * Check all live triggers for this item.
@@ -332,7 +332,7 @@ class MturkHitSearch extends MturkClass {
   goFetch(objUrl, queueUnique, elapsed) {
 		this.searchGStats.setSearchElapsed(elapsed); // Pass elapsed time to global search stats
 		if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
-    super.goFetch(objUrl).then(result => { // Go fetch this url and bring back results from a promise
+    super.goFetch(objUrl).then( result => { // Go fetch this url and bring back results from a promise
       if (!result) {
         if (this.dError(1)) { console.error('Returned fetch result was a null.', JSON.stringify(objUrl)); }
 			} else {

@@ -184,6 +184,7 @@ class PandaCard {
    */
   /**
    * This method shows the details of a panda in a modal.
+   * @async                                       - To wait for the data to be loaded from the database.
    * @param  {successCallBack} [successFunc=null] - Function to call after the save button is pressed.
    */
   async showDetailsModal(successFunc=null) {
@@ -193,8 +194,9 @@ class PandaCard {
       if (!hitInfo.data) { await bgPanda.getDbData(this.myId); }
       hitInfo.data = Object.assign(hitInfo.data, changes);
       hitInfo.data.duration *= 60000; bgPanda.timerDuration(this.myId);
-      this.updateAllCardInfo(hitInfo);
       await bgPanda.updateDbData(this.myId, hitInfo.data);
+      this.updateAllCardInfo(hitInfo);
+      pandaUI.logTabs.updateLogStatus(null, this.myId, 0, hitInfo.data);
       modal.closeModal();
       if (hitInfo.skipped) bgPanda.checkSkipped(this.myId);
       if (!pandaUI.pandaStats[this.myId].collecting) hitInfo.data = null;
@@ -205,10 +207,11 @@ class PandaCard {
       { label:"Limit # of GroupID in queue:", type:"range", key:"limitNumQueue", min:0, max:24 }, 
       { label:"Limit # of total Hits in queue:", type:"range", key:"limitTotalQueue", min:0, max:24 }, 
       { label:"Accept Only Once:", type:"trueFalse", key:"once" }, 
-      { label:"Daily Accepted Hit Limit:", type:"text", key:"acceptLimit" }, 
-      { label:"Stop Collecting After Minutes:", type:"text", key:"duration" }, 
+      { label:"Daily Accepted Hit Limit:", type:"text", key:"acceptLimit", default:0 }, 
+      { label:"Stop Collecting After Minutes:", type:"text", key:"duration", default:0 }, 
+      { label:"Stop Collecting After # of fetches:", type:"text", key:"limitFetches", default:0 }, 
       { label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam" }, 
-      { label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration" }, 
+      { label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration", default:0 }, 
       { label:"Friendly Requester Name:", type:"text", key:"friendlyReqName" }, 
       { label:"Friendly Hit Title:", type:"text", key:"friendlyTitle" }, 
       { label:"Requester Name:", type:"text", key:"reqName" }, 

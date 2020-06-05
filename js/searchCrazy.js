@@ -10,8 +10,8 @@ function startSearchCrazy() {
 /** Detect when user closes page so background page can remove anything it doesn't need without the search UI. **/
 window.addEventListener("beforeunload", (e) => { bgPage.gSetSearchUI(null); bgSearchClass.closedUI(); });
   searchUI.prepareSearch();
-  bgSearchClass.addTrigger("rid", "AFEG4RKNBSL4T", {"name":"Ben Peterson", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":false, "from":"searchUI"});
-  bgSearchClass.addTrigger("gid", "30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", {"name":"Ibotta, Inc.", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":true, "from":"searchUI"});
+  bgSearchClass.addTrigger("rid", "AFEG4RKNBSL4T", {"name":"Ben Peterson", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "limitFetches":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":false, "from":"searchUI"});
+  bgSearchClass.addTrigger("gid", "30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", {"name":"Ibotta, Inc.", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "limitFetches":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":true, "from":"searchUI"});
 }
 /** ================ First lines executed when page is loaded. ============================ **/
 allTabs('/searchCrazy.html', count => { // Count how many Search Crazy pages are opened.

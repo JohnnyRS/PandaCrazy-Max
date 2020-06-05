@@ -48,6 +48,7 @@ class PandaGOptions {
    * Load up global options from database or use and save default options into database.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
+   * @async                      - To wait for the options data to be loaded from the database.
    * @param {function} afterFunc - Function to call after done to send success array or error object.
    */
   async prepare(afterFunc) {

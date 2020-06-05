@@ -15,6 +15,7 @@ function modalLoadingData() {
 /**
  * Starts the process of loading data in the program and check for errors as it goes.
  * Make sure to check for a good DB open and wait for slower computers.
+ * @async - To wait for preparations for classes to end their database operations.
  */
 async function startPandaCrazy() {
   await bgPage.gCheckPandaDB().then( result => { goodDB = result; }, rejected => errorObject = rejected );
