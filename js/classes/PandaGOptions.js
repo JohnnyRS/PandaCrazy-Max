@@ -17,6 +17,7 @@ class PandaGOptions {
       disableNotifications:false,
       unfocusWarning:true,
       themeName:"normal",
+      cardDisplay:2,                // 2 = Normal look, 1 = Minimal Info, 0 = One Liner
       debugger:0
     };
     this.timers = {
@@ -206,4 +207,14 @@ class PandaGOptions {
    * @return {number} - Returns the number for the captcha counter.
    */
   getCaptchaCount() { return this.captchaCounter; }
+  /**
+   * Gets the panda card display format
+   * @return {number} - Returns the number for the display format to show information.
+   */
+  getCardDisplay() { return this.general.cardDisplay; }
+  /**
+   * Change the display number used to display information in the panda cards.
+   * @param  {number} display - The number for the display format to use for information in the panda card.
+   */
+  setCardDisplay(display) { this.general.cardDisplay = display; }
 }

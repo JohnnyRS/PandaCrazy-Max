@@ -106,7 +106,7 @@ class PandaUI {
 	 * Highlight the panda card's gid number with this unique ID.
    * @param  {number} myId - The unique ID for a panda job.
    */
-  highlightEffect_gid(myId) { $(`#pcm_groupId_${myId}`).effect( "highlight", {color:"#E6E6FA"}, 300 ); }
+  highlightEffect_gid(myId) { $(`#pcm_groupId_${myId}, #pcm_buttonGroup1_${myId}`).effect( "highlight", {color:"#E6E6FA"}, 300 ); }
   /**
 	 * Highlight the panda card according to the action and duration.
    * @param  {number} myId 						 - The unique ID for a panda job.
@@ -192,6 +192,16 @@ class PandaUI {
       $(`#pcm_pandaCard_${myId}`).removeData("previousColor").animate({"backgroundColor":prevColor},{duration:1000});
     }
   }
+  /**
+   * Change the information displayed on all the panda cards to normal, minimal or one liner.
+   * @param  {number} display - The number representing the info displayed in the panda card.
+   */
+  changeDisplay(display) {
+		globalOpt.setCardDisplay(display);
+		for (const myId in this.pandaCard) {
+			this.pandaCard[myId].updateCardDisplay();
+		}
+	}
   /**
    * This is called after the save button is clicked.
    * @callback savePCallBack
@@ -465,14 +475,14 @@ class PandaUI {
 				else { targetBtn.css("background-color", "red"); this.ctrlDelete.push(myId); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $(".pcm_deleteButton").css("background-color", ""); }
 		})
-		$(`#pcm_collectButton_${myId}`).click((e) => {
+		$(`#pcm_collectButton_${myId}, #pcm_collectButton1_${myId}`).click((e) => {
 			const theButton = $(e.target).closest(".btn");
 			if (theButton.is(".pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable")) {
 				pandaInfo.autoAdded = false; this.startCollecting(myId); }
 			else this.stopCollecting(myId, "manual");
 		});
 		if (pandaInfo.data.search && loaded) this.searchDisabled(myId);
-		$(`#pcm_hamButton_${myId}`).click((e) => { 
+		$(`#pcm_hamButton_${myId}, #pcm_hamButton1_${myId}`).click((e) => { 
 			const targetBtn = $(e.target).closest(".btn");
 			if (targetBtn.data("longClicked")) { targetBtn.removeData("longClicked"); targetBtn.css({"background-color": "", "color": ""});}
 			else { this.hamButtonClicked(myId, targetBtn); }
@@ -488,11 +498,28 @@ class PandaUI {
 					this.hamButtonClicked(myId, targetBtn, true);
 				}
 			});
-		$(`#pcm_deleteButton_${myId}`).click((e) => {
+		$(`#pcm_deleteButton_${myId}, #pcm_deleteButton1_${myId}`).click((e) => {
 			if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
 			this.removeJobs(this.ctrlDelete);
 		});
-		$(`#pcm_detailsButton_${myId}`).click(() => { this.pandaCard[myId].showDetailsModal(); });
+		$(`#pcm_detailsButton_${myId}, #pcm_detailsButton1_${myId}`).click(() => {
+			this.pandaCard[myId].showDetailsModal();
+		});
+		$(`#pcm_groupId_${myId}`).click((e) => {
+			const double = parseInt( $(e.target).data('double'), 10 );
+			if (double === 2) $(e.target).data('double', 0);
+			setTimeout( () => {
+				const double = parseInt( $(e.target).data('double'), 10 );
+				if (double !== 2) {
+					const myId = $(e.target).data('myId');
+					navigator.clipboard.writeText(bgPanda.pandaUrls[myId].accept);
+				}
+			}, 250);
+		});
+		$(`#pcm_groupId_${myId}`).on('dblclick', (e) => {
+			$(e.target).data('double', 2);
+			console.log("OMG I am doubleclicked", $(e.target).data('myId'));
+		});
 		if (newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
     return myId;
   }

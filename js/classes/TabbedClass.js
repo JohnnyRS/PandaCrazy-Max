@@ -38,7 +38,7 @@ class TabbedClass {
   async prepare() {
     let success = "", err = null;
     if (this.ulId==="pcm_tabbedPandas") { // Is this tab row for the panda's?
-      this.addAddButton($(`#${this.ulId}`)); // Shows the add tab button on the tabbed panda row
+      this.addAddButton($(`#${this.ulId}`).disableSelection()); // Shows the add tab button on the tabbed panda row
       this.renameTab = true; this.deleteTab = true; this.draggable = true; // Allows renaming, deleting and dragging
       await bgPanda.db.getFromDB(bgPanda.tabsStore, null, true, (cursor) => { return cursor.value; })
       .then( async result => {
@@ -55,7 +55,7 @@ class TabbedClass {
         if (!err) success = "Added all panda tabs.";
       }, (rejected) => err = rejected );
     } else {
-      $(`<li class="pcm_captchaText ml-2"></li>`).appendTo($(`#${this.ulId}`));
+      $(`<li class="pcm_captchaText ml-2"></li>`).appendTo($(`#${this.ulId}`).disableSelection());
       success = "Added all log tabs.";
     }
     return [success, err];
@@ -115,7 +115,7 @@ class TabbedClass {
         drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
       );
     else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_captchaText`));
-    const label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).appendTo(start);
+    const label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).disableSelection().appendTo(start);
     if (this.renameTab) $(label).bind('contextmenu', (e) => {
         if ($(e.target).closest("li").data("unique")!==0) { // First tab can not be renamed ever.
           modal.showDialogModal("700px", "Rename Tab Title", "Type in the title of this tab you want renamed.", () => {
@@ -128,7 +128,7 @@ class TabbedClass {
         e.preventDefault();
         return false;
       });
-      $(label).append($(`<span>${this.dataTabs[unique].title}</span>`));
+      $(label).append($(`<span>${this.dataTabs[unique].title}</span>`).disableSelection());
     if (unique!==0 && this.deleteTab) $(label).append($(`<span class="float-right pl-3 font-weight-bold pcm-tabDelete">x</span>`).click( (e) => {
       modal.showDialogModal("700px", "Delete tab", "Do you really want to delete this tab?", () => {
         e.preventDefault(); e.stopPropagation();
@@ -139,7 +139,7 @@ class TabbedClass {
         modal.closeModal();
       }, true, true);
       }));
-    const tabPane = $(`<div class="tab-pane pcm_tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
+    const tabPane = $(`<div class="tab-pane pcm_tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.dataTabs[unique].title}" role="tabpanel"></div>`).disableSelection().appendTo(`#${this.contentId}`);
     if (this.draggable) {
       $(tabPane).append($(`<div class="card-deck p-0 px-1"></div>`).data("unique",unique).sortable({ opacity:0.5, cursor:"move", appendTo: document.body, helper: "clone",
         stop: async (e, ui) => { await this.cardDragged(e, ui, "sortable"); }}

@@ -283,7 +283,7 @@ class ModalClass {
     const idName = this.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     const modalBody = $(`#${idName} .${this.classModalBody}`);
     let df = document.createDocumentFragment();
-    $('<div><div class="pcm_inputError">&nbsp;</div></div>').appendTo(df);
+    const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>').appendTo(df);
     createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
     createCheckBox(df, 'Start Collecting', 'pcm_startCollecting', '', true);
     createCheckBox(df, 'Collect Only Once', 'pcm_onlyOnce', '');
@@ -306,17 +306,12 @@ class ModalClass {
      */
     function checkGroupID() {
       const groupVal = $('#pcm_formAddGroupID').val();
+      let goodID = true;
       if (groupVal === '') {
         $('label[for="pcm_formAddGroupID"]').css('color', 'red');
         $(div).find('.pcm_inputError:first').html('Must fill in GroupID or URL!').data('gIdEmpty',true);
-      } else if (bgPanda.pandaGroupIds.hasOwnProperty(groupVal) && 
-          !$(div).find('.pcm_inputError:first').data('gIdDup')) {
-        $('label[for="pcm_formAddGroupID"]').css('color', 'yellow');
-        $(div).find('.pcm_inputError:first').html('GroupID already added. Still want to add?').data('gIdDup',true);
-        $('.modal-footer .pcm_modalSave:first').html('YES! Add new Panda Info');
       } else if (groupVal.match(/^[0-9a-zA-Z]+$/) || groupVal.includes('://')) {
         let groupId = null, reqId = null;
-        const groupVal = $('#pcm_formAddGroupID').val();
         if (groupVal.includes('://')) [groupId, reqId] = bgPanda.parsePandaUrl(groupVal);
         else groupId = groupVal;
         const reqName = ($('#pcm_formReqName').val()) ? $('#pcm_formReqName').val() : groupId;
@@ -327,10 +322,19 @@ class ModalClass {
         const startNow = $('#pcm_startCollecting').is(':checked');
         const once = $('#pcm_onlyOnce').is(':checked'); 
         const currentTab = pandaUI.tabs.currentTab;
-        this.closeModal();
-        if (groupId) {
+        if (groupId && bgPanda.pandaGroupIds.hasOwnProperty(groupId) && !$(div).find('.pcm_inputError:first').data('gIdDup')) {
+          $('label[for="pcm_formAddGroupID"]').css('color', 'yellow');
+          $(div).find('.pcm_inputError:first').html('GroupID already added. Still want to add?').data('gIdDup',true);
+          $('.modal-footer .pcm_modalSave:first').html('YES! Add new Panda Info');
+        } else if (groupId) {
           pandaUI.addPanda(groupId, description, title, reqId, reqName, pay, once, null, 0, 0, 0, 0, false, 4000, 0, 0, currentTab, false, '', '', startNow);
-          } else if (reqId) console.log('Create Search Panda');
+          this.closeModal();
+        } else if (reqId) {
+          console.log("this is a search job");
+        } else {
+          $('label[for="pcm_formAddGroupID"]').css('color', 'red');
+          $(div).find('.pcm_inputError:first').html('Invalid Group ID or URL').data('gIdInvalid',true);
+        }
       } else {
         $('label[for="pcm_formAddGroupID"]').css('color', 'red');
         $(div).find('.pcm_inputError:first').html('Invalid Group ID or URL').data('gIdInvalid',true);

@@ -18,6 +18,7 @@ function modalLoadingData() {
  * @async - To wait for preparations for classes to end their database operations.
  */
 async function startPandaCrazy() {
+  $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
   await bgPage.gCheckPandaDB().then( result => { goodDB = result; }, rejected => errorObject = rejected );
   if (goodDB) {
     await globalOpt.prepare( showMessages ); // Wait for global options to load and show message or error.

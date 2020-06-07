@@ -224,8 +224,10 @@ class LogTabsClass {
     this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
   }
   /**
-   * @param  {object}
-   * @param  {number}
+   * Adds the status for this panda job with the unique ID to the status log tab.
+   * @param  {object} data  - Object of the data from the panda job with the unique number ID.
+   * @param  {object} stats - Object with the stats for this panda job with the unique number ID.
+   * @param  {number} myId  - The unique ID for a panda job.
    */
   addToStatus(data, stats, myId) {
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
@@ -259,9 +261,7 @@ class LogTabsClass {
   removeFromStatus(myId) {
     this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`)
       .css('background-color', '#260000');
-    setTimeout( () => { 
-      this.statusContent.find(`.pcm_${myId}-stop`).remove();
-    }, 12000);
+    setTimeout( () => { this.statusContent.find(`.pcm_${myId}-stop`).remove(); }, 12000);
   }
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.

@@ -80,15 +80,15 @@ class MenuClass {
        {type:"item", label:"Export"}, {type:"item", label:"Import"}]);
     this.addMenu(topMenu, "Display", () => {}, "", "pcm-topMenuBtn");
     this.addSubMenu(topMenu, "",
-      [{type:"item", label:"Normal"},
-       {type:"item", label:"Minimal Info"},
-       {type:"item", label:"One Line Info"}]);
+      [{type:"item", label:"Normal", menuFunc: () => { pandaUI.changeDisplay(2) }},
+       {type:"item", label:"Minimal Info", menuFunc: () => { pandaUI.changeDisplay(1) }},
+       {type:"item", label:"One Line Info", menuFunc: () => { pandaUI.changeDisplay(0) }}]);
     this.addMenu(topMenu, "Grouping", () => { groupings.showGroupingsModal(pandaUI); }, "List all Groupings Added", "pcm-topMenuBtn");
     this.addSubMenu(topMenu, "",
-      [{type:"item", label:"Start/Stop", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } },
-       {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(true); } },
-       {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(); } },
-       {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(pandaUI); } }]);
+      [{type:"item", label:"Start/Stop", menuFunc: () => { groupings.showGroupingsModal(pandaUI); }},
+       {type:"item", label:"Create by Selection", menuFunc: () => { groupings.createInstant(true); }},
+       {type:"item", label:"Create Instantly", menuFunc: () => { groupings.createInstant(); }},
+       {type:"item", label:"Edit", menuFunc: () => { groupings.showGroupingsModal(pandaUI); }}]);
     this.addMenu(topMenu, "1", () => { bgPanda.timerChange(globalOpt.getTimer1()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
     this.addMenu(topMenu, "2", () => { bgPanda.timerChange(globalOpt.getTimer2()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
     this.addMenu(topMenu, "3", () => { bgPanda.timerChange(globalOpt.getTimer3()); }, "Change timer to the Main Timer", "pcm-topMenuBtn");
