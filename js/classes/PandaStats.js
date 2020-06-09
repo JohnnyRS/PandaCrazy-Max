@@ -19,9 +19,9 @@ class PandaStats {
     this.dailyAccepted = 0;                   // The number of accepted hits today.
     this.collectStore = "collectionStore";    // The store name for the collection stat storage.
     this.acceptedStore = "acceptedStore";     // The store name for the accepted stat storage.
-    this.fetched = { value:0, session:0, id:"#pcm_hitFetched", label:"Fetched" };
-    this.accepted = { value:0, id:"#pcm_hitAccepted", label:"Acc" };
-    this.noMore = { value:0, id:"#pcm_hitNoMore", label:"NM" };
+    this.fetched = { value:0, session:0, id:'#pcm_hitFetched', label:'Fetched', id2:'#pcm_hitFetched1' };
+    this.accepted = { value:0, id:'#pcm_hitAccepted', label:"Acc", id2:'#pcm_hitAccepted1' };
+    this.noMore = { value:0, id:'#pcm_hitNoMore', label:'NM', id2:'#pcm_hitNoMore1' };
     this.updateAllStats();
   }
   /**
@@ -59,6 +59,8 @@ class PandaStats {
   updateAllStats() {
 		$(`${this.accepted.id}_${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
 		$(`${this.fetched.id}_${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
+		$(`${this.accepted.id2}_${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
+		$(`${this.fetched.id2}_${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
   }
   /**
    * Update a specific stat on the panda card.
@@ -66,6 +68,7 @@ class PandaStats {
    */
   updateHitStat(statObj) {
 		$(`${statObj.id}_${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
+		$(`${statObj.id2}_${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
   }
   /**
    * Adds the time it was collecting to the total seconds collecting for session.

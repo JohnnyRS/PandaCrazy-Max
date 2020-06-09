@@ -318,7 +318,7 @@ class MturkPanda extends MturkClass {
 		this.info[myId] = {queueUnique:null, hitsAvailable:hitsAvailable, autoAdded:autoAdded, dbId:dbInfo.id, skipped:false, autoTGoHam:"off", data:dbInfo, lastTime:null, lastElapsed:0 };
 		const pandaUrl = this.createPandaUrl(dbInfo.groupId); // create the panda url for this panda
 		this.pandaUrls[myId] = {preview: this.createPreviewUrl(dbInfo.groupId), accept: pandaUrl, urlObj: new UrlClass(pandaUrl + "?format=json")}; // set up this panda list of urls with preview url too.
-		extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
+		if (!loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
 	}
 	/**
 	 * Remove the panda with the unique ID and delete from database if necessary.
@@ -348,12 +348,11 @@ class MturkPanda extends MturkClass {
 	timerDuration(myId) { pandaTimer.changeDuration(this.info[myId].queueUnique, this.info[myId].data.duration); }
 	/**
 	 * Gets data from mturk hit details and assigns them to the panda info object.
-	 * @async 									- To wait for the update to the database just in case data gets removed from memory.
 	 * @param  {object} details - Object with all the details from the hit.
 	 * @param  {number} myId		- The unique ID for a panda job.
 	 * @return {string}					- Returns the assignment ID for hit.
 	 */
-	async parseHitDetails(details, myId) {
+	parseHitDetails(details, myId) {
 		let thisHit = this.info[myId], assignment_id="";
 		if (thisHit.data.limitNumQueue>0) 
 			this.queueAdds[myId] = (this.queueAdds.hasOwnProperty(myId)) ? this.queueAdds[myId]+1 : 1;
@@ -366,7 +365,7 @@ class MturkPanda extends MturkClass {
 		thisHit.data.description = details.description; thisHit.data.price = details.monetaryReward.amountInDollars;
 		thisHit.hitsAvailable = details.assignableHitsCount; thisHit.data.assignedTime = details.assignmentDurationInSeconds;
 		thisHit.data.expires = details.expirationTime; extPandaUI.pandaCard[myId].updateAllCardInfo(thisHit);
-		await this.updateDbData(null, thisHit.data);
+		this.updateDbData(null, thisHit.data);
 		return assignment_id;
 	}
 	/**

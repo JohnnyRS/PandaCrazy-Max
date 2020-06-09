@@ -82,6 +82,26 @@ class PandaUI {
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
 				if (!err) {
+					let tabUniques = this.tabs.getUniques(), dbIds = Object.keys(bgPanda.dbIds);
+					console.log(JSON.stringify(dbIds));
+					for (const unique of tabUniques) {
+						let positions = this.tabs.getpositions(unique);
+						console.log(JSON.stringify(positions));
+						for (const dbId of positions) {
+							dbIds = arrayRemove(dbIds, dbId.toString());
+							const myId = bgPanda.getMyId(dbId);
+							this.addPandaToUI(myId, bgPanda.info[myId], null, true);
+						}
+					}
+					console.log(JSON.stringify(dbIds));
+					if (dbIds.length>0) {
+						for (const dbId of dbIds) {
+							const myId = bgPanda.getMyId(dbId);
+							bgPanda.info[myId].tabUnique = 0;
+							this.addPandaToUI(myId, bgPanda.info[myId], null, true);
+						}
+						console.log("We have orphans!");
+					}
 					bgPanda.useDefault = false;
 					bgPanda.nullData();
 				}
@@ -404,8 +424,8 @@ class PandaUI {
 	 * @param  {object} r - The object of the panda job that needs to be added.
 	 */
 	addPandaDB(r) {
-		let update = false;
-		if (!this.tabs.dataTabs.hasOwnProperty(r.tabUnique)) { r.tabUnique = this.tabs.tabsArr[0]; update = true; }
+		let update = false, tabUniques = this.tabs.getUniques();
+		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
 		bgPanda.addPanda(r, 0, false, {}, update, true);
 	}
 	/**
@@ -446,7 +466,7 @@ class PandaUI {
 			hitInfo.data.title = title; hitInfo.data.description = description; hitInfo.data.price = price;
 			this.runThisPanda(myId, tempDuration, tempGoHam);
 		} else {
-			if (tabUnique === -1) tabUnique = this.tabs.dataTabs[this.tabs.currentTab].id;
+			if (tabUnique === -1) tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
 			let dbInfo = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, limitFetches:limitFetches, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, assignedTime:null, expires:null, dateAdded: dated, tabUnique:tabUnique, positionNum:null, once:once, search:search, acceptLimit:acceptLimit, totalSeconds:0, totalAccepted:0 };
 			// save these values in a temporary array to come back to them after adding panda info in panda class
 			let newAddInfo = {'tempDuration':tempDuration, 'tempGoHam':tempGoHam, 'run':run};
@@ -520,7 +540,13 @@ class PandaUI {
 			$(e.target).data('double', 2);
 			console.log("OMG I am doubleclicked", $(e.target).data('myId'));
 		});
-		if (newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
+		$(`#pcm_hitReqName1_${myId}`).click((e) => {
+			$(`#pcm_hitReqName1_${myId}`).hide(); $(`#pcm_hitStats1_${myId}`).show();
+		});
+		$(`#pcm_hitStats1_${myId}`).click((e) => {
+			$(`#pcm_hitStats1_${myId}`).hide(); $(`#pcm_hitReqName1_${myId}`).show();
+		});
+		if (newAddInfo && newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
     return myId;
   }
   /**
@@ -528,9 +554,9 @@ class PandaUI {
    * @param  {number} myId 				- The unique ID for a panda job.
    * @param  {number} queueUnique - The timer unique ID that this hit was accepted from.
    * @param  {object} result			- The result brought back from the fetch method.
-   * @param  {object} data				- The saved data from the panda object just in case it gets deleted.
    */
   hitAccepted(myId, queueUnique, result) {
+		this.logTabs.queueTotal++;
     this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
     this.pandaGStats.addTotalAccepted();
     this.highlightEffect_card(myId);

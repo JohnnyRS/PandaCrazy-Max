@@ -134,16 +134,19 @@ function formatAMPM(theFormat, theDate, theTimeZone) {
  * @return {string}         - The converted time in a string format.
  */
 function getTimeLeft(seconds) {
-	let weeks = Math.floor(seconds/604800); seconds = seconds - (weeks*604800);
-	let days = Math.floor(seconds/86400); seconds = seconds - (days*86400);
-	let hours = Math.floor(seconds/3600); seconds = seconds - (hours*3600);
-	let minutes = Math.floor(seconds/60); seconds = seconds - (minutes*60);
-  let plusSeconds = seconds, returnString = "", displaying = 0;
-  if (weeks>0) { returnString += `${weeks} weeks `; displaying++; }
-  if (weeks>0 || days>0) { returnString += `${days} days `; displaying++; }
-  if (displaying<2 && (days>0 || hours>0) ) { returnString += `${hours} hours `; displaying++; }
-  if (displaying<2 && (hours>0 || minutes>0) ) { returnString += `${minutes} minutes `; displaying++; }
-  if (displaying<2) returnString += `${("0" + plusSeconds).slice(-2)} seconds`;
+  let returnString = "", displaying = 0;
+  if (seconds>=0) {
+    let weeks = Math.floor(seconds/604800); seconds = seconds - (weeks*604800);
+    let days = Math.floor(seconds/86400); seconds = seconds - (days*86400);
+    let hours = Math.floor(seconds/3600); seconds = seconds - (hours*3600);
+    let minutes = Math.floor(seconds/60); seconds = seconds - (minutes*60);
+    let plusSeconds = seconds;
+    if (weeks>0) { returnString += `${weeks} weeks `; displaying++; }
+    if (weeks>0 || days>0) { returnString += `${days} days `; displaying++; }
+    if (displaying<2 && (days>0 || hours>0) ) { returnString += `${hours} hours `; displaying++; }
+    if (displaying<2 && (hours>0 || minutes>0) ) { returnString += `${minutes} minutes `; displaying++; }
+    if (displaying<2) returnString += `${("0" + plusSeconds).slice(-2)} seconds`;
+  } else returnString = "0 seconds";
   return returnString.trim();
 }
 /**
