@@ -38,10 +38,12 @@ class LogTabsClass {
    * Setter to change the total amount of hits in queue. If changed then do skipped check on jobs.
 	 * @param {bool} v - Set the total number of hits in queue.
 	 */											
-	set queueTotal(v) { if (v !== this._queueTotal) {
-    this._queueTotal = v;
-    bgPanda.doNewChecks();
-  } }
+	set queueTotal(v) {
+    if (v !== this._queueTotal) {
+      this._queueTotal = v;
+      bgPanda.doNewChecks();
+    }
+  }
   /**
    * Prepare the tabs on the bottom and placing the id names in an array.
    * @async          - To wait for the tabs to be prepared and displayed from the database.

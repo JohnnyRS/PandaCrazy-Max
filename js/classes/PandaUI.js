@@ -18,11 +18,9 @@ class PandaUI {
 		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database
 		this.collectStore = "collectionStore";	// Name for collection times storage in database
 		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database
-		this.dbStats = new DatabaseClass( this.dbStatsName, 1); // The stat database for logging of panda stats.
-		chrome.runtime.onMessage.addListener( (request, sender) => { 	// used for external add buttons
-			if (request.command.substring(0, 3)==="add") { this.addFromExternal(request); }
-		});
+		this.dbStats = new DatabaseClass(this.dbStatsName, 1); // The stat database for logging of panda stats.
 		this.openStatsDB(); // Open the database first.
+		this.listener = new ListenerClass();
 	}
 	/**
    * Gets the total hits in the queue.
@@ -187,10 +185,10 @@ class PandaUI {
    * @param  {string} [whyStop=null]	 - The reason why this panda is stopping.
    * @param  {string} [newBgColor=""]	 - The new background color of the panda card.
    */
-  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor="") {
+  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor="") { console.log(whyStop);
     if (stopEffect) this.stopEffect_card(myId); 
     if (newBgColor!=="") {
-      $(`#pcm_pandaCard_${myId}`).data("previousColor1", $(`#pcm_pandaCard_${myId}`)
+      $(`#pcm_pandaCard_${myId}`).data("previousColor1", $(`#pcm_pandaCard_${myId}`).data('stopped',whyStop)
       .css("background-color")).css("background-color", newBgColor);
     }
 		if (stopEffect) this.highlightEffect_card(myId,"stop",7500);
@@ -291,16 +289,17 @@ class PandaUI {
 	async stopCollecting(myId, whyStop=null, deleteData=true) {
 		const hitInfo = bgPanda.info[myId];
 		if (whyStop === 'manual') this.pandaCard[myId].collectTipChange('');
-    bgPanda.stopCollecting(myId, whyStop);
 		if (this.pandaStats[myId].collecting) this.pandaGStats.subCollecting();
 		const theStats = this.pandaStats[myId].stopCollecting();
 		hitInfo.data.totalSeconds += theStats.seconds; hitInfo.data.totalAccepted += theStats.accepted;
+		const hitData = Object.assign({}, hitInfo.data);
+    bgPanda.stopCollecting(myId, hitData, whyStop);
 		$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOn").addClass("pcm_buttonOff");
 		$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOn").addClass("pcm_buttonOff");
 		$(`#pcm_hamButton_${myId}`).removeClass("pcm_delayedHam");
 		const previousColor = $(`#pcm_pandaCard_${myId}`).data("previousColor");
 		if (previousColor && !hitInfo.skipped) $(`#pcm_pandaCard_${myId}`).stop(true,true).removeData("previousColor").animate({"backgroundColor":previousColor},{duration:1000});
-		await bgPanda.updateDbData(myId, hitInfo.data);
+		await bgPanda.updateDbData(myId, hitData);
 		this.logTabs.removeFromStatus(myId);
 		if (deleteData && !hitInfo.skipped) bgPanda.info[myId].data = null;
 		hitInfo.queueUnique = null; hitInfo.autoTGoHam = "off";
@@ -412,12 +411,13 @@ class PandaUI {
 	 * @param  {object} msg - The message object from the external source.
 	 */
 	addFromExternal(msg) {
-		// msg = object data for a panda job from external scripts
-		const search = (msg.command==="addSearchJob" || msg.command==="addSearchOnceJob") ? "gid" : null;
-		const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
-		const run = (msg.command!=="addOnlyJob"); // Run this job after adding
-		const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
-		this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, 0, false, 0, 0, 0, -1, false, "", "", run, true, duration, 4000);
+		if (msg.groupId !== '' && msg.reqId !== '') {
+			const search = (msg.command==="addSearchJob" || msg.command==="addSearchOnceJob") ? "gid" : null;
+			const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
+			const run = (msg.command!=="addOnlyJob"); // Run this job after adding
+			const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
+			this.addPanda(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price, once, search, 0, 0, 0, 0, false, 0, 0, 0, -1, false, "", "", run, true, duration, 4000);
+		}
 	}
 	/**
 	 * Add panda from the database.
@@ -497,16 +497,19 @@ class PandaUI {
 		})
 		$(`#pcm_collectButton_${myId}, #pcm_collectButton1_${myId}`).click((e) => {
 			const theButton = $(e.target).closest(".btn");
-			if (theButton.is(".pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable")) {
-				pandaInfo.autoAdded = false; this.startCollecting(myId); }
-			else this.stopCollecting(myId, "manual");
+			let stopped = $(`#pcm_pandaCard_${myId}`).data('stopped');
+			if (stopped === "noQual" || stopped === "blocked") {
+				if (this.pandaStats[myId].collecting) this.stopCollecting(myId, "manual");
+			} else if (theButton.is(".pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable")) {
+				pandaInfo.autoAdded = false; this.startCollecting(myId, false);
+			} else this.stopCollecting(myId, "manual");
 		});
 		if (pandaInfo.data.search && loaded) this.searchDisabled(myId);
 		$(`#pcm_hamButton_${myId}, #pcm_hamButton1_${myId}`).click((e) => { 
 			const targetBtn = $(e.target).closest(".btn");
 			if (targetBtn.data("longClicked")) { targetBtn.removeData("longClicked"); targetBtn.css({"background-color": "", "color": ""});}
 			else { this.hamButtonClicked(myId, targetBtn); }
-		}).mayTriggerLongClicks( { delay: 1200 }).on('longClick', (e) => {
+		}).mayTriggerLongClicks({ delay: 1200 }).on('longClick', (e) => {
 				const targetBtn = $(e.target).closest(".btn");
 				targetBtn.data("longClicked",true);
 				if (targetBtn.hasClass("pcm_delayedHam")) {

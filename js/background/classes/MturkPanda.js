@@ -28,6 +28,7 @@ class MturkPanda extends MturkClass {
 		this.info = {};													// Object of panda info.
     this.pandaUrls = [];										// Array of panda objects for a panda with preview and accept links.
 		this.pandaSkipped = [];									// List of all panda's being skipped because of limits.
+		this.pandaSkippedData = {};							// List of all panda data which are being skipped.
 		this.queueAdds = {};										// Object of panda accepted hits so it can limit number of accepts.
 		this.loggedOff = false;									// Are we logged off from mturk?
 		this.resultsBack = true;
@@ -257,17 +258,16 @@ class MturkPanda extends MturkClass {
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			info.queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
 				this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle
-			}, (myId) => {
-				const info = this.info[myId];
-				extPandaUI.stopCollecting(myId, null, false); // Do after when timer is removed from queue
-				if (info.data.search!==null && (
-						(info.data.once && extPandaUI.pandaStats[myId].accepted.value==0) || !info.data.once)) {
+			}, async (myId) => {
+				const info = this.info[myId], hitData = Object.assign({}, info.data);
+				await extPandaUI.stopCollecting(myId, null, false); // Do after when timer is removed from queue
+				if (hitData.search!==null && (
+						(hitData.once && extPandaUI.pandaStats[myId].accepted.value==0) || !hitData.once)) {
 					extPandaUI.searchingNow(myId);
 					mySearch.startSearching();
-					let value = (info.data.search === "gid") ? info.data.groupId : info.data.reqId;
-					mySearch.addTrigger(info.data.search, value, {"name":info.data.title, "duration":tempDuration, "once":info.data.once, "limitNumQueue":info.data.limitNumQueue, "limitTotalQueue":info.data.limitTotalQueue, "limitFetches":info.data.limitFetches, "autoGoHam":false, goHamDuration:0, "tempGoHam":tempGoHam, "disabled":false, "from":"pandaUI"});
-				}
-				this.info[myId].data = null;
+					let value = (hitData.search === "gid") ? hitData.groupId : hitData.reqId;
+					mySearch.addTrigger(hitData.search, value, {"name":hitData.title, "duration":tempDuration, "once":hitData.once, "limitNumQueue":hitData.limitNumQueue, "limitTotalQueue":hitData.limitTotalQueue, "limitFetches":hitData.limitFetches, "autoGoHam":false, goHamDuration:0, "tempGoHam":tempGoHam, "disabled":false, "from":"pandaUI"});
+				} else this.info[myId].data = null;
 			}, goHamStart, info.data.duration, tempDuration, tempGoHam, info.skipped);
 			if (info.data.search!==null) extPandaUI.searchCollecting(myId); // mark panda as a search job collecting
 			this.sendStatusToSearch(myId,true);
@@ -285,17 +285,17 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId					 - The unique ID for a panda job.
 	 * @param  {string} [whyStop=null] - Reason why collecting is stopping.
 	 */
-	stopCollecting(myId, whyStop=null) {
+	stopCollecting(myId, hitData, whyStop=null) {
 		let info = this.info[myId], queueUnique = info.queueUnique;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
-		if (info.data.search!==null) {
-			if (whyStop==="once" || whyStop==="Daily Accept Limit" || whyStop==="Fetched Limit" || whyStop==="manual") {
-				let value = (info.data.search === "gid") ? info.data.groupId : info.data.reqId;
-				mySearch.disableTrigger(info.data.search,value); // Mark this search trigger disabled on search page
+		if (hitData.search!==null) {
+			if (["once","Daily Accept Limit","Fetched Limit","manual","noQual","blocked"].includes(whyStop)) {
+				let value = (hitData.search === "gid") ? hitData.groupId : hitData.reqId;
+				mySearch.disableTrigger(hitData.search, value); // Mark this search trigger disabled on search page
 				extPandaUI.searchDisabled(myId); // Mark this search job as disabled here
 			}
 		}
-		this.sendStatusToSearch(myId,false); // Tell search page that this panda is not collecting
+		this.sendStatusToSearch(myId,false); // Tell search page that this panda is not collecting.
 	}
 	/**
 	 * Add a panda to the panda UI and save to database if it wasn't saved before.
@@ -327,17 +327,17 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} deleteDB - Should panda be deleted from database?
 	 */
 	async removePanda(myId, deleteDB) {
-		this.stopCollecting(myId, null);
-		const pandaInfo = this.info[myId], gId = pandaInfo.data.groupId;
+		const hitInfo = this.info[myId], hitData = Object.assign({}, hitInfo.data), gId = hitData.groupId;
+		this.stopCollecting(myId, hitData, null);
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId);
 		if (this.pandaGroupIds[gId].length > 1) { this.pandaGroupIds[gId] = arrayRemove(this.pandaGroupIds[gId],myId); }
 		else delete this.pandaGroupIds[gId];
-		if (pandaInfo.data.search!==null) {
-			const value = (pandaInfo.data.search==="gid") ? pandaInfo.data.groupId : pandaInfo.data.reqId;
-			mySearch.removeTrigger(pandaInfo.data.search, value);
+		if (hitData.search!==null) {
+			const value = (hitData.search==="gid") ? gId : hitData.reqId;
+			mySearch.removeTrigger(hitData.search, value);
 		}
-		if (deleteDB) await this.deleteDbData(myId);
-		delete this.dbIds[pandaInfo.dbId];
+		if (deleteDB) this.deleteDbData(myId);
+		delete this.dbIds[hitInfo.dbId];
 		this.info[myId].data = null; delete this.info[myId]; delete this.pandaUrls[myId];
 	}
 	/**
@@ -384,6 +384,7 @@ class MturkPanda extends MturkClass {
 				extPandaUI.cardEffectPreviousColor(myId, true, "#ffa691");
 				pandaTimer.hamOff(thisHit.queueUnique); // Make sure go ham is off if this panda was going ham.
 				this.pandaSkipped.push(myId); thisHit.skipped = true;
+				this.pandaSkippedData[myId] = Object.assign({}, thisHit.data);
 				pandaTimer.skipThis(thisHit.queueUnique);
 				extPandaUI.pandaCard[myId].collectTipChange(`<br><strong>Skipping because ${skipIt}</strong>`, true);
 				return true;
@@ -395,16 +396,20 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId - The unique ID for a panda job.
 	 * @return {bool}				 - True if this hit is being unskipped now.
 	 */
-	checkSkipped(myId) {
-		const thisHit = this.info[myId], data = thisHit.data, hits = myQueue.totalResults(null, data.groupId);
-		let unskip = false;
-		if ( (Number(data.limitNumQueue) === 0) || (data.limitNumQueue > 0 && hits < data.limitNumQueue) ) unskip=true;
-		if ( (Number(data.limitTotalQueue) === 0) || (data.limitTotalQueue > 0 && extPandaUI.getQueueTotal() < data.limitTotalQueue) ) unskip=true;
-		else if (data.limitTotalQueue > 0) unskip=false;
+	checkSkipped(myId, newData=null) {
+		if (newData) this.pandaSkippedData[myId] = newData;
+		const thisHit = this.info[myId], data = this.pandaSkippedData[myId];
+		const hits = myQueue.totalResults(null, data.groupId);
+		let unskip = true;
+		if (data.limitTotalQueue > 0 && extPandaUI.getQueueTotal() >= data.limitTotalQueue) unskip = false;
+		if (unskip && data.limitNumQueue > 0 && hits >= data.limitNumQueue) unskip=false;
 		if (unskip) {
 			extPandaUI.cardEffectPreviousColor(myId,false);
 			pandaTimer.unSkipThis(thisHit.queueUnique); // Unskip this panda in timer.
-			if (this.pandaSkipped.includes(myId)) this.pandaSkipped = arrayRemove(this.pandaSkipped, myId);
+			if (this.pandaSkipped.includes(myId)) {
+				this.pandaSkipped = arrayRemove(this.pandaSkipped, myId);
+				delete this.pandaSkippedData[myId];
+			}
 			thisHit.skipped = false; // This hit not skipped
 			extPandaUI.pandaCard[myId].collectTipChange('');
 			if (!extPandaUI.pandaStats[myId].collecting) thisHit.data = null;
@@ -437,7 +442,7 @@ class MturkPanda extends MturkClass {
 		if (stopIt!==null) {
 			extPandaUI.stopItNow(myId, false, stopIt);
 			extPandaUI.pandaCard[myId].collectTipChange(`<br><strong>Stopped for ${stopIt}</strong>`, true);
-		} // Stop this panda if needs to be stopped by limits.
+		}
 		return stopIt;
 	}
 	/**
@@ -461,7 +466,7 @@ class MturkPanda extends MturkClass {
 	/**
 	 * When something new is in queue then check skipped hits to see if they can be unskipped.
 	 */
-	doNewChecks() {
+	doNewChecks() { console.log(this.pandaSkipped.length,this.skippedDoNext);
 		if (this.pandaSkipped.length && !this.skippedDoNext) goNext(0, this.pandaSkipped.length, this);
 		if (this.tempPaused && extPandaUI.getQueueTotal() < 25) {
 			pandaTimer.paused = false; this.tempPaused = false;
@@ -472,12 +477,14 @@ class MturkPanda extends MturkClass {
 		 * @param  {number} count  - The current counter for next skipped hit to check.
 		 * @param  {number} length - The length of the skipped hit array to limit recursion.
 		 */
-		function goNext(count, length, thisPanda) {
-			const nextSkipped = thisPanda.pandaSkipped.shift();
-			thisPanda.skippedDoNext = true;
-			if (!thisPanda.checkSkipped(nextSkipped)) thisPanda.pandaSkipped.push(nextSkipped);
-			if (count<=length && thisPanda.pandaSkipped.length>0) setTimeout( goNext, 200, ++count, length, thisPanda );
-			else thisPanda.skippedDoNext = false;
+		function goNext(count, length, thisPanda) { console.log(count,length);
+			if (count<length) {
+				const nextSkipped = thisPanda.pandaSkipped.shift();
+				thisPanda.skippedDoNext = true;
+				if (!thisPanda.checkSkipped(nextSkipped)) thisPanda.pandaSkipped.push(nextSkipped);
+				if (thisPanda.pandaSkipped.length>0) setTimeout( goNext, 200, ++count, length, thisPanda );
+				else { thisPanda.skippedDoNext = false; delete thisPanda.pandaSkippedData[nextSkipped]; }
+			} else { thisPanda.skippedDoNext = false; }
 		}
 }
 	/**
@@ -531,9 +538,9 @@ class MturkPanda extends MturkClass {
 					} else if (result.mode === "noMoreHits") {
 						extPandaUI.pandaGStats.addTotalPandaNoMore(); extPandaUI.pandaStats[myId].addNoMore();
 					} else if (result.mode === "noQual" && stopped===null) {
-						console.log("Not qualified"); extPandaUI.stopItNow(myId, true, stopped, "#DDA0DD");
+						console.log("Not qualified"); extPandaUI.stopItNow(myId, true, "noQual", "#DDA0DD");
 					} else if (result.mode === "blocked") {
-						console.log("You are blocked"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f");
+						console.log("You are blocked"); extPandaUI.stopItNow(myId, true, "blocked", "#575b6f");
 					} else if (result.mode === "notValid") {
 						console.log("Group ID not found"); extPandaUI.stopItNow(myId, true, stopped, "#575b6f");
 					} else if (result.mode === "unknown") {

@@ -208,7 +208,7 @@ class PandaCard {
       this.updateAllCardInfo(hitInfo);
       pandaUI.logTabs.updateLogStatus(null, this.myId, 0, hitInfo.data);
       modal.closeModal();
-      if (hitInfo.skipped) bgPanda.checkSkipped(this.myId);
+      if (hitInfo.skipped) bgPanda.checkSkipped(this.myId, hitInfo.data);
       if (!pandaUI.pandaStats[this.myId].collecting) hitInfo.data = null;
       if (successFunc!==null) successFunc(changes);
     }, "invisible", "No", null, "visible btn-sm", "Cancel");

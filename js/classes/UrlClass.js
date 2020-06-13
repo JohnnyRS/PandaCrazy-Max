@@ -24,10 +24,10 @@ class UrlClass {
 		try {
 			const response = await fetch(this.url, { credentials: `include` });
 			let thisResult = "ok", dataType = "", theData=null;
-			if (response.ok || response.status === 422 || response.status === 429 || response.status === 400) {
+			if (response.ok || response.status === 422 || response.status === 429 || response.status === 400 || response.status === 503) {
 				// sorts response into json or text
 				const type = response.headers.get('Content-Type');
-				if (response.status === 400) thisResult = "bad.request";
+				if (response.status === 400 || response.status === 503 ) thisResult = "bad.request";
 				if (type.includes("application/json")) {
 					theData = await response.json(); dataType = "json";
 				}
@@ -35,8 +35,7 @@ class UrlClass {
 					theData = await response.text(); dataType = "text";
 				}
 				return { type: `${thisResult}.${dataType}`, url: response.url, status: response.status, data: theData };
-			}
-			else {
+			} else {
 				console.log("Fetch responses was not OK.");
 				const type = response.headers.get('Content-Type'); console.log(type);
 				if (type.includes("application/json")) console.log(await response.json());
@@ -46,7 +45,7 @@ class UrlClass {
 		}
 		catch (e) {
 			console.log("Got an error when trying to fetch the url.");
-			return null;
+			return { type: "caught.error", url: '', status: null, data: null };
 		}
 	}
 }

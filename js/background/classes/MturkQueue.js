@@ -120,6 +120,8 @@ class MturkQueue extends MturkClass {
             this.queueAdd = [];
             this.sendQueueResults();
           }
+        } else if (result.type === 'caught.error') {
+          console.log('Mturk might be slow right now. Received a service unavailable error.')
         }
       }
     });
