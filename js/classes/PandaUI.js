@@ -75,7 +75,7 @@ class PandaUI {
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			// Use initializing default if database wasn't created yet.
-			if (bgPanda.useDefault) await this.addPanda("30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, 0, true, 4000);
+			if (bgPanda.useDefault) await this.addPanda("3SHL2XNU5XNTJYNO5JDRKKP26VU0PY", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01", false, null, 12, 0, 0, 0, true, 4000, _, _, _, _, _, _, _, _, _, _, true);
 			else err = await bgPanda.getAllPanda(); // Not using initializing default value so load from database
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
@@ -86,9 +86,11 @@ class PandaUI {
 						let positions = this.tabs.getpositions(unique);
 						console.log(JSON.stringify(positions));
 						for (const dbId of positions) {
-							dbIds = arrayRemove(dbIds, dbId.toString());
 							const myId = bgPanda.getMyId(dbId);
-							this.addPandaToUI(myId, bgPanda.info[myId], null, true);
+							dbIds = arrayRemove(dbIds, dbId.toString());
+							if (bgPanda.info.hasOwnProperty(myId)) {
+								this.addPandaToUI(myId, bgPanda.info[myId], null, true);
+							} else  this.tabs.removePosition(unique, dbId);
 						}
 					}
 					console.log(JSON.stringify(dbIds));
@@ -185,7 +187,7 @@ class PandaUI {
    * @param  {string} [whyStop=null]	 - The reason why this panda is stopping.
    * @param  {string} [newBgColor=""]	 - The new background color of the panda card.
    */
-  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor="") { console.log(whyStop);
+  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor="") {
     if (stopEffect) this.stopEffect_card(myId); 
     if (newBgColor!=="") {
       $(`#pcm_pandaCard_${myId}`).data("previousColor1", $(`#pcm_pandaCard_${myId}`).data('stopped',whyStop)
@@ -337,26 +339,6 @@ class PandaUI {
 		}, null, () => { jobsArr.length = 0; $(".pcm_deleteButton").css("background-color", ""); });
 	}
 	/**
-	 * When panda's are coming in externally too fast they need to delay collecting for 1600 milliseconds each.
-	 * This is a recursive method which will go through the delayed hitqueue and began collecting one by one.
-	 * @param  {number} [diff=null] - The difference of time since the last panda was added.
-	 */
-	nextInDelayedQueue(diff=null) {
-		if (this.hitQueue.length>0) {
-			if (diff === null) diff = new Date().getTime() - this.lastAdded;
-			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
-				const obj = this.hitQueue.shift();
-				this.lastAdded = new Date().getTime();
-				bgPanda.info[obj.myId].data.autoAdded = true;
-				bgPanda.info[obj.myId].hitsAvailable = obj.hitsAvailable;
-				this.pandaCard[obj.myId].updateAllCardInfo(bgPanda.info[obj.myId]);
-				this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
-				if (this.hitQueue.length===0) { this.lastAdded = null; this.delayedTimeout = null; }
-				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
-			} else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
-		} else this.delayedTimeout = null;
-	}
-	/**
 	 * Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
 	 * @param  {number} myId 						- The unique ID for a panda job.
@@ -383,6 +365,26 @@ class PandaUI {
 	 * @param  {number} myId - The unique ID for a panda job.
 	 */
 	searchingNow(myId) { this.pandaCard[myId].pandaSearchingNow(); }
+	/**
+	 * When panda's are coming in externally too fast they need to delay collecting for 1600 milliseconds each.
+	 * This is a recursive method which will go through the delayed hitqueue and began collecting one by one.
+	 * @param  {number} [diff=null] - The difference of time since the last panda was added.
+	 */
+	nextInDelayedQueue(diff=null) {
+		if (this.hitQueue.length>0) {
+			if (diff === null) diff = new Date().getTime() - this.lastAdded;
+			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
+				const obj = this.hitQueue.shift();
+				this.lastAdded = new Date().getTime();
+				bgPanda.info[obj.myId].data.autoAdded = true;
+				bgPanda.info[obj.myId].hitsAvailable = obj.hitsAvailable;
+				this.pandaCard[obj.myId].updateAllCardInfo(bgPanda.info[obj.myId]);
+				this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
+				if (this.hitQueue.length===0) { this.lastAdded = null; this.delayedTimeout = null; }
+				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
+			} else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
+		} else this.delayedTimeout = null;
+	}
 	/**
 	 * Run this panda after adding it to panda class with a temporary duration and temporary go ham duration.
 	 * @param  {number} myId 				 - The unique ID for a panda job.
@@ -428,8 +430,7 @@ class PandaUI {
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
 		bgPanda.addPanda(r, 0, false, {}, update, true);
 	}
-	/**
-	 * Add a new panda job with lot of information and options to the panda area and database.
+	/** Add a new panda job with lot of information and options to the panda area and database.
 	 * Search class uses this to add hits.
 	 * @async																 - To wait for the data to be loaded from database if needed.
 	 * @param  {string} groupId							 - The group ID for this panda.
@@ -456,8 +457,9 @@ class PandaUI {
 	 * @param  {bool} [external=false]			 - Did this panda job get added from an external source?
 	 * @param  {number} [tempDuration=0]		 - The temporary duration to collect on the first collection run.
 	 * @param  {number} [tempGoHam=0]				 - The temporary duration to go ham for on the first collection run.
+	 * @param  {bool}	[loaded=false]				 - Was this panda loaded? Used for default values.
 	 */
-	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, limitFetches=0, autoGoHam=false, hamDuration=0, duration=0, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=0, tempGoHam=0) {
+	async addPanda(groupId, description, title, reqId, reqName, price, once, search, hitsAvailable=0, limitNumQueue=0, limitTotalQueue=0, limitFetches=0, autoGoHam=false, hamDuration=0, duration=0, acceptLimit=0, tabUnique=-1, autoAdded=false, friendlyTitle="", friendlyReqName="", run=false, external=false, tempDuration=0, tempGoHam=0, loaded=false) {
 		const dated = new Date().getTime(); // get the date that this job was added.
 		if (external && bgPanda.pandaGroupIds.hasOwnProperty(groupId)) {
 			const myId=bgPanda.pandaGroupIds[groupId][0], hitInfo=bgPanda.info[myId];
@@ -470,7 +472,7 @@ class PandaUI {
 			let dbInfo = { groupId:groupId, description:description, title:title, reqId:reqId, reqName:reqName, price:price, limitNumQueue:limitNumQueue, limitTotalQueue:limitTotalQueue, limitFetches:limitFetches, autoGoHam:autoGoHam, hamDuration:hamDuration, duration:duration, friendlyTitle:friendlyTitle, friendlyReqName:friendlyReqName, assignedTime:null, expires:null, dateAdded: dated, tabUnique:tabUnique, positionNum:null, once:once, search:search, acceptLimit:acceptLimit, totalSeconds:0, totalAccepted:0 };
 			// save these values in a temporary array to come back to them after adding panda info in panda class
 			let newAddInfo = {'tempDuration':tempDuration, 'tempGoHam':tempGoHam, 'run':run};
-			await bgPanda.addPanda(dbInfo, hitsAvailable, autoAdded, newAddInfo);
+			await bgPanda.addPanda(dbInfo, hitsAvailable, autoAdded, newAddInfo, false, loaded);
 		}
 	}
 	/**

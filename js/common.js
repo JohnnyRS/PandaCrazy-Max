@@ -1,4 +1,5 @@
 let todayDay = moment().date();
+const _ = undefined;
 
 /**
  * Creates a Jquery input object and returns it and appends to element if appendHere is passed.
