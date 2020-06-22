@@ -1,4 +1,4 @@
-<h1 align="center">PandaCrazy Chrome Extension Ver. 0.8.2 for Amazon Mturk</h1>
+<h1 align="center">PandaCrazy Chrome Extension for Amazon Mturk</h1>
 
 *This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.*
 
@@ -18,4 +18,4 @@ Some menus still don't work. Options haven't all been tested yet. Accepted and s
 
 This is being built by the newest ECMAScript, jquery, jquery UI and bootstrap. Coding in Visual Studio Code.
 
-At this time this only works in Chrome in developer mode!
+At this time this works in Chrome and new microsoft edge in developer mode!

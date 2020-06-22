@@ -60,6 +60,8 @@ html, body { height: 100%; }
 .pcm_pandaCard.pcm_oneLine .pcm_hitStats { font-size:0.7em !important; font-weight:600 !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_hitButton { margin:0 1.5px 0 0 !important; padding: 0 0.4px 0.5px 0.4px !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_deleteButton { margin-left:4px !important; padding: 0 2px 0.5px 2px !important; }
+.pcm_pandaCard .pcm_hitStats .ridsearch { color:mediumblue; }
+.pcm_pandaCard .pcm_hitStats .gidsearch { color:indigo; }
 .card-text { line-height: 1.0 !important; padding-left:1px !important; }
 .pcm_checkbox { height:11px; }
 .pcm_nameGroup, .pcm_priceGroup {

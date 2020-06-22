@@ -287,6 +287,7 @@ class ModalClass {
     createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
     createCheckBox(df, 'Start Collecting', 'pcm_startCollecting', '', true);
     createCheckBox(df, 'Collect Only Once', 'pcm_onlyOnce', '');
+    createCheckBox(df, 'Search Job', 'pcm_searchJob', '');
     createInput(df, ' pt-3 border-top border-info', 'pcm_formReqName', 'Requester Name: ', 'default: group ID shown');
     createInput(df, '', 'pcm_formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2');
     createInput(df, '', 'pcm_formAddTitle', 'Title: ', 'default: group ID shown');
@@ -311,13 +312,14 @@ class ModalClass {
         $('label[for="pcm_formAddGroupID"]').css('color', 'red');
         $(div).find('.pcm_inputError:first').html('Must fill in GroupID or URL!').data('gIdEmpty',true);
       } else if (groupVal.match(/^[0-9a-zA-Z]+$/) || groupVal.includes('://')) {
-        let groupId = null, reqId = null;
+        let groupId = null, reqId = null, reqSearch = false;
         if (groupVal.includes('://')) [groupId, reqId] = bgPanda.parsePandaUrl(groupVal);
-        else groupId = groupVal;
+        else if (groupVal.match(/^[^Aa]/)) groupId = groupVal;
+        else { reqId = groupVal; reqSearch = true; }
+        if (reqId && !reqSearch) { groupId = reqId; reqSearch = true; }
+        let title = ($('#pcm_formAddTitle').val()) ? $('#pcm_formAddTitle').val() : groupId;
         const reqName = ($('#pcm_formReqName').val()) ? $('#pcm_formReqName').val() : groupId;
-        reqId = (reqId) ? reqId : $('#pcm_formAddReqID').val();
-        const title = ($('#pcm_formAddTitle').val()) ? $('#pcm_formAddTitle').val() : groupId;
-        const description = ($('#pcm_formAddDesc').val()) ? $('#pcm_formAddDesc').val() : groupId;
+        const desc = ($('#pcm_formAddDesc').val()) ? $('#pcm_formAddDesc').val() : groupId;
         const pay = ($('#pcm_formAddPay').val()) ? $('#pcm_formAddPay').val() : '0.00';
         const startNow = $('#pcm_startCollecting').is(':checked');
         const once = $('#pcm_onlyOnce').is(':checked'); 
@@ -326,11 +328,13 @@ class ModalClass {
           $('label[for="pcm_formAddGroupID"]').css('color', 'yellow');
           $(div).find('.pcm_inputError:first').html('GroupID already added. Still want to add?').data('gIdDup',true);
           $('.modal-footer .pcm_modalSave:first').html('YES! Add new Panda Info');
-        } else if (groupId) {
-          pandaUI.addPanda(groupId, description, title, reqId, reqName, pay, once, null, 0, 0, 0, 0, false, 4000, 0, 0, currentTab, false, '', '', startNow);
+        } else if ( (groupId && !reqSearch) || reqId) {
+          title = (reqId) ? '--( Requester ID Search )--' : title;
+          let search = (reqId) ? 'rid' : ((groupId && $('#pcm_searchJob').is(':checked')) ? 'gid' : null);
+          let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
+          let opt = optObject(once, search,_,_,_,_,_,_, (reqId) ? 0 : 4000);
+          pandaUI.addPanda(data, opt, false, startNow,_,_, (reqId) ? 4000 : 0);
           this.closeModal();
-        } else if (reqId) {
-          console.log("this is a search job");
         } else {
           $('label[for="pcm_formAddGroupID"]').css('color', 'red');
           $(div).find('.pcm_inputError:first').html('Invalid Group ID or URL').data('gIdInvalid',true);

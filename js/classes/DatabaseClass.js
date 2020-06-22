@@ -15,6 +15,15 @@ class DatabaseClass {
     this.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   }
   /**
+   */
+  testDB() {
+    return new Promise( (resolve, reject) => {
+      let request = this.indexedDB.open( this.dbName, this.dbVersion );
+      request.onsuccess = () => { if (request.result.objectStoreNames.length === 0) { request.result.close(); reject('bad'); } else resolve('good'); };
+      request.onerror = () => { request.result.close(); reject('bad'); }
+    });
+  }
+  /**
    * Opens this database using dbName and dbVersion properties of class.
    * Assigns db property to opened database request.
    * @param {bool} deleteFirst - Delete database before opening or creating it?

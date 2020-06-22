@@ -27,6 +27,7 @@ class MturkHitSearch extends MturkClass {
 		this.onlyQualified = true;      					// Show only qualified hits in search results.
 		this.onlyMasters = false;       					// Show only master hits in search results.
 		this.minReward = 0.01;          					// The minimum reward will be $0.01 by default.
+		this.resultsBack = true;
 		this.json = true;               					// Format json in url or not.
 		this.loggedOff = false;         					// Are we logged off from mturk?
     this.sort = "updated_desc";     					// Sort by updated_desc by default.
@@ -93,9 +94,10 @@ class MturkHitSearch extends MturkClass {
 	startSearching() {
 		if (!this.timerUnique) { // Make sure it's not already searching.
 			this.searchGStats.searchingOn();
-			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed) => { 
-				this.goFetch(this.searchUrl, timerUnique, elapsed); // do this every cycle
-			}, () => { this.stopSearching(); }); // do after when timer is removed from queue
+			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed) => {
+				if (this.liveTriggers.length > 0) this.goFetch(this.searchUrl, timerUnique, elapsed);
+				else this.stopSearching();
+			});
 		}
 	}
 	/**
@@ -106,6 +108,8 @@ class MturkHitSearch extends MturkClass {
 			searchTimer.deleteFromQueue(this.timerUnique);
 			this.timerUnique = null;
 			this.searchGStats.searchingOff();
+			this.originRemove("pandaUI");
+			myPanda.searchingStopped();
 		}
 	}
 	/**
@@ -120,7 +124,7 @@ class MturkHitSearch extends MturkClass {
 			else this.pandaCollecting = this.pandaCollecting.filter(item => item !== gId);
 			if (!info.disabled) {
 				info.tempDisabled = !status;
-				this.toggleDisabled(gId, this.triggerInfo["gid"][gId], true);
+				this.toggleDisabled(gId, this.triggerInfo['gid'][gId], true);
 			}
 		}
 	}
@@ -150,15 +154,18 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} triggerInfo	- The trigger object that found this panda item.
 	 */
 	sendToPanda(item, triggerInfo) {
-		if (extPandaUI) extPandaUI.addPanda(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, triggerInfo.once, null, item.assignable_hits_count, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, triggerInfo.limitFetches, triggerInfo.autoGoHam, triggerInfo.goHamDuration, 0, 0, -1, true, "", "", true, true, triggerInfo.duration, triggerInfo.tempGoHam);
-		}
+		let data = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count);
+		let opt = optObject(triggerInfo.once,_,_, triggerInfo.limitNumQueue, triggerInfo.limitTotalQueue, triggerInfo.limitFetches, _, triggerInfo.autoGoHam, triggerInfo.goHamDuration);
+		if (extPandaUI) extPandaUI.addFromSearch(data, opt, true, true, true, triggerInfo.duration, triggerInfo.tempGoHam);
+	}
 	/**
 	 * Check all live triggers for this item.
 	 * @param  {object} item - The hit item that needs to be checked for any trigger detection.
 	 * @return {void}				 - Sends back nothing.
 	 */
-	checkTriggers(item) {
-		for (const trigger of this.liveTriggers) {
+	checkTriggers(item, triggers=null) {
+		triggers = (triggers) ? triggers : this.liveTriggers;
+		for (const trigger of triggers) {
 			const idString = `[${item.hit_set_id}][${item.requester_id}]`;
 			const triggerInfo = this.triggerInfo[trigger.type][trigger.value];
 			if (trigger.type==="rid" && this.isGidBlocked(triggerInfo, item.hit_set_id)) { return null; }
@@ -168,6 +175,7 @@ class MturkHitSearch extends MturkClass {
 						console.log(`Found a trigger: ${triggerInfo.name} - ${item.assignable_hits_count} - ${item.hit_set_id} - ${item.creation_time}`);
 						this.sendToPanda(item,triggerInfo);
 						if (triggerInfo.once && trigger.type==="rid") this.requesterTempBlockGid(triggerInfo, item.hit_set_id);
+						if (triggerInfo.from === 'pandaUI') this.removeTrigger(trigger.type, trigger.value);
 					}
 				}
 			}
@@ -194,7 +202,7 @@ class MturkHitSearch extends MturkClass {
 				if (this.searchGStats.isSearchOn() && this.liveTriggers.length===0) this.stopSearching();
 			}
 		}
-	}
+}
 	/**
 	 * Checks this trigger to see if disabled status is equal to value passed and then toggle status.
 	 * @param  {bool} checkWithThis - Check if trigger disabled is equal to this boolean.
@@ -203,8 +211,8 @@ class MturkHitSearch extends MturkClass {
 	 */
 	checkTrigger(checkWithThis,type,value) {
 		const info = this.triggerInfo[type][value];
-		if (info.disabled === checkWithThis) {
-			this.toggleDisabled(value, info);
+		if (info.disabled === checkWithThis || info.tempDisabled === checkWithThis) {
+			this.toggleDisabled(value, info, info.tempDisabled);
 			if (extSearchUI) extSearchUI.updateTrigger(null,info,false);
 		}
 	}
@@ -237,26 +245,32 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} info	- The object with the information for this new trigger.
 	 * @return {number}				- Returns the unique id of this trigger.
 	 */
-	addTrigger(type, value, info) {
+	addTrigger(type, info) {
 		this.triggersAdded++;
-		info.tempDisabled = false; // tempDisabled is used for temporary disabling trigger if it's running in PandaCrazy
-		info.key1 = type; // key1 will be for the type of trigger
-		info.key2 = value; // key2 will be for the value of trigger
-		info.count = this.triggersAdded; // count will be the unique number for trigger
-		if (this.triggerInfo[type][value]) { this.enableTrigger(type, value); return null; }
-		this.triggerInfo[type][value] = Object.assign({}, info); // set up trigger info data with the info
-    const gid = (type==="gid") ? value : ""; // if trigger is a gid then get the gid value
-    const collectingPanda = (gid!=="" && this.pandaCollecting.includes(gid)); // is PandaCrazy collecting it?
-    if ( collectingPanda || info.disabled) { // is panda collecting it or is it disabled?
-      // disable trigger if it's disabled or already collecting in PandaCrazy
-      this.disabledTriggers.push({type:type, value:value}); // put this trigger in the disabled array
-      if (collectingPanda) info.tempDisabled = true; // set the disable temporary if PandaCrazy collecting it.
-    } else this.liveTriggers.push({type:type, value:value}); // enable the trigger right away.
+		let ridPanda = (type === 'rid' && info.from === 'pandaUI') ? true : false;
+		info.key1 = type; info.key2 = (type==='rid') ? info.rid : info.gid; info.count = this.triggersAdded;
+		info.tempDisabled = false; info.timerUnique = -1;
+		info.reqUrl = (type === 'rid') ? new UrlClass(`https://worker.mturk.com/requesters/${info.rid}/projects`) : null;
+		if (!info.hasOwnProperty('myId')) info.myId = -1; 
+		if (this.triggerInfo[type][info.key2]) { this.enableTrigger(type, info.key2); return null; }
+    const collectingPanda = (type === 'gid' && this.pandaCollecting.includes(info.gid));
+		if (collectingPanda || ridPanda) info.tempDisabled = true;
+		this.triggerInfo[type][info.key2] = Object.assign({}, info);
+    if (info.disabled || info.tempDisabled || ridPanda) { 
+			this.disabledTriggers.push({'type':type, 'value':info.key2});
+		} else this.liveTriggers.push({'type':type, 'value':info.key2});
 		if (extSearchUI) {
 			const index = Object.keys(this.triggerInfo[info.key1]).length;
-			extSearchUI.addToUI(this.triggerInfo[type][value], index);
-		} else if (!info.disabled) this.startSearching();
-		if (this.searchGStats.isSearchOn() && this.liveTriggers.length>0) this.startSearching();
+			extSearchUI.addToUI(this.triggerInfo[type][info.key2], index);
+		} else {
+			if (!info.disabled && !ridPanda) this.startSearching();
+			else if (!this.searchGStats.isSearchOn() && this.liveTriggers.length>0) this.startSearching();
+		}
+		if (ridPanda) {
+			info.timerUnique = searchTimer.addToQueue(info.key2, (timerUnique, elapsed, myId) => { 
+				this.goFetch(info.reqUrl, timerUnique, elapsed, myId);
+			});
+		}
 		return this.triggersAdded;
 	}
 	/**
@@ -279,7 +293,7 @@ class MturkHitSearch extends MturkClass {
 	openUI() {
 		Object.keys(this.triggerInfo).forEach( key => {
 			Object.keys(this.triggerInfo[key]).forEach( key2 => {
-				if (extSearchUI && this.triggerInfo[key][key2].from==="pandaUI") {
+				if (extSearchUI && this.triggerInfo[key][key2].from === "pandaUI") {
 					const index = Object.keys(this.triggerInfo[key]).length;
 					console.log(this.triggerInfo[key][key2],index);
 					extSearchUI.addToUI(this.triggerInfo[key][key2], index);
@@ -292,7 +306,7 @@ class MturkHitSearch extends MturkClass {
 	 * When a UI is closed this method will remove any triggers added from that UI.
 	 * @param  {string} [origin="searchUI"] - The UI that is being closed.
 	 */
-	closedUI(origin="searchUI") {
+	originRemove(origin="searchUI") {
 		Object.keys(this.triggerInfo).forEach( key => {
 			Object.keys(this.triggerInfo[key]).forEach( key2 => {
 				if (this.triggerInfo[key][key2].from===origin) this.removeTrigger(key, key2);
@@ -320,7 +334,7 @@ class MturkHitSearch extends MturkClass {
 		this.sort = (this.sorting.includes(sort)) ? sort : this.sorting[0];// set up sorting with passed value or default
 		this.json = json; this.pageSize = pageSize; this.onlyQualified = onlyQual;
 		this.onlyMasters = onlyMasters; this.minReward = minReward;
-		this.searchUrl = new UrlClass(this.createSearchUrl()); // let's set up search url object with search options
+		this.searchUrl = new UrlClass(this.createSearchUrl());
   }
   /**
 	 * Fetches the url for this search after timer class tells it to do so and handles mturk results.
@@ -329,12 +343,14 @@ class MturkHitSearch extends MturkClass {
    * @param  {number} queueUnique - Unique number for the job in timer queue.
    * @param  {number} elapsed			- Exact time it took for the panda timer to do next queue job.
    */
-  goFetch(objUrl, queueUnique, elapsed) {
+  async goFetch(objUrl, queueUnique, elapsed, myId) {
 		this.searchGStats.setSearchElapsed(elapsed); // Pass elapsed time to global search stats
-		if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
-    super.goFetch(objUrl).then( result => { // Go fetch this url and bring back results from a promise
-      if (!result) {
-        if (this.dError(1)) { console.error('Returned fetch result was a null.', JSON.stringify(objUrl)); }
+		if (myId === -1 || this.resultsBack) {
+			if (myId !== -1) this.resultsBack = false;
+			if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
+			const result = await super.goFetch(objUrl);
+			if (!result) {
+				if (this.dError(1)) { console.error('Returned fetch result was a null.', JSON.stringify(objUrl)); }
 			} else {
 				this.searchGStats.addTotalSearchFetched(); // Increment counter for total searches fetched
 				if (result.mode === "logged out" && queueUnique !== null) this.nowLoggedOff();
@@ -358,9 +374,26 @@ class MturkHitSearch extends MturkClass {
 						this.lastSearchIdentify.unshift(indentifyArr); // add new signatures to the beginning of the array
 						this.lastSearchIdentify = this.lastSearchIdentify.slice(0,50); // Remember last 50 signatures
 					}
+				} else if (result.type === "ok.text") {
+					const reactProps = $(result.data).find('.row.m-b-md div:eq(1)').data('react-props');
+					if (reactProps) {
+						let hitsData = reactProps.bodyData;
+						if (hitsData.length > 0) {
+							let requesterName = $(result.data).find('h1.m-b-md').text();
+							let pandaId = this.triggerInfo['rid'][myId];
+							if (requesterName !== '') myPanda.updateReqName(pandaId.myId, requesterName);
+							for (const hit of hitsData) {
+								this.checkTriggers(hit, [{'type':'rid', 'value':myId}])
+							}
+						}
+					}
+					searchTimer.deleteFromQueue(queueUnique);
+					this.enableTrigger('rid', myId);
+					if (!this.searchGStats.isSearchOn()) this.startSearching();
 				}
 			}
-    });
+			this.resultsBack = true;
+		}
   }
 	/**
 	 * Checks if this error is allowed to show depending on user options and class name.

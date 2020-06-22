@@ -77,13 +77,15 @@ class PandaCard {
   }
   /**
    * Create the status area for the panda card.
+   * @param  {object} hitInfo         - 
    * @param  {object} appendHere      - Append the status area to this element.
    * @param  {string} [oneLine=false] -
    */
-  createCardStatus(appendHere, oneLine=false) {
+  createCardStatus(hitInfo, appendHere, oneLine=false) {
     let element = (oneLine) ? 'span' : 'div';
     let one = (oneLine) ? '1' : '';
-    $(`<${element} class="pcm_hitStats mr-auto" id="pcm_hitStats${one}_${this.myId}"></${element}>`).html(`[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${this.myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${this.myId}"></span> ]`).css('cursor', 'default').hide().appendTo(appendHere)
+    let search = (hitInfo.search) ? ` (<span class='${hitInfo.search}search'>${hitInfo.search.toUpperCase()} search</span>)` : '';
+    $(`<${element} class="pcm_hitStats mr-auto" id="pcm_hitStats${one}_${this.myId}"></${element}>`).html(`[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${this.myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${this.myId}"></span> ]${search}`).css('cursor', 'default').hide().appendTo(appendHere)
   }
   /**
    * Create the button group area for the panda card.
@@ -92,20 +94,20 @@ class PandaCard {
    */
   createCardButtonGroup(hitInfo, appendHere) {
     const group = $(`<div class="card-text" id="pcm_buttonGroup_${this.myId}"></div>`).hide();
-    const textCollect = (hitInfo.data.search) ? "-Collecting-" : "Collect";
-    const classCollect = (hitInfo.data.search) ? "pcm_buttonOff pcm_searchCollect" : "pcm_buttonOff";
-    $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton ${classCollect} shadow-none" id="pcm_collectButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.collectTip}"></button>`).append(`<span>${textCollect}</span>`).appendTo(group);
-    if (!hitInfo.data.search) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.hamTip}"></button>`).append(`<span>GoHam</span>`).appendTo(group);
+    const textCollect = (hitInfo.search) ? "-Collecting-" : "Collect";
+    $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" id="pcm_collectButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.collectTip}"></button>`).append(`<span>${textCollect}</span>`).appendTo(group);
+    if (!hitInfo.search) $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.hamTip}"></button>`).append(`<span>GoHam</span>`).appendTo(group);
     $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.details}"></button>`).append(`<span>Details</span>`).appendTo(group);
     $(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.delete}"></button>`).append(`<span>X</span>`).appendTo(group);
     appendHere.append(group);
   }
   /**
    * Used to display a card with only one line for display purposes.
+   * @param  {object} hitInfo
    */
-  oneLineCard() {
+  oneLineCard(hitInfo) {
     const nameGroup = $(`<div class="pcm_nameGroup row w-90"></div>`).css('cursor', 'default').hide().append(`<span class="pcm_reqName col mr-auto px-1 text-truncate" id="pcm_hitReqName1_${this.myId}"></span>`);
-    this.createCardStatus(nameGroup, true);
+    this.createCardStatus(hitInfo, nameGroup, true);
     const buttonGroup = $(`<span class="d-flex pl-1 pcm_buttonGroup1" id="pcm_buttonGroup1_${this.myId}"></span>`).appendTo(nameGroup);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" type="button" id="pcm_collectButton1_${this.myId}"><span>C</span></button>`);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" type="button" id="pcm_hamButton1_${this.myId}"><span>H</span></button>`);
@@ -124,10 +126,10 @@ class PandaCard {
     const body = $(`<div class="card-body p-0"></div>`).appendTo(card);
     const text = $(`<div class="card-text p-0" id="output_${this.myId}">`).appendTo(body);
     $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${this.myId}"></span>`).css('cursor', 'pointer').data('myId',this.myId).data('double',0)).appendTo(text);
-    this.oneLineCard().appendTo(text);
+    this.oneLineCard(hitInfo).appendTo(text);
     $(`<div class="pcm_priceGroup"></div>`).hide().append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${this.myId}"></span>`).css('cursor', 'default')).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${this.myId}"></span>`)).appendTo(text);
     $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${this.myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').hide().appendTo(text);
-    this.createCardStatus(text);
+    this.createCardStatus(hitInfo, text);
     this.createCardButtonGroup(hitInfo, text);
     appendHere.append(card);
     card.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
@@ -175,8 +177,9 @@ class PandaCard {
    * Disable this search panda.
    */
   pandaDisabled() {
-    $(`#pcm_collectButton_${this.myId}`).html("-Disabled-").removeClass("pcm_searchOn")
-      .removeClass("pcm_searchCollect").addClass("pcm_searchDisable");
+    const collectB = $(`#pcm_collectButton_${this.myId}`);
+    if (!collectB.hasClass('pcm_searchCollect'))
+      collectB.html("-Disabled-").removeClass("pcm_searchOn").addClass("pcm_searchDisable");
   }
   /**
    * Adds a string to or changes the collect help tip.

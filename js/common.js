@@ -316,6 +316,39 @@ function isNewDay() {
   if (todayDay != day) { todayDay = day; return true; }
   else return false;
 }
+/** Creates and returns an object filled with data for a hit and default values set if needed.
+ * @param  {string} gid				 - The group ID for this panda.
+ * @param  {string} desc			 - The description for this panda.
+ * @param  {string} title			 - The title for this panda.
+ * @param  {string} rid				 - The requester ID for this panda.
+ * @param  {string} rN				 - The requester name for this panda.
+ * @param  {string} pay				 - The price for this panda.
+ * @param  {number} [hA=0]		 - The number of hits avaiable to collect in a batch?
+ * @param  {number} [aT=null]  - Time duration in seconds for this hit.
+ * @param  {string} [exp=null] - Time that this hit will expire from mturk.
+ * @param  {string} [fT=""]	   - The friendly title to use for this panda job.
+ * @param  {string} [fR=""]    - The friendly requester name to use for this panda job.
+ * @return {object}            - Object with all the data set or using default values.
+ */
+function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT='', fR='') {
+  return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':hA, 'assignedTime':aT, 'expires':exp, 'friendlyTitle':fT, 'friendlyReqName':fR};
+}
+/** Creates and returns an object for options of a hit and default values set if needed.
+ * @param  {bool} [once=false]	- Should this panda job only accept one hit?
+ * @param  {string} [srch=null] - Is this a search job and what kind will it be?
+ * @param  {number} [tab=-1]		- The tab used for the card for this panda job.
+ * @param  {number} [lNQ=0]		  - Limit the number of this group id in the queue at once.
+ * @param  {number} [lTQ=0]	    - Limit the total number of hits in the queue before collecting more.
+ * @param  {number} [lF=0]		  - Number of times to try to fetch panda before stopping.
+ * @param  {number} [dur=0]			- The duration for this panda to collect before turning off.
+ * @param  {bool} [aGH=false]		- Should this go ham automatically?
+ * @param  {number} [hamD=0]		- The duration used in go ham mode.
+ * @param  {number} [aL=0]			- The amount of hits to collect today before stopping.
+ * @return {object}             - Object with options set or using default values.
+ */
+function optObject(once=false, srch=null, tab=-1, lNQ=0, lTQ=0, lF=0, dur=0, aGH=false, hamD=0, aL=0) {
+  return {'once':once, 'search':srch,'limitNumQueue':lNQ, 'limitTotalQueue':lTQ, 'limitFetches':lF, 'duration':dur,'autoGoHam':aGH, 'hamDuration':hamD, 'acceptLimit':aL, 'tabUnique':tab};
+}
 
 /** Constant values for console coloring. */
 const CONSOLE_WARN = 'color: red;'

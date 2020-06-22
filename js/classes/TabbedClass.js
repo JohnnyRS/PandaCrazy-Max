@@ -47,6 +47,14 @@ class TabbedClass {
     return this.#dataTabs[tabUnique].list;
   }
   /**
+   * @param  {number} tabUnique
+   * @return {array}
+   */
+  removePosition(tabUnique, position) {
+    this.#dataTabs[tabUnique].list = arrayRemove(this.#dataTabs[tabUnique].list, position);
+    bgPanda.db.updateDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+  }
+  /**
    * Prepare the tabbed areas on this page at the start up of the program.
    * @async                   - To wait for the loading of the tab data from the database.
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections.

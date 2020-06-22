@@ -217,6 +217,7 @@ class TimerClass {
 	goHam(queueUnique, dGoHam=0) {
 		if (this.goingHam===null) { // If it's already going ham then do nothing.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is now going ham for ${queueUnique}: ${this.hamTimeout}`);
+			if (dGoHam === 0) dGoHam = 5000; // default temporary goham to 5000ms if it was 0.
 			this.queueObject[queueUnique].dGoHam = dGoHam;
 			this.goingHam=queueUnique; this.adjustTimer(this.hamTimeout);
 		}

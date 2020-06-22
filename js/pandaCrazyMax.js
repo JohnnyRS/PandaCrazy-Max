@@ -19,8 +19,7 @@ function modalLoadingData() {
  */
 async function startPandaCrazy() {
   $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
-  await bgPage.gCheckPandaDB().then( result => { goodDB = result; }, rejected => errorObject = rejected );
-  if (goodDB) {
+  if (await bgPage.gCheckPandaDB()) {
     await globalOpt.prepare( showMessages ); // Wait for global options to load and show message or error.
     await alarms.prepare( showMessages ); // Wait for alarms to load and show message or error.
     await groupings.prepare( showMessages ); // Wait for groupings to load and show message or error.

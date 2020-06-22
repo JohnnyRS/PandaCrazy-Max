@@ -19,36 +19,26 @@ class LogTabsClass {
     this.queueUpdating = false;
     this.queueAdding = false;
   }
-	/**
-   * Getter to return if the queue has actually changed.
-	 * @return {bool} - True if there was anything new that changed in mturk queue.
-	 */
+	/** Getter to return if the queue has actually changed.
+	 * @return {bool} - True if there was anything new that changed in mturk queue. */
 	get queueIsNew() { return this._queueIsNew; }
-	/**
-   * Setter to change if queue has actually changed. If it did change then do skipped check on jobs.
-	 * @param {bool} v - Set if there was anything new that changed in mturk queue.
-	 */											
+	/** Setter to change if queue has actually changed. If it did change then do skipped check on jobs.
+	 * @param {bool} v - Set if there was anything new that changed in mturk queue. */											
 	set queueIsNew(v) { this._queueIsNew = v; if (v) { bgPanda.doNewChecks(); } }
-  /**
-   * Gets the total hits in the queue.
-   * @return {number} - Total hits in the queue.
-   */
+  /** Gets the total hits in the queue.
+   * @return {number} - Total hits in the queue. */
   get queueTotal() { return this._queueTotal; }
-	/**
-   * Setter to change the total amount of hits in queue. If changed then do skipped check on jobs.
-	 * @param {bool} v - Set the total number of hits in queue.
-	 */											
+	/** Setter to change the total amount of hits in queue. If changed then do skipped check on jobs.
+	 * @param {bool} v - Set the total number of hits in queue. */											
 	set queueTotal(v) {
     if (v !== this._queueTotal) {
       this._queueTotal = v;
       bgPanda.doNewChecks();
     }
   }
-  /**
-   * Prepare the tabs on the bottom and placing the id names in an array.
+  /** Prepare the tabs on the bottom and placing the id names in an array.
    * @async          - To wait for the tabs to be prepared and displayed from the database.
-   * @return {array} - Success message array and then error object in an array.
-   */
+   * @return {array} - Success message array and then error object in an array. */
   async prepare() {
     let [success, err] = await this.tabs.prepare();
     if (!err) {
@@ -63,13 +53,11 @@ class LogTabsClass {
     }
     return [success, err];
   }
-  /**
-   * Add the hit information to the log and either append or before element passed.
+  /** Add the hit information to the log and either append or before element passed.
    * @param  {object} newInfo       - Object with information of the new hit being added to the log.
    * @param  {string} taskId        - The task id of the hit in the queue results.
    * @param  {object} element       - Element to append this hit to in the log tab.
-   * @param  {bool} [appendTo=true] - Should this be appended to element or before element?
-   */
+   * @param  {bool} [appendTo=true] - Should this be appended to element or before element? */
   addToWatch(hitInfo, element, appendTo=true) {
     if (!this.taskIds.includes(hitInfo.task_id)) {
       const timeLeft = getTimeLeft(hitInfo.secondsLeft);
@@ -99,13 +87,11 @@ class LogTabsClass {
       if (this.dLog(3)) console.info(`%cNew to queue: {title: ${hitInfo.project.title}, task_id:${hitInfo.task_id}, hit_set_id:${hitInfo.project.hit_set_id}, assignment_id:${hitInfo.assignment_id}, requester_id:${hitInfo.project.requester_id}, requester_name:${hitInfo.project.requester_name}}`,CONSOLE_DEBUG);
     }
   }
-  /**
-   * Add a new hit accepted into the queue in the correct position accroding to seconds left.
+  /** Add a new hit accepted into the queue in the correct position accroding to seconds left.
    * @param  {object} hitInfo       - Object of the panda job from panda class.
    * @param  {object} hitInfo2      - Hit information from mturk queue results.
    * @param  {object} data          - Saved data from panda class just in case it gets removed.
-   * @param  {string} [task_url=""] - The task url from the fetch results.
-   */
+   * @param  {string} [task_url=""] - The task url from the fetch results. */
   addIntoQueue(hitInfo, hitInfo2, data, task_url="") {
     this.addIntoQueue.counter = (this.addIntoQueue.counter) ? this.addIntoQueue.counter++ : 0;
     if (this.queueUpdating && this.addIntoQueue.counter<1000) // Check if currently updating queue.
@@ -124,12 +110,10 @@ class LogTabsClass {
       this.queueAdding = false;
     }
   }
-  /**
-   * Update the queue watch with newer hits and update time left in the queue watch.
+  /** Update the queue watch with newer hits and update time left in the queue watch.
    * This will figure out if there are any new hits and add it in the correct position.
    * Also will figure out if a hit was removed from queue and remove it from queue watch.
-   * @param  {object} queueResults - Object of all the hits on the mturk queue.
-   */
+   * @param  {object} queueResults - Object of all the hits on the mturk queue. */
   updateQueue(queueResults) {
     this.updateQueue.counter = (this.updateQueue.counter) ? this.updateQueue.counter++ : 0;
     if (this.queueAdding && this.updateQueue.counter<1000) // Check if currently updating queue.
@@ -192,17 +176,13 @@ class LogTabsClass {
       this.queueUpdating = false;
     }
   }
-  /**
-   * Update the queue watch captcha counter.
-   * @param  {number} captchaCount - The counter for the captcha text in queue watch.
-   */
+  /** Update the queue watch captcha counter.
+   * @param  {number} captchaCount - The counter for the captcha text in queue watch. */
   updateCaptcha(captchaCount) {
     if (captchaCount!==null) this.tabs.updateCaptcha(captchaCount);
   }
-  /**
-   * Add accepted hit to the accepted log and limit it to a maximum hits shown.
-   * @param  {object} data - The data for the job to display that was accepted.
-   */
+  /** Add accepted hit to the accepted log and limit it to a maximum hits shown.
+   * @param  {object} data - The data for the job to display that was accepted. */
   addToLog(data) {
     let divHits = this.acceptContent.find('div');
     if (divHits.length >= 100) divHits[divHits.length - 1].remove();
@@ -211,23 +191,19 @@ class LogTabsClass {
     const title = (data.friendlyTitle) ? data.friendlyTitle : data.title;
     this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
   }
-  /**
-   * Adds the status for this panda job with the unique ID to the status log tab.
+  /** Adds the status for this panda job with the unique ID to the status log tab.
    * @param  {object} data  - Object of the data from the panda job with the unique number ID.
    * @param  {object} stats - Object with the stats for this panda job with the unique number ID.
-   * @param  {number} myId  - The unique ID for a panda job.
-   */
+   * @param  {number} myId  - The unique ID for a panda job. */
   addToStatus(data, stats, myId) {
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
     this.statusContent.append(`<div class='pcm_${myId}'><span class='pcm_emp'>Requester:</span> <span class='requester'>${requester}</span> | <span class='pcm_emp'>Pay:</span> $<span class='pay'>${Number(data.price).toFixed(2)}</span> | <span class='pcm_emp'>Mode:</span> panda | <span class='pcm_emp'>Accepted:</span> <span class='accepted'>${stats.accepted.value}</span> | <span class='pcm_emp'>Fetched:</span> <span class='fetched'>${stats.fetched.value}</span> | <span class='pcm_emp'>Elapsed:</span> <span class='elapsed'>0.0s</span></div>`);
   }
-  /**
-   * Display the stats from panda job with the unique ID on the status tab or the changes to requester name and pay.
+  /** Display the stats from panda job with the unique ID on the status tab or the changes to requester name and pay.
    * @param  {object} stats          - The stats for this panda job with the unique ID.
    * @param  {number} myId           - The unique ID for a panda job.
    * @param  {number} seconds        - Number of seconds elapsed from last time job fetched url.
-   * @param  {object} [changes=null] - The changes to data that needs to be shown in status tab.
-   */
+   * @param  {object} [changes=null] - The changes to data that needs to be shown in status tab. */
   updateLogStatus(stats, myId, milliseconds, changes=null) {
     if (stats) {
       this.statusContent.find(`.pcm_${myId} .fetched:first`).html(stats.fetched.value);
@@ -242,32 +218,26 @@ class LogTabsClass {
       this.statusContent.find(`.pcm_${myId} .pay:first`).html(Number(changes.price).toFixed(2));
     }
   }
-  /**
-   * Remove a status line from the status tab giving it 12 seconds before removal.
-   * @param  {number} myId - The unique ID for a panda job.
-   */
+  /** Remove a status line from the status tab giving it 12 seconds before removal.
+   * @param  {number} myId - The unique ID for a panda job. */
   removeFromStatus(myId) {
     this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`)
       .css('background-color', '#260000');
     setTimeout( () => { this.statusContent.find(`.pcm_${myId}-stop`).remove(); }, 12000);
   }
-	/**
-	 * Checks if this error is allowed to show depending on user options and class name.
+	/** Checks if this error is allowed to show depending on user options and class name.
 	 * (0)-fatal = Errors that can crash or stall program.
    * (1)-error = Errors that shouldn't be happening but may not be fatal.
    * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
    * @param  {number} levelNumber - Level number for this error.
-	 * @return {bool}							  - True if this error is permitted to show.
-	 */
+	 * @return {bool}							  - True if this error is permitted to show. */
 	dError(levelNumber) { return dError(levelNumber, 'LogTabsClass'); }
-	/**
-	 * Checks if this debug message is allowed to show depending on user options and class name.
+	/** Checks if this debug message is allowed to show depending on user options and class name.
    * (1)-info = Shows basic information of progress of program.
    * (2)-debug = Shows the flow of the program with more debugging information.
    * (3)-trace = More details shown including variable contents and functions being called.
    * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
 	 * @param  {number} levelNumber - Level number for this debug message.
-	 * @return {bool}							  - True if this message is permitted to show.
-	 */
+	 * @return {bool}							  - True if this message is permitted to show. */
 	dLog(levelNumber) { return dLog(levelNumber, 'LogTabsClass'); }
 }
