@@ -165,12 +165,20 @@ class LogTabsClass {
           }
         }
         this.taskIds = Array.from(newIds); this.taskInfo = Object.assign({}, newInfo);
-        let queueWatch = this.queueContent.find("div");
+        let queueWatch = this.queueContent.find("div"), firstOne = true;
         for (const hit of queueWatch) {
           const taskId = $(hit).data('taskId');
           const timeLeft = getTimeLeft(newInfo[taskId].secondsLeft);
           $(hit).find('.pcm_timeLeft').html(timeLeft);
           if (newInfo[taskId].secondsLeft < 0) $(hit).css('text-decoration', 'line-through');
+          else if (firstOne) {
+            if (globalOpt.checkQueueAlert(newInfo[taskId].secondsLeft)) {
+              if (globalOpt.isQueueAlert()) this.queueContent.closest(".tab-pane")
+                .stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
+              if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
+            }
+            firstOne = false;
+          }
         }
       }
       this.queueUpdating = false;

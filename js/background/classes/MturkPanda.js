@@ -42,6 +42,9 @@ class MturkPanda extends MturkClass {
 		this.useDefault = false;								// Should we be using default values because no data in database?
 		this.db = new DatabaseClass(this.dbName, 1);  // Set up the database class.
 	}
+	/** If logged off then returns true.
+	 * @return {bool} - True if logged off. */
+	isLoggedOff() { return this.loggedOff; }
 	/** Converts the unique database ID to the equivalent unique panda job ID.
 	 * @param  {number} dbId - The unique database ID for a panda job.
 	 * @return {number}			 - Returns the unique databse ID from a unique panda job ID. */
@@ -54,8 +57,8 @@ class MturkPanda extends MturkClass {
 	 * @param  {string} groupId - The groupId of the panda to creat a url.
 	 * @return {string}					- Returns the created string. */
 	createPreviewUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks`; }
-	/**
-	 */
+	/** Tests if the database can be opened and has all the storage created.
+	 * @return {bool} - True if database is all ready. */
 	async testDB() {
 		let result = this.db.testDB().then( () => { return true; }, () => {
 			return this.openDB(true).then( () => { return true; }, rejected => { dbError = rejected; return false; });
@@ -155,9 +158,21 @@ class MturkPanda extends MturkClass {
 	/** Changes the time for the panda timer and returns the time saved.
 	 * @param  {number} timer - The time to change the panda timer to.
 	 * @return {number}				- Returns the panda timer time that was set. */
-	timerChange(timer) {
-		return pandaTimer.setTimer(timer);
+	timerChange(timer, add=0, del=0) {
+		let newTimer = null;
+		if (timer) newTimer = pandaTimer.setTimer(timer, true);
+		else if (add>0) newTimer = pandaTimer.addToTimer(add);
+		else if (del>0) newTimer = pandaTimer.delFromTimer(del);
+		return newTimer
 	}
+	/** Changes the ham time for the panda timer and returns the ham time saved.
+	 * @param  {number} timer - The time to change the ham timer to.
+	 * @return {number}				- Returns the ham timer time that was set. */
+	hamTimerChange(timer) { return pandaTimer.setHamTimer(timer); }
+	/** Changes the time for the queue timer and returns the time saved.
+	 * @param  {number} timer - The time to change the queue timer to.
+	 * @return {number}				- Returns the queue timer time that was set. */
+	queueTimerChange(timer) { return myQueue.timerChange(timer); }
 	/** Tells panda timer to stop all jobs in queue. */
 	stopAll() { pandaTimer.stopAll(); }
 	/** Toggle the panda timer pause status.
@@ -189,8 +204,8 @@ class MturkPanda extends MturkClass {
 	unPauseTimer() { pandaTimer.paused = false; }
 	/** When logged off this will pause the panda timer and let panda UI know it's logged off. */
 	nowLoggedOff() {
-		pandaTimer.paused = true; this.loggedOff = true;
 		if (extPandaUI) extPandaUI.nowLoggedOff();
+		pandaTimer.paused = true; this.loggedOff = true;
 	}
 	/** When logged back in this will unpause the panda timer and let panda UI know it's logged back in. */
 	nowLoggedOn() {
@@ -509,6 +524,9 @@ class MturkPanda extends MturkClass {
 					if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
 					else if (result.mode === "pre") {
 						extPandaUI.pandaGStats.addPandaPRE();
+					} else if (result.mode === "mturkLimit") {
+						console.log("Mturk limit reached"); this.tempPaused = true; pandaTimer.paused = true;
+						extPandaUI.mturkLimit();
 					} else if (result.mode === "maxxedOut") {
 						console.log("Maxxed out dude"); this.tempPaused = true; pandaTimer.paused = true;
 					} else if (result.mode === "noMoreHits") {
@@ -524,6 +542,7 @@ class MturkPanda extends MturkClass {
 					} else if (result.mode === "cookies.large") {
 						console.log("cookie large problem"); this.tempPaused = true; pandaTimer.paused = true;
 					} else if (result.type === "ok.text") {
+						extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert();
 						console.log("captcha found"); globalOpt.resetCaptcha();
 					}
 				}

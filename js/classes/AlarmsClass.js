@@ -16,7 +16,8 @@ class AlarmsClass {
       more15:{filename:"higher-alarm.mp3", obj:null, desc:"Hits Paying less than", pay:"0.15", lessThan:99},
       queueFull:{filename:"Your queue is full - Paul.mp3", obj:null, desc:"Hits Paying less than", pay:"", lessThan:99},
       queueAlert:{filename:"Ship_Brass_Bell.mp3", obj:null, desc:"Hits Paying less than", pay:"", lessThan:4},
-      loggedOut:{filename:"CrowCawSynthetic.wav", obj:null, desc:"Hits Paying less than", pay:"", lessThan:99}
+      loggedOut:{filename:"CrowCawSynthetic.wav", obj:null, desc:"Hits Paying less than", pay:"", lessThan:99},
+      captchaAlarm:{filename:"CrowCawSynthetic.wav", obj:null, desc:"Hits Paying less than", pay:"", lessThan:99}
     };
     this.myAudio = null;
   }
@@ -80,22 +81,21 @@ class AlarmsClass {
     this.myAudio = this.data[alarmSound].audio; this.myAudio.currentTime = 0;
     this.myAudio.play();
   }
-  /**
-   * This plays the queue alert alarm.
-   */
-  doQueueAlarm() { this.playSound("queueAlert"); }
+  /** This plays the queue alert alarm. */
+  doQueueAlarm() { this.playSound('queueAlert'); }
+  doCaptchaAlarm() { this.playSound('captchaAlarm'); }
 	/**
    * Method to decide which alarm to play according to the hit minutes and price.
 	 * @param  {object} thisHit - The hit information to use to decide on alarm to sound.
 	 */
-	doAlarms(thisHit) {
-		const minutes = Math.floor(thisHit.assignedTime / 60);
-		if ( thisHit.price < parseFloat(this.data.less2.pay) ) {
+	doAlarms(hitData) {
+		const minutes = Math.floor(hitData.assignedTime / 60);
+		if ( hitData.price < parseFloat(this.data.less2.pay) ) {
 			if (minutes <= this.data.less2.lessThan) this.playSound("less2Short"); else this.playSound("less2");
-		} else if ( thisHit.price <= parseFloat(this.data.less5.pay) ) {
+		} else if ( hitData.price <= parseFloat(this.data.less5.pay) ) {
 			if (minutes <= this.data.less5.lessThan) this.playSound("less5Short"); else this.playSound("less5");
-		} else if ( thisHit.price <= parseFloat(this.data.less15.pay) ) {
+		} else if ( hitData.price <= parseFloat(this.data.less15.pay) ) {
 			if (minutes <= this.data.less15.lessThan) this.playSound("less15Short"); else this.playSound("less15");
-		} else if ( thisHit.price < parseFloat(this.data.more15.pay) ) { this.playSound("more15"); }
+		} else if ( hitData.price < parseFloat(this.data.more15.pay) ) { this.playSound("more15"); }
 	}
 }

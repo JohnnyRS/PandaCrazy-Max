@@ -204,7 +204,9 @@ class TabbedClass {
    * @param  {number} captchaCount - The captcha counter that needs to be updated on page.
    */
   updateCaptcha(captchaCount) {
-    $(`#${this.ulId} .pcm_captchaText:first`).html(`Captcha Count: ${captchaCount}`)
+    if (globalOpt.general.captchaCountText)
+      $(`#${this.ulId} .pcm_captchaText:first`).html(`Captcha Count: ${captchaCount}`);
+    else $(`#${this.ulId} .pcm_captchaText:first`).html('');
   }
   /**
    * Sets the panda with the unique ID to the tab unique ID and then saves to database.

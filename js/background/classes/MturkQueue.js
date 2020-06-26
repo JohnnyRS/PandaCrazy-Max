@@ -23,18 +23,18 @@ class MturkQueue extends MturkClass {
 		queueTimer.setTimer(timer);       // Sets the timer for the timer class.
     this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
   }
-  /**
-   * Returns the value of loggedOff value;
-   * @return {bool} - True if logged off.
-   */
+  /** Returns the value of loggedOff value;
+   * @return {bool} - True if logged off. */
   isLoggedOff() { return this.loggedOff; }
-  /**
-   * Sends queue results and authenticity token for returning jobs to the panda UI and search UI.
-   */
+  /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI. */
   sendQueueResults() {
     myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
     mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
   }
+  /** Changes the time for the queue timer and returns the time saved.
+   * @param  {number} timer - The time to change the queue timer to.
+	 * @return {number}				- Returns the queue timer time that was set. */
+  timerChange(timer) { this.timer = queueTimer.setTimer(timer, true); return this.timer; }
   /**
    * Starts the queue monitor by adding a job to the timer queue.
    */

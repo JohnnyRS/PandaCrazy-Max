@@ -183,16 +183,23 @@ function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
 function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="", textColor="") {
   let parent = $(target).parent();
   if (editMe) {
-    $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${obj.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => textToggle(thisObject, e.target, obj, theValue, false, textBorder, textColor)).focus( (e) => $(e.target).select() ));
+    let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder, textColor); }
+    $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${obj.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => doTextToggle(e) ).focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
     $(`#pcm_${obj.key}DetailI`).focus();
   } else {
-    if (editMe!==null) thisObject[obj.key] = theValue = $(target).val(); // Null is on first call of function.
-    if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
-    let theSpan = $(`<span id="pcm_${obj.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`);
-    $(parent).empty().append(theSpan);
-    if (!obj.disable) $(theSpan).on('click', (e) => { 
-      textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
-    });
+    $(`#pcm_tdLabel_${obj.key}`).css('color', '');
+    if (editMe !== null) thisObject[obj.key] = theValue = $(target).val(); // Null is on first call of function.
+    if (obj.type === 'number') thisObject[obj.key] = Number(thisObject[obj.key]);
+    if (theValue === "") { theValue = "{Empty}"; textColor = " text-danger"; }
+    if (!obj.min || theValue >= obj.min) {
+      let theSpan = $(`<span id="pcm_${obj.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`);
+      $(parent).empty().append(theSpan);
+      if (!obj.disable) $(theSpan).on('click', (e) => {
+        textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
+      });
+    } else {
+      $(`#pcm_tdLabel_${obj.key}`).css('color', 'red');
+    }
   }
 }
 /**
@@ -216,28 +223,35 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
     if (theValue===-1) { theValue = "0"; }
     if (theValue===undefined) { theValue = element.default; }
+    if (element.money) theValue = Number(theValue).toFixed(2);
     if (element.format==="date") { theValue = formatAMPM("short",new Date(theValue)); }
     if (element.disable) { textColor = " text-warning"; textBorder = ""; }
     if (element.label!=="") { padding = " pl-4"; }
-    const pre = (element.pre) ? element.pre : "", addSpan = (element.type==="text") ? "<span></span>" : "";
+    const pre = (element.pre) ? element.pre : '';
+    const addSpan = (element.type === 'text' || element.type === 'number') ? "<span></span>" : "";
     const tdWidth = (element.width) ? `width:${element.width} !important;` : "";
     const tdStyle = ` style="padding-right:1px !important; max-width:320px; ${tdWidth}"`;
-    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append(`<td class="col-4 text-right">${element.label}</td>`);
-    else if (!horizontal) row = $(`<div>`).append($(`<span class="${padding}">${element.label}</span>`));
-    if (table) valueCol = $(`<td class="font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate"${tdStyle}>${addSpan}</td>`);
-    else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data("edit","off");
+    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
+    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append($(`<td class='col-4 text-right'></td>`).append($(`<span${addtip} id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data)));
+    else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
+    if (table) valueCol = $(`<td class='font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
+    else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data('edit','off');
     valueCol.appendTo(row);
     if (element.type==="range") {
       $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => {
         $(`#pcm_${element.key}Detail`).val(($(e.target).val())); thisObject[element.key] = $(e.target).val();
       } ).appendTo(valueCol);
       $(`<input class="pcm_inputRangeText" id="pcm_${element.key}Detail" type="text" value="${theValue}" size="2"></input>`).appendTo(valueCol);
-    } else if (element.type==="text") {
+    } else if (element.type === 'text' || element.type === 'number') {
+        const theMin = (element.min) ? element.min : null;
         textToggle(thisObject, $(valueCol).find("span"), element, theValue, null, textBorder, textColor);
     } else if (element.type==="trueFalse") {
+      if (element.reverse) theValue = !theValue;
       $(`<span id="pcm_${element.key}Detail" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`)
       .on('click', (e) => {
-        $(e.target).html( ($(e.target).html() === "true") ? "false" : "true" ); thisObject[element.key] = ($(e.target).html() === 'true');
+        $(e.target).html( ($(e.target).html() === "true") ? "false" : "true" );
+        thisObject[element.key] = ($(e.target).html() === 'true');
+        if (element.reverse) thisObject[element.key] = !thisObject[element.key];
       }).appendTo(valueCol);
     } else if (element.type==="button") {
       const button = $(`<button class="btn btn-primary${element.addClass}" id="${element.idStart}_${element.unique}">${element.label}</button>`);
@@ -347,6 +361,7 @@ function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT=
  * @return {object}             - Object with options set or using default values.
  */
 function optObject(once=false, srch=null, tab=-1, lNQ=0, lTQ=0, lF=0, dur=0, aGH=false, hamD=0, aL=0) {
+  if (hamD===0) hamD = globalOpt.getHamDelayTimer();
   return {'once':once, 'search':srch,'limitNumQueue':lNQ, 'limitTotalQueue':lTQ, 'limitFetches':lF, 'duration':dur,'autoGoHam':aGH, 'hamDuration':hamD, 'acceptLimit':aL, 'tabUnique':tab};
 }
 

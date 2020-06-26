@@ -37,7 +37,7 @@ html, body { height: 100%; }
   margin-left:5px !important;
 }
 #pcm_searching.pcm_searchOn { color: #a9fc79 !important; }
-.pcm_buttonOn { background-color: #008000; color: #FFFFFF; }
+.pcm_buttonOn { background-color: #008000; color: #FFFFFF !important; }
 .pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm_buttonOff { background-color: #D3D3D3; color: #000000; }
 .pcm_buttonOff.pcm_delayedHam { background-color: #087d9b; color: #f3e3e3; }

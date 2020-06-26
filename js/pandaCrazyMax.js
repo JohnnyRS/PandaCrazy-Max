@@ -58,6 +58,11 @@ allTabs('/pandaCrazy.html', count => { // Count how many Panda Crazy pages are o
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
+window.addEventListener('visibilitychange', (evt) => {
+  if (globalOpt && notify && 'hidden' in document && document.hidden) {
+    if (globalOpt.isNotifications() && globalOpt.isUnfocusWarning()) notify.showNotFocussed();
+  }
+}, false);
 document.addEventListener('keydown', (e) => {
   if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).disableSelection(); }
 });

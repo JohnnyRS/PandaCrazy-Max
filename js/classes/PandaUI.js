@@ -20,6 +20,7 @@ class PandaUI {
 		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database
 		this.dbStats = new DatabaseClass(this.dbStatsName, 1); // The stat database for logging of panda stats.
 		this.listener = new ListenerClass();
+		this.modalJob = new ModalJobClass();
 	}
 	/** Gets the total hits in the queue.
    * @return {number} - Total hits in the queue. */
@@ -91,7 +92,10 @@ class PandaUI {
 		afterFunc(success, err);
 	}
 	/** Shows the logged off modal and after it will unpause the timer. */
-	nowLoggedOff() { modal.showLoggedOffModal( () => { bgPanda.unPauseTimer(); } ); }
+	nowLoggedOff() {
+		modal.showLoggedOffModal( () => { bgPanda.unPauseTimer(); } );
+		if (globalOpt.isNotifications() && !bgPanda.isLoggedOff()) notify.showLoggedOff();
+	}
   /** Closes the logged off modal if it's opened. */
   nowLoggedOn() { modal.closeModal("Program Paused!"); }
   /** Make the color of the panda card with this unique ID to the previous color in the card data.
@@ -169,7 +173,7 @@ class PandaUI {
    * @param  {number} display - The number representing the info displayed in the panda card. */
   changeDisplay(display) {
 		globalOpt.setCardDisplay(display);
-		for (const myId in this.pandaCard) {
+		for (const myId in Object.keys(this.pandaCard)) {
 			this.pandaCard[myId].updateCardDisplay();
 		}
 	}
@@ -188,7 +192,7 @@ class PandaUI {
 		if (err) {
 			this.haltScript(err, 'Failed getting data from database for all panda\'s so had to end script.', 'Error getting panda data. Error:');
 		}
-		modal.showJobsModal(type, groupings, thisObj, saveFunc, checkFunc, cancelFunc, afterShow);
+		this.modalJob.showJobsModal(type, groupings, thisObj, saveFunc, checkFunc, cancelFunc, afterShow);
 	}
 	/** Start panda job collecting with this unique ID and set the duration for collecting and go ham.
 	 * Also starts the goham at start if neccesary.
@@ -433,7 +437,7 @@ class PandaUI {
 			this.removeJobs(this.ctrlDelete);
 		});
 		$(`#pcm_detailsButton_${myId}, #pcm_detailsButton1_${myId}`).click(() => {
-			this.pandaCard[myId].showDetailsModal();
+			this.modalJob.showDetailsModal(myId);
 		});
 		$(`#pcm_groupId_${myId}`).click((e) => {
 			const double = parseInt( $(e.target).data('double'), 10 );
@@ -493,15 +497,19 @@ class PandaUI {
 		this.logTabs.addIntoQueue(pandaInfo, hitDetails, pandaInfo.data, result.url.replace("https://worker.mturk.com",''));
 		this.logTabs.addToLog(pandaInfo.data);
 		this.updateLogStatus(myId, 0, pandaInfo.data);
-    bgPanda.checkIfLimited(myId, true);
-    alarms.doAlarms(pandaInfo);
+		bgPanda.checkIfLimited(myId, true);
+		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
+    alarms.doAlarms(pandaInfo.data);
 	}
 	/** Does any resetting of any values needed when the new day happens. */
-	resetDailyStats() {
-		for (const key in this.pandaStats) {
-			this.pandaStats[key].resetDailyStats();
-		}
-	}
+	resetDailyStats() { for (const key in this.pandaStats) { this.pandaStats[key].resetDailyStats(); } }
+	/** Sounds an alarm by the name parameter. Will check if the name is correct before calling alarm function.
+	 * @param  {string} name - The name of an alarm to sound. */
+	soundAlarm(name) { if (['Captcha'].includes(name)) alarms[`do${name}Alarm`](); }
+	/** Notifies the user that a captcha has been found. */
+	captchaAlert() { if (globalOpt.isNotifications() && globalOpt.isCaptchaAlert()) notify.showCaptchaAlert(); }
+	/** Notifies the user that they can't accept any more hits for today. */
+	mturkLimit() { if (globalOpt.isNotifications()) notify.showDailyLimit(); }
 	/** Updates the status log tab on the bottom with relevant information.
 	 * @param  {number} myId					 - The unique ID for a panda job.
 	 * @param  {number} milliseconds	 - The elapsed time since job last tried to get a hit.
