@@ -41,7 +41,10 @@ class SearchGStats {
 	/**
 	 * Set the searching value to off and update stat in status bar.
 	 */
-	searchingOff() { this.searching.value = false; this.updateStatNav(this.searching,"Off"); }
+	searchingOff() {
+		this.searching.value = false; this.searchNow.value = false;
+		this.updateStatNav(this.searching,"Off"); this.updateStatNav(this.searchNow,"Search Now");
+	}
 	/**
 	 * Set the search now value to off and update stat in status bar.
 	 */

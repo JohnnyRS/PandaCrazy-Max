@@ -1,8 +1,6 @@
-/**
- * This class deals with fetching urls from mturk and send results back to other classes.
+/** This class deals with fetching urls from mturk and send results back to other classes.
  * @class MturkClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MturkClass {
 	constructor() {
 		this.totalFetched = { value:0, id:"#pcm_totalFetched", disabled:null, type:"integer" };
@@ -10,31 +8,22 @@ class MturkClass {
 		this.timerValue = { value:0, id:"#pcm_timerValue", disabled:null, type:"integer" };
 		this.resultUrl = "";			// Just a place to keep results from fetch for future use.
 	}
-	/**
-	 * This method updates the status bar with relevant information from fetching mturk urls.
-	 * @param  {object} statObj - The object that needs to be updated in status bar.
-	 */
+	/** This method updates the status bar with relevant information from fetching mturk urls.
+	 * @param  {object} statObj - The object that needs to be updated in status bar. */
 	updateStatNav(statObj) {
 		if (window.jQuery) {
 			if (statObj.disabled===null) statObj.disabled = ($(statObj.id).length) ? false : true;
 			if (!statObj.disabled) $(statObj.id).html(statObj.value);
 		}
 	}
-	/**
-	 * Adds 1 to the total fetched and updates the stat in status bar.
-	 */
+	/** Adds 1 to the total fetched and updates the stat in status bar. */
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
-	/**
-	 * Adds 1 to the total PRE's and updates the stat in status bar.
-	 */
+	/** Adds 1 to the total PRE's and updates the stat in status bar. */
 	addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
-	/**
-	 * Fetches the url in url object and handles mturk results.
+	/** Fetches the url in url object and handles mturk results.
 	 * Can deal with Pre's, maxxed out and logged out for any mturk URL;
-	 * TODO #2 might want to deal with reject results from the fetch function.
 	 * @param  {object} objUrl - The url object to use for fetching.
-	 * @return {object} 			 - Returns data in an object or null if got nothing.
-	 */
+	 * @return {object} 			 - Returns data in an object or null if got nothing. */
 	goFetch(objUrl) {
 		const response = objUrl.goFetch().then( result => {
 			if (!result) return null;
@@ -53,8 +42,9 @@ class MturkClass {
 			else if ( result.type === "bad.request.text" && result.data.includes("Header Or Cookie Too Large") ) {
 				returnObj.mode = "cookies.large"; returnObj.data = null;
 			}
+			result = null;
 			return returnObj;
-		}, rejected => { console.error("error has occured"); });
+		}, () => { console.error("error has occured"); });
 		return response;
 	}
 }

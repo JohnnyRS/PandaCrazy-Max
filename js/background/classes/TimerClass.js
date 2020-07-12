@@ -1,11 +1,10 @@
-/**
- * Class for the main timer which keeps all the timing organized for panda's, search and queue operations.
+'use strict';
+/** Class for the main timer which keeps all the timing organized for panda's, search and queue operations.
  * A queue is used to hold all the jobs it needs to do and runs the job after an elapsed time.
  * Minimum timer is set to make sure the timer never goes under which could cause problems.
  * Allows jobs to be skipped or jumped over. Allows jobs to go ham which runs on a lower elapsed time.
  * @class TimerClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class TimerClass {
 	/**
 	 * @param  {number} [timer=900]        - Do jobs after this time in milliseconds has elapsed.
@@ -51,8 +50,9 @@ class TimerClass {
 	set paused(v) {
 		const oldPaused = this._paused;
 		this._paused = v; // Set private property to change.
-		if (oldPaused) this.goTimer(); // If it was paused then start timer.
+		if (oldPaused && !v) this.goTimer(); // If it was paused then start timer.
 		if (v != oldPaused) this.sendBackInfo(); // If paused was changed then send back info to class.
+		return v;
 	}
 	/** Tells timer to send back information about timer status to class attached. */
 	pleaseSendBack() { this.sendBack = true; }
@@ -103,7 +103,7 @@ class TimerClass {
 	 * Stops timer if duration is elapsed. Stops hamming after ham duration is elapsed.
 	 * Calculates exact elapsed time for information purposes. */
 	privateLoop() {
-		this.timeoutDoing = this.timeoutID; this.timeoutID = null; // TimeoutID gets moved to timeoutDoing
+		this.timeoutDoing = this.timeoutID; this.timeoutID = null;
 		const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
 		// Which timer is being used. ham timer or regular timer.
 		const usingTimer = (this.goingHam!==null && this.hamTimer!==null) ? this.hamTimer : this.timeout;
@@ -118,12 +118,12 @@ class TimerClass {
 			else queueUnique = this.queue.shift(); // If not going ham then item unique is in the next queue position
 			const thisItem = this.queueObject[queueUnique]; // Let's get the details of this item
 			if (thisItem) {
-				if (thisItem.timeStarted===null) thisItem.timeStarted = new Date().getTime();
-				if (thisItem.timeRestarted===null) thisItem.timeRestarted = new Date().getTime();
+				if (thisItem.timeStarted===null) thisItem.timeStarted = end;
+				if (thisItem.timeRestarted===null) thisItem.timeRestarted = end;
 				if (thisItem.duration>0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
 				if (thisItem.tDuration>0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
 				if (thisItem.dGoHam>0) { // Is this just a temporary go ham job and item just started then init hamstarted
-					if (thisItem.hamstarted===null) thisItem.hamstarted = new Date().getTime();
+					if (thisItem.hamstarted===null) thisItem.hamstarted = end;
 					else if ( (end - thisItem.hamstarted) > thisItem.dGoHam ) {
 						turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamstarted = null;
 					}
@@ -131,7 +131,7 @@ class TimerClass {
 				if (!stopFor && this.goingHam===null) this.queue.push(queueUnique);
 				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
 					thisItem.theFunction(queueUnique, elapsed, thisItem.myId);
-					this.started = new Date().getTime();
+					this.started = end;
 				}
 				else if (stopFor) { // This item has expired so run the after function and delete it from queue
 					if (this.dLog(2)) console.info(`%c[${this.timerName}] timer expired: ${stopFor}`, CONSOLE_INFO);

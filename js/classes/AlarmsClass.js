@@ -1,8 +1,6 @@
-/**
- * Class dealing with the playing of the different alarms and saving it in the database.
+/** Class dealing with the playing of the different alarms and saving it in the database.
  * @class AlarmsClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class AlarmsClass {
   constructor() {
     this.alarmFolder = "alarms";
@@ -21,16 +19,15 @@ class AlarmsClass {
     };
     this.myAudio = null;
   }
-  /**
-   * Prepare the alarms by getting the src of the alarm url and save to database if using default values.
+  /** Prepare the alarms by getting the src of the alarm url and save to database if using default values.
    * @async                - To wait for the alarm data to completely load into memory.
    * @param  {object} data - The alarms data object that has all the alarms.
    * @param  {bool} fromDB - Did these alarms come from the database or default values?
-   * @return {object}      - Error object to return if error happened.
-   */
+   * @return {object}      - Error object to return if error happened. */
   async prepareAlarms(data, fromDB) {
-    let err = null;
+    let err = null; this.myAudio = null;
     await Object.entries(data).forEach( async ([key, value]) => {
+      delete value.audio;
       if (!fromDB) { // Use default values and save to database.
         // Need to make a clone of value because audio obj has methods which can not be saved.
         await bgPanda.db.addToDB(bgPanda.alarmsStore, value)
@@ -42,18 +39,10 @@ class AlarmsClass {
     });
     return err;
   }
-  /**
-   * This is called after the alarm data are prepared and ready.
-   * @callback afterACallBack
-   * @param {array} success  - Array of successful messages.
-   * @param {object} err     - An error object if promise was rejected.
-   */
-  /**
-   * Loads up the alarms from the database or saves default values if no alarms are in the database.
+  /** Loads up the alarms from the database or saves default values if no alarms are in the database.
    * Saves any errors from trying to add to database and then sends a reject.
-   * @async                             - To wait for the alarm data to be loaded from database.
-   * @param  {afterACallBack} afterFunc - Function to call after done to send success error.
-   */
+   * @async                       - To wait for the alarm data to be loaded from database.
+   * @param  {function} afterFunc - Function to call after done to send success error. */
   async prepare(afterFunc) {
     let success = [], err = null;
     await bgPanda.db.getFromDB(bgPanda.alarmsStore, null, true, async (cursor) => { 
@@ -68,10 +57,8 @@ class AlarmsClass {
     }, (rejected) => err = rejected );
     afterFunc(success, err); // Sends any errors back to the after function for processing.
   }
-  /**
-   * Play the sound with the name provided.
-   * @param  {string} alarmSound - The name of the alarm to sound from the alarms object.
-   */
+  /** Play the sound with the name provided.
+   * @param  {string} alarmSound - The name of the alarm to sound from the alarms object. */
   playSound(alarmSound) {
     const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
     if (isPlaying) {
@@ -83,11 +70,10 @@ class AlarmsClass {
   }
   /** This plays the queue alert alarm. */
   doQueueAlarm() { this.playSound('queueAlert'); }
+  /** This plays the captcha alert alarm. */
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
-	/**
-   * Method to decide which alarm to play according to the hit minutes and price.
-	 * @param  {object} thisHit - The hit information to use to decide on alarm to sound.
-	 */
+	/** Method to decide which alarm to play according to the hit minutes and price.
+	 * @param  {object} thisHit - The hit information to use to decide on alarm to sound. */
 	doAlarms(hitData) {
 		const minutes = Math.floor(hitData.assignedTime / 60);
 		if ( hitData.price < parseFloat(this.data.less2.pay) ) {

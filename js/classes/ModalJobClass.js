@@ -1,21 +1,24 @@
-/**
- * This class deals with any showing of modals for jobs.
+/** This class deals with any showing of modals for jobs.
  * @class ModalJobClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
-  /** This method shows the details of a panda in a modal.
+	constructor() {
+  }
+  /** Shows the modal for users to change the details of the hit job with the unique ID.
    * @async                                - To wait for the data to be loaded from the database.
-   * @param  {function} [successFunc=null] - Function to call after the save button is pressed. */
-  async showDetailsModal(myId, successFunc=null) {
+   * @param  {number} myId                 - The unique ID number for the hit job being edited.
+   * @param  {function} [successFunc=null] - Function to call after the save button is pressed.
+   * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
+  async showDetailsModal(myId, successFunc=null, afterClose=null) {
     await bgPanda.getDbData(myId);
-    const hitInfo = bgPanda.info[myId];
+    let hitInfo = bgPanda.options(myId);
+    if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
       hitInfo.data = Object.assign(hitInfo.data, changes);
       hitInfo.data.duration *= 60000; bgPanda.timerDuration(myId);
       await bgPanda.updateDbData(myId, hitInfo.data);
-      pandaUI.pandaCard[myId].updateAllCardInfo(hitInfo);
+      pandaUI.cards.updateAllCardInfo(myId, hitInfo);
       pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data);
       modal.closeModal();
       if (hitInfo.skipped) bgPanda.checkSkipped(myId, hitInfo.data);
@@ -51,12 +54,12 @@ class ModalJobClass {
       const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
       divContainer.append(df);
       modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
-    });
+    }, () => { if (afterClose) afterClose(); else modal = null; });
   }
-  /**
-   * Shows a modal for adding panda or search jobs
-   */
-  showJobAddModal() {
+  /** Shows a modal for adding panda or search jobs.
+   * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
+  showJobAddModal(afterClose=null) {
+    if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     let df = document.createDocumentFragment();
     const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>').appendTo(df);
@@ -77,7 +80,7 @@ class ModalJobClass {
       $('#pcm_startCollecting').click( e => $('#pcm_formAddGroupID').focus() );
       $('#pcm_onlyOnce').click( e => $('#pcm_formAddGroupID').focus() );
       $('#pcm_formAddGroupID').focus();
-    });
+    }, () => { modal = null; if (afterClose) afterClose(); });
     /** Verifies that the groupID inputted is correct. */
     function checkGroupID() {
       const groupVal = $('#pcm_formAddGroupID').val();
@@ -105,8 +108,8 @@ class ModalJobClass {
           title = (reqId) ? '--( Requester ID Search )--' : title;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm_searchJob').is(':checked')) ? 'gid' : null);
           let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
-          let opt = optObject(once, search,_,_,_,_,_,_, (reqId) ? 0 : 4000);
-          pandaUI.addPanda(data, opt, false, startNow,_,_, (reqId) ? 4000 : 0);
+          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.getSearchDuration()*1000 : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer()*1000);
+          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer()*1000);
           modal.closeModal();
         } else {
           $('label[for="pcm_formAddGroupID"]').css('color', 'red');
@@ -121,12 +124,13 @@ class ModalJobClass {
   /** Shows jobs in a table with a checkbox, collect button and details button.
    * @param  {object} modalBody             - The Jquery element of the modal body to append to.
    * @param  {array} jobs                   - An array of all the jobs to display.
-   * @param  {function} [checkboxFunc=null] - Function to call when checkbox is clicked. */
-  showJobsTable(modalBody, jobs, checkboxFunc=null) {
+   * @param  {function} [checkboxFunc=null] - Function to call when checkbox is clicked.
+   * @param  {function} [afterClose=null]   - Function to call after the modal is closed. */
+  async showJobsTable(modalBody, jobs, checkboxFunc=null, afterClose=null) {
     const divContainer = $(`<table class="table table-dark table-hover table-sm table-moreCondensed pcm_jobTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([ { string:"", type:"string" }, {string:"Requester Name", type:"string", noBorder:true}, {string:"Title", type:"string", noBorder:true}, {string:"Pay", type:"string", noBorder:true}, {string:"", type:"string"}, {string:"", type:"string"} ], divContainer, bgPanda.info, true, true, "#0b716c");
-    jobs.forEach(myId => {
-      const status = (pandaUI.pandaStats[myId].collecting) ? "On" : "Off";
+    for (const myId of jobs) {
+      let status = (pandaUI.pandaStats[myId].collecting) ? "On" : "Off", data = await bgPanda.dataObj(myId);
       displayObjectData([
         { string:"", type:"checkbox", width:"20px", unique:myId, inputClass:" pcm_checkbox", btnFunc:checkboxFunc },
         { string:"Requester Name", type:"keyValue", key:"reqName", orKey:"friendlyReqName", width:"155px", id:`pcm_RQN_${myId}` },
@@ -137,30 +141,30 @@ class ModalJobClass {
           }},
         { label:"Details", type:"button", addClass:" btn-xxs", idStart:"pcm_detailsButton1_", width:"62px", unique:myId, btnFunc: (e) => { 
             const myId = e.data.unique;
-            pandaUI.modalJob.showDetailsModal( myId, (changes) => {
+            this.showDetailsModal( myId, (changes) => {
               $(`#pcm_RQN_${myId}`).text( (changes.friendlyReqName!=="") ? changes.friendlyReqName : changes.reqName );
               $(`#pcm_TTL_${myId}`).text( (changes.friendlyTitle!=="") ? changes.friendlyTitle : changes.title );
               $(`#pcm_Pay_${myId}`).text(changes.price);
-            });
+            }, () => { if (afterClose) afterClose(); });
           }}
-      ], divContainer, bgPanda.info[myId].data, true, true);
-    });
+      ], divContainer, data, true, true);
+    }
   }
   /** Filters out jobs with the search term, collecting radio, search mode and once options.
    * @param  {string} search       - Search term to find in title or requester name.
    * @param  {object} modalControl - Jquery element of modalControl to use for these jobs.
    * @return {bool}                - True if job should be shown. */
   jobsFilter(search, modalControl) {
-    return bgPanda.pandaUniques.filter( (myId) => {
-      const value = bgPanda.info[myId];
+    return bgPanda.pandaUniques.filter( async (myId) => {
+      let options = bgPanda.options(myId);
       const stats = pandaUI.pandaStats[myId];
       let good = false;
       const radioChecked = $(modalControl).find(`input[name='theJobs']:checked`).val();
       if (radioChecked==="0") good = true;
       else if (radioChecked==="1" && stats.collecting) good = true;
       else if (radioChecked==="2" && !stats.collecting) good = true;
-      else if (radioChecked==="4" && value.once) good = true;
-      if (good && search!=="" && (value.title.toLowerCase().includes(search) || value.reqName.toLowerCase().includes(search))) good = true;
+      else if (radioChecked==="4" && options.once) good = true;
+      if (good && search!=="" && (options.title.toLowerCase().includes(search) || options.reqName.toLowerCase().includes(search))) good = true;
       else if (good && search!=="") good = false;
       return good;
     } )
@@ -172,8 +176,10 @@ class ModalJobClass {
    * @param  {function} [saveFunc=null]   - Function to call when save button clicked.
    * @param  {function} [checkFunc=null]  - Function to call when checkbox clicked on a job.
    * @param  {function} [cancelFunc=null] - Function to call when cancel button clicked.
-   * @param  {function} [afterShow=null]  - Function to call when modal is shown after animations stopped. */
-  showJobsModal(type='jobs', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null) {
+   * @param  {function} [afterShow=null]  - Function to call when modal is shown after animations stopped.
+   * @param  {function} [afterClose=null] - Function to call after the modal is closed. */
+ showJobsModal(type='jobs', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null, afterClose=null) {
+    if (!modal) modal = new ModalClass();
     const theTitle = (type==='groupingEdit') ? 'Edit Groupings' : 'List Jobs';
     const saveBtnStatus = (type==='groupingEdit') ? 'visible btn-sm' : 'invisible';
     const idName = modal.prepareModal(thisObj, '1000px', 'modal-header-info modal-lg', theTitle, '', 'text-right bg-dark text-light', 'modal-footer-info', saveBtnStatus, 'Save Groupings', saveFunc, 'invisible', 'No', null, 'invisible', 'Close');
@@ -200,14 +206,14 @@ class ModalJobClass {
     }, ' pl-5');
     $('<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>').on( 'click', (e) => {
       $(modalBody).find('.pcm_jobTable').remove();
-      this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl), checkFunc);
+      this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl), checkFunc, () => {});
       if (type==='groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm_selection_${bgPanda.dbIds[value]}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === 'jobs') $('<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>').click( (e) => {
-      const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => { return Number($(element).val()); }).get();
+      const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => Number(element.val())).get();
       if (selected.length) pandaUI.removeJobs(selected, () => {
           $(modalBody).find('.pcm_jobTable').remove();
-          this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl));
+          this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl),_, () => {});
         });
     }).appendTo(inputControl);
     $(df).find('input:radio[name="theJobs"]').click( (e) => {
@@ -216,9 +222,9 @@ class ModalJobClass {
     modal.showModal(cancelFunc, () => {
       $('<div class="pcm_modalControl w-100"></div>').append(df).insertBefore(modalBody);
       let df2 = document.createDocumentFragment();
-      this.showJobsTable(df2, this.jobsFilter('', modalControl), checkFunc);
+      this.showJobsTable(df2, this.jobsFilter('', modalControl), checkFunc, () => {});
       $(df2).appendTo(modalBody);
       if (afterShow) afterShow(this);
-    });
+    }, () => { if (afterClose) afterClose(); else modal = null; });
   }
 }

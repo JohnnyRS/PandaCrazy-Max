@@ -1,22 +1,23 @@
-let globalOpt=new PandaGOptions(), modal = new ModalClass(), alarms = new AlarmsClass();
+let globalOpt=new PandaGOptions(), modal = null, alarms = new AlarmsClass();
 let notify = new NotificationsClass(), groupings = new PandaGroupings(), pandaUI = new PandaUI();
 let menus = new MenuClass("pcm_quickMenu");
-let goodDB=false, errorObject = null;
+let goodDB=false, errorObject = null, gNewVersion = false;
 let bgPage = chrome.extension.getBackgroundPage(); // Get the background page object for easier access.
 let bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(); // Get objects to panda and queue class.
+let localVersion = localStorage.getItem('PCM_version');
+let gManifestData = chrome.runtime.getManifest();
+if (gManifestData.version !== localVersion) gNewVersion = true;
+localStorage.setItem('PCM_version',gManifestData.version);
 
-/**
- * Open a modal showing loading Data and then after it shows on screen go start Panda Crazy.
- */
+/** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
+  modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
     null , false, false, '', '', null, startPandaCrazy.bind(this) ); // Calls startPandaCrazy after modal shown.
 }
-/**
- * Starts the process of loading data in the program and check for errors as it goes.
+/** Starts the process of loading data in the program and check for errors as it goes.
  * Make sure to check for a good DB open and wait for slower computers.
- * @async - To wait for preparations for classes to end their database operations.
- */
+ * @async - To wait for preparations for classes to end their database operations. */
 async function startPandaCrazy() {
   $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
   if (await bgPage.gCheckPandaDB()) {
@@ -30,17 +31,15 @@ async function startPandaCrazy() {
     $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
     setTimeout( () => {
-      modal.closeModal('Loading Data'); 
+      modal.closeModal('Loading Data');
       bgQueue.startQueueMonitor();
     }, 600); // Just a small delay so messages can be read by user.
   } else { haltScript(errorObject, errorObject.message, "Problem with Database.", 'Error opening database:'); }
 }
 
-/** 
- * Shows good messages in loading modal and console. Shows error message on page and console before halting script.
+/**  Shows good messages in loading modal and console. Shows error message on page and console before halting script.
  * @param {array} good - Array of good messages to display in the loading modal and console.
- * @param {object} bad - If set then an error has happened so display it and stop script.
- */
+ * @param {object} bad - If set then an error has happened so display it and stop script. */
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
   if (good.length > 0) { // Does it have good messages?
@@ -57,12 +56,13 @@ allTabs('/pandaCrazy.html', count => { // Count how many Panda Crazy pages are o
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
-/** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
+/** Detects when user opens another tab in same window with PCmax or minimizes. Not sure if this is needed with extension. */
 window.addEventListener('visibilitychange', (evt) => {
   if (globalOpt && notify && 'hidden' in document && document.hidden) {
     if (globalOpt.isNotifications() && globalOpt.isUnfocusWarning()) notify.showNotFocussed();
   }
 }, false);
+/** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', (e) => {
   if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).disableSelection(); }
 });

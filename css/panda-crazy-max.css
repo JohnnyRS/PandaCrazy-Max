@@ -45,6 +45,13 @@ html, body { height: 100%; }
 .pcm_searching .pcm_searchCollect { background-color: #1ab71a; color: #FFFFFF; }
 .pcm_searching .pcm_searchOn { background-color: #1e581e; color: #a9fc79 !important; }
 .pcm_searching .pcm_searchDisable { background-color: #680e0e; color: #d7e0d1 !important; }
+.pcm_importButton { width:300px; }
+.pcm_importButton.disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
+.pcm_importStatus { margin:10px 0 10px 0; }
+.pcm_fileInput { width:100%; font-size:10px; margin-top:15px; }
+.custom-file { width:320px; }
+.custom-file-label { text-align: left; }
+#pcm_importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
 .card {
   margin: 2px 2px 0 0 !important;
   border-color: #023bd6 !important;

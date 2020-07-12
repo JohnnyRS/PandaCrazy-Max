@@ -1,8 +1,6 @@
-/**
- * This class deals with the different menus and which methods to call.
+/** This class deals with the different menus and which methods to call.
  * @class MenuClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MenuClass {
   /**
    * @param  {string} id    The id name of the quick menu on the UI to use to append.
@@ -74,18 +72,18 @@ class MenuClass {
        {type:'rangeMin', label:'0'}]);
     this.addMenu(topMenu, 'Jobs', () => { pandaUI.showJobsModal(); }, 'List all Panda Jobs Added', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '', 
-      [{type:'item', label:'Add', menuFunc: () => { pandaUI.modalJob.showJobAddModal(); }, tooltip:'Add a new Panda or Search Job'},
+      [{type:'item', label:'Add', menuFunc: () => { pandaUI.showJobAddModal(); }, tooltip:'Add a new Panda or Search Job'},
        {type:'item', label:'Stop All', menuFunc: () => { bgPanda.stopAll(); }, tooltip:'Stop All Collecting Panda or Search Jobs'},
        {type:'item', label:'Search Jobs', menuFunc: () => { pandaUI.showJobsModal(); }, tooltip:'Search the Panda Jobs Added'},
        {type:'item', label:'Search Mturk'},
        {type:'divider'},
-       {type:'item', label:'Export'},
-       {type:'item', label:'Import'}]);
-    this.addMenu(topMenu, 'Display', () => { pandaUI.changeDisplay(2) }, 'Change how information is displayed on the jobs to Normal.', 'pcm-topMenuBtn');
+       {type:'item', label:'Export', menuFunc: () => { /* new EximClass().exportData(); */ }},
+       {type:'item', label:'Import', menuFunc: () => { new EximClass().importModal(); }}]);
+    this.addMenu(topMenu, 'Display', () => { pandaUI.cards.changeDisplay(2) }, 'Change how information is displayed on the jobs to Normal.', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '',
-      [{type:'item', label:'Normal', menuFunc: () => { pandaUI.changeDisplay(2) }, tooltip:'Change how information is displayed on the jobs to Normal.'},
-       {type:'item', label:'Minimal Info', menuFunc: () => { pandaUI.changeDisplay(1) }, tooltip:'Change how information is displayed on the jobs to minimal 3 lines.'},
-       {type:'item', label:'One Line Info', menuFunc: () => { pandaUI.changeDisplay(0) }, tooltip:'Change how information is displayed on the jobs to only one line.'}]);
+      [{type:'item', label:'Normal', menuFunc: () => { pandaUI.cards.changeDisplay(2) }, tooltip:'Change how information is displayed on the jobs to Normal.'},
+       {type:'item', label:'Minimal Info', menuFunc: () => { pandaUI.cards.changeDisplay(1) }, tooltip:'Change how information is displayed on the jobs to minimal 3 lines.'},
+       {type:'item', label:'One Line Info', menuFunc: () => { pandaUI.cards.changeDisplay(0) }, tooltip:'Change how information is displayed on the jobs to only one line.'}]);
     this.addMenu(topMenu, 'Grouping', () => { groupings.showGroupingsModal(pandaUI); }, 'Start, stop or edit groupings you have added', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '',
       [{type:'item', label:'Start/Stop', menuFunc: () => { groupings.showGroupingsModal(pandaUI); }, tooltip:'Start, stop or edit groupings you have added'},
@@ -114,7 +112,7 @@ class MenuClass {
     this.addMenu(group, 'Pause', (e) => { if (bgPanda.pauseToggle()) $(e.target).html('Unpause'); else $(e.target).html('Pause'); }, 'Pause Timer.');
     this.addMenu(group, 'Start Group', () => { groupings.showGroupingsModal(pandaUI); } );
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.');
-    this.addMenu(group, 'Add Job', () => { pandaUI.modalJob.showJobAddModal(); }, 'Add a Panda or Search Job.');
+    this.addMenu(group, 'Add Job', () => { pandaUI.showJobAddModal(); }, 'Add a Panda or Search Job.');
     this.addSeparator(group, ' - ');
     this.addMenu(group, 'Reset Timer', () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'Reset the current timer to the original time.' );
     this.addMenu(group, 'Search Jobs', () => { pandaUI.showJobsModal(); }, 'Search the Panda Jobs Added' );

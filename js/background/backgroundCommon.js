@@ -7,7 +7,7 @@ let myQueue = new MturkQueue(2000); // 2s for queue monitor by default
  * Checks if panda UI was closed so it can stop the queue monitor and search UI.
  */
 function checkUIConnects() {
-  if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.originRemove("pandaUI"); mySearch.stopSearching(); dbGood = false; }
+  if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.stopSearching(); dbGood = false; }
 }
 /**
  * Function to set up a search UI variable for the background and returns search class.

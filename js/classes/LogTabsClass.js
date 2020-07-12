@@ -1,9 +1,7 @@
-/**
- * A class that deals with the queue watch, accepted hits and status log on the bottom.
+/** A class that deals with the queue watch, accepted hits and status log on the bottom.
  * It will also take care of how the logs are displayed on the UI page.
  * @class LogTabsClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class LogTabsClass {
   constructor() {
     this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
@@ -54,20 +52,20 @@ class LogTabsClass {
     return [success, err];
   }
   /** Add the hit information to the log and either append or before element passed.
-   * @param  {object} newInfo       - Object with information of the new hit being added to the log.
-   * @param  {string} taskId        - The task id of the hit in the queue results.
+   * @param  {object} hitInfo       - Object with information of the new hit being added to the log.
    * @param  {object} element       - Element to append this hit to in the log tab.
    * @param  {bool} [appendTo=true] - Should this be appended to element or before element? */
   addToWatch(hitInfo, element, appendTo=true) {
     if (!this.taskIds.includes(hitInfo.task_id)) {
       const timeLeft = getTimeLeft(hitInfo.secondsLeft);
-      const toAdd = $(`<div class="pcm_queue">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',hitInfo.task_id);
+      let toAdd = $(`<div class="pcm_queue">(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',hitInfo.task_id);
       if (appendTo) toAdd.appendTo(element);
       else toAdd.insertBefore(element);
       toAdd.append(" :: ");
       createLink(toAdd, "pcm_returnLink", "#", "Return", "_blank", (e) => {
+        modal = new ModalClass();
         modal.showDialogModal("700px", "Return this hit?", `Do you really want to return this hit:<br> ${hitInfo.project.requester_name} - ${hitInfo.project.title}`, () => {
-          const returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
+          let returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
           fetch(returnLink, { method: 'POST', credentials: `include`,
             headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
             body: "_method=delete&authenticity_token=" + encodeURIComponent(bgPanda.authenticityToken)
@@ -80,14 +78,15 @@ class LogTabsClass {
       });
       toAdd.append(" :: ");
       createLink(toAdd, "pcm_continueLink", "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "from_queue=true"), "Continue Work", "_blank", (e) => {
-          const theHeight=window.outerHeight-80, theWidth=window.outerWidth-10;
+          let theHeight = window.outerHeight-80, theWidth = window.outerWidth-10;
           window.open($(e.target).attr("href"),"_blank","width=" + theWidth + ",height=" +  theHeight + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes");
           e.preventDefault();
       });
       if (this.dLog(3)) console.info(`%cNew to queue: {title: ${hitInfo.project.title}, task_id:${hitInfo.task_id}, hit_set_id:${hitInfo.project.hit_set_id}, assignment_id:${hitInfo.assignment_id}, requester_id:${hitInfo.project.requester_id}, requester_name:${hitInfo.project.requester_name}}`,CONSOLE_DEBUG);
+      toAdd = null;
     }
   }
-  /** Add a new hit accepted into the queue in the correct position accroding to seconds left.
+  /** Add a new hit accepted into the queue in the correct position according to seconds left.
    * @param  {object} hitInfo       - Object of the panda job from panda class.
    * @param  {object} hitInfo2      - Hit information from mturk queue results.
    * @param  {object} data          - Saved data from panda class just in case it gets removed.
@@ -99,13 +98,14 @@ class LogTabsClass {
     else { // If not currently updating queue then add hit to queue watch.
       if (!this.taskIds.includes(data.taskId)) { // Make sure hit not in queue already.
         this.queueAdding = true;
-        let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft>data.assignedTime; } );
+        let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft > data.assignedTime; } );
         this.taskIds.splice( ((found===-1) ? this.taskIds.length-1 : found-1), 0, data.taskId );
-        const newInfo = { project: {assignable_hits_count:hitInfo.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:hitInfo2.task_id, assignment_id:hitInfo2.assignment_id, task_url:task_url.replace("&auto_accept=true","")};
+        let newInfo = { project: {assignable_hits_count:data.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:hitInfo2.task_id, assignment_id:hitInfo2.assignment_id, task_url:task_url.replace("&auto_accept=true","")};
         if (found===-1) this.addToWatch(newInfo, this.queueContent, true);
         else this.addToWatch(newInfo, this.queueContent.find("div")[found], false);
         this.taskInfo[data.taskId] = newInfo; this.taskIds.push(data.taskId);
         this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
+        newInfo = null;
       }
       this.queueAdding = false;
     }
@@ -160,6 +160,7 @@ class LogTabsClass {
                 }
                 if (i >= currentHits.length) this.addToWatch(newInfo[taskId], this.queueContent, true);
                 else this.addToWatch(newInfo[taskId], this.queueContent.find("div")[i], false);
+                currentHits = null;
               }
             }
           }
@@ -180,8 +181,10 @@ class LogTabsClass {
             firstOne = false;
           }
         }
+        queueWatch = null;
       }
-      this.queueUpdating = false;
+      newIds = []; oldIds = [];
+      this.queueUpdating = false; prevHits = newInfo = null;
     }
   }
   /** Update the queue watch captcha counter.
@@ -194,10 +197,11 @@ class LogTabsClass {
   addToLog(data) {
     let divHits = this.acceptContent.find('div');
     if (divHits.length >= 100) divHits[divHits.length - 1].remove();
-    const now = moment().format('ddd hh:mma');
+    let now = moment().format('ddd hh:mma');
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
     const title = (data.friendlyTitle) ? data.friendlyTitle : data.title;
     this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
+    divHits = now = null;
   }
   /** Adds the status for this panda job with the unique ID to the status log tab.
    * @param  {object} data  - Object of the data from the panda job with the unique number ID.

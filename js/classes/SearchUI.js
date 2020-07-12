@@ -1,36 +1,32 @@
-/**
- * A class dealing with the search UI so the user can more easily enable or disable triggers.
+/** A class dealing with the search UI so the user can more easily enable or disable triggers.
  * @class SearchUI
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class SearchUI {
   constructor () {
 		this.ridRow = null;
 		this.ridColumn1 = null;
 		this.ridListGroup1 = null;
 	}
-  /**
-	 * Stops the searching process.
-   */
-  stopSearching() { bgSearchClass.stopSearching(); }
-  /**
-	 * Starts the searching prcoess.
-   */
-  startSearching() { bgSearchClass.startSearching(); }
-  /**
-	 * Shows logged off modal and will unpause the timer when logged off modal closes.
-   */
-	nowLoggedOff() {
-		modal.showLoggedOffModal( () => { bgSearchClass.unPauseTimer(); } );
+  /** Stops the searching process. */
+  stopSearching() {
+		if (bgSearchClass.searchGStats.isSearchOn()) bgSearchClass.searchGStats.searchingOff();
+		bgSearchClass.stopSearching();
 	}
-  /**
-   */
-	nowLoggedOn() { modal.closeModal(); }
-	/**
-	 * Updates the stat object with the text provided or the stat value.
+  /** Starts the searching prcoess. */
+  startSearching() {
+		bgSearchClass.searchGStats.searchingOn();
+		bgSearchClass.startSearching();
+	}
+  /** Shows logged off modal and will unpause the timer when logged off modal closes. */
+	nowLoggedOff() {
+		modal = new ModalClass();
+		modal.showLoggedOffModal( () => { modal = null; bgSearchClass.unPauseTimer(); } );
+	}
+  /** Closes any loggedoff modal because it's now logged on. */
+	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
+	/** Updates the stat object with the text provided or the stat value.
 	 * @param  {object} statObj - The object of the stat that needs to be updated.
-	 * @param  {string} text		- The text to display in the stat area.
-	 */
+	 * @param  {string} text		- The text to display in the stat area. */
 	updateStatNav(statObj,text) {
 		if (text==="") {
 			if (statObj.disabled===null) statObj.disabled = ($(statObj.id).length) ? false : true;
@@ -40,17 +36,14 @@ class SearchUI {
 		if (statObj.addClass && statObj.value) $(statObj.id).addClass(statObj.addClass);
 		else if (statObj.addClass) $(statObj.id).removeClass(statObj.addClass);
 	}
-  /**
-	 * Prepare the search page with button events and set up the columns for triggers to use.
-	 * If the panda UI is opened then it will start the queue monitor too.
-   */
+  /** Prepare the search page with button events and set up the columns for triggers to use.
+	 * If the panda UI is opened then it will start the queue monitor too. */
   prepareSearch() {
 		$("#pcm_saveToFile").click( (e) => { saveToFile(bgSearchClass.hitSearchObjects); });
 		$("#pcm_searchNow").click( (e) => {
 			if (!bgSearchClass.isPandaUI()) return false;
-			if (bgSearchClass.searchGStats.isSearchNowOn()) {
-				this.stopSearching(); bgSearchClass.searchGStats.searchNowOff();
-			} else { this.startSearching(); }
+			if (bgSearchClass.searchGStats.isSearchOn()) this.stopSearching();
+			else this.startSearching();
 		});
 		let ridRow = $(`<div class="row mx-0"></div>`).appendTo(`#pcm_requesterTriggers`);
 		$(ridRow).append(`<div class="col-4 px-0 my-1"><div class="list-group list-group-flush" id="pcm_ridListTab" role="tablist"></div></div><div class="col-8 pl-1 mx-0"><div class="tab-content" id="nav-ridTabContent"></div></div>`);
@@ -59,36 +52,30 @@ class SearchUI {
 		if (bgSearchClass.searchGStats.isSearchOn()) { bgSearchClass.openUI(); }
 		if (bgSearchClass.isPandaUI()) bgQueue.startQueueMonitor();
   }
-  /**
-	 * Update the status bar with the hits found value or the search results value.
+  /** Update the status bar with the hits found value or the search results value.
    * @param  {string} statusName - The status name to update with the status value.
-   * @param  {string} status		 - The status value that should be display in the status bar.
-   */
+   * @param  {string} status		 - The status value that should be display in the status bar. */
   updateStatus(statusName, status) {
     if (statusName === "hits found") $("#pcm_searchHitsFound").html(status);
     else if (statusName === "total results") $("#pcm_searchResults").html(status);
 	}
-	/**
-	 * This method will update the passed element with the info from the passed trigger info.
+	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} [thetrigger=null] - The jquery element where the updated data should be placed.
 	 * @param  {object} [passInfo=null]	  - The info from the trigger that needs to display updates.
-	 * @param  {bool} [toggle=true]				- Should this trigger be toggled?
-	 */
+	 * @param  {bool} [toggle=true]				- Should this trigger be toggled? */
 	updateTrigger(thetrigger=null, passInfo=null, toggle=true) {
 		if (thetrigger===null && passInfo===null) return;
 		const theTarget = (thetrigger) ? thetrigger : $(`#list-t${passInfo.key1}${passInfo.count}-list`);
 		const theInfo = $(theTarget).data("info");
-		if (toggle) bgSearchClass.toggleDisabled(theInfo.key2, theInfo, false)
+		if (toggle) bgSearchClass.toggleTrigger(theInfo.key1, theInfo.key2);
 		if ($(theTarget).hasClass("pcm_disabled")) $(theTarget).removeClass("pcm_disabled");
 		else $(theTarget).addClass("pcm_disabled");
 		const disabledText = (theInfo.disabled) ? ` <span class="text-danger pcm_disabledText">(Disabled)</span>` : ` <span class="text-success pcm_disabledText">(Enabled)</span>`;
 		$(`#list-t${theInfo.key1}${theInfo.count} .pcm_disabledText`).html(disabledText);
 	}
-	/**
-	 * Display the info for a trigger in the column 2 detail area.
+	/** Display the info for a trigger in the column 2 detail area.
 	 * @param  {object} info  - The info about this trigger that is needed to be added to this column.
-	 * @param  {number} index - The unique index number for this trigger.
-	 */
+	 * @param  {number} index - The unique index number for this trigger. */
 	addToColumn1(info,index) {
 		const disabledClass = (info.disabled) ? " pcm_disabled" : "";
 		const active = (Number(index)===1) ? " show active" : "";
@@ -100,11 +87,9 @@ class SearchUI {
 			this.updateTrigger(theTarget);
 		});
 	}
-	/**
-	 * Display the info for a trigger in the column 2 detail area.
+	/** Display the info for a trigger in the column 2 detail area.
 	 * @param  {object} info  - The info about this trigger that is needed to be added to this column.
-	 * @param  {number} index - The unique index number for this trigger.
-	 */
+	 * @param  {number} index - The unique index number for this trigger. */
 	addToColumn2(info,index) {
 		const disabledText = (info.disabled) ? ` <span class="text-danger pr-2 pcm_disabledText">(Disabled)</span>` : ` <span class="text-success pr-2 pcm_disabledText">(Enabled)</span>`;
 		const active = (Number(index)===1) ? " show active" : "";
@@ -119,19 +104,15 @@ class SearchUI {
 			{ label:"Temporary GoHam Time on Auto: ", type:"text", key:"tempGoHam", disable:true } 
 		], tabPane, bgSearchClass.triggerInfo[key1][key2]);
 	}
-	/**
-	 * Add the trigger info to the page in column 1 and column 2.
+	/** Add the trigger info to the page in column 1 and column 2.
 	 * @param  {object} info  - The info about this trigger that is needed to be added to the page.
-	 * @param  {number} index	- The unique index number for this trigger.
-	 */
+	 * @param  {number} index	- The unique index number for this trigger. */
 	addToUI(info, index) {
 		this.addToColumn1(info,index); this.addToColumn2(info,index);
 	}
-	/**
-	 * Remove the trigger with the type and group ID or requester ID from the search UI.
+	/** Remove the trigger with the type and group ID or requester ID from the search UI.
 	 * @param  {string} type  - Type of the trigger [group ID or requester ID].
-	 * @param  {number} value - Group ID or Requester ID for value depending on type.
-	 */
+	 * @param  {number} value - Group ID or Requester ID for value depending on type. */
 	removeTrigger(type, value) {
 		const active = $(`#nav-${type}TabContent div.active`);
 		if ($(active).get(0).id === `list-t${type}${value}`) {

@@ -1,9 +1,7 @@
-/**
- * Class for the global options and methods to change them.
+/** Class for the global options and methods to change them.
  * Breaks up the options into general, timers and alarm options.
  * @class PandaGOptions
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class PandaGOptions {
   constructor() {
     this.general = {};
@@ -28,7 +26,7 @@ class PandaGOptions {
       secondTimer:1400,           // The time for the second timer.
       thirdTimer:2100,            // The time for the third timer.
       hamTimer:900,               // The time for the ham timer.
-      hamDelayTimer:8,            // The duration timer for goHam on any new hits.
+      hamDelayTimer:8,            // The duration timer in seconds for goHam on any new hits.
       queueTimer:2000,            // The time for the queue Timer.
       timerIncrease:10,
       timerDecrease:10,
@@ -36,6 +34,8 @@ class PandaGOptions {
       timerAutoIncrease:10,
       stopAutoSlow:false,
       autoSlowDown:false,
+      timerUsed:'mainTimer',
+      searchDuration:10
     };
     this.timerRange = {min:600, max:15000};
     this.timerDur = {min:0, max:600}
@@ -53,15 +53,14 @@ class PandaGOptions {
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
   }
-  /**
-   * Load up global options from database or use and save default options into database.
+  /** Load up global options from database or use and save default options into database.
    * Saves any errors from trying to add to database and then sends a reject.
    * Sends success array with messages and error object from any rejects to afterFunc.
    * @async                      - To wait for the options data to be loaded from the database.
-   * @param {function} afterFunc - Function to call after done to send success array or error object.
-   */
+   * @param {function} afterFunc - Function to call after done to send success array or error object. */
   async prepare(afterFunc) {
     let success = [], err = null;
+    this.captchaCounter = 0; this.lastQueueAlert = -1; this.timerUsed = 'mainTimer';
     await bgPanda.db.getFromDB(bgPanda.optionsStore, null, true, (cursor) => { return cursor.value; })
     .then( async result => {
       if (result.length) { // Options were already saved in database so load and use them.
@@ -85,7 +84,6 @@ class PandaGOptions {
         this.alarms = Object.assign({}, this.alarmsDefault);
       }
     }, rejected => err = rejected);
-    delete this.generalDefault; delete this.timersDefault; delete this.alarmsDefault;
     afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /** Updates the global options and resets anything that is needed for example tooltips. */
@@ -100,10 +98,9 @@ class PandaGOptions {
     bgPanda.db.updateDB(bgPanda.optionsStore, this.timers);
     bgPanda.db.updateDB(bgPanda.optionsStore, this.alarms);
   }
-  /**
-   * Shows the general options in a modal for changes.
-   */
+  /** Shows the general options in a modal for changes. */
   showGeneralOptions() {
+    modal = new ModalClass();
     const idName = modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.general = Object.assign(this.general, changes);
       modal.closeModal();
@@ -121,9 +118,12 @@ class PandaGOptions {
       {label:"Disable Desktop Notifications:", type:"trueFalse", key:"disableNotifications", tooltip:'Disable notifications shown when accepting hits or warnings.'}, 
       {label:"Disable Unfocused window warning:", type:"trueFalse", key:"unfocusWarning", reverse:true, tooltip:'Stop notifying me about the unfocussed window because I know what I am doing.'}
     ], divContainer, modal.tempObject[idName], true);
-    $(modalBody).find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
-    modal.showModal();
+    modal.showModal(_, () => {
+      $(modalBody).find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+    }, () => { modal = null; });
   }
+  /** Verifies all the timers changed with max and min ranges.
+   * @param  {object} v - The changed timer object to verify. */
   timerConfirm(v) {
     let foundError = false;
     for (const key of Object.keys(this.timers)) {
@@ -139,8 +139,9 @@ class PandaGOptions {
   }
   /** Shows the timer options in a modal for changes. */
   showTimerOptions() {
+    modal = new ModalClass();
     const idName = modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
-      let errorFound = this.timerConfirm(changes); console.log(errorFound,JSON.stringify(changes));
+      let errorFound = this.timerConfirm(changes);
       if (!errorFound) {
         this.timers = Object.assign(this.timers, changes);
         bgPanda.timerChange(this.timers[this.timerUsed]);
@@ -164,11 +165,13 @@ class PandaGOptions {
       {label:"Timer Add Timer By:", type:"number", key:"timerAddMore", tooltip:'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
       {label:"Timer Auto Slowdown Increase:", type:"number", key:"timerAutoIncrease", tooltip:'', data:this.timerChange}
     ], divContainer, modal.tempObject[idName], true);
-    modal.showModal();
-    modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+    modal.showModal(_, () => {
+      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+    }, () => { modal = null; });
   }
   /** Shows the alarm options in a modal for changes. */
   showAlarmOptions() {
+    modal = new ModalClass();
     const idName = modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
       this.alarms = Object.assign(this.alarms, changes);
       modal.closeModal();
@@ -178,7 +181,9 @@ class PandaGOptions {
     displayObjectData([
       { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }
     ], divContainer, modal.tempObject[idName], true);
-    modal.showModal();
+    modal.showModal(_, () => {
+      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+    }, () => { modal = null; });
   }
   /** Updates the captcha text area with updated info.
    * @return {number} - Returns the value in the captcha counter. */
@@ -186,9 +191,7 @@ class PandaGOptions {
     this.captchaCounter = (this.general.captchaAt>this.captchaCounter) ? this.captchaCounter + 1 : 0;
     return this.captchaCounter;
   }
-  /**
-   * Resets the captcha counter back down to 0.
-   */
+  /** Resets the captcha counter back down to 0. */
   resetCaptcha() { this.captchaCounter = 0; }
   /** Checks to see if it's ok to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
@@ -232,6 +235,8 @@ class PandaGOptions {
   getCurrentTimer() { return this.timers[this.timerUsed]; }
   /** Get the ham delay time to use for new hits when goHam gets turned on. */
   getHamDelayTimer() { return this.timers.hamDelayTimer; }
+  /** Get the search duration time to use for new hits when it starts to collect before searching. */
+  getSearchDuration() { return this.timers.searchDuration; }
   /** Get the timer increase value for increase timer button. */
   getTimerIncrease() { return this.timers.timerIncrease; }
   /** Get the timer decrease value for decrease timer button. */

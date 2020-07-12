@@ -1,8 +1,7 @@
-/**
- * Class that handles all functions dealing with multiple modal dialogs.
+'use strict';
+/** Class that handles all functions dealing with multiple modal dialogs.
  * @class ModalClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalClass {
 	constructor() {
     this.idName = "pcm_modal";                    // Id name of the main modal element.
@@ -26,10 +25,11 @@ class ModalClass {
     const style = ` style="z-index:${1051+(count*2)}"`;
     const idName = `${this.idName}_${count}`;
     this.modals.push(idName); // Push the id name of the modal on to the modals array for multiple modals.
-    const modalHeader = $(`<div class="modal-header"><h4 class="modal-title"></h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>`);
-    const modalFooter = $(`<div class="modal-footer"><button type="button" class="btn btn-success pcm_modalSave">Save</button><button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button><button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button></div>`);
-    const modalContent = $(`<div class="modal-content"></div>`).append(modalHeader, `<div class="modal-body text-center py-2"></div>`, modalFooter);
+    let modalHeader = $(`<div class="modal-header"><h4 class="modal-title"></h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>`);
+    let modalFooter = $(`<div class="modal-footer"><button type="button" class="btn btn-success pcm_modalSave">Save</button><button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button><button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button></div>`);
+    let modalContent = $(`<div class="modal-content"></div>`).append(modalHeader, `<div class="modal-body text-center py-2"></div>`, modalFooter);
     $(`<div id=${idName} class="modal pcm_modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog my-3"></div>`).append(modalContent)).appendTo("body");
+    modalHeader = modalFooter = modalContent = null;
     return idName;
   }
   /** Show this modal dialog to user allowing multiple modals to be shown with zIndex.
@@ -47,6 +47,7 @@ class ModalClass {
       $(e.target).remove(); // Remove the modal from document.
       this.modals.pop(); // Remove this modal from array of modals.
     });
+    $(`#${idName}`).on('hide.bs.modal', (e) => { $(e.target).data('bs.modal', null).remove();  });
     if (afterShow) $(`#${idName}`).on('shown.bs.modal', () => { afterShow(); });
   }
   /** Will close a modal with the title name or the last modal shown.
@@ -60,6 +61,7 @@ class ModalClass {
     }
     const idName = this.modals.slice(foundTitle)[0];
     $(`#${idName}`).modal("hide"); // Hiding is basically closing it.
+    $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
     delete this.tempObject[idName]; // Delete the temporary cloned copy of object to be saved.
   }
   /** Workaround for popup unload not working when crossed domains. (www.mturk.com vs worker.mturk.com)
@@ -78,10 +80,10 @@ class ModalClass {
    * @param {string} footerClass                - Class name used for the foot of the modal.
    * @param {string} [saveButton='invisible']   - Class name to be added to the save button. Invisible is default.
    * @param {string} [saveText='Save']          - Text to show on the save button.
-   * @param {function} [saveFunc=null]      - Function to be called when the save button is clicked.
+   * @param {function} [saveFunc=null]          - Function to be called when the save button is clicked.
    * @param {string} [noButton='invisible']     - Class name to be added to the no button. Invisible is default.
    * @param {string} [noText='No']              - Text to show on the no button.
-   * @param {function} [noFunc=null]          - Function to be called when the no button is clicked.
+   * @param {function} [noFunc=null]            - Function to be called when the no button is clicked.
    * @param {string} [cancelButton='invisible'] - Class name to be added to the cancel button. Invisible is default.
    * @param {string} [cancelText='Cancel']      - Text to show on the cancel button.
    * @return {string}                           - Id name of modal prepared. */
@@ -100,7 +102,7 @@ class ModalClass {
     return idName;
   }
   /** Shows a modal informing user that they are logged off from mturk.
-   * @param  {closeCallBack} [afterClose=null] - Function to call after close animation is completed. */
+   * @param  {function} [afterClose=null] - Function to call after close animation is completed. */
   showLoggedOffModal(afterClose=null) {
     if (this.modalLoggedOff === 0) {
       this.modalLoggedOff++;
@@ -120,7 +122,7 @@ class ModalClass {
    * @param  {function} cancelFunc - Function to call after the cancel button is clicked. */
   showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc) {
     const idName = this.prepareModal(null, "600px", "modal-header-danger modal-lg", "Deleting a Panda Hit!", `<h4>Are you sure you want me to delete this job?</h4><h5 class="text-primary">${hitDetails}</h5>`, "text-center", "", "visible", "Yes", deleteFunc, "visible", "No", noFunc, "visible", "Cancel");
-    this.showModal(cancelFunc);
+    this.showModal(cancelFunc,_, () => { modal = null; });
     $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc(); } });
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.
@@ -149,6 +151,6 @@ class ModalClass {
       });
         $('#pcm_formQuestion').focus().select();
       if (afterShow) afterShow();
-    });
+    }, () => { modal = null; } );
   }
 }
