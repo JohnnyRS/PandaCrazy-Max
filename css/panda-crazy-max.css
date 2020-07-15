@@ -51,6 +51,12 @@ html, body { height: 100%; }
 .pcm_fileInput { width:100%; font-size:10px; margin-top:15px; }
 .custom-file { width:320px; }
 .custom-file-label { text-align: left; }
+.pcm_alarms { font-size: 15px; margin: 5px 10px; }
+.pcm_alarms .custom-file { width:280px; height:15px; }
+.pcm_alarms .custom-file-input { height:10px; line-height:1.0; }
+.pcm_alarms .custom-file-label { height:25px; line-height:0.8; white-space: nowrap; font-size:10px; }
+.pcm_alarms .custom-file-label::after { line-height: 1.0; height:23px; }
+.pcm_alarms .pcm_changeMe { font-size: 15px; }
 #pcm_importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
 .card {
   margin: 2px 2px 0 0 !important;

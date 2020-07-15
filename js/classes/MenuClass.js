@@ -31,10 +31,12 @@ class MenuClass {
    * @param  {object} appendHere    - Append submenu to an added menu element.
    * @param  {string} dropdownStyle - The css style of the dropdown when submenu arrow clicked.
    * @param  {array} dropdownInfo   - The dropdown information for the rest of the submenus. */
-  addSubMenu(appendHere, dropdownStyle, dropdownInfo) {
+  addSubMenu(appendHere, dropdownStyle, dropdownInfo, noClick=false, onClosed=null) {
     const btnGroup = $(`<div class='btn-group py-0'></div>`).appendTo(appendHere);
     $(`<button type='button' class='btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'></button>`).append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
     const dropdownMenu = $(`<div class='dropdown-menu pcm_dropdownMenu' style='${dropdownStyle}'></div>`).appendTo(btnGroup);
+    if (noClick) dropdownMenu.click( (e) => { e.stopPropagation(); } );
+    if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', (e) => { onClosed(); });
     dropdownInfo.forEach( (info) => {
       const addtip = (info.tooltip && info.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${info.tooltip}'` : ``;
       if (info.type === 'item') {
@@ -68,8 +70,8 @@ class MenuClass {
     this.addMenu(topMenu, 'Vol:', () => {}, '', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, 'min-width:3rem; text-align:center;', 
       [{type:'rangeMax', label:'100'},
-       {type:'slider', id:'pcm_volumeVertical', min:0, max:100, value:50, step:10, slideFunc: (e, ui) => { $(e.target).find('.ui-slider-handle').text(ui.value); }, createFunc: (e, ui) => { $(e.target).find('.ui-slider-handle').text(50).css({left: '-.5em', width: '30px'}); }},
-       {type:'rangeMin', label:'0'}]);
+       {type:'slider', id:'pcm_volumeVertical', min:0, max:100, value:50, step:5, slideFunc: (e, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value) }, createFunc: (e, ui) => { $(e.target).find('.ui-slider-handle').text(50).css({left: '-0.6em', width: '25px', fontSize:'12px', lineHeight:'1', height:'18px', paddingTop:'2px'}); }},
+       {type:'rangeMin', label:'0'}], true, () => {});
     this.addMenu(topMenu, 'Jobs', () => { pandaUI.showJobsModal(); }, 'List all Panda Jobs Added', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '', 
       [{type:'item', label:'Add', menuFunc: () => { pandaUI.showJobAddModal(); }, tooltip:'Add a new Panda or Search Job'},
@@ -103,7 +105,7 @@ class MenuClass {
       this.addSubMenu(topMenu, '',
       [{type:'item', label:'General', menuFunc:() => { globalOpt.showGeneralOptions(); }, tooltip:'Change the general options'},
        {type:'item', label:'Edit Timers', menuFunc:function() { globalOpt.showTimerOptions(); }, tooltip:'Change options for the timers'},
-       {type:'item', label:'Edit Alarms', menuFunc:() => { globalOpt.showAlarmOptions(); }, tooltip:'Change the options and sounds for the alarms'}]);
+       {type:'item', label:'Edit Alarms', menuFunc:() => { alarms.showAlarmsModal(); }, tooltip:'Change the options and sounds for the alarms'}]);
   }
   /** Create the quick menu buttons under the stats area. */
   createQuickMenu() {

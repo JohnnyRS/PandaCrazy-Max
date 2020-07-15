@@ -136,10 +136,10 @@ class ModalClass {
    * @param {string} [defAns='']        - Default answer in input field initially.
    * @param {number} [max=null]         - Maximum characters allowed in input field.
    * @param {function} [afterShow=null] - Function to run after the dialog is shown after animation is stopped.  */
-  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null) {
+  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, 'Yes', yesFunc, noClass, 'No');
+    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, 'No');
     this.showModal(null, () => {
       let docKeys = "";
       if (question!=='') { // Should an input field be shown with a question?
@@ -151,6 +151,6 @@ class ModalClass {
       });
         $('#pcm_formQuestion').focus().select();
       if (afterShow) afterShow();
-    }, () => { modal = null; } );
+    }, () => { if (afterClose) afterClose(); else modal = null; } );
   }
 }

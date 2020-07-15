@@ -316,7 +316,7 @@ class PandaUI {
 				const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
 				const run = (msg.command!=="addOnlyJob"); // Run this job after adding
 				const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
-				let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : 0;
+				let hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : 0;
 				let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
 				let opt = optObject(once, search,_,_,_,_,_,_, hamD);
 				this.addPanda(data, opt, true, run, true, duration, 4000);

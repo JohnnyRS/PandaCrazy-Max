@@ -95,7 +95,7 @@ class TabbedClass {
         const label = $('#pcm_formQuestion').val();
         if (label) { this.addTab(label, false, true); }
         modal.closeModal();
-      }, true, true, "Title: ", `Added-${this.unique}`, 10);
+      }, true, false, "Title: ", `Added-${this.unique}`, 10,_,_, 'Add Tab');
     } )).appendTo($(tabElement));
   }
   /** Adds a tab from an object which may come from the database or imported file.
@@ -154,7 +154,7 @@ class TabbedClass {
             const title = $('#pcm_formQuestion').val();
             if (title && title!=="") { this.#dataTabs[unique].title = title; $(e.target).html(title); }
             modal.closeModal();
-          }, true, true, "Title: ", $(e.target).text(), 10);
+          }, true, false, "Title: ", $(e.target).text(), 10,_,_, 'Rename Tab');
         }
         e.preventDefault();
         return false;

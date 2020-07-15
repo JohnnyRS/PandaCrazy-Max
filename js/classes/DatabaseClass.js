@@ -125,7 +125,8 @@ class DatabaseClass {
         listDel.onerror = e => { error = listDel.error.message; } // Error when problems with index happen.
       } else {
         let count = store.count(key); count.onsuccess = () => { // Get number of items with Key
-          if (count.result>0) { const request = store.delete(key); request.onsuccess = () => { completed = true; } }
+          if (count.result > 0 && key !== null) { const request = store.delete(key); request.onsuccess = () => { completed = true; } }
+          else if (key === null) { store.clear(); completed = true; }
           else { error = `Key: [${key}] not found in ${storeName}`; } // Error if key not found.
         }
       }

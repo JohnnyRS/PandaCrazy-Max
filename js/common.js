@@ -23,10 +23,11 @@ function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=
 }
 /** Create a Jquery file input object and returns it and appends to element if appendHere is passed.
  * @param  {object} appendHere - The jquery element to append the input div to. */
-function createFileInput(appendHere) {
+function createFileInput(appendHere=null, accept=null) {
   let inputGroup = $(`<div class='custom-file'></div>`);
-  $(`<input type='file' class='custom-file-input' id='customFile'><label class='custom-file-label' for='customFile'>Choose file...</label>`).appendTo(inputGroup);
-  inputGroup.appendTo(appendHere);
+  let acceptStr = (accept) ? ` accept='${accept}'` : '';
+  $(`<input type='file' class='custom-file-input' id='customFile' nowrap${acceptStr}><label class='custom-file-label' for='customFile'>Choose file...</label>`).appendTo(inputGroup);
+  if (appendHere) inputGroup.appendTo(appendHere);
   return inputGroup;
 }
 /** Creates a Jquery link and returns it and appends it to element passed.

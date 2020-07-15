@@ -21,12 +21,12 @@ function modalLoadingData() {
 async function startPandaCrazy() {
   $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
   if (await bgPage.gCheckPandaDB()) {
-    await globalOpt.prepare( showMessages ); // Wait for global options to load and show message or error.
-    await alarms.prepare( showMessages ); // Wait for alarms to load and show message or error.
-    await groupings.prepare( showMessages ); // Wait for groupings to load and show message or error.
+    await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
+    await alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
+    await groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
     menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
-    await pandaUI.prepare( showMessages ); // Wait for panda jobs to load and show message or error.
+    await pandaUI.prepare(showMessages); // Wait for panda jobs to load and show message or error.
     $('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'}); // Enable all tooltips.
     $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.

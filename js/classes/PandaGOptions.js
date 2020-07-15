@@ -200,7 +200,7 @@ class PandaGOptions {
     let returnValue = false, saveMinutes = true;
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
     const minutes = Math.trunc(seconds/60);
-    if (alarms.data.queueAlert.lessThan*60 > seconds) {
+    if (alarms.getData('queueAlert').lessThan * 60 > seconds) {
       if (this.lastQueueAlert===-1 || this.lastQueueAlert>minutes) { returnValue = true; }
       this.lastQueueAlert = minutes;
     } else this.lastQueueAlert = -1;
