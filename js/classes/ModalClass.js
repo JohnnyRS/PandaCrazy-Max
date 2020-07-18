@@ -136,14 +136,14 @@ class ModalClass {
    * @param {string} [defAns='']        - Default answer in input field initially.
    * @param {number} [max=null]         - Maximum characters allowed in input field.
    * @param {function} [afterShow=null] - Function to run after the dialog is shown after animation is stopped.  */
-  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes') {
+  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null) {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, 'No');
+    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
     this.showModal(null, () => {
       let docKeys = "";
       if (question!=='') { // Should an input field be shown with a question?
-        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max);
+        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
         docKeys = '#pcm_formQuestion,';
       }
       $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.

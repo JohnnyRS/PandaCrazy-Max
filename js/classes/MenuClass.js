@@ -68,44 +68,45 @@ class MenuClass {
   createTopMenu() {
     const topMenu = $(`<div class='btn-group text-left border border-info' id='pcm_topMenuGroup' role='group'></div>`).appendTo($(`#${this.topMenuId}`));
     this.addMenu(topMenu, 'Vol:', () => {}, '', 'pcm-topMenuBtn');
+    let vol = globalOpt.theVolume();
     this.addSubMenu(topMenu, 'min-width:3rem; text-align:center;', 
-      [{type:'rangeMax', label:'100'},
-       {type:'slider', id:'pcm_volumeVertical', min:0, max:100, value:50, step:5, slideFunc: (e, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value) }, createFunc: (e, ui) => { $(e.target).find('.ui-slider-handle').text(50).css({left: '-0.6em', width: '25px', fontSize:'12px', lineHeight:'1', height:'18px', paddingTop:'2px'}); }},
-       {type:'rangeMin', label:'0'}], true, () => {});
+      [{'type':'rangeMax', 'label':'100'},
+       {'type':'slider', id:'pcm_volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (e, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value) }, 'createFunc': (e, ui) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
+       {'type':'rangeMin', 'label':'0'}], true, () => {});
     this.addMenu(topMenu, 'Jobs', () => { pandaUI.showJobsModal(); }, 'List all Panda Jobs Added', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '', 
-      [{type:'item', label:'Add', menuFunc: () => { pandaUI.showJobAddModal(); }, tooltip:'Add a new Panda or Search Job'},
-       {type:'item', label:'Stop All', menuFunc: () => { bgPanda.stopAll(); }, tooltip:'Stop All Collecting Panda or Search Jobs'},
-       {type:'item', label:'Search Jobs', menuFunc: () => { pandaUI.showJobsModal(); }, tooltip:'Search the Panda Jobs Added'},
-       {type:'item', label:'Search Mturk'},
-       {type:'divider'},
-       {type:'item', label:'Export', menuFunc: () => { /* new EximClass().exportData(); */ }},
-       {type:'item', label:'Import', menuFunc: () => { new EximClass().importModal(); }}]);
+      [{'type':'item', 'label':'Add', 'menuFunc': () => { pandaUI.showJobAddModal(); }, 'tooltip':'Add a new Panda or Search Job'},
+       {'type':'item', 'label':'Stop All', 'menuFunc': () => { bgPanda.stopAll(); }, 'tooltip':'Stop All Collecting Panda or Search Jobs'},
+       {'type':'item', 'label':'Search Jobs', 'menuFunc': () => { pandaUI.showJobsModal(); }, 'tooltip':'Search the Panda Jobs Added'},
+       {'type':'item', 'label':'Search Mturk'},
+       {'type':'divider'},
+       {'type':'item', 'label':'Export', 'menuFunc': () => { /* new EximClass().exportData(); */ }},
+       {'type':'item', 'label':'Import', 'menuFunc': () => { new EximClass().importModal(); }}]);
     this.addMenu(topMenu, 'Display', () => { pandaUI.cards.changeDisplay(2) }, 'Change how information is displayed on the jobs to Normal.', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '',
-      [{type:'item', label:'Normal', menuFunc: () => { pandaUI.cards.changeDisplay(2) }, tooltip:'Change how information is displayed on the jobs to Normal.'},
-       {type:'item', label:'Minimal Info', menuFunc: () => { pandaUI.cards.changeDisplay(1) }, tooltip:'Change how information is displayed on the jobs to minimal 3 lines.'},
-       {type:'item', label:'One Line Info', menuFunc: () => { pandaUI.cards.changeDisplay(0) }, tooltip:'Change how information is displayed on the jobs to only one line.'}]);
+      [{'type':'item', 'label':'Normal', 'menuFunc': () => { pandaUI.cards.changeDisplay(2) }, 'tooltip':'Change how information is displayed on the jobs to Normal.'},
+       {'type':'item', 'label':'Minimal Info', 'menuFunc': () => { pandaUI.cards.changeDisplay(1) }, 'tooltip':'Change how information is displayed on the jobs to minimal 3 lines.'},
+       {'type':'item', 'label':'One Line Info', 'menuFunc': () => { pandaUI.cards.changeDisplay(0) }, 'tooltip':'Change how information is displayed on the jobs to only one line.'}]);
     this.addMenu(topMenu, 'Grouping', () => { groupings.showGroupingsModal(pandaUI); }, 'Start, stop or edit groupings you have added', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '',
-      [{type:'item', label:'Start/Stop', menuFunc: () => { groupings.showGroupingsModal(pandaUI); }, tooltip:'Start, stop or edit groupings you have added'},
-       {type:'item', label:'Create by Selection', menuFunc: () => { groupings.createInstant(true); }, tooltip:'Create a grouping by selecting the jobs you want to start at same time.'},
-       {type:'item', label:'Create Instantly', menuFunc: () => { groupings.createInstant(); }, tooltip:'Create a grouping with any jobs running now with default name and description'},
-       {type:'item', label:'Edit', menuFunc: () => { groupings.showGroupingsModal(pandaUI); }, tooltip:'Start, stop or edit groupings you have added'}]);
+      [{'type':'item', 'label':'Start/Stop', 'menuFunc': () => { groupings.showGroupingsModal(pandaUI); }, 'tooltip':'Start, stop or edit groupings you have added'},
+       {'type':'item', 'label':'Create by Selection', 'menuFunc': () => { groupings.createInstant(true); }, 'tooltip':'Create a grouping by selecting the jobs you want to start at same time.'},
+       {'type':'item', 'label':'Create Instantly', 'menuFunc': () => { groupings.createInstant(); }, 'tooltip':'Create a grouping with any jobs running now with default name and description'},
+       {'type':'item', 'label':'Edit', 'menuFunc': () => { groupings.showGroupingsModal(pandaUI); }, 'tooltip':'Start, stop or edit groupings you have added'}]);
     this.addMenu(topMenu, '1', (e) => { this.changeTheTimer(e, globalOpt.useTimer1()); }, 'Change timer to the Main Timer', 'pcm-topMenuBtn pcm_timerButton pcm_buttonOn');
     this.addMenu(topMenu, '2', (e) => { this.changeTheTimer(e, globalOpt.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-topMenuBtn pcm_timerButton');
     this.addMenu(topMenu, '3', (e) => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-topMenuBtn pcm_timerButton');
     this.addSubMenu(topMenu, '',
-      [{type:'item', label:'Edit Timers', menuFunc: () => { globalOpt.showTimerOptions(); }, tooltip:'Change options for the timers'},
-       {type:'item', menuFunc: () => { bgPanda.timerChange(null, globalOpt.getTimerIncrease()); }, label:`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm_timerIncrease', tooltip:`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
-       {type:'item', menuFunc: () => { bgPanda.timerChange(null, 0, globalOpt.getTimerDecrease()); }, label:`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm_timerDecrease', tooltip:`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
-       {type:'item', menuFunc: () => { bgPanda.timerChange(null, globalOpt.getTimerAddMore()); }, label:`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm_timerAddMore', tooltip:`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
-       {type:'item', menuFunc: () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, label:'Reset Timer', tooltip:'Reset the current timer to the original time.'}]);
+      [{'type':'item', 'label':'Edit Timers', 'menuFunc': () => { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
+       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm_timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
+       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm_timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
+       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm_timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
+       {'type':'item', 'menuFunc': () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}]);
       this.addMenu(topMenu, 'Options', () => { globalOpt.showGeneralOptions(); }, 'Change Global, Alarms or timer Options', 'pcm-topMenuBtn');
       this.addSubMenu(topMenu, '',
-      [{type:'item', label:'General', menuFunc:() => { globalOpt.showGeneralOptions(); }, tooltip:'Change the general options'},
-       {type:'item', label:'Edit Timers', menuFunc:function() { globalOpt.showTimerOptions(); }, tooltip:'Change options for the timers'},
-       {type:'item', label:'Edit Alarms', menuFunc:() => { alarms.showAlarmsModal(); }, tooltip:'Change the options and sounds for the alarms'}]);
+      [{'type':'item', 'label':'General', 'menuFunc':() => { globalOpt.showGeneralOptions(); }, 'tooltip':'Change the general options'},
+       {'type':'item', 'label':'Edit Timers', 'menuFunc':function() { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
+       {'type':'item', 'label':'Edit Alarms', 'menuFunc':() => { alarms.showAlarmsModal(); }, 'tooltip':'Change the options and sounds for the alarms'}]);
   }
   /** Create the quick menu buttons under the stats area. */
   createQuickMenu() {

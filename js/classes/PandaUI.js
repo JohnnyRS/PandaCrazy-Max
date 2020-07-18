@@ -4,18 +4,23 @@
 class PandaUI {
   constructor () {
 		this.cards = new PandaCards();
-		this.hitQueue = [];									// Array of panda's to add delayed when multiple panda's get added at once
-		this.lastAdded = null;							// The time the last hit got added to delay adding hits slowly
-		this.hamBtnBgColor = "";						// Default value for background color of the ham button from css file
-		this.hamBtnColor = "";							// Default value for color of the ham button from css file
-		this.pandaStats = {};								// Object of PandaStats Class object with stats for each panda
-		this.tabs = null;										// The tabbed area where the panda card will go to.
-		this.logTabs = null;								// The log tabs on the bottom of the page with queue watch.
-		this.pandaGStats = null;						// The global stats for all the panda's and display stats to status area.
-		this.delayedTimeout = null;
-		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database
-		this.collectStore = "collectionStore";	// Name for collection times storage in database
-		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database
+		this.hitQueue = [];											// Array of panda's to add delayed when multiple panda's get added at once.
+		this.lastAdded = null;									// The time the last hit got added to delay adding hits slowly.
+		this.hamBtnBgColor = "";								// Default value for background color of the ham button from css file.
+		this.hamBtnColor = "";									// Default value for color of the ham button from css file.
+		this.pandaStats = {};										// Object of PandaStats Class object with stats for each panda.
+		this.tabs = null;												// The tabbed area where the panda card will go to.
+		this.logTabs = null;										// The log tabs on the bottom of the page with queue watch.
+		this.pandaGStats = null;								// The global stats for all the panda's and display stats to status area.
+		this.delayedTimeout = null;					    // Used to delay adding jobs externally to get control.
+		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database.
+		this.collectStore = "collectionStore";	// Name for collection times storage in database.
+		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database.
+    this.tabPandaHeight = 0;
+		this.tabLogHeight = 0;
+		this.windowHeight = 0;
+		this.windowChanged = true;
+		this.resizeObserver = null;
 		this.dbStats = new DatabaseClass(this.dbStatsName, 1); // The stat database for logging of panda stats.
 		this.listener = new ListenerClass();
 		this.modalJob = null;
@@ -99,10 +104,41 @@ class PandaUI {
 					bgPanda.useDefault = false; bgPanda.nullData();
 				}
 			}
+      this.tabPandaHeight = $(`#pcm_pandaPanel`).height();
+			this.tabLogHeight = $(`#pcm_logPanel`).height();
+			this.windowHeight = window.innerHeight;
 		}
-		window.onresize = (e) => { this.tabs.resizeTabContents(); }
+		window.onresize = async (e) => { this.resizeTabContents(); }
+		this.resizeObserver = new ResizeObserver((entries) => this.panelResized(entries));
+		$('#pcm_pandaPanel').mousedown( () => { this.resizeObserver.observe($('#pcm_pandaPanel')[0]); } )
+		$('#pcm_pandaPanel').mouseup( () => { this.resizeObserver.disconnect(); } )
 		afterFunc(success, err);
 	}
+  /** Resizes the tab contents according to window size changes. */
+  resizeTabContents() {
+    let windowChange = this.innerHeight - window.innerHeight;
+    $('#pcm_pandaTabContents .pcm_tabs').height(`${this.tabs.tabContentsHeight - windowChange}px`);
+		$('#pcm_pandaPanel').height(`${this.tabPandaHeight - windowChange}px`);
+		this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
+    this.innerHeight = window.innerHeight;
+    this.tabPandaHeight = $('#pcm_pandaPanel').height();
+	}
+	/** Resizes the panda and log panels when user is resizing them.
+	 * @param  {array} entries - Number of entries resizeObserver finds that got resized. */
+  panelResized(entries) {
+		window.requestAnimationFrame(() => { // Stops loop limit exceeded for ResizeObserver.
+			if (!Array.isArray(entries) || !entries.length) { return; }
+			let changed = $('#pcm_pandaPanel').height() - this.tabPandaHeight;
+			if (changed !== 0) {
+				$('#pcm_pandaTabContents .pcm_tabs').height(this.tabs.tabContentsHeight + changed);
+				$('#pcm_logTabContents .pcm_tabs').height(this.logTabs.tabContentsHeight - changed);
+				this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
+				this.logTabs.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
+				this.tabPandaHeight = $('#pcm_pandaPanel').height();
+				this.tabLogHeight = $(`#pcm_logPanel`).height();
+			}
+		});
+  }
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		modal = new ModalClass();
@@ -158,7 +194,7 @@ class PandaUI {
 			if (goodCollect) {
 				let data = await bgPanda.dataObj(myId);
 				this.logTabs.addToStatus(data, this.pandaStats[myId], myId);
-				this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
+				if (!this.pandaStats[myId].searching) this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
 				this.pandaStats[myId].startCollecting();
 				$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 				$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
@@ -218,7 +254,7 @@ class PandaUI {
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
-				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then(  (r) => {
+				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => {
 					let info = bgPanda.options(myId); info.data = r;
 					this.removeJob(myId, afterFunc);
 				}, rejected => console.error(rejected));
@@ -456,7 +492,7 @@ class PandaUI {
 	}
 	/** Sounds an alarm by the name parameter. Will check if the name is correct before calling alarm function.
 	 * @param  {string} name - The name of an alarm to sound. */
-	soundAlarm(name) { if (['Captcha'].includes(name)) alarms[`do${name}Alarm`](); }
+	soundAlarm(name) { if (['Captcha','Queue','Full'].includes(name)) alarms[`do${name}Alarm`](); }
 	/** Notifies the user that a captcha has been found. */
 	captchaAlert() { if (globalOpt.isNotifications() && globalOpt.isCaptchaAlert()) notify.showCaptchaAlert(); }
 	/** Notifies the user that they can't accept any more hits for today. */

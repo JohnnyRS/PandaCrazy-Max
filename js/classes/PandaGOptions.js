@@ -4,51 +4,59 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class PandaGOptions {
   constructor() {
-    this.general = {};
-    this.generalDefault = {
-      category:"general",         // Object category used for database saving and loading.
-      showHelpTooltips:true,      // Should help tooltips be shown or just info tips?
-      disableCaptchaAlert:false,  // Should captcha alerts and notifications be disabled?
-      captchaCountText:true,      // Should the captcha count text be shown on the lower log tabbed section?
-      captchaAt:35,               // Number of hits collected usually before a captcha is shown.
-      disableQueueAlarm:false,    // Should the alarm not be sounded when a hit is nearing expiration?
-      disableQueueAlert:false,    // Should the alert color not be shown in queue watch when a hit is near expiration?
-      disableNotifications:false, // Should notifications not be shown?
-      unfocusWarning:true,        // Should the warning about unfocussed window be shown?
-      themeName:"normal",         // The theme name being used.
-      cardDisplay:2,              // 2 = Normal look, 1 = Minimal Info, 0 = One Liner
-      debugger:0                  // Main debugger level.
+    this.general = {};              // The general object used in script from database or default values.
+    this.generalDefault = {         // Default values used at first run or default buttons.
+      'category':"general",         // Object category used for database saving and loading.
+      'showHelpTooltips':true,      // Should help tooltips be shown or just info tips?
+      'disableCaptchaAlert':false,  // Should captcha alerts and notifications be disabled?
+      'captchaCountText':true,      // Should the captcha count text be shown on the lower log tabbed section?
+      'captchaAt':35,               // Number of hits collected usually before a captcha is shown.
+      'disableQueueAlarm':false,    // Should the alarm not be sounded when a hit is nearing expiration?
+      'disableQueueAlert':false,    // Should the alert color not be shown in queue watch when a hit is near expiration?
+      'disableNotifications':false, // Should notifications not be shown?
+      'unfocusWarning':true,        // Should the warning about unfocussed window be shown?
+      'themeName':"normal",         // The theme name being used.
+      'cardDisplay':2,              // 2 = Normal look, 1 = Minimal Info, 0 = One Liner card display.
+      'logPanelHeight':0,           // The height of the bottom log panel if user resizes it.
+      'debugger':0                  // Main debugger level.
     };
-    this.timers = {};
-    this.timersDefault = {
-      category:"timers",          // Object category used for database saving and loading.
-      mainTimer:1000,             // The time for the main timer.
-      secondTimer:1400,           // The time for the second timer.
-      thirdTimer:2100,            // The time for the third timer.
-      hamTimer:900,               // The time for the ham timer.
-      hamDelayTimer:8,            // The duration timer in seconds for goHam on any new hits.
-      queueTimer:2000,            // The time for the queue Timer.
-      timerIncrease:10,
-      timerDecrease:10,
-      timerAddMore:650,
-      timerAutoIncrease:10,
-      stopAutoSlow:false,
-      autoSlowDown:false,
-      timerUsed:'mainTimer',
-      searchDuration:10
+    this.timers = {};               // The timers object used in script from database or default values.
+    this.timersDefault = {          // Default values used at first run or default buttons.
+      'category':"timers",          // Object category used for database saving and loading.
+      'mainTimer':1000,             // The time for the main timer.
+      'secondTimer':1400,           // The time for the second timer.
+      'thirdTimer':2100,            // The time for the third timer.
+      'hamTimer':900,               // The time for the ham timer.
+      'hamDelayTimer':8,            // The duration timer in seconds for goHam on any new hits.
+      'queueTimer':2000,            // The time for the queue Timer.
+      'timerIncrease':10,           // Time in milliseconds used for the timer increase button.
+      'timerDecrease':10,           // Time in milliseconds used for the timer decrease button.
+      'timerAddMore':650,           // Time in milliseconds used for the timer add more button.
+      'timerAutoIncrease':10,
+      'stopAutoSlow':false,
+      'autoSlowDown':false,
+      'timerUsed':'mainTimer',
+      'searchDuration':10
     };
-    this.timerRange = {min:600, max:15000};
-    this.timerDur = {min:0, max:600}
-    this.timerQueue = {min:1000, max:60000};
-    this.timerChange = {min:5, max:2000};
+    this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
+    this.timerDur = {min:0, max:600}          // The limits for the ham duration in seconds.
+    this.timerQueue = {min:1000, max:60000};  // The limits for the timer queue in milliseconds when editing.
+    this.timerChange = {min:5, max:2000};     // The limits for the timer change buttons in milliseconds when editing.
     this.alarms = {};
     this.alarmsDefault = {
-      category:"alarms",
-      volume:80,
-      showAlertNotify:true,
-      fastSearch:false,
-      unfocusDeThrottle:false,
+      'category':"alarms",
+      'volume':80,
+      'showAlertNotify':true,
+      'ttsName':'',
+      'unfocusDeThrottle':false,
     };
+    this.helpers = {};
+    this.helpersDefault = {
+      'category':'helpers',
+      'forumButtons':true,
+      'mturkPageButtons':true,
+      'queueCommands':true
+    }
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
@@ -61,37 +69,44 @@ class PandaGOptions {
   async prepare(afterFunc) {
     let success = [], err = null;
     this.captchaCounter = 0; this.lastQueueAlert = -1; this.timerUsed = 'mainTimer';
-    await bgPanda.db.getFromDB(bgPanda.optionsStore, null, true, (cursor) => { return cursor.value; })
-    .then( async result => {
+    await bgPanda.db.getFromDB(bgPanda.optionsStore).then( async result => {
       if (result.length) { // Options were already saved in database so load and use them.
         for (var i=0, keys=Object.keys(result); i < keys.length; i++) {
           let thisSaved = {};
-          if (['general','timers','alarms'].includes(result[i].category)) {
+          if (['general','timers','alarms','helpers'].includes(result[i].category)) {
             thisSaved = result[i];
             this[result[i].category] = Object.assign({}, this[result[i].category + 'Default'], result[i]);
           }
+        }
+        if (Object.keys(this.helpers).length === 0) { await bgPanda.db.addToDB(bgPanda.optionsStore, this.helpersDefault)
+          .then( () => { this.helpers = Object.assign({}, this.helpersDefault); })
         }
         success[0] = "Loaded all global options from database";
       } else { // Add default values to the options database and use them.
         await bgPanda.db.addToDB(bgPanda.optionsStore, this.generalDefault)
         .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.timersDefault)
           .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.alarmsDefault)
-            .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
+            .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.helpersDefault)
+              .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
+            }, rejected => { err = rejected; })
           }, rejected => { err = rejected; })
         }, rejected => err = rejected);
         this.general = Object.assign({}, this.generalDefault);
         this.timers = Object.assign({}, this.timersDefault);
         this.alarms = Object.assign({}, this.alarmsDefault);
+        this.helpers = Object.assign({}, this.helpersDefault);
       }
     }, rejected => err = rejected);
     afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /** Updates the global options and resets anything that is needed for example tooltips. */
-  update() {
-    if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
-    else {
-      $('[data-toggle="tooltip"]').tooltip('disable');
-      $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
+  update(tooltips=true) {
+    if (tooltips) {
+      if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
+      else {
+        $('[data-toggle="tooltip"]').tooltip('disable');
+        $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
+      }
     }
     pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
     bgPanda.db.updateDB(bgPanda.optionsStore, this.general);
@@ -106,8 +121,8 @@ class PandaGOptions {
       modal.closeModal();
       this.update();
     });
-    const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    let df = document.createDocumentFragment();
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
       {label:"Show Help Tooltips:", type:"trueFalse", key:"showHelpTooltips", min:0, max:24, tooltip:'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
       {label:"Disable Captcha Alert:", type:"trueFalse", key:"disableCaptchaAlert", min:0, max:24, tooltip:'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
@@ -117,9 +132,11 @@ class PandaGOptions {
       {label:"Disable Queue Watch Alarm:", type:"trueFalse", key:"disableQueueAlarm", tooltip:'Disable sounding the alarm for hits nearing the expiration time.'}, 
       {label:"Disable Desktop Notifications:", type:"trueFalse", key:"disableNotifications", tooltip:'Disable notifications shown when accepting hits or warnings.'}, 
       {label:"Disable Unfocused window warning:", type:"trueFalse", key:"unfocusWarning", reverse:true, tooltip:'Stop notifying me about the unfocussed window because I know what I am doing.'}
-    ], divContainer, modal.tempObject[idName], true);
+    ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
-      $(modalBody).find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+      const modalBody = $(`#${idName} .${modal.classModalBody}`);
+      $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
+      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
   /** Verifies all the timers changed with max and min ranges.
@@ -151,8 +168,8 @@ class PandaGOptions {
         modal.closeModal();
       }
     });
-    const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    let df = document.createDocumentFragment();
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
       {label:'Main Timer:', type:'number', key:'mainTimer', tooltip:`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
       {label:"Timer #2:", type:'number', key:"secondTimer", tooltip:`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
@@ -164,24 +181,10 @@ class PandaGOptions {
       {label:"Timer Decrease By:", type:"number", key:"timerDecrease", tooltip:'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},
       {label:"Timer Add Timer By:", type:"number", key:"timerAddMore", tooltip:'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
       {label:"Timer Auto Slowdown Increase:", type:"number", key:"timerAutoIncrease", tooltip:'', data:this.timerChange}
-    ], divContainer, modal.tempObject[idName], true);
+    ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
-      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
-    }, () => { modal = null; });
-  }
-  /** Shows the alarm options in a modal for changes. */
-  showAlarmOptions() {
-    modal = new ModalClass();
-    const idName = modal.prepareModal(this.alarms, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
-      this.alarms = Object.assign(this.alarms, changes);
-      modal.closeModal();
-    });
-    const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([
-      { label:"Show Help Tooltips:", type:"range", key:"limitNumQueue", min:0, max:24 }
-    ], divContainer, modal.tempObject[idName], true);
-    modal.showModal(_, () => {
+      const modalBody = $(`#${idName} .${modal.classModalBody}`);
+      $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
       modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
@@ -201,7 +204,7 @@ class PandaGOptions {
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
     const minutes = Math.trunc(seconds/60);
     if (alarms.getData('queueAlert').lessThan * 60 > seconds) {
-      if (this.lastQueueAlert===-1 || this.lastQueueAlert>minutes) { returnValue = true; }
+      if (this.lastQueueAlert===-1 || this.lastQueueAlert > minutes) { returnValue = true; }
       this.lastQueueAlert = minutes;
     } else this.lastQueueAlert = -1;
     return returnValue;
@@ -252,4 +255,7 @@ class PandaGOptions {
   /** Change the display number used to display information in the panda cards.
    * @param  {number} display - The number for the display format to use for information in the panda card. */
   setCardDisplay(display) { this.general.cardDisplay = display; }
+  /** Sets or returns the value of the volume.
+   * @param  {number} [vol=null] - The value of the volume to change or null to return current value. */
+  theVolume(vol=null) { if (vol) { this.alarms.volume = vol; this.update(false); } return this.alarms.volume; }
 }

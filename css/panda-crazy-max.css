@@ -1,4 +1,5 @@
 html, body { height: 100%; }
+.panel-resizable { resize: vertical; overflow: hidden; }
 .bottom-dotted { border-bottom:2px dotted #c46f74; }
 .tooltip.show { opacity: 1 !important; filter: alpha(opacity=100) !important;}
 .tooltip-inner { border: 1px red solid; max-width: 300px; }
@@ -22,6 +23,7 @@ html, body { height: 100%; }
 #pcm_pandaTabs .pcm_tabs { overflow-y:auto; height: calc(100vh - 260px); }
 #pcm_logTabs .pcm_tabs { overflow-y:auto; height: 140px; }
 .pcm-tabDelete { line-height:1.2; color: #eb892d; }
+.pcm_detailsEdit { color: #84f79e; }
 .pcm_hitButton {
   margin-top: 2px !important;
   margin-bottom: 3px !important;
@@ -57,6 +59,7 @@ html, body { height: 100%; }
 .pcm_alarms .custom-file-label { height:25px; line-height:0.8; white-space: nowrap; font-size:10px; }
 .pcm_alarms .custom-file-label::after { line-height: 1.0; height:23px; }
 .pcm_alarms .pcm_changeMe { font-size: 15px; }
+.pcm_alarmEdit { color:#e6ebac; font-size:15px; }
 #pcm_importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
 .card {
   margin: 2px 2px 0 0 !important;
@@ -69,7 +72,7 @@ html, body { height: 100%; }
 .pcm_pandaCard { background-color: #48D1CC; }
 .pcm_pandaCard.pcm_searching { background-color: #04a3a3; }
 .pcm_pandaCard.pcm_oneLine { min-width:320px !important; max-width:320px !important; }
-.pcm_pandaCard.pcm_oneLine .pcm_reqName { font-size:0.7em !important; font-weight:600 !important; }
+.pcm_pandaCard.pcm_oneLine .pcm_reqName1 { font-size:0.7em !important; font-weight:600 !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_hitStats { font-size:0.7em !important; font-weight:600 !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_hitButton { margin:0 1.5px 0 0 !important; padding: 0 0.4px 0.5px 0.4px !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_deleteButton { margin-left:4px !important; padding: 0 2px 0.5px 2px !important; }
@@ -83,7 +86,7 @@ html, body { height: 100%; }
   padding: 0 !important;
   margin: 0 !important;
 }
-.pcm_reqName {
+.pcm_reqName, .pcm_reqName1 {
   color: #000080;
   font-weight: 700 !important;
   line-height: 1.2 !important;
@@ -183,7 +186,7 @@ html, body { height: 100%; }
 .fade {
   transition: opacity 5ms;
 }
-.pcm_inputDiv-question { margin-left:90px; }
+.pcm_inputDiv-question { margin-left:70px; }
 .pcm_jobTable { margin-bottom:5px !important; }
 .pcm_detailsTable tr { line-height: 0.8; font-size: 0.8em; }
 .pcm_detailsTable tr output { width:30px !important; font-size: 0.7rem !important; height:20px; padding:0 6px; }
@@ -191,7 +194,7 @@ html, body { height: 100%; }
 .pcm_detailsTable tr .editable-cancel { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_detailsTable tr select { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
 .pcm_inputText { height:17px !important; margin-left:2px; font-size:0.9em !important; width:300px; padding-left:4px; }
-.pcm_inputText-md { height:19px !important; margin-left:2px; padding-top:2px; font-size:0.9em !important; width:350px !important; }
+.pcm_inputText-md { height:19px !important; margin-left:2px; padding-top:2px; font-size:0.9em !important; width:330px !important; }
 .pcm_inputDate-md { height:18px !important; margin-left:2px; padding-top:6px; font-size:0.7em !important; width:80px !important; }
 .pcm_inputEndHours, .pcm_inputEndMinutes { height:18px !important; margin-left:0 !important; padding-left:2px !important; padding-right:0 !important; font-size:0.7em !important; width:25px !important; }
 .pcm-inputClearIcon { display: flex; padding: .15rem .30rem; color: #495057; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: .25rem; margin-top: 0; margin-left:2px; }

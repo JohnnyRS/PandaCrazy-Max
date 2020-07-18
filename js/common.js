@@ -232,19 +232,20 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     let textColor = "", padding="pl-0", valueCol=null, textBorder = "bottom-dotted";
     let theValue = (element.orKey && thisObject[element.orKey]!=="") ? thisObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${thisObject[element.key]} - ${thisObject[element.andKey]}` : thisObject[element.key]) : "");
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
-    if (theValue==="") { theValue = "{Empty}"; textColor = " text-danger"; }
-    if (theValue===-1) { theValue = "0"; }
-    if (theValue===undefined) { theValue = element.default; }
+    if (theValue === '') { theValue = "{Empty}"; textColor = " text-danger"; }
+    if (theValue === -1) { theValue = "0"; }
+    if (theValue === undefined) { theValue = element.default; }
     if (element.money) theValue = Number(theValue).toFixed(2);
-    if (element.format==="date") { theValue = formatAMPM("short",new Date(theValue)); }
+    if (element.format === "date") { theValue = formatAMPM("short",new Date(theValue)); }
     if (element.disable) { textColor = " text-warning"; textBorder = ""; }
-    if (element.label!=="") { padding = " pl-4"; }
+    if (element.label !== "") { padding = " pl-4"; }
+    if (element.minutes) { theValue = theValue / 60000; }
     const pre = (element.pre) ? element.pre : '';
     const addSpan = (element.type === 'text' || element.type === 'number') ? "<span></span>" : "";
     const tdWidth = (element.width) ? `width:${element.width} !important;` : "";
     const tdStyle = ` style="padding-right:1px !important; max-width:320px; ${tdWidth}"`;
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
-    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append($(`<td class='col-4 text-right'></td>`).append($(`<span${addtip} id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data)));
+    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append($(`<td class='col-4 text-right'></td>`).disableSelection().append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key).disableSelection()));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
     if (table) valueCol = $(`<td class='font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
     else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data('edit','off');

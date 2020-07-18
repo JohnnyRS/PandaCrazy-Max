@@ -12,6 +12,8 @@ class LogTabsClass {
     this.queueContent = null;           // The contents for the queue watch.
     this.acceptContent = null;          // The contents for the accepted tab.
     this.statusContent = null;          // The contents for the status tab.
+    this.tabContentsHeight = 0;
+    this.tabNavHeight = 0;  
     this._queueTotal = 0;
     this._queueIsNew = false;
     this.queueUpdating = false;
@@ -49,6 +51,8 @@ class LogTabsClass {
       this.statusContent = $(`<div class="pcm_hitStatus"></div>`).appendTo(`#${this.ids[1].tabContent}`)
       this.queueContent = $(`<div class="pcm_queueResults"></div>`).appendTo(`#${this.ids[2].tabContent}`);
     }
+    this.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
+    this.tabNavHeight = $('#pcm_tabbedlogs').height();
     return [success, err];
   }
   /** Add the hit information to the log and either append or before element passed.
@@ -176,7 +180,7 @@ class LogTabsClass {
             if (globalOpt.checkQueueAlert(newInfo[taskId].secondsLeft)) {
               if (globalOpt.isQueueAlert()) this.queueContent.closest(".tab-pane")
                 .stop(true,true).effect( "highlight", {color:"#ff0000"}, 3600 );
-              if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm();
+              if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm(globalOpt.lastQueueAlert);
             }
             firstOne = false;
           }

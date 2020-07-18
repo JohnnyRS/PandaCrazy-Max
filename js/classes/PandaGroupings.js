@@ -21,9 +21,9 @@ class PandaGroupings {
   /** This resets the start and end times for all the groupings for next day or first start.
    * @param  {bool} [fillStatus=true] - Should group status be filled in also? Only on first start. */
   resetTimes(fillStatus=true) {
-    for (var i=0, keys=Object.keys(this.groups); i < keys.length; i++) {
-      if (this.groups[keys[i]].startTime !== "") this.setStartEndTimes(keys[i]);
-      if (fillStatus) this.groupStatus[i] = {collecting:false};
+    for (const key of Object.keys(this.groups)) {
+      if (this.groups[key].startTime !== "") this.setStartEndTimes(key);
+      if (fillStatus) this.groupStatus[key] = {collecting:false};
     }
   }
   /** Loads up any groupings saved in datbase.
@@ -34,16 +34,13 @@ class PandaGroupings {
   async prepare(afterFunc) {
     let success = [], err = null;
     this.groups = {}; this.groupStatus = {}; this.unique = 1; this.startTimes = {}; this.endTimes = {};
-    await bgPanda.db.getFromDB(bgPanda.groupingStore, null, true,
-        (cursor, index) => { return {[index]:cursor.value}; }, false) // Return object for cursor.
-    .then( (result) => {
-      if (Object.keys(result).length !== 0) { // If there are groupings saved then load them up!
-        this.groups = result; this.unique = Object.keys(result).length + 1;
-        this.resetTimes(true);
-      }
+    bgPanda.db.getFromDB(bgPanda.groupingStore).then( (result) => {
+      let i = 1;
+      for (const value of result) { this.groups[i++] = value;  }
+      this.unique = result.length + 1; this.resetTimes(true);
       success[0] = "All Groupings have been loaded.";
-    }, (rejected) => err = rejected );
-    afterFunc(success, err);
+      afterFunc(success, err);
+    }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
   /** This method checks all the start times and starts groupings when necessary. */
   checkStartTimes() {

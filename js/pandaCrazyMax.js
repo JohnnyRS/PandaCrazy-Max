@@ -22,8 +22,8 @@ async function startPandaCrazy() {
   $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
   if (await bgPage.gCheckPandaDB()) {
     await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
-    await alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
-    await groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
+    alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
+    groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
     menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
     await pandaUI.prepare(showMessages); // Wait for panda jobs to load and show message or error.
@@ -33,7 +33,7 @@ async function startPandaCrazy() {
     setTimeout( () => {
       modal.closeModal('Loading Data');
       bgQueue.startQueueMonitor();
-    }, 600); // Just a small delay so messages can be read by user.
+    }, 300); // Just a small delay so messages can be read by user.
   } else { haltScript(errorObject, errorObject.message, "Problem with Database.", 'Error opening database:'); }
 }
 

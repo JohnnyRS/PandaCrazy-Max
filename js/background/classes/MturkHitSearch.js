@@ -103,9 +103,6 @@ class MturkHitSearch extends MturkClass {
 			const info = this.triggerInfo['gid'][gId];
 			if (status) this.pandaCollecting.push(gId);
 			else this.pandaCollecting = this.pandaCollecting.filter(item => item !== gId);
-			if (!info.disabled) {
-				if (info.tempDisabled && !status) this.triggerStatus('gid', gId, false, true);
-			}
 		}
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
@@ -136,25 +133,25 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} item - The hit item that needs to be checked for any trigger detection.
 	 * @return {void}				 - Sends back nothing. */
 	checkTriggers(item, triggers=null) {
-		console.time('check2');
+		// console.time('check2');
 		let liveStr = this.livePandaUIStr + this.liveSearchUIStr;
 		let gidFound = liveStr.includes(`[[gid:${item.hit_set_id}]]`);
 		let ridFound = liveStr.includes(`[[rid:${item.requester_id}]]`);
 		if (gidFound || ridFound) {
 			let key1 = (gidFound) ? 'gid' : 'rid', key2 = (gidFound) ? item.hit_set_id : item.requester_id;
-			let triggerInfo = this.triggerInfo[key1][key2];
-			if (!this.pandaCollecting.includes(item.hit_set_id) && triggerInfo) {
+			let triggerInfo = this.triggerInfo[key1][key2]; console.log('checking: ',liveStr, triggerInfo.tempDisabled)
+			if (!triggerInfo.tempDisabled && !this.pandaCollecting.includes(item.hit_set_id) && triggerInfo) {
 				if ((key1 === 'rid' && !this.isGidBlocked(triggerInfo, item.hit_set_id)) || key1 === 'gid') {
 					console.log(`Found a trigger: ${triggerInfo.name} - ${item.assignable_hits_count} - ${item.hit_set_id} - ${item.creation_time}`);
-					console.timeEnd('check2');
-					console.time('check3');
+					// console.timeEnd('check2');
+					// console.time('check3');
 					this.sendToPanda(item, triggerInfo, key1);
-					console.timeEnd('check3');
+					// console.timeEnd('check3');
 					if (triggerInfo.once && key1 === 'rid') this.requesterTempBlockGid(triggerInfo, item.hit_set_id, key1);
-					if (key1 === 'gid') this.triggerStatus(key1, key2, true, true);
-				} else console.timeEnd('check2');
-			} else console.timeEnd('check2');
-		} else console.timeEnd('check2');
+					if (key1 === 'gid') triggerInfo.tempDisabled = true;
+				} //else console.timeEnd('check2');
+			} //else console.timeEnd('check2');
+		} //else console.timeEnd('check2');
 		liveStr = '';
 	}
 	/**	Creates the live trigger string which holds all trigger info for faster searching.
@@ -170,13 +167,10 @@ class MturkHitSearch extends MturkClass {
 	/** Sets the disabled status of trigger and redoes the live string if needed.
 	 * @param  {string} type							 - The type of trigger this is for. 'gid' or 'rid'.
 	 * @param  {string} value							 - Group ID or requester ID depending on the trigger type.
-	 * @param  {object} status						 - Will this be disabled or enabled?
-	 * @param  {bool} [tempDisabled=false] - Should temporary disable property be changed or the main disable property? */
-	setDisabled(type, value, status, tempDisabled=false, from='searchUI') {
+	 * @param  {object} status						 - Will this be disabled or enabled?*/
+	setDisabled(type, value, status, from='searchUI') {
 		const info = this.triggerInfo[type][value];
-		this.liveString(info, !status, from);
-		if (tempDisabled) info.tempDisabled = status; else info.disabled = status;
-		if (!tempDisabled && status) info.tempDisabled = true;
+		this.liveString(info, !status, from); info.disabled = status;
 		if (this.searchGStats.isSearchOn() && this.liveCounter === 0) this.stopSearching();
 		else if (this.liveCounter) this.startSearching();
 	}
@@ -185,8 +179,8 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} value			 - Group ID or requester ID depending on the trigger type.
 	 * @param  {bool} status			 - Will this be disabled or enabled?
 	 * @param  {bool} [temp=false] - Should temporary disable property be changed or the main disable property? */
-	triggerStatus(type, value, status, temp=false, from='searchUI') {
-		if (this.is(type,value)) this.setDisabled(type, value, status, temp, from);
+	triggerStatus(type, value, status, from='searchUI') {
+		if (this.is(type,value)) this.setDisabled(type, value, status, from);
 	}
 	/** Toggles the status of the trigger.
 	 * @param  {string} type  - The type of trigger this is for. 'gid' or 'rid'.
@@ -213,9 +207,12 @@ class MturkHitSearch extends MturkClass {
 		info.key1 = type; info.key2 = (type==='rid') ? info.rid : info.gid; info.count = this.triggersAdded;
 		info.tempDisabled = false; info.timerUnique = -1;
 		info.reqUrl = (type === 'rid') ? new UrlClass(`https://worker.mturk.com/requesters/${info.rid}/projects`) : null;
+		let triggerData = this.triggerInfo[type][info.key2];
 		if (!info.hasOwnProperty('myId')) info.myId = -1; 
-		if (!loaded && this.triggerInfo[type][info.key2]) {
-			this.triggerStatus(type, info.key2, false,_, from); return null;
+		if (!loaded && triggerData) {
+			if (triggerData.tempDisabled) { triggerData.tempDisabled = false; }
+			else this.triggerStatus(type, info.key2, info.disabled, from);
+			return null;
 		} else {
 			const collectingPanda = (type === 'gid' && this.pandaCollecting.includes(info.gid));
 			if (collectingPanda || ridPanda) info.tempDisabled = true;
@@ -327,18 +324,19 @@ class MturkHitSearch extends MturkClass {
 					}
 				} else if (result.type === "ok.text") {
 					let reactProps = $(result.data).find('.row.m-b-md div:eq(1)').data('react-props');
+					let triggerData = this.triggerInfo['rid'][myId];
 					if (reactProps) {
 						let hitsData = reactProps.bodyData;
 						if (hitsData.length > 0) {
 							let requesterName = $(result.data).find('h1.m-b-md').text();
-							let pandaId = this.triggerInfo['rid'][myId];
-							if (requesterName !== '') myPanda.updateReqName(pandaId.myId, requesterName);
+							if (requesterName !== '') myPanda.updateReqName(triggerData.myId, requesterName);
 							for (const hit of hitsData) { this.checkTriggers(hit, [{'type':'rid', 'value':myId}]) }
 						}
 						hitsData = null;
 					}
 					searchTimer.deleteFromQueue(queueUnique);
-					this.triggerStatus('rid', myId, false,_, from);
+					triggerData.tempDisabled = false;
+					this.triggerStatus('rid', myId, false, from);
 					if (!this.timerUnique) this.startSearching();
 					reactProps = null;
 				}

@@ -8,18 +8,18 @@ class PandaCards {
     this.multiple = [];
 		this.ctrlDelete = [];								// List of panda's selected for deletion by using ctrl key
     this.values = {
-      'reqName':{valueName:'reqName', id:'#pcm_hitReqName', class:'.pcm_reqName', label:''},
-      'reqName1Line':{valueName:'reqName', id:'#pcm_hitReqName1', class:'.pcm_reqName1', label:''},
-      'friendlyReqName':{valueName:'friendlyReqName', id:'#pcm_hitReqName', class:'.pcm_reqName', label:''},
-      'groupId':{valueName:'groupId', id:'#pcm_groupId', class:'.pcm_groupId', label:''},
-      'price':{valueName:'price', id:'#pcm_hitPrice', class:'.pcm_price', label:''},
-      'numbers':{valueName:'hitsAvailable', id:'#pcm_numbers', class:'.pcm_numbers', label:''},
-      'title':{valueName:'title', id:'#pcm_hitTitle', class:'.pcm_title', label:''},
-      'friendlyTitle':{valueName:'friendlyTitle', id:'#pcm_hitTitle', label:''},
-      'collectBtn':{class:'.pcm_collectButton'},
+      'reqName':{'valueName':'reqName', 'id':'#pcm_hitReqName', 'class':'.pcm_reqName', 'label':''},
+      'reqName1Line':{'valueName':'reqName', 'id':'#pcm_hitReqName1', 'class':'.pcm_reqName1', 'label':''},
+      'friendlyReqName':{'valueName':'friendlyReqName', 'id':'#pcm_hitReqName', 'class':'.pcm_reqName', 'label':''},
+      'groupId':{'valueName':'groupId', 'id':'#pcm_groupId', 'class':'.pcm_groupId', 'label':''},
+      'price':{'valueName':'price', 'id':'#pcm_hitPrice', 'class':'.pcm_price', 'label':''},
+      'numbers':{'valueName':'hitsAvailable', 'id':'#pcm_numbers', 'class':'.pcm_numbers', 'label':''},
+      'title':{'valueName':'title', 'id':'#pcm_hitTitle', 'class':'.pcm_title', 'label':''},
+      'friendlyTitle':{'valueName':'friendlyTitle', 'id':'#pcm_hitTitle', 'label':''},
+      'collectBtn':{'class':'.pcm_collectButton'},
       'collectTip':'Start Collecting this Panda Hit',
       'details':'Display and edit all options for this Panda.',
-      'delete':'Delete this Panda hit. [CTRL] click to delete multiple hits.',
+      'delete':'Delete this Panda hit. [CTRL] click cards to delete multiple hits.',
       'hamTip':'Collect hits from this Panda only! Delayed ham mode can be turned on by clicking and holding this button.'
     }
   }
@@ -71,7 +71,8 @@ class PandaCards {
   createCardStatus(myId, info, oneLine=false) {
     let element = (oneLine) ? 'span' : 'div';
     let one = (oneLine) ? '1' : '';
-    let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()} search</span>)` : '';
+    let searchText = (oneLine) ? '' : ' search';
+    let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
     return `<${element} class="pcm_hitStats mr-auto" id="pcm_hitStats${one}_${myId}">[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${myId}"></span> ]${search}</${element}>`;
   }
   /** Create the button group area for the panda card.
@@ -214,7 +215,7 @@ class PandaCards {
    * @param  {number} myId        - The unique ID for a panda job.
    * @param  {string} [change=''] - The string to change the tip to or add to.
    * @param  {bool} [add=false]   - Will the change be added to tip or replaces it? */
-  collectTipChange(myId, change='', add=false) { this.cards[myId].collectTipChange(change, add); }
+  collectTipChange(myId, change='', add=false) { this.cards[myId].collectTipChange(this.values, change, add); }
   /** Show that the card is searching for hits.
    * @param  {number} myId - The unique ID for a panda job. */
   pandaSearchingNow(myId) { this.cards[myId].pandaSearchingNow(this.values); }
@@ -381,24 +382,30 @@ class PandaCard {
   /** Mark this search panda as searching in the search class.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaSearchingNow(val) {
-    this.df.find(val.collectBtn.class).html("-Searching-").removeClass("pcm_searchCollect pcm_searchDisable").addClass("pcm_searchOn");
+    let cl = val.collectBtn.class;
+    this.df.find(cl).html("-Searching-");
+    this.df.find(cl, cl + '1').removeClass("pcm_searchCollect pcm_searchDisable").addClass("pcm_searchOn");
   }
   /** Mark this search panda as collecting as a regular panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaCollectingNow(val) {
-    this.df.find(val.collectBtn.class).html("-Collecting-").removeClass("pcm_searchOn pcm_searchDisable").addClass("pcm_searchCollect");
+    let cl = val.collectBtn.class;
+    this.df.find(cl).html("-Collecting-");
+    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_searchDisable").addClass("pcm_searchCollect");
   }
   /** Disable this search panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaDisabled(val) {
-    let collectB = this.df.find(val.collectBtn.class);
-    collectB.html("-Disabled-").removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
+    let cl = val.collectBtn.class;
+    this.df.find(cl).html("-Disabled-");
+    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
   }
   /** Adds a string to or changes the collect help tip.
+   * @param  {object} val         - The object with the values for classes and text for this card.
    * @param  {string} [change=''] - The string to add to or change the collect help tip.
    * @param  {bool} [add=false]   - Should string be added to original help tip? */
-  collectTipChange(change='', add=false) {
-    let newTitle = (change !== '') ? ((add) ? this.collectTip + change : change) : this.collectTip;
+  collectTipChange(val, change='', add=false) {
+    let newTitle = (change !== '') ? ((add) ? val.collectTip + change : change) : val.collectTip;
     $(`#pcm_collectButton_${this.myId}`).attr('data-original-title', newTitle).tooltip('update');
   }
 }

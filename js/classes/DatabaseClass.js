@@ -78,34 +78,17 @@ class DatabaseClass {
       this.addToDB( storeName, data, true ).then( id => { resolve(id); }, rejected => reject(rejected) );
     });
   }
-  /** Get an array or object of items from database with a key. Using arrays is by default.
+  /** Get an array or object of items from database with a key.
    * @param {string} storeName           - Store name to be used for adding data to.
    * @param {string} key                 - Get the item with this key.
-   * @param {bool} [doCursor=false]      - Use cursor to get multiple items with the key.
-   * @param {function} [cursorFunc=null] - Function to use for each item got with cursor.
-   * @param {bool} [useArray=true]       - Use array or false to save returned value from cursorFunc to object.
    * @return {promise}                   - Array or object in resolve. Error object in reject. */
-  getFromDB(storeName, key, doCursor=false, cursorFunc=null, useArray=true) {
+  getFromDB(storeName, key=null) {
     return new Promise( (resolve, reject) => {
-      let myArray = [], myObject = {}, index = 0;
-      let theResult = null;
-      const returnThis = (useArray) ? myArray : myObject; // Return an array or object?
       let tx = this.db.transaction( [storeName], "readonly" );
       let store = tx.objectStore( storeName );
-      let request = (doCursor) ? store.openCursor() : store.get(key); // Open cursor or just get an item?
-      request.onsuccess = (e) => {
-        if (doCursor) { // Get multiple items with cursor.
-          let cursor = request.result;
-          if (cursor) {
-            if (useArray) myArray.push(cursorFunc(cursor, index)); // Add value from cursorFunc to an array.
-            else Object.assign(myObject, cursorFunc(cursor, index)); // Add value from cursorFunc to an object.
-            index++;
-            cursor.continue();
-          }
-        } else theResult = request.result; // Return just the one item.
-      };
-      tx.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${tx.error.message}`)); }
-      tx.oncomplete = () => resolve( (doCursor) ? returnThis : theResult );
+      let request = (key) ? store.get(key) : store.getAll(); // Open cursor or just get an item?
+      request.onsuccess = () => resolve(request.result);
+      request.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); }
     });
   }
   /** Delete an item or items from a database with a key using an index if necessary.

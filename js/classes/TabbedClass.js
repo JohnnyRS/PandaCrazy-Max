@@ -16,7 +16,10 @@ class TabbedClass {
     this.ulId = ulId;                 // The ul id name for the tab structure of page.
     this.contentId = contentId;       // The content id name for the content area of page.
     this.tabIds = "pcm-t";            // The tab id name of the tab area of page.
-    this.tabNavHeight = 0             //
+    this.topPanelHeights = 76;
+    this.tabNavHeight = 0;  
+    this.tabContentsHeight = 0;
+    this.tabPandaHeight = 0;
     this.addButton = false;           // Can users add tabs by using an add button?
     this.renameTab = false;           // Can users rename a tab?
     this.deleteTab = false;           // Can users delete a tab?
@@ -45,8 +48,7 @@ class TabbedClass {
     if (this.ulId==="pcm_tabbedPandas") { // Is this tab row for the panda's?
       this.addAddButton($(`#${this.ulId}`).disableSelection()); // Shows the add tab button on the tabbed panda row
       this.renameTab = true; this.deleteTab = true; this.draggable = true; // Allows renaming, deleting and dragging
-      await bgPanda.db.getFromDB(bgPanda.tabsStore, null, true, (cursor) => { return cursor.value; })
-      .then( async result => {
+      await bgPanda.db.getFromDB(bgPanda.tabsStore).then( async result => {
         const theData = (result.length) ? result : this.defaultTabs;
         let active = true;
         for (let index=0, len=theData.length; index<len; index++) {
@@ -67,7 +69,19 @@ class TabbedClass {
       $(`<li class="pcm_captchaText ml-2"></li>`).appendTo($(`#${this.ulId}`).disableSelection());
       success = "Added all log tabs.";
     }
+    this.tabNavHeight = $(`#pcm_tabbedPandas`).height();
+    this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
     return [success, err];
+  }
+  /** Resizes the tab contents according to the tab nav height and bottom status tab area. */
+  async resizeTabContents() {
+    let change = $(`#pcm_tabbedPandas`).height() - this.tabNavHeight;
+    if (change !== 0 && this.tabContentsHeight > 0) {
+      $('#pcm_pandaTabContents .pcm_tabs').height(`${this.tabContentsHeight - change}px`);
+    }
+    pandaUI.innerHeight = window.innerHeight;
+    this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
+    this.tabNavHeight = $(`#pcm_tabbedPandas`).height();
   }
   /** Creates the tab structure with the supplied id names and element appended to it.
    * @param  {object} element   - The jquery element to append to the tab structure.
@@ -193,14 +207,6 @@ class TabbedClass {
     this.resizeTabContents();
     label = null;
     return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
-  }
-  /** Resizes the tab contents according to the tab nav height and bottom status tab area. */
-  resizeTabContents() {
-    let newHeight = $(`#pcm_tabbedPandas`).height();
-    if (newHeight != this.tabNavHeight) {
-      $('#pcm_pandaTabContents, #pcm_pandaTabContents .pcm_tabs').height(`${window.innerHeight -240 - newHeight}px`);
-    }
-    this.tabNavHeight = newHeight;
   }
   /** Hide the current tab contents when removing or adding a lot of cards.
    * @param  {object} [unique=null] - The unique number for this tab content area to hide. */

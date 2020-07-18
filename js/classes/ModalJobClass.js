@@ -3,6 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
 	constructor() {
+    this.pandaDur = {min:0, max:60} // Limits for the panda duration in minutes.
   }
   /** Shows the modal for users to change the details of the hit job with the unique ID.
    * @async                                - To wait for the data to be loaded from the database.
@@ -15,8 +16,11 @@ class ModalJobClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
+      changes.duration = Math.min(Math.max(changes.duration, this.pandaDur.min), this.pandaDur.max);
+      changes.duration *= 60000;
+      changes.hamDuration = Math.min(Math.max(changes.hamDuration, globalOpt.timerDur.min), globalOpt.timerDur.max);
       hitInfo.data = Object.assign(hitInfo.data, changes);
-      hitInfo.data.duration *= 60000; bgPanda.timerDuration(myId);
+      bgPanda.timerDuration(myId);
       await bgPanda.updateDbData(myId, hitInfo.data);
       pandaUI.cards.updateAllCardInfo(myId, hitInfo);
       pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data);
@@ -26,14 +30,15 @@ class ModalJobClass {
       if (successFunc!==null) successFunc(changes);
     }, "invisible", "No", null, "visible btn-sm", "Cancel");
     let df = document.createDocumentFragment();
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(df);
     displayObjectData([
       {label:'Limit # of GroupID in queue:', type:'range', key:'limitNumQueue', min:0, max:24, tooltip:'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
       {label:'Limit # of total Hits in queue:', type:'range', key:'limitTotalQueue', min:0, max:24, tooltip:'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
       {label:'Accept Only Once:', type:'trueFalse', key:'once', tooltip:'Should only one hit be accepted and then stop collecting? Great for surveys.'},
       {label:"Daily Accepted Hit Limit:", type:"text", key:"acceptLimit", default:0, tooltip:'How many hits a day should be accepted for this job?'},
-      {label:"Stop Collecting After Minutes:", type:"text", key:"duration", default:0, tooltip:'The number of minutes for this job to collect before stopping. Resets time if a hit gets collected.'},
+      {label:"Stop Collecting After MINUTES:", type:"text", key:"duration", minutes:true, default:0, tooltip:'The number of minutes for this job to collect before stopping. Resets time if a hit gets collected.'},
       {label:"Stop Collecting After # of fetches:", type:"text", key:"limitFetches", default:0, tooltip:'Number of tries to catch a hit to do before stopping.'},
-      {label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam", tooltip:'Should this job go ham when it finds a hit and then runs for delayed ham duration before it goes back to normal collecting mode?'},
+      {label:"Force Delayed Ham on Collect:", type:"trueFalse", key:"autoGoHam", tooltip:'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
       {label:"Force Delayed Ham Duration:", type:"text", key:"hamDuration", default:0, tooltip:'The duration in minutes to use to go in ham mode after collecting a hit and then go back to normal collecting mode.'},
       {label:"Friendly Requester Name:", type:"text", key:"friendlyReqName", tooltip:'A user created requester name to make the name shorter or easier to remember.'},
       {label:"Friendly Hit Title:", type:"text", key:"friendlyTitle", tooltip:'A user created hit title to make the title shorter or easier to remember what it is.'},
