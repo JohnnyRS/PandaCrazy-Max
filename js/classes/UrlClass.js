@@ -11,16 +11,14 @@ class UrlClass {
 	/** Gets the url being used by this class.
 	 * @return {string} - The url string that this class is using. */
 	returnUrl() { return this.url; }
-	/** Fetches the url and handles mturk results.
-	 * Detects json result and text result.
+	/** Fetches the url and handles mturk results. Detects json result and text result.
 	 * @async - To wait for the responses to be received after a fetch. */
 	async goFetch() {
-		let returnValue = null;
+		let returnValue = null, response = {};
+		let thisResult = "ok", dataType = "", theData=null;
 		try {
-			let response = await fetch(this.url, { credentials: `include` });
-			let thisResult = "ok", dataType = "", theData=null;
+			response = await fetch(this.url, { credentials: `include` });
 			if (response.ok || response.status === 422 || response.status === 429 || response.status === 400 || response.status === 503) {
-				// sorts response into json or text
 				const type = response.headers.get('Content-Type');
 				if (response.status === 400 || response.status === 503 ) thisResult = "bad.request";
 				if (type.includes("application/json")) {
@@ -37,12 +35,12 @@ class UrlClass {
 				else console.log(await response.text());
 				returnValue = { type: "unknown.result", url1: response.url, status: response.status, data: null };
 			}
-			response = theData = null;
 		}
 		catch (e) {
 			console.log("Got an error when trying to fetch the url.");
 			returnValue = { type: "caught.error", url: '', status: null, data: null };
 		}
+		response = {}; theData = null;
 		return returnValue;
 	}
 }

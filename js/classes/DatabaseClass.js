@@ -50,32 +50,13 @@ class DatabaseClass {
    * @param {bool} [update=false]   - True to use put for add or update. False to use add only.
    * @param {bool} [multiple=false] - Does the data object have multiple items to add?
    * @return {promise}              - Database key or new key in resolve. Error object in reject. */
-  addToDB(storeName, mData, update=false, multiple=false) {
+  addToDB(storeName, mData) {
     return new Promise( (resolve, reject) => {
-      let newId = null, dbIds = [];
-      let tx = this.db.transaction( [storeName], "readwrite" );
-      if (multiple) {
-        for (const data of mData) {
-          let request = tx.objectStore(storeName).add(data);
-          request.onsuccess = () => { data.id = request.result; dbIds.push(request.result); }
-        }
-      }
-      else {
-        let items = tx.objectStore( storeName );
-        let request = (update) ? items.put(mData) : items.add(mData);
-        request.onsuccess = e => { newId = request.result; } // Set newId to the key used to add item.
-      }
+      let newId = null, tx = this.db.transaction( [storeName], "readwrite" );
+      let datas = (Array.isArray(mData)) ? mData : [mData], storage = tx.objectStore(storeName);
+      for (const data of datas) {  storage.put(data).onsuccess = (e) => { data.id = newId = e.target.result; } }
       tx.onabort = () => { reject(new Error(`Add to: ${storeName} error: ${tx.error.message}`)); }
-      tx.oncomplete = () => { resolve( (multiple) ? dbIds : newId ); }
-    });
-  }
-  /** Updates data in database with a key in data or if key not found then it adds data.
-   * @param {string} storeName - Store name to be used for adding data to.
-   * @param {object} data      - Data to be added to the store name database.
-   * @return {promise}         - Database key or new key in resolve. Error object in reject. */
-  updateDB(storeName, data) {
-    return new Promise( (resolve, reject) => {
-      this.addToDB( storeName, data, true ).then( id => { resolve(id); }, rejected => reject(rejected) );
+      tx.oncomplete = () => { resolve( (datas.length > 1) ? -1 : newId ); }
     });
   }
   /** Get an array or object of items from database with a key.

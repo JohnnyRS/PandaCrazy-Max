@@ -1,21 +1,21 @@
 const locationUrl = window.location.href, _ = undefined;
 const parentUrl = window.parent.location.href;
-let hitData = {}, hitsData = {}, originalSetItem = null;
+let hitData = {}, hitsData = {}, originalSetItem = null, pcm_running = false;
 let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
 
 /** Sends a message to the extension with given values.
- * @param  {string} com          - The command to send to the extension.
- * @param  {string} gId          - The group ID for this hit job.
- * @param  {string} [desc='']    - The description for this hit job.
- * @param  {string} [title='']   - The title for this hit job.
- * @param  {string} [rId='']     - The requester ID for this hit job.
- * @param  {string} [rName='']   - The requester name for this hit job.
- * @param  {number} [price=0.00] - The price for this hit job.
- * @param  {string} [dur='']     - The duration given for this hit job.
- * @param  {number} [hA=0]       - The hits available for this hit job.
+ * @param  {string} com        - Command        @param {object} data          - Data Object  @param  {string} gId      - GroupID
+ * @param  {string} [desc='']  - Description    @param  {string} [title='']   - Title        @param  {string} [rId=''] - Requester ID
+ * @param  {string} [rName=''] - Requester name @param  {number} [price=0.00] - Price        @param  {string} [dur=''] - Duration
+ * @param  {number} [hA=0]     - Hits available
  */
-function sendToExt(com, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0) {
-  chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA});
+function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0) {
+  if (typeof chrome.app.isInstalled === 'undefined')  {
+    if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
+    location.reload();
+  } else {
+    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA});
+  }
 }
 /** Parses the command string and sends message to extension.
  * @param  {string} command - The command to send for this button.
@@ -49,7 +49,7 @@ function parseCommands(command, data) {
     case 'addOnceJob':          // Add a panda job but only accept one hit.
     case 'addSearchJob':        // Add a search job and try collecting it.
     case 'addJob':              // Add a job and try collecting it.
-      sendToExt(command, data.groupId,_, data.title, data.requesterId, data.requesterName, data.pay, data.duration, data.hitsAvailable);
+      sendToExt(command, data, data.groupId,_, data.title, data.requesterId, data.requesterName, data.pay, data.duration, data.hitsAvailable);
   }
 }
 /** Sends message commands to PandaCrazy about a new panda or search job to add. Used for forums with older PC buttons.
@@ -136,7 +136,7 @@ function oldPCRemoval() {
 function buttonsSend1(e, command) {
   let theIndex = $(e.target).closest('.table-row').index();
   let data = hitsData[theIndex];
-  if (data) chrome.runtime.sendMessage({command:command, groupId:data.hit_set_id, description:data.description, title:data.title, reqId:data.requester_id, reqName:data.requester_name, price:data.monetary_reward.amount_in_dollars});
+  if (data) this.sendToExt(command,null, data.hit_set_id, data.description, data.title, data.requester_id, data.requester_name, data.monetary_reward.amount_in_dollars);
 }
 /** Format 2 for button messages to send.
  * @param  {string} command - The command to send for this button. */
@@ -144,7 +144,7 @@ function buttonsSend2(command) {
   if (hitData) {
     const regex = /\[hit_type_id\]=([^&]*)&.*\[requester_id\]=([^&]*)&/;
     let [all, groupId, reqId] = unescape(hitData.contactRequesterUrl).match(regex);
-    chrome.runtime.sendMessage({command:command, groupId:groupId, description:hitData.description, title:hitData.projectTitle, reqId:reqId, reqName:hitData.requesterName, price:hitData.monetaryReward.amountInDollars});
+    this.sendToExt(command,null, groupId, hitData.description, hitData.projectTitle, reqId, hitData.requesterName, hitData.monetaryReward.amountInDollars);
   }
 }
 /** Parses a URL with no assignment ID attached so must be a preview. */
@@ -198,6 +198,15 @@ function oldPandaCrazy() { console.log('old pandacrazy page'); }
 /** Works on forum pages with the name given.
  * @param  {string} name - The name of the forum this page is on. */
 function onForums(name) { console.log('onForums page name: ',name); }
+
+/** Find out if there was an external command needing to run because of a reload page. */
+chrome.storage.local.get(['pcm_running'], (result) => { pcm_running = result.pcm_running; });
+let lastExtCommand = localStorage.getItem('PCM_LastExtCommand');
+if (lastExtCommand) {
+  let parsed = JSON.parse(lastExtCommand);
+  this.parseCommands(parsed.command, parsed.data);
+  localStorage.removeItem('PCM_LastExtCommand');
+}
 
 /** Sort pages to relevant functions. */
 if (/worker\.mturk\.com([\/]|$)([\?]|$)(.*=.*|)$/.test(locationUrl)) hitList(); // Pages with hits listed

@@ -27,7 +27,7 @@ class PandaGOptions {
       'secondTimer':1400,           // The time for the second timer.
       'thirdTimer':2100,            // The time for the third timer.
       'hamTimer':900,               // The time for the ham timer.
-      'hamDelayTimer':8,            // The duration timer in seconds for goHam on any new hits.
+      'hamDelayTimer':6,            // The duration timer in seconds for goHam on any new hits.
       'queueTimer':2000,            // The time for the queue Timer.
       'timerIncrease':10,           // Time in milliseconds used for the timer increase button.
       'timerDecrease':10,           // Time in milliseconds used for the timer decrease button.
@@ -36,7 +36,7 @@ class PandaGOptions {
       'stopAutoSlow':false,
       'autoSlowDown':false,
       'timerUsed':'mainTimer',
-      'searchDuration':10
+      'searchDuration':12
     };
     this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
     this.timerDur = {min:0, max:600}          // The limits for the ham duration in seconds.
@@ -99,6 +99,12 @@ class PandaGOptions {
     }, rejected => err = rejected);
     afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
+  removeAll() { this.general = this.timers = this.alarms = this.helpers = {}; }
+  importOptions(newData) {
+    newData.timers.timerUsed = this.timers.timerUsed;
+    this.general = newData.general; this.timers = newData.timers; this.alarms = newData.alarms;
+    this.update(true);
+  }
   /** Updates the global options and resets anything that is needed for example tooltips. */
   update(tooltips=true) {
     if (tooltips) {
@@ -109,9 +115,9 @@ class PandaGOptions {
       }
     }
     pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
-    bgPanda.db.updateDB(bgPanda.optionsStore, this.general);
-    bgPanda.db.updateDB(bgPanda.optionsStore, this.timers);
-    bgPanda.db.updateDB(bgPanda.optionsStore, this.alarms);
+    bgPanda.db.addToDB(bgPanda.optionsStore, this.general);
+    bgPanda.db.addToDB(bgPanda.optionsStore, this.timers);
+    bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms);
   }
   /** Shows the general options in a modal for changes. */
   showGeneralOptions() {
@@ -180,7 +186,8 @@ class PandaGOptions {
       {label:"Timer Increase By:", type:"number", key:"timerIncrease", tooltip:'Change the value in milliseconds on the increase menu button to increase the current timer by.', data:this.timerChange},
       {label:"Timer Decrease By:", type:"number", key:"timerDecrease", tooltip:'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},
       {label:"Timer Add Timer By:", type:"number", key:"timerAddMore", tooltip:'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
-      {label:"Timer Auto Slowdown Increase:", type:"number", key:"timerAutoIncrease", tooltip:'', data:this.timerChange}
+      {label:"Timer Auto Slowdown Increase:", type:"number", key:"timerAutoIncrease", tooltip:'', data:this.timerChange},
+      {label:"Default search durations for hits:", type:"number", key:"searchDuration", tooltip:'The duration temporarily used for any hits found from search jobs.', data:this.timerChange}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
@@ -239,7 +246,7 @@ class PandaGOptions {
   /** Get the ham delay time to use for new hits when goHam gets turned on. */
   getHamDelayTimer() { return this.timers.hamDelayTimer; }
   /** Get the search duration time to use for new hits when it starts to collect before searching. */
-  getSearchDuration() { return this.timers.searchDuration; }
+  theSearchDuration(val) { if (val) { this.timers.searchDuration = val; this.update(false); } return this.timers.searchDuration; }
   /** Get the timer increase value for increase timer button. */
   getTimerIncrease() { return this.timers.timerIncrease; }
   /** Get the timer decrease value for decrease timer button. */

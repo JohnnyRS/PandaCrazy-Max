@@ -25,6 +25,8 @@ class AlarmsClass {
     this.data = {};
     this.myAudio = null;
   }
+  /** Removes any data that should be removed when closing down. */
+  removeAll() { this.modal = null; this.voices = []; this.data = {}; this.myAudio = null; }
   /** Uses the Text to speach sythesis to speak a text provided. Will cancel any text speaking first.
    * @param  {string} thisText       - The text which needs to be spoken.
    * @param  {string} [endFunc=null] - The function to run when the text spoken ends. */
@@ -58,9 +60,7 @@ class AlarmsClass {
       if (!value.obj) { // If no audio obj then set up src with default filename.
         value.audio = new Audio();
         value.audio.src = chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`);
-      } else {
-        value.audio = new Audio(value.obj); value.obj = null;
-      }
+      } else { value.audio = new Audio(value.obj); value.obj = null; }
       this.data[value.name] = value;
     }
     return err;
@@ -94,11 +94,12 @@ class AlarmsClass {
     let saveThis = Object.assign({}, this.data[alarmSound]);
     if (saveThis.audio.src.substr(0,4) === 'data') saveThis.obj = saveThis.audio.src;
     delete saveThis.audio;
-		bgPanda.db.updateDB(bgPanda.alarmsStore, saveThis).then( () => {},
+		bgPanda.db.addToDB(bgPanda.alarmsStore, saveThis).then( () => {},
 			rejected => { pandaUI.haltScript(rejected, 'Failed updating data to database for an alarm so had to end script.', 'Error adding alarm data. Error:'); }
 		);
   }
-  /** sets up a select option with all the voices available in english and selects any previous voice selected. */
+  /** sets up a select option with all the voices available in english and selects any previous voice selected.
+   * @return {object} - Jquery object of the voice options. */
   voicesOption() {
     let options = $(document.createDocumentFragment()), i=0;
     for (const voice of this.voices) {
@@ -166,7 +167,7 @@ class AlarmsClass {
   /** This plays the queue full alarm. */
   doFullAlarm() { this.playSound('queueFull'); }
 	/** Method to decide which alarm to play according to the hit minutes and price.
-	 * @param  {object} thisHit - The hit information to use to decide on alarm to sound. */
+	 * @param  {object} hitData - The hit information to use to decide on alarm to sound. */
 	doAlarms(hitData) {
     let minutes = Math.floor(hitData.assignedTime / 60), speakThis = '';
     if (this.synth) {
@@ -213,4 +214,10 @@ class AlarmsClass {
    * @param  {string} alarmSound - The name of the alarm to return the TTS value for.
    * @param  {number} newLess    - The new less than value to be set. */
   setLessThan(alarmSound, newLess) { this.data[alarmSound].lessThan = newLess; this.saveAlarm(alarmSound); }
+  /** Gets the folder for the alarms and returns it.
+   * @return {string} - The folder name where the default alarms are stored. */
+  getFolder() { return this.alarmFolder; }
+  /** Gets the default values for the alarms and returns it.
+   * @return {object} - The default values for the alarms. */
+  theDefaultAlarms() { return this.dataDefault; }
 }

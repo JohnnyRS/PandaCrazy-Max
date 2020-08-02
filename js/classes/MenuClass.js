@@ -32,9 +32,9 @@ class MenuClass {
    * @param  {string} dropdownStyle - The css style of the dropdown when submenu arrow clicked.
    * @param  {array} dropdownInfo   - The dropdown information for the rest of the submenus. */
   addSubMenu(appendHere, dropdownStyle, dropdownInfo, noClick=false, onClosed=null) {
-    const btnGroup = $(`<div class='btn-group py-0'></div>`).appendTo(appendHere);
+    let btnGroup = $(`<div class='btn-group py-0'></div>`).appendTo(appendHere);
     $(`<button type='button' class='btn btn-primary-dark btn-xs dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'></button>`).append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
-    const dropdownMenu = $(`<div class='dropdown-menu pcm_dropdownMenu' style='${dropdownStyle}'></div>`).appendTo(btnGroup);
+    let dropdownMenu = $(`<div class='dropdown-menu pcm_dropdownMenu' style='${dropdownStyle}'></div>`).appendTo(btnGroup);
     if (noClick) dropdownMenu.click( (e) => { e.stopPropagation(); } );
     if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', (e) => { onClosed(); });
     dropdownInfo.forEach( (info) => {
@@ -48,6 +48,7 @@ class MenuClass {
       else if (info.type === 'slider') $(`<div id='${info.id}' class='text-center'></div>`).slider({orientation:'vertical', range:'min', min:info.min, max:info.max, value:info.value, step:info.step, create: (e, ui) => { info.createFunc.apply(this, [e, ui]); }, slide: (e, ui) => { info.slideFunc.apply(this, [e, ui]); }}).appendTo(dropdownMenu);
       else if (info.type === 'divider') $(`<div class='dropdown-divider'></div>`).appendTo(dropdownMenu);
     });
+    btnGroup = null; dropdownMenu = null;
   }
   /** Change the panda timer and turn all other timer buttons off. */
   changeTheTimer(e, timer) {
@@ -66,7 +67,7 @@ class MenuClass {
   }
   /** Create the top menu using addMenu and addSubMenu Methods. */
   createTopMenu() {
-    const topMenu = $(`<div class='btn-group text-left border border-info' id='pcm_topMenuGroup' role='group'></div>`).appendTo($(`#${this.topMenuId}`));
+    let topMenu = $(`<div class='btn-group text-left border border-info' id='pcm_topMenuGroup' role='group'></div>`).appendTo($(`#${this.topMenuId}`));
     this.addMenu(topMenu, 'Vol:', () => {}, '', 'pcm-topMenuBtn');
     let vol = globalOpt.theVolume();
     this.addSubMenu(topMenu, 'min-width:3rem; text-align:center;', 
@@ -106,12 +107,14 @@ class MenuClass {
       this.addSubMenu(topMenu, '',
       [{'type':'item', 'label':'General', 'menuFunc':() => { globalOpt.showGeneralOptions(); }, 'tooltip':'Change the general options'},
        {'type':'item', 'label':'Edit Timers', 'menuFunc':function() { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
-       {'type':'item', 'label':'Edit Alarms', 'menuFunc':() => { alarms.showAlarmsModal(); }, 'tooltip':'Change the options and sounds for the alarms'}]);
+       {'type':'item', 'label':'Edit Alarms', 'menuFunc':() => { alarms.showAlarmsModal(); }, 'tooltip':'Change the options and sounds for the alarms'}
+      ]);
+    topMenu = null;
   }
   /** Create the quick menu buttons under the stats area. */
   createQuickMenu() {
-    const quickMenu = $(`<div class='btn-group text-left w-100 py-1' role='group'></div>`).appendTo($(`#${this.quickMenuId}`));
-    const group = $(`<div class='btn-group py-0 my-0'></div>`).appendTo(quickMenu);
+    let quickMenu = $(`<div class='btn-group text-left w-100 py-1' role='group'></div>`).appendTo($(`#${this.quickMenuId}`));
+    let group = $(`<div class='btn-group py-0 my-0'></div>`).appendTo(quickMenu);
     this.addMenu(group, 'Pause', (e) => { if (bgPanda.pauseToggle()) $(e.target).html('Unpause'); else $(e.target).html('Pause'); }, 'Pause Timer.');
     this.addMenu(group, 'Start Group', () => { groupings.showGroupingsModal(pandaUI); } );
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.');
@@ -120,6 +123,7 @@ class MenuClass {
     this.addMenu(group, 'Reset Timer', () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'Reset the current timer to the original time.' );
     this.addMenu(group, 'Search Jobs', () => { pandaUI.showJobsModal(); }, 'Search the Panda Jobs Added' );
     this.addMenu(group, 'Search Mturk', () => {} );
+    quickMenu = null; group = null;
   }
   /** This will show the quickMenu buttons. */
   showQuickMenu() { $(`#${this.quickMenuId}`).show(); }

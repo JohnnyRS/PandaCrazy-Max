@@ -42,6 +42,8 @@ class PandaGroupings {
       afterFunc(success, err);
     }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
+  /** Removes data from class so memory isn't being used after a closing. */
+  removeAll() { this.groups = this.groupStatus = this.startTimes = this.endTimes = {}; }
   /** This method checks all the start times and starts groupings when necessary. */
   checkStartTimes() {
     if (isNewDay()) this.resetTimes(false); // Reset start and end times object if new day.
@@ -64,18 +66,20 @@ class PandaGroupings {
       thisMoment = null;
     }
   }
+  /** Adds groupings from an array to the database usually when importing.
+   * @param  {array} additions - Groupings additions to add to database. */
+  importToDB(additions) { for (const newGroup of additions) { bgPanda.db.addToDB(bgPanda.groupingStore, newGroup); } }
   /** Adds a grouping with the name, description and data for it.
    * @param  {string} name        - The name for this new grouping.
    * @param  {string} description - The description for this new grouping.
    * @param  {object} additions   - An object with all data for the new grouping.
    * @return {number}             - Returns the unique number for this new grouping. */
   add(name, description, additions) {
-    let newGroup = {name:name, description:description, pandas:{}, sorted:[], startTime:"", endHours:0, endMinutes:0};
+    let newGroup = {name:name, description:description, pandas:{}, startTime:"", endHours:0, endMinutes:0};
     const newUnique = this.unique;
     newGroup.pandas = additions;
-    Object.keys(additions).forEach(key => { newGroup.sorted.push(key); });
     this.groups[newUnique] = newGroup;
-    bgPanda.db.addToDB(bgPanda.groupingStore, newGroup).then( (id) => { this.groups[newUnique].id = id; } );
+    bgPanda.db.addToDB(bgPanda.groupingStore, newGroup).then( (id) => { if (id >= 0) this.groups[newUnique].id = id; } );
     this.groupStatus[newUnique] = {collecting:false};
     if (this.groups[newUnique].startTime!=="") this.setStartEndTimes(newUnique);
     return this.unique++;
@@ -109,10 +113,7 @@ class PandaGroupings {
   async delete(grouping) {
     await bgPanda.db.deleteFromDB(bgPanda.groupingStore, this.groups[grouping].id)
     .then( null, (rejected) => console.error(rejected));
-    delete this.groups[grouping];
-    delete this.groupStatus[grouping];
-    delete this.startTimes[grouping];
-    delete this.endTimes[grouping];
+    delete this.groups[grouping]; delete this.groupStatus[grouping]; delete this.startTimes[grouping]; delete this.endTimes[grouping];
   }
   /** If grouping has more than 1 panda to start it will stagger collection so timer won't get bombarded.
    * @param  {number} grouping - The unique number for the grouping to be deleted.
@@ -148,8 +149,6 @@ class PandaGroupings {
    * @param  {number} grouping - The unique number for the grouping to be stopped. */
   stopCollecting(grouping) { if (this.groupStatus[grouping].collecting) this.toggle(grouping, true); }
   /** Check all panda jobs for a grouping to make sure it's not deleted and remove from grouping if it is.
-   * If all panda's are collecting in the grouping then make sure grouping is toggled on.
-   * If all panda's are not collecting in the grouping then make sure grouping is toggled off.
    * @param  {object} grouping       - The unique number for the grouping to be deleted.
    * @param  {bool} [doToggle=false] - True if toggle group when all panda's collecting or not collecting. */
   goCheckGroup(grouping, doToggle=false) {
@@ -194,7 +193,8 @@ class PandaGroupings {
   /** Show grouping edit modal so user can change grouping options.
    * @param  {number} grouping            - The unique number for the grouping to be deleted.
    * @param  {function} [afterFunc=null]  - The function to call when saved button is clicked.
-   * @param  {function} [cancelFunc=null] - The function to call when cancel button is clicked. */
+   * @param  {function} [cancelFunc=null] - The function to call when cancel button is clicked.
+   * @param  {function} [afterClose=null] - The function to call when modal is closed. */
   showgroupingEditModal(grouping, afterFunc=null, cancelFunc=null, afterClose=null) {
     pandaUI.showJobsModal("groupingEdit", grouping, this.groups[grouping], (savedResults) => {
       const name = $(`#pcm_groupingNameI`).val(), description = $(`#pcm_groupingDescI`).val();;
@@ -211,7 +211,7 @@ class PandaGroupings {
       const bgColor = (jobNumbers>0) ? "" : "#800517";
       $(`#pcm_nameDesc_${grouping}`).html(`${this.groups[grouping].name} - ${this.groups[grouping].description} - <span class="small">{${jobNumbers} Jobs}</span>`)
       $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", bgColor).effect( "highlight", {color:"#3CB371"}, 1500);
-      bgPanda.db.updateDB(bgPanda.groupingStore, this.groups[grouping]);
+      bgPanda.db.addToDB(bgPanda.groupingStore, this.groups[grouping]);
       if (afterFunc!==null) setTimeout( () => { afterFunc(); }, 300 );
     }, async (e) => {
       let info = bgPanda.options(e.data.unique);

@@ -1,17 +1,21 @@
 const bgPage = chrome.extension.getBackgroundPage(); // Get background page for extension
-let searchUI = new SearchUI(), globalOpt = null;
-let bgSearchClass = bgPage.gSetSearchUI(searchUI);
-const bgQueue = bgPage.gGetQueue();
-const modal = null; // set up a modal class for a options, warnings or details
+let search = null, bgQueue = null, bgSearchClass = null, modal = null;
+
+async function prepare() {
+  await bgPage.prepareToOpen(_, true);
+  search = new SearchUI(); bgQueue = bgPage.gGetQueue();
+  bgSearchClass = bgPage.gSetSearchUI(search);
+}
 /**
  * Starts the search crazy UI and prepares all the search triggers.
  */
-function startSearchCrazy() {
-/** Detect when user closes page so background page can remove anything it doesn't need without the search UI. **/
-window.addEventListener("beforeunload", (e) => { bgPage.gSetSearchUI(null); bgSearchClass.originRemove(); });
-  searchUI.prepareSearch();
-  bgSearchClass.addTrigger("rid", {"name":"Ben Peterson", "rid":"AFEG4RKNBSL4T", "gid":"", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "limitFetches":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":false, "from":"searchUI"});
-  bgSearchClass.addTrigger("gid", {"name":"Ibotta, Inc.", "rid":"", "gid":"30B721SJLR5BYYBNQJ0CVKKCWQZ0OI", "duration": 6000, "once":false, "limitNumQueue":0, "limitTotalQueue":0, "limitFetches":0, "autoGoHam":false, goHamDuration:0, "tempGoHam":3000, "disabled":true, "from":"searchUI"});
+async function startSearchCrazy() {
+  /** Detect when user closes page so background page can remove anything it doesn't need without the search UI. **/
+  await prepare();
+  window.addEventListener('beforeunload', (e) => { bgPage.gSetSearchUI(null); });
+  search.prepareSearch();
+  bgSearchClass.addTrigger('rid', {'name':'Ben Peterson', 'reqId':'AFEG4RKNBSL4T', 'groupId':'', 'title':'', 'reqName':'Ben Peterson', 'pay':0.01, 'duration':'6 minutes', 'status':'searching'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':0, 'tempGoHam':4000});
+  bgSearchClass.addTrigger('gid', {'name':'Ibotta, Inc.', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':0, 'tempGoHam':4000});
 }
 /** ================ First lines executed when page is loaded. ============================ **/
 allTabs('/searchCrazy.html', count => { // Count how many Search Crazy pages are opened.

@@ -51,8 +51,6 @@ class PandaUI {
 		this.pandaStats[myId].deleteIdFromDB(dbId);
 	}
 	/** Loads up any panda jobs that are saved or saves default panda jobs if database was just created.
-	 * If loaded up data is done then start queue monitor and removes panda data to save memory.
-   * Saves any errors from trying to add to database and then sends a reject.
 	 * @async												- To wait for the tabs to completely load from the database.
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object. */
 	async prepare(afterFunc) {
@@ -63,7 +61,7 @@ class PandaUI {
 		this.cards.prepare(this.tabs);
 		this.logTabs = new LogTabsClass(); 		// Functions dealing with the tabs in UI
 		this.logTabs.updateCaptcha(globalOpt.getCaptchaCount());			// Show captcha count on bottom tabs
-		this.pandaGStats =  new PandaGStats();												// Global stats for panda's
+		this.pandaGStats = new PandaGStats();												// Global stats for panda's
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			let oO = optObject(_,_,_,_,_,_,_,_, globalOpt.getHamDelayTimer());
@@ -74,7 +72,6 @@ class PandaUI {
 				if (!err) {
 					let tabUniques = this.tabs.getUniques(), dbIds = Object.keys(bgPanda.dbIds);
 					for (const unique of tabUniques) {
-						let fragment = document.createDocumentFragment();
 						let positions = this.tabs.getpositions(unique);
 						for (const dbId of positions) {
 							const myId = bgPanda.getMyId(dbId);
@@ -87,7 +84,7 @@ class PandaUI {
 						this.cards.appendDoc(unique);
 					}
 					if (dbIds.length>0) {
-						for (const dbId of dbIds) { console.log('we have orphans: ', dbIds);
+						for (const dbId of dbIds) {
 							const myId = bgPanda.getMyId(dbId), info = bgPanda.options(myId);
 							info.tabUnique = 1;
 							this.addPandaToUI(myId, info, null, true);
@@ -113,6 +110,13 @@ class PandaUI {
 		$('#pcm_pandaPanel').mousedown( () => { this.resizeObserver.observe($('#pcm_pandaPanel')[0]); } )
 		$('#pcm_pandaPanel').mouseup( () => { this.resizeObserver.disconnect(); } )
 		afterFunc(success, err);
+	}
+	/** Removes all panda jobs from UI and stats. */
+	async removeAll() {
+		this.cards.removeAll(); this.tabs.removeAll(); this.logTabs.removeAll();
+		this.cards = null; this.pandaStats = {}; this.listener = null; this.dbStats = null;
+		this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
+		this.pandaGStats = null; this.delayedTimeout = null; this.resizeObserver = null; this.modalJob = null;
 	}
   /** Resizes the tab contents according to window size changes. */
   resizeTabContents() {
@@ -156,19 +160,14 @@ class PandaUI {
   }
 	/** Show the jobs modal for editing panda jobs or panda jobs in a grouping.
 	 * It will also load all panda's from the database and wait for successful load.
-	 * @async																- To wait for all the data for panda's to be loaded from database.
-	 * @param  {string} [type="jobs"]				- The type of data that is being edited.
-	 * @param  {number} [groupings=-1]			- The unique ID for the grouping that will be edited.
-	 * @param  {object} [thisObj=null]			- The grouping object that is being edited.
-	 * @param  {function} [saveFunc=null]		- Function to call when the save button is clicked.
-	 * @param  {function} [checkFunc=null]  - Function to call when checkbox clicked on a job.
-	 * @param  {function} [cancelFunc=null] - Function to call when the cancel button is clicked.
-	 * @param  {function} [afterShow=null]  - Function to call when modal is shown after animation effects.
-	 * @param  {function} [afterClose=null] - Function to call when modal is closes. */
+	 * @async															 - To wait for all the data for panda's to be loaded from database.
+	 * @param  {string} [type="jobs"]			 - Type of data        @param  {number} [groupings=-1]			- Grouping ID    @param  {object} [thisObj=null]			- Grouping object
+	 * @param  {function} [saveFunc=null]	 - Save Function       @param  {function} [checkFunc=null]  - Check Function @param  {function} [cancelFunc=null] - Cancel Function
+	 * @param  {function} [afterShow=null] - After Show Function @param  {function} [afterClose=null] - After Close Function */
 	async showJobsModal(type="jobs", groupings=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null, afterClose=null) {
 		let err = await bgPanda.getAllPanda(false); // Just loading all panda data into memory.
 		if (err) {
-			this.haltScript(err, 'Failed getting data from database for all panda\'s so had to end script.', 'Error getting panda data. Error:');
+			this.haltScript(err, 'Failed getting data from database for all pandas so had to end script.', 'Error getting panda data. Error:');
 		}
 		if (!this.modalJob) this.modalJob = new ModalJobClass();
 		this.modalJob.showJobsModal(type, groupings, thisObj, saveFunc, checkFunc, () => {
@@ -177,10 +176,7 @@ class PandaUI {
 		}, afterShow, () => { this.modalJob = null; if (afterClose) afterClose(); else modal = null; });
 	}
 	/** Shows the add job modal. */
-	showJobAddModal() {
-		this.modalJob = new ModalJobClass();
-		this.modalJob.showJobAddModal( () => { this.modalJob = null; } );
-	}
+	showJobAddModal() { this.modalJob = new ModalJobClass(); this.modalJob.showJobAddModal( () => { this.modalJob = null; } ); }
 	/** Start panda job collecting with this unique ID and set the duration for collecting and go ham.
 	 * Also starts the goham at start if neccesary.
 	 * @async														 - To wait for the loading of the data from the database.
@@ -189,13 +185,15 @@ class PandaUI {
 	 * @param  {number} [tempDuration=0] - The duration for this panda job to collect for.
 	 * @param  {number} [tempGoHam=0]		 - The duration for the temporary go ham to stay on. */
 	async startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
-		if (!this.pandaStats[myId].collecting) { // Make sure this panda is not collecting.
+		let pandaStat = this.pandaStats[myId], alreadySearching = pandaStat.searching;
+		if (!pandaStat.collecting) { // Make sure this panda is not collecting.
 			let goodCollect = await bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
 			if (goodCollect) {
 				let data = await bgPanda.dataObj(myId);
-				this.logTabs.addToStatus(data, this.pandaStats[myId], myId);
-				if (!this.pandaStats[myId].searching) this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
-				this.pandaStats[myId].startCollecting();
+				this.logTabs.addToStatus(data, pandaStat, myId);
+				if (!pandaStat.collecting && !alreadySearching) this.pandaGStats.addCollecting();
+				this.pandaGStats.collectingOn();
+				pandaStat.startCollecting();
 				$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 				$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 			}
@@ -208,10 +206,10 @@ class PandaUI {
 	 * @param  {bool} [deleteData=true]	- Should the data in the database be deleted also?
 	 * @param  {bool} [searching=false]	- Is this a job search and searching now? */
 	async stopCollecting(myId, whyStop=null, deleteData=true, searching=false) {
-		let info = bgPanda.options(myId), classToo = '';
+		let info = bgPanda.options(myId), classToo = '', pandaStat = this.pandaStats[myId];
 		if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
-		if (this.pandaStats[myId].collecting && !searching) this.pandaGStats.subCollecting();
-		const theStats = this.pandaStats[myId].stopCollecting();
+		if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
+		let theStats = pandaStat.stopCollecting();
 		info.data.totalSeconds += theStats.seconds; info.data.totalAccepted += theStats.accepted;
 		let hitData = Object.assign({}, info.data); // Make a copy of data.
 		bgPanda.stopCollecting(myId, hitData, whyStop);
@@ -263,13 +261,6 @@ class PandaUI {
 			jobsArr.length = 0;
 		}, null, () => { jobsArr.length = 0; $(".pcm_deleteButton").css("background-color", ""); });
 	}
-	/** Removes all panda jobs from UI and stats. */
-	async removeAll() {
-		this.cards.removeAll();
-		for (const key of Object.keys(this.pandaStats)) { delete this.pandaStats[key]; }
-		this.hitQueue = []; this.lastAdded = null;
-		this.pandaGStats.resetStats(); this.delayedTimeout = null; this.pandaStats = {};
-	}
 	/** Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
 	 * @param  {number} myId 						- The unique ID for a panda job.
@@ -283,18 +274,25 @@ class PandaUI {
 	}
 	/** Show that this panda search job is collecting in panda mode.
 	 * @param  {number} myId - The unique ID for a panda job. */
-	searchCollecting(myId) { this.cards.pandaCollectingNow(myId); }
+	searchCollecting(myId) {
+		let pandaStat = this.pandaStats[myId];
+		pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaCollectingNow(myId);
+	}
 	/** Show that this panda search job is disabled and not being searched anymore.
 	 * @param  {number} myId - The unique ID for a panda job. */
 	searchDisabled(myId) {
 		let pandaStat = this.pandaStats[myId];
-		if (pandaStat.doSearching() || pandaStat.doCollecting()) this.pandaGStats.subCollecting();
-		if (this.pandaGStats.collectingTotal.value<1) this.pandaGStats.collectingOff();
-		pandaStat.doSearching(false); this.cards.pandaDisabled(myId);
+		if (pandaStat) {
+			if (pandaStat.doSearching()) this.pandaGStats.subCollecting();
+			if (this.pandaGStats.collectingTotal.value < 1) this.pandaGStats.collectingOff();
+			pandaStat.doSearching(false); pandaStat.doCollecting(false); pandaStat.doSearchCollecting(false); this.cards.pandaDisabled(myId);
+		}
 	}
 	/** Show that this panda search job is being searched on the search page by the search class.
 	 * @param  {number} myId - The unique ID for a panda job. */
-	searchingNow(myId) { this.pandaStats[myId].doSearching(true); this.cards.pandaSearchingNow(myId); }
+	searchingNow(myId) {
+		let pandaStat = this.pandaStats[myId];
+		pandaStat.doSearching(true); this.cards.pandaSearchingNow(myId); }
 	/** When panda's are coming in externally too fast they need to delay collecting for 1600 milliseconds each.
 	 * This is a recursive method which will go through the delayed hitqueue and began collecting one by one.
 	 * @param  {number} [diff=null] - The difference of time since the last panda was added. */
@@ -351,28 +349,23 @@ class PandaUI {
 				const search = (msg.command==="addSearchJob" || msg.command==="addSearchOnceJob") ? "gid" : null;
 				const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
 				const run = (msg.command!=="addOnlyJob"); // Run this job after adding
-				const duration = ((search) ? 10000 : 120000); // Searches stops after 10 seconds. All others 2 minutes
-				let hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : 0;
+				const duration = ((search) ? 10000 : (msg.auto) ? 120000 : 0); // Searches collect for 10 seconds and then searches. Automatic adds stops after 2 minutes.
+				let hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
 				let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
 				let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-				this.addPanda(data, opt, true, run, true, duration, 4000);
+				this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
 			}
 		}
 	}
 	/** Add panda from search triggers. Is used to use search jobs instead of adding a new hit if not needed.
-	 * @param  {object} data			    - Object with all data for hit filled in.
-	 * @param  {object} opt			      - Object with all the options set for this hit.
-	 * @param  {object} add			      - Was this hit auto added?
-	 * @param  {object} run			      - Should this hit automatically run when added?
-	 * @param  {bool} ext			        - Did this panda job get added from an external source?
-	 * @param  {number} tempDuration  - The temporary duration to collect on the first collection run.
-	 * @param  {number} tempGoHam		  - The temporary duration to go ham for on the first collection run.
-	 * @param  {number} searchType		- The search type for this job.
-	 * @param  {string} [searchId=-1] - The unique ID for this job coming from the search class. */
-	addFromSearch(data, opt, add, run, ext, tempDuration, tempGoHam, searchType, searchId=-1) {
-		if (searchId !== -1 && data.reqName !== '') bgPanda.updateReqName(searchId, data.reqName);
+	 * @param  {object} data			         - Data                @param  {object} opt			  - Options        @param  {object} auto			    - Auto Added
+	 * @param  {object} run			           - Run after?          @param  {bool} ext			    - From external? @param  {number} tempDuration  - Temp duration
+	 * @param  {number} tempGoHam          - Temp GoHam duration @param  {number} searchType - Search type    @param  {string} [myId=-1]     - MyId
+	 * @param  {string} [from='fromPanda'] - from which UI? */
+	addFromSearch(data, opt, auto, run, ext, tempDuration, tempGoHam, searchType, myId=-1, from='fromPanda') {
+		if (myId !== -1 && data.reqName !== '') bgPanda.updateReqName(myId, data.reqName);
 		if (data.hamDuration === 0) data.hamDuration = globalOpt.getHamDelayTimer();
-		this.addPanda(data, opt, add, run, ext, tempDuration, tempGoHam,_,_,_,_, searchType);
+		this.addPanda(data, opt, auto, run, ext, tempDuration, tempGoHam,_,_,_,_, searchType, from);
 	}
 	/** Add panda from the database.
 	 * @async							- To wait for the process of adding data to the database.
@@ -380,42 +373,34 @@ class PandaUI {
 	async addPandaDB(r) {
 		let update = gNewVersion, tabUniques = this.tabs.getUniques();
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
-		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : 0;
+		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : r.hamDuration;
 		let dO = dataObject(r.groupId, r.description, r.title, r.reqId, r.reqName, r.price, r.hitsAvailable, r.assignedTime, r.expires, r.friendlyTitle, r.friendlyReqName);
 		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone);
 		let dbInfo = {...dO, ...oO, 'id':r.id, 'dateAdded':r.dateAdded, 'totalSeconds':r.totalSeconds, 'totalAccepted':r.totalAccepted};
-		await bgPanda.addPanda(dbInfo, false, {}, update, true);
+		await bgPanda.addPanda(dbInfo, false, {},_,_, update, true, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
 	}
 	/** Add a new panda job with lot of information and options to the panda area and database.
 	 * Search class uses this to add hits.
-	 * @async														- To wait for the data to be loaded from database if needed.
-	 * @param  {object} [d={}]			  	- Object with all data for hit filled in.
-	 * @param  {object} [opt={}]				- Object with all the options set for this hit.
-	 * @param  {object} [add=false]			- Was this hit auto added?
-	 * @param  {object} [run=false]			- Should this hit automatically run when added?
-	 * @param  {bool} [run=false]		  	- Should this panda job run after completely added?
-	 * @param  {bool} [ext=false]				- Did this panda job get added from an external source?
-	 * @param  {number} [tDur=0]      	- The temporary duration to collect on the first collection run.
-	 * @param  {number} [tempGoHam=0]		- The temporary duration to go ham for on the first collection run.
-	 * @param  {bool}	[loaded=false]	  - Was this panda loaded? Used for default values.
-	 * @param  {object}	[addDate=null]	- The date that this hit was last added or get current date.
-	 * @param  {number}	[seconds=0]			- The total number of seconds that this job had been collecting.
-	 * @param  {number}	[accepts=0]			- The total number of hits that was accepted since job was added.
-	 * @param  {number} [searchType='']	- The search type for this job. */
-	async addPanda(d={}, opt={}, add=false, run=false, ext=false, tDur=0, tempGoHam=0, loaded=false, addDate=null, seconds=0, accepts=0, searchType='') {
+	 * @async														   - To wait for the data to be loaded from database if needed.
+	 * @param  {object} [d={}]			  	   - Data           @param  {object} [opt={}]			 - Options        @param  {object} [add=false]		 - Auto Added?
+	 * @param  {bool} [run=false]		  	   - Run After?     @param  {bool} [ext=false]		 - From external? @param  {number} [tDur=0]      	 - Temp duration
+	 * @param  {number} [tGoH=0]		       - GoHam duration @param  {bool}	[loaded=false] - Loaded?        @param  {object}	[addDate=null] - Date
+	 * @param  {number}	[seconds=0]			   - Seconds        @param  {number}	[accepts=0]	 - Accepted       @param  {number} [searchType=''] - Search Type
+	 * @param  {string} [from='fromPanda'] - from which UI? */
+	async addPanda(d={}, opt={}, add=false, run=false, ext=false, tDur=0, tGoH=0, loaded=false, addDate=null, seconds=0, accepts=0, searchType='', from='fromPanda') {
 		const dated = (addDate) ? addDate : new Date().getTime(); // get the date that this job was added.
-		let gidFound = bgPanda.checkExisting(d.groupId, true, searchType, d);
+		let gidFound = bgPanda.checkExisting(d.groupId, searchType, from);
 		if (ext && gidFound !== null) {
 			const info = bgPanda.options(gidFound);
 			if (!info.data) await bgPanda.getDbData(gidFound);
 			info.data.hitsAvailable = d.hitsAvailable; info.data.reqName = d.reqName; info.data.reqId = d.reqId;
 			info.data.title = d.title; info.data.description = d.description; info.data.price = d.price;
-			this.runThisPanda(gidFound, tDur, tempGoHam);
+			this.runThisPanda(gidFound, tDur, tGoH);
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
 			let dbInfo = {...d, ...opt, 'dateAdded': dated, totalSeconds:seconds, totalAccepted:accepts};
-			let newAddInfo = {'tempDuration':tDur, 'tempGoHam':tempGoHam, 'run':run};
-			await bgPanda.addPanda(dbInfo, add, newAddInfo, false, loaded);
+			let newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};
+			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
 		}
 	}
 	/** Add this panda job to the panda UI with a card and stats.
@@ -438,7 +423,10 @@ class PandaUI {
 			if (newAddInfo) {
 				if ((pandaInfo.search === 'gid' || pandaInfo.search === null) && newAddInfo.run)
 					this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
-				else if (pandaInfo.search === 'rid' && newAddInfo.run) bgPanda.doSearching(myId, pandaInfo.data, 10000);
+				else if (pandaInfo.search === 'rid' && newAddInfo.run) {
+					this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
+					bgPanda.doSearching(myId, pandaInfo.data, 10000);
+				}
 			}
 			this.cards.cardButtons();
 		}
@@ -450,15 +438,13 @@ class PandaUI {
    * @param  {object} html 				- The html received from the fetch result.
    * @param  {object} url					- The url which was received by a fetch result. */
 	hitAccepted(myId, queueUnique, html, url) {
-		this.logTabs.queueTotal++;
-    this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
-    this.pandaGStats.addTotalAccepted();
-    this.cards.highlightEffect_card(myId);
+		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
+    this.pandaGStats.addTotalAccepted(); this.cards.highlightEffect_card(myId);
 		let pandaInfo = bgPanda.options(myId);
     this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
     if (pandaInfo.autoTGoHam !== "disable" &&
        (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
-      bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration);
+      bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration * 1000);
     }
     bgPanda.resetTimerStarted(queueUnique);
     let targetDiv = $(html).find(".project-detail-bar .task-project-title").next("div");
@@ -490,6 +476,10 @@ class PandaUI {
 		}
 		bgPanda.nullData(false, true);
 	}
+	/** Returns the total number recorded of hits in queue.
+	 * @param  {string} gId='' - Group ID to search for and count the hits in queue.
+	 * @return {number}        - Returns the number of group ID hits or all hits in queue. */
+	totalResults(gId='') { return this.logTabs.totalResults(gId); }
 	/** Sounds an alarm by the name parameter. Will check if the name is correct before calling alarm function.
 	 * @param  {string} name - The name of an alarm to sound. */
 	soundAlarm(name) { if (['Captcha','Queue','Full'].includes(name)) alarms[`do${name}Alarm`](); }
@@ -506,7 +496,6 @@ class PandaUI {
 		this.logTabs.updateLogStatus(stats, myId, milliseconds, changes);
 	}
 	/** Save the queue results received after making sure the groupings are checked for start times to start.
-	 * Also detects if a new day happened and then will reset any daily values that need to be reset.
 	 * @param  {object} queueResults - Object from the mturk queue with all the hits information. */
 	async gotNewQueue(queueResults) {
 		groupings.checkStartTimes();

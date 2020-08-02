@@ -65,10 +65,10 @@ class ModalJobClass {
    * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
   showJobAddModal(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(null, '900px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information. [GroupID is mandatory]</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
+    const idName = modal.prepareModal(null, '920px', 'modal-header-info modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information.</h4>', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Add new Panda Info', checkGroupID.bind(this), 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     let df = document.createDocumentFragment();
-    const div = $('<div><div class="pcm_inputError">&nbsp;</div></div>').appendTo(df);
-    createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Group ID or URL: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
+    const div = $('<div><div class="pcm_inputError"></div><div style="color:aqua">Enter a Group ID, Requester ID, Preview URL or accept URL.</div></div>').appendTo(df);
+    createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', '* Enter info for new Job: ', 'example: 30B721SJLR5BYYBNQJ0CVKKCWQZ0OI');
     createCheckBox(df, 'Start Collecting', 'pcm_startCollecting', '', true);
     createCheckBox(df, 'Collect Only Once', 'pcm_onlyOnce', '');
     createCheckBox(df, 'Search Job', 'pcm_searchJob', '');
@@ -90,7 +90,7 @@ class ModalJobClass {
     function checkGroupID() {
       const groupVal = $('#pcm_formAddGroupID').val();
       if (groupVal === '') {
-        $('label[for="pcm_formAddGroupID"]').css('color', 'red');
+        $('label[for="pcm_formAddGroupID"]').css('color', '#f78976');
         $(div).find('.pcm_inputError:first').html('Must fill in GroupID or URL!').data('gIdEmpty',true);
       } else if (groupVal.match(/^[0-9a-zA-Z]+$/) || groupVal.includes('://')) {
         let groupId = null, reqId = null, reqSearch = false;
@@ -99,22 +99,23 @@ class ModalJobClass {
         else { reqId = groupVal; reqSearch = true; }
         if (reqId && !reqSearch) { groupId = reqId; reqSearch = true; }
         let title = ($('#pcm_formAddTitle').val()) ? $('#pcm_formAddTitle').val() : groupId;
-        const reqName = ($('#pcm_formReqName').val()) ? $('#pcm_formReqName').val() : groupId;
+        let reqName = ($('#pcm_formReqName').val()) ? $('#pcm_formReqName').val() : groupId;
         const desc = ($('#pcm_formAddDesc').val()) ? $('#pcm_formAddDesc').val() : groupId;
         const pay = ($('#pcm_formAddPay').val()) ? $('#pcm_formAddPay').val() : '0.00';
         const startNow = $('#pcm_startCollecting').is(':checked');
         const once = $('#pcm_onlyOnce').is(':checked'); 
-        const currentTab = pandaUI.tabs.currentTab;
+        const currentTab = pandaUI.tabs.currentTab; console.log(groupVal, reqId, reqSearch, groupId);
         if (groupId && bgPanda.pandaGroupIds.hasOwnProperty(groupId) && !$(div).find('.pcm_inputError:first').data('gIdDup')) {
           $('label[for="pcm_formAddGroupID"]').css('color', 'yellow');
           $(div).find('.pcm_inputError:first').html('GroupID already added. Still want to add?').data('gIdDup',true);
           $('.modal-footer .pcm_modalSave:first').html('YES! Add new Panda Info');
         } else if ( (groupId && !reqSearch) || reqId) {
           title = (reqId) ? '--( Requester ID Search )--' : title;
+          if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm_searchJob').is(':checked')) ? 'gid' : null);
           let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
-          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.getSearchDuration()*1000 : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer()*1000);
-          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer()*1000);
+          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.theSearchDuration() * 60000 : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer() * 1000);
+          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer() * 1000);
           modal.closeModal();
         } else {
           $('label[for="pcm_formAddGroupID"]').css('color', 'red');

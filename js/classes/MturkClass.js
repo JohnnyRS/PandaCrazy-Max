@@ -42,7 +42,7 @@ class MturkClass {
 			else if ( result.type === "bad.request.text" && result.data.includes("Header Or Cookie Too Large") ) {
 				returnObj.mode = "cookies.large"; returnObj.data = null;
 			}
-			result = null;
+			result = {};
 			return returnObj;
 		}, () => { console.error("error has occured"); });
 		return response;

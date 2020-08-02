@@ -15,6 +15,7 @@ class PandaCards {
       'price':{'valueName':'price', 'id':'#pcm_hitPrice', 'class':'.pcm_price', 'label':''},
       'numbers':{'valueName':'hitsAvailable', 'id':'#pcm_numbers', 'class':'.pcm_numbers', 'label':''},
       'title':{'valueName':'title', 'id':'#pcm_hitTitle', 'class':'.pcm_title', 'label':''},
+      'reqId':{'valueName':'reqId'},
       'friendlyTitle':{'valueName':'friendlyTitle', 'id':'#pcm_hitTitle', 'label':''},
       'collectBtn':{'class':'.pcm_collectButton'},
       'collectTip':'Start Collecting this Panda Hit',
@@ -29,9 +30,8 @@ class PandaCards {
   /** Add card to the tab content area.
    * @param  {number} myId           - The unique ID for a panda job.
    * @param  {object} info           - The information from a panda hit to update to card.
-   * @param  {bool} [fromDB=false]   - Are these cards being created from jobs loaded from database?
-   * @param  {bool} [multiple=false] - Are there multiple cards to be added to the tab UI? */
-  addCard(myId, info, fromDB=false, multiple=false) {
+   * @param  {bool} [fromDB=false]   - Are these cards being created from jobs loaded from database? */
+  addCard(myId, info, fromDB=false) {
     this.cards[myId] = new PandaCard(myId, info.dbId);
     this.appendCard(myId, info, fromDB);
     this.cards[myId].updateAllCardInfo(info, this.values);
@@ -46,16 +46,15 @@ class PandaCards {
   get(myId) { return this.cards[myId]; }
   /** Remove all cards from the tab UI. */
   removeAll() {
-		for (const key of Object.keys(this.cards)) { this.cards[key].removeCard(); delete this.cards[key]; }
-		this.cards = {}; this.multiple = []; this.ctrlDelete = [];
+		for (const key of Object.keys(this.cards)) { this.cards[key].df = null; }
+		this.cards = {}; this.multiple = []; this.ctrlDelete = []; this.tabs = null;
   }
   /** Append all the document fragments for this tab with unique number.
    * @param  {number} tabUnique - The unique number for the tab for cards to be added. */
   appendDoc(tabUnique) {
     let df = $(document.createDocumentFragment());
     for (const myId of this.multiple) { df.append(this.cards[myId].document); }
-    this.tabs.appendTo(df, tabUnique);
-    this.multiple = [];
+    this.tabs.appendTo(df, tabUnique); this.multiple = []; df = null;
   }
   /** Change the information displayed on all the panda cards to normal, minimal or one liner.
    * @param  {number} display - The number representing the info displayed in the panda card. */
@@ -66,12 +65,9 @@ class PandaCards {
   /** Create the status area for the panda card.
    * @param  {number} myId            - The unique ID for a panda job.
    * @param  {object} info            - The information from a panda hit to update to card.
-   * @param  {object} appendHere      - Append the status area to this element.
    * @param  {string} [oneLine=false] - Should this card only show one line info? */
   createCardStatus(myId, info, oneLine=false) {
-    let element = (oneLine) ? 'span' : 'div';
-    let one = (oneLine) ? '1' : '';
-    let searchText = (oneLine) ? '' : ' search';
+    let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : ' search';
     let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
     return `<${element} class="pcm_hitStats mr-auto" id="pcm_hitStats${one}_${myId}">[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${myId}"></span> ]${search}</${element}>`;
   }
@@ -93,11 +89,12 @@ class PandaCards {
   oneLineCard(myId, info) {
     const nameGroup = $(`<div class="pcm_nameGroup row w-90"></div>`).css('cursor', 'default').hide().append(`<span class="pcm_reqName1 col mr-auto px-1 text-truncate" id="pcm_hitReqName1_${myId}"></span>`);
     $(this.createCardStatus(myId, info, true)).appendTo(nameGroup);
-    const buttonGroup = $(`<span class="d-flex pl-1 pcm_buttonGroup1" id="pcm_buttonGroup1_${myId}"></span>`).appendTo(nameGroup);
+    let buttonGroup = $(`<span class="d-flex pl-1 pcm_buttonGroup1" id="pcm_buttonGroup1_${myId}"></span>`).appendTo(nameGroup);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton1 pcm_buttonOff shadow-none" type="button" id="pcm_collectButton1_${myId}"><span>C</span></button>`);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" type="button" id="pcm_hamButton1_${myId}"><span>H</span></button>`);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" type="button" id="pcm_detailsButton1_${myId}"><span>D</span></button>`);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" type="button" id="pcm_deleteButton1_${myId}"><span>X</span></button>`);
+    buttonGroup = null;
     return nameGroup;
   }
   /** Create the card and add it to the multiple array for appending later.
@@ -116,15 +113,14 @@ class PandaCards {
     $(this.createCardButtonGroup(myId, info)).appendTo(text);
     this.cards[myId].document = card;
     this.multiple.push(myId);
-    card = body = text = null;
+    card = null; body = null; text = null;
   }
   /** Append this card to the panda tab.
    * @param  {number} myId             - The unique ID for a panda job.
    * @param  {object} info             - Data for the panda connected to this card.
    * @param  {bool} [fromDB=false]     - Did this panda come from the database or a default value? */
   appendCard(myId, info, fromDB=false) {
-    let thisTabUnique = (info.data.tabUnique !== null) ? info.data.tabUnique : this.tabs.currentTab;
-    this.df = $('');
+    let thisTabUnique = (info.data.tabUnique !== null) ? info.data.tabUnique : this.tabs.currentTab; this.df = $('');
     if (!this.tabs.getUniques().includes(thisTabUnique)) thisTabUnique = this.tabs.currentTab;
     if (info.data.tabUnique != thisTabUnique) { info.data.tabUnique = thisTabUnique; bgPanda.updateDbData(this.myId); }
     if (!fromDB) this.tabs.setPosition(thisTabUnique, info.dbId, !fromDB);
@@ -244,7 +240,7 @@ class PandaCards {
 				if (pandaUI.pandaStats[myId].collecting) await pandaUI.stopCollecting(myId, "manual");
 			} else if (theButton.is(".pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable")) {
 				info.autoAdded = false;
-				if (info.search !== 'rid') pandaUI.startCollecting(myId, false, (info.search === 'gid') ? 10000 : 0);
+				if (info.search !== 'rid') await pandaUI.startCollecting(myId, false, (info.search === 'gid') ? 10000 : 0);
 				else if (info.search === 'rid') {
 					$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 					$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
@@ -295,7 +291,7 @@ class PandaCards {
 				}
 			}, 250);
 		});
-	$(`.pcm_groupId`).unbind('dblclick').on('dblclick', (e) => {
+    $(`.pcm_groupId`).unbind('dblclick').on('dblclick', (e) => {
 			let myId = $(e.target).closest('.card').data('myId');
 			$(e.target).data('double', 2);
 		});
@@ -306,7 +302,8 @@ class PandaCards {
 		$(`.pcm_hitStats1`).unbind('click').click( (e) => {
 			let myId = $(e.target).closest('.card').data('myId');
 			$(e.target).hide(); $(`#pcm_hitReqName1_${myId}`).show();
-		});
+    });
+    $(`.pcm_pandaCard`).find('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
 	}
 }
 /** This class deals with showing panda information on a card and sorts them in the panda area.
@@ -335,13 +332,14 @@ class PandaCard {
     if (info) {
       let titleSelect = this.df.find(`${val.title.class}`);
       const titlePre = (titleSelect.attr('data-original-title')!==undefined) ? "data-original-" : "";
+      const shortenThis = (info.data[val.groupId.valueName]) ? info.data[val.groupId.valueName] : info.data[val.reqId.valueName];
       let reqName = (info.data[val.friendlyReqName.valueName]!=="") ? info.data[val.friendlyReqName.valueName] : info.data[val.reqName.valueName];
       this.df.find(`${val.reqName.class}`).html(reqName);
       this.df.find(`${val.reqName.class}`).attr(`${titlePre}title`, `${reqName}<br>${info.data[val.groupId.valueName]}`).html(`${reqName}`);
       this.df.find(`${val.reqName1Line.class}`).attr(`${titlePre}title`, `${reqName}<br>${info.data[val.groupId.valueName]}`).html(`${reqName}`);
-      this.df.find(`${val.groupId.class}`).html(`${shortenGroupId(info.data[val.groupId.valueName])}`);
+      this.df.find(`${val.groupId.class}`).html(`${shortenGroupId(shortenThis)}`);
       this.df.find(`${val.price.class}`).html(`${parseFloat(info.data[val.price.valueName]).toFixed(2)}`);
-      if (info[val.numbers.valueName]>1) this.df.find(`${val.numbers.class}`).html(`[${info[val.numbers.valueName]}]`);
+      if (info.data[val.numbers.valueName]>1) this.df.find(`${val.numbers.class}`).html(`[${info.data[val.numbers.valueName]}]`);
       let title = (info.data[val.friendlyTitle.valueName]!=="") ? info.data[val.friendlyTitle.valueName] : info.data[val.title.valueName];
       titleSelect.attr(`${titlePre}title`, `${title}`).html(`${title}`); titleSelect = null;
     }
@@ -375,29 +373,23 @@ class PandaCard {
   /** Move this card to the tab with the tab unique number.
    * @param  {object} tabs      - Tab object to use when moving card.
    * @param  {number} tabUnique - Tab unique number to use for the tab when moving card. */
-  moveCard(tabs, tabUnique) {
-    this.df.detach();
-    tabs.appendTo(this.df, tabUnique);
-  }
+  moveCard(tabs, tabUnique) { this.df.detach(); tabs.appendTo(this.df, tabUnique); }
   /** Mark this search panda as searching in the search class.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaSearchingNow(val) {
-    let cl = val.collectBtn.class;
-    this.df.find(cl).html("-Searching-");
+    let cl = val.collectBtn.class; this.df.find(cl).html("-Searching-");
     this.df.find(cl, cl + '1').removeClass("pcm_searchCollect pcm_searchDisable").addClass("pcm_searchOn");
   }
   /** Mark this search panda as collecting as a regular panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaCollectingNow(val) {
-    let cl = val.collectBtn.class;
-    this.df.find(cl).html("-Collecting-");
+    let cl = val.collectBtn.class; this.df.find(cl).html("-Collecting-");
     this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_searchDisable").addClass("pcm_searchCollect");
   }
   /** Disable this search panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaDisabled(val) {
-    let cl = val.collectBtn.class;
-    this.df.find(cl).html("-Disabled-");
+    let cl = val.collectBtn.class; this.df.find(cl).html("-Disabled-");
     this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
   }
   /** Adds a string to or changes the collect help tip.

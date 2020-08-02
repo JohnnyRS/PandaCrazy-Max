@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "PandaCrazy Max",
-  "version": "0.8.6.2",
+  "version": "0.8.6.4",
   "description": "Extension for Mturk.com to Collect panda's for you at a certain cycle instead of timers. Lot of organizing of panda's and grouping them together to start and stop them at once.",
 
   "browser_action": {
@@ -12,6 +12,7 @@
     "default_title": "PandaCrazy Max for Mturk.com"
   },
   "background": {
+    "persistent": false,
     "scripts": [
       "js/jquery-3.4.1.min.js",
       "js/moment.js",
@@ -22,6 +23,7 @@
       "js/classes/UrlClass.js",
       "js/classes/MturkClass.js",
       "js/classes/SearchGStats.js",
+      "js/classes/HistoryClass.js",
       "js/background/classes/MturkQueue.js",
       "js/background/classes/MturkPanda.js",
       "js/background/classes/MturkHitSearch.js",
@@ -54,8 +56,7 @@
   ],
   "permissions": [
     "activeTab",
-    "webRequest",
-    "webRequestBlocking",
+    "management",
     "tabs",
     "storage",
     "clipboardWrite",

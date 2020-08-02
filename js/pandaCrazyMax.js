@@ -1,26 +1,36 @@
-let globalOpt=new PandaGOptions(), modal = null, alarms = new AlarmsClass();
-let notify = new NotificationsClass(), groupings = new PandaGroupings(), pandaUI = new PandaUI();
-let menus = new MenuClass("pcm_quickMenu");
-let goodDB=false, errorObject = null, gNewVersion = false;
-let bgPage = chrome.extension.getBackgroundPage(); // Get the background page object for easier access.
-let bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(); // Get objects to panda and queue class.
+let bgPage = null; // Get the background page object for easier access.
+let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, pandaUI = null; history = null;
+let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null;
 let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
 
+async function getBgPage() {
+  chrome.runtime.getBackgroundPage(function(backgroundPage){
+    bgPage = backgroundPage; prepare();
+  })
+}
+async function prepare() {
+  await bgPage.prepareToOpen(true).then( () => {
+    bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(), bgHistory = bgPage.gGetHistory(), bgSearch = bgPage.gGetSearch();
+    globalOpt = new PandaGOptions(), alarms = new AlarmsClass(), notify = new NotificationsClass();
+    groupings = new PandaGroupings(), pandaUI = new PandaUI(), menus = new MenuClass("pcm_quickMenu");
+    startPandaCrazy();
+  });
+}
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
-function modalLoadingData() {
+function modalLoadingData() { console.log('starting here')
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, startPandaCrazy.bind(this) ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
 }
 /** Starts the process of loading data in the program and check for errors as it goes.
  * Make sure to check for a good DB open and wait for slower computers.
  * @async - To wait for preparations for classes to end their database operations. */
 async function startPandaCrazy() {
   $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
-  if (await bgPage.gCheckPandaDB()) {
+  if (bgHistory.db && bgPanda.db && bgSearch.db) {
     await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
     alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
     groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
@@ -48,14 +58,18 @@ function showMessages(good, bad) {
 }
 
 /** ================ First lines executed when page is loaded. ============================ **/
-allTabs('/pandaCrazy.html', count => { // Count how many Panda Crazy pages are opened.
+allTabs('/pandaCrazy.html', async (count) => { // Count how many Panda Crazy pages are opened.
   if (count<2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
   else haltScript(null, 'You have PandaCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting PandaCrazy Max', true);
 });
 
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
-window.addEventListener('beforeunload', (e) => { bgPanda.removeAll(); bgPage.gSetPandaUI(null); });
+window.addEventListener('beforeunload', async (e) => {
+  if (bgPanda) { bgPage.gSetPandaUI(null); alarms.removeAll(); globalOpt.removeAll(); groupings.removeAll(); }
+  globalOpt = null; notify = null; alarms = null; menus = null; modal = null; groupings = null; errorObject = null; bgPanda = null;
+  bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false;
+});
 /** Detects when user opens another tab in same window with PCmax or minimizes. Not sure if this is needed with extension. */
 window.addEventListener('visibilitychange', (evt) => {
   if (globalOpt && notify && 'hidden' in document && document.hidden) {

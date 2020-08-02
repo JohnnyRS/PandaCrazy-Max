@@ -105,7 +105,6 @@ class TimerClass {
 	privateLoop() {
 		this.timeoutDoing = this.timeoutID; this.timeoutID = null;
 		const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
-		// Which timer is being used. ham timer or regular timer.
 		const usingTimer = (this.goingHam!==null && this.hamTimer!==null) ? this.hamTimer : this.timeout;
 		const usingTimer2 = (this.goingHam!==null && this.hamTimer!==null) ? 'hamTimer' : 'normalTimer';
 		const elapsed = end - this.started; // Get elapsed time from when timer started to end
@@ -198,7 +197,6 @@ class TimerClass {
 	goHam(queueUnique, dGoHam=0) {
 		if (this.goingHam===null) { // If it's already going ham then do nothing.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is now going ham for ${queueUnique}: ${this.hamTimer}`);
-			if (dGoHam === 0) dGoHam = 5000; // default temporary goham to 5000ms if it was 0.
 			this.queueObject[queueUnique].dGoHam = dGoHam;
 			this.goingHam=queueUnique; this.adjustTimer(this.hamTimer);
 		}
@@ -230,7 +228,7 @@ class TimerClass {
 				this.deleteFromQueue(key);
 			});
 			if (this.dLog(2)) console.log(`%c[${this.timerName}] is trying to stop all jobs`,CONSOLE_INFO);
-			this.goingHam = null; this.running = false; this.queue = [], this.queueSkipped = [];
+			this.goingHam = null; this.running = false; this.queue = []; this.queueSkipped = [];
 		}
 	}
 	/** Skip the job with the unique number until it is unskipped.
@@ -312,7 +310,3 @@ class TimerClass {
 	 * @return {bool}								- True if this message is permitted to show. */
 	dLog(levelNumber) { return dLog(levelNumber, 'TimerClass'); }
 }
-
-const pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
-const queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
-const searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default

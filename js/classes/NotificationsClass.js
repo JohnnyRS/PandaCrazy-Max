@@ -26,8 +26,8 @@ class NotificationsClass {
   show(title, message='message', tag='tag', groupId='', alertIcon=false) {
     if (this.lastGroupId !== groupId) this.tagNumber++;
     this.lastGroupId = groupId;
-    let iconUrl = 'https://pandacrazy.allbyjohn.com/mturk/Messaging-Online-icon.png';
-    if (alertIcon) iconUrl = 'https://pandacrazy.allbyjohn.com/mturk/Messaging-Alert-Icon.png';
+    let iconUrl = '/img/Messaging-Online-icon.png';
+    if (alertIcon) iconUrl = '/img/Messaging-Alert-Icon.png';
     const n = ( this.isReady() ) ? new Notification(title, {
       body: message, icon: iconUrl,
       tag: tag+this.tagNumber

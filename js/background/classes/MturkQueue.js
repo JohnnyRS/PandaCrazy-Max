@@ -1,6 +1,5 @@
 'use strict'
 /** This class gets the queue from mturk and sends it out to other classes that need it.
- * It will try to get queue at a slower rate if logged off and then wait for log on to message other classes.
  * @class MturkQueue
  * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
@@ -27,8 +26,8 @@ class MturkQueue extends MturkClass {
   isLoggedOff() { return this.loggedOff; }
   /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI. */
   sendQueueResults() {
-    myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
-    mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
+    if (myPanda) myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
+    if (mySearch) mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
   }
   /** Changes the time for the queue timer and returns the time saved.
    * @param  {number} timer - The time to change the queue timer to.
@@ -50,9 +49,8 @@ class MturkQueue extends MturkClass {
    * If no ID's are given then it will get the total reward potential of all the hits in queue.
    * @param  {string} [rId='']  - Requester ID to get total count from.
    * @param  {string} [gId='']  - Group ID to get total count from.
-   * @param  {number} [price=0] - Any price higher than this amount will be totaled in reward total.
    * @return {number}           - Returns total counted value of given options. */
-  totalResults(rId='', gId='', price=0) {
+  totalResults(rId='', gId='') {
     let total = 0;
     if (this.queueResults.length) {
       if (gId !== '') {
@@ -92,7 +90,7 @@ class MturkQueue extends MturkClass {
     if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 		super.goFetch(objUrl).then(result => {
       if (!result) {
-        if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }
+        // if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }
       } else {
         if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
         else if (result.type === 'ok.text') {

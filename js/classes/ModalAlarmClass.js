@@ -17,6 +17,9 @@ class ModalAlarmClass {
     let titleStr = (title !== '') ? ` title='${title}'` : '';
     return `<button class='${theClass} btn btn-${size} btn-${color} mr-1'${titleStr}>${text}</button>`;
   }
+  /** Creates the div element for each alarm option and returns it.
+   * @param  {string} name - The name of the alarm to add.
+   * @return {object}      - Jquery object of the div element created. */
   addDivAlarms(name) {
     let data = alarms.getData(name);
     let colorM = (data.mute) ? 'success' : _, colorT = (data.tts) ? 'success' : _;
@@ -26,6 +29,8 @@ class ModalAlarmClass {
     if (name === 'queueAlert') lessThanStr = ` <span class='minutes bg-info px-1' title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
     return $(`<div class='${name}'></div>`).data('snd',name).append(this.btnStr('Play','playme',_, 'Play the sound now!')).append(this.btnStr('Mute','muteMe', colorM, 'Mute this sound.')).append(this.btnStr('TTS','ttsMe', colorT, 'Use Text to Speech instead.')).append(this.btnStr('Change','newSnd',_, 'Change the alarm to your own sound file.')).append(`<span class="ml-2">${desc}</span>${payStr}${lessThanStr}</div>`);
   }
+  /** Add the save button when a user is changing the alarm sound.
+   * @param  {string} name - The name of the alarm being changed. */
   addSaveButton(name) {
     $('.pcm_fileStatus').html('').css('color', '#1ee81e').append(this.btnStr('Save Audio', 'saveAudio', 'success', 'xs'));
     $('.saveAudio').click( (e) => {
@@ -35,6 +40,8 @@ class ModalAlarmClass {
       alarms.saveAlarm(name); this.audio = null;
     });
   }
+  /** Shows the modal for the alrams so users can change alarm options.
+   * @param  {function} [afterClose=null] - Function to call after modal is closed. */
   async showAlarmsModal(afterClose=null) {
     modal = new ModalClass();
     const idName = modal.prepareModal(this.alarms, "900px", "modal-header-info modal-lg", "Alarm Options", "", "text-right bg-dark text-light", "modal-footer-info");
@@ -106,7 +113,7 @@ class ModalAlarmClass {
           $('.defaultAudio').click( (e) => {
             let data = alarms.getData(soundName);
             this.audio = new Audio();
-            this.audio.src = chrome.runtime.getURL(`${alarms.alarmFolder}/${data.filename}`);
+            this.audio.src = chrome.runtime.getURL(`${alarms.getFolder()}/${data.filename}`);
             this.addSaveButton(soundName);
           });
         }
@@ -141,6 +148,9 @@ class ModalAlarmClass {
       modal = null; if (afterClose) afterClose();
     });
   }
+  /** Reads a file, sets up the audio and plays the audio to user.
+   * @param  {string} name - The name of the alarm for this audio file.
+   * @param  {string} type - The type of audio being read. */
   readData(name, type) {
     let readerContents = this.reader.result;
     let base64Audio = btoa(readerContents);

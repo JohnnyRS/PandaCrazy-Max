@@ -12,6 +12,7 @@ class PandaStats {
     this.dbId = dbId;                         // The unique database ID for this panda job.
     this.collecting = false;                  // Is this panda collecting or not?
 		this.searching = false;
+		this.searchCollecting = false;
     this.collectStart = null;                 // Time that this panda started the collecting session.
     this.collectAccepted = 0;                 // The number of hits accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
@@ -31,10 +32,10 @@ class PandaStats {
   setDailyStats(total=0) { this.dailyAccepted = total; }
   /** Stores the data in the collect stats database for collecting times of panda jobs.
    * @param  {object} data - The data to store in the database stats for collecting. */
-  collectStatsDB(data) { pandaUI.dbStats.addToDB( this.collectStore, data ).then( () => {} ); }
+  collectStatsDB(data) { pandaUI.dbStats.addToDB(this.collectStore, data).then( () => {} ); }
   /** Stores the data in the accepted stats database for accepted hits times of panda jobs.
    * @param  {object} data - The data to store in the database stats for accepted hits. */
-  acceptedStatsDB(data) { pandaUI.dbStats.addToDB( this.acceptedStore, data ).then( () => {} ); }
+  acceptedStatsDB(data) { pandaUI.dbStats.addToDB(this.acceptedStore, data).then( () => {} ); }
   /** Deletes all stats for panda with the unique id from the panda stats database.
    * @param  {number} dbId - The database id of the panda to delete all stats from. */
   deleteIdFromDB(dbId) {
@@ -98,6 +99,9 @@ class PandaStats {
 	/** Sets or returns the value of the searching status.
 	 * @param  {bool} val=null - The status to set the searching status or return status if null. */
 	doSearching(val=null) { if (val !== null) this.searching = val; return this.searching; }
+	/** Sets or returns the value of the search collecting status.
+	 * @param  {bool} val=null - The status to set the search collecting status or return status if null. */
+	doSearchCollecting(val=null) { if (val !== null) this.searchCollecting = val; return this.searchCollecting; }
 	/** Sets or returns the value of the collecting status.
 	 * @param  {bool} val=null - The status to set the collecting status or return status if null. */
 	doCollecting(val=null) { if (val !== null) this.collecting = val; return this.collecting; }

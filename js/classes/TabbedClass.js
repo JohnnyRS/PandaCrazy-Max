@@ -40,6 +40,13 @@ class TabbedClass {
    * @param  {number} tabUnique - The unique tab number for the new tab from database ID.
    * @return {array}            - Returns the array of the positions for jobs in tab. */
   getpositions(tabUnique) { return this.#dataTabs[tabUnique].list; }
+  /** Sets the positions of the jobs in the tab with the unique number with the new positions.
+   * @param  {number} tabUnique - The unique tab number for the new tab from database ID.
+   * @param  {array} newList    - The array of positions to set for this tab. */
+  setpositions(tabUnique, newList) {
+    this.#dataTabs[tabUnique].list = newList;
+    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+  }
   /** Prepare the tabbed areas on this page at the start up of the program.
    * @async                   - To wait for the loading of the tab data from the database.
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections. */
@@ -73,6 +80,8 @@ class TabbedClass {
     this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
     return [success, err];
   }
+  /** Remove all data from memory when closing. */
+  removeAll() { this.#tabsArr = []; this.#dataTabs = {}; }
   /** Resizes the tab contents according to the tab nav height and bottom status tab area. */
   async resizeTabContents() {
     let change = $(`#pcm_tabbedPandas`).height() - this.tabNavHeight;
@@ -113,12 +122,14 @@ class TabbedClass {
     } )).appendTo($(tabElement));
   }
   /** Adds a tab from an object which may come from the database or imported file.
-   * @param  {object} tabData - The object with data for the tab being added from database or other source.
-   * @return {object}         - The database ID that is set when added into database. */
+   * @param  {object} tabData         - The object with data for the tab being added from database or other source.
+   * @param  {bool} active            - Is this tab active?
+   * @param  {function} [doFunc=null] - Function to call after tab is added.
+   * @return {number}                 - The database ID that is set when added into database. */
   async addFromDB(tabData, active, doFunc=null) {
     let dbId = tabData.id, err = null;
     if (!dbId) await bgPanda.db.addToDB(bgPanda.tabsStore, tabData)
-    .then( result => { dbId = tabData.id = result; }, rejected => err = rejected );
+    .then( id => { if (id >= 0) dbId = tabData.id = id; }, rejected => err = rejected );
     this.#tabsArr.push(dbId); this.#dataTabs[dbId] = tabData;
     this.unique++;
     await this.addTab2(dbId, active);
@@ -131,19 +142,17 @@ class TabbedClass {
    * @param  {bool} [active=false]    - Is this tab active?
    * @param  {bool} [manualAdd=false] - Was tab manually added? */
   async addTab(name, active=false, manualAdd=false) {
-    const arrPos = this.#tabsArr.length; let unique = this.unique++;
+    let arrPos = this.#tabsArr.length, unique = this.unique++;
     let thisTab = {title:name, position:arrPos, list:[]};
     if (manualAdd) {
       await bgPanda.db.addToDB(bgPanda.tabsStore, thisTab)
       .then( async dbId => {
-        this.#dataTabs[dbId] = thisTab;
-        this.#dataTabs[dbId].id = unique = dbId;
-        this.#tabsArr.push(dbId);
+        if (dbId >= 0) {
+          this.#dataTabs[dbId] = thisTab; this.#dataTabs[dbId].id = unique = dbId; this.#tabsArr.push(dbId);
+        }
       });
-    } else {
-      this.#dataTabs[unique] = thisTab;
-      this.#tabsArr.push(unique);
-    }
+    } else { this.#dataTabs[unique] = thisTab; this.#tabsArr.push(unique); }
+    thisTab = {};
     return await this.addTab2(unique, active);
   }
   /** Add a tab to the page with the unique number and active status.
@@ -153,7 +162,7 @@ class TabbedClass {
    * @param  {bool} active   - Shows that this tab is active if true. */
   async addTab2(unique, active) {
     const activeText = (active) ? " active" : "";
-    const start = $(`<li class="nav-item"></li>`).data("unique", unique);
+    let start = $(`<li class="nav-item"></li>`).data("unique", unique);
     if (this.addButton) $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_addTab`))
       .droppable( {tolerance:'pointer', over: (e, ui) => { $(e.target).find("a").click(); },
         drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
@@ -172,8 +181,9 @@ class TabbedClass {
         }
         e.preventDefault();
         return false;
-      });
-      $(label).append($(`<span>${this.#dataTabs[unique].title}</span>`).disableSelection());
+      }
+    );
+    $(label).append($(`<span>${this.#dataTabs[unique].title}</span>`).disableSelection());
     if (unique!==0 && this.deleteTab) $(label).append($(`<span class="float-right pl-3 font-weight-bold pcm-tabDelete">x</span>`).click( (e) => {
       modal = new ModalClass();
       modal.showDialogModal("700px", "Delete tab", "Do you really want to delete this tab?", async () => {
@@ -205,7 +215,7 @@ class TabbedClass {
       $(tabPane).droppable({tolerance:'pointer', drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }});
     }
     this.resizeTabContents();
-    label = null;
+    label = null; start = null;
     return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
   }
   /** Hide the current tab contents when removing or adding a lot of cards.
@@ -240,13 +250,13 @@ class TabbedClass {
     if (unique===tabUnique && action === "sortable") {
       const pos1 = tabsInfo.list.indexOf(hitData.id);
       arrayMove(tabsInfo.list, pos1, theItem.index());
-      await bgPanda.db.updateDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
+      await bgPanda.db.addToDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
     } else if (unique!==tabUnique && action !== "sortable") {
       this.removePosition(tabUnique, hitData.id); this.setPosition(unique, hitData.id);
       setTimeout( () => { $(theItem).detach().appendTo($(`#pcm-t${unique}Content .card-deck:first`)); });
       hitData.tabUnique = unique;
       await bgPanda.updateDbData(myId, hitData);
-      await bgPanda.db.updateDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
+      await bgPanda.db.addToDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
     }
     theItem = activeTab = null;
   }
@@ -262,13 +272,13 @@ class TabbedClass {
    * @param  {number} id        - The unique ID for the panda that is being positioned. */
   setPosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list.push(id);
-    bgPanda.db.updateDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
   }
   /** Removes the panda from this tab unique ID and then saves the updated positions to database.
    * @param  {number} tabUnique - The tab unique ID that the panda should be removed from.
    * @param  {number} id        - The unique ID for the panda that is being removed from position. */
   removePosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list = arrayRemove(this.#dataTabs[tabUnique].list, id);
-    bgPanda.db.updateDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
   }
 }

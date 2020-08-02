@@ -1,5 +1,4 @@
 /** A class that deals with the queue watch, accepted hits and status log on the bottom.
- * It will also take care of how the logs are displayed on the UI page.
  * @class LogTabsClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class LogTabsClass {
@@ -7,6 +6,7 @@ class LogTabsClass {
     this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
     this.ids = [];                      // Array of the id names of the log tabs on the bottom.
     this.taskIds = [];                  // Array of the task id's of the hits in the queue for queue watch.
+    this.groupIds = [];                 // Array of the group id's of the hits in the queue for queue watch.
     this.taskInfo = {};                 // Object of all the hits in the queue for queue watch.
     this.queueTab = null;               // The tab for the queue watch.
     this.queueContent = null;           // The contents for the queue watch.
@@ -55,6 +55,8 @@ class LogTabsClass {
     this.tabNavHeight = $('#pcm_tabbedlogs').height();
     return [success, err];
   }
+  /** Removes all data from class when shutting down to make sure memory is not used anymore. */
+  removeAll() { this.tabs.removeAll(); this.ids = []; this.taskIds = []; this.groupIds = []; this.taskInfo = {}; this.tabs = null; }
   /** Add the hit information to the log and either append or before element passed.
    * @param  {object} hitInfo       - Object with information of the new hit being added to the log.
    * @param  {object} element       - Element to append this hit to in the log tab.
@@ -100,14 +102,14 @@ class LogTabsClass {
     if (this.queueUpdating && this.addIntoQueue.counter<1000) // Check if currently updating queue.
       setTimeout(this.addIntoQueue.bind(this), 30, hitInfo, hitInfo2, data, task_url);
     else { // If not currently updating queue then add hit to queue watch.
-      if (!this.taskIds.includes(data.taskId)) { // Make sure hit not in queue already.
-        this.queueAdding = true;
-        let found =this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft > data.assignedTime; } );
-        this.taskIds.splice( ((found===-1) ? this.taskIds.length-1 : found-1), 0, data.taskId );
+      if (!this.taskIds.includes(hitInfo2.task_id)) { // Make sure hit not in queue already.
+        this.queueAdding = true; console.log(hitInfo2.task_id, JSON.stringify(data));
+        let found = this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft > data.assignedTime; } );
         let newInfo = { project: {assignable_hits_count:data.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:hitInfo2.task_id, assignment_id:hitInfo2.assignment_id, task_url:task_url.replace("&auto_accept=true","")};
-        if (found===-1) this.addToWatch(newInfo, this.queueContent, true);
+        if (found === -1) this.addToWatch(newInfo, this.queueContent, true);
         else this.addToWatch(newInfo, this.queueContent.find("div")[found], false);
-        this.taskInfo[data.taskId] = newInfo; this.taskIds.push(data.taskId);
+        this.taskIds.splice( ((found === -1) ? this.taskIds.length : found-1), 0, hitInfo2.task_id );
+        this.taskInfo[hitInfo2.task_id] = newInfo; this.groupIds.push(data.groupId);
         this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
         newInfo = null;
       }
@@ -123,17 +125,17 @@ class LogTabsClass {
     if (this.queueAdding && this.updateQueue.counter<1000) // Check if currently updating queue.
       setTimeout(this.updateQueue.bind(this), 30, queueResults);
     else {
-      let newIds = [], newInfo = {}, oldIds = [];
-      this.queueTotal = queueResults.length; this.queueUpdating = true;
-      this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
+      let newIds = [], newgIds = [], newInfo = {}, oldIds = [];
+      this.queueUpdating = true;
       let prevHits = this.queueContent.find("div");
-      if (this.queueTotal === 0 && prevHits.length > 0) {
-        this.queueContent.empty(); this.taskIds.length = 0; this.taskInfo = Object.assign({}, {});
-      } else if (this.queueTotal > 0) {
+      if (queueResults.length === 0 && prevHits.length > 0) {
+        this.queueContent.empty(); this.taskIds = []; this.groupIds = []; this.taskInfo = {}; this.queueTotal = queueResults.length;
+        this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
+      } else if (queueResults.length > 0) {
         let counter = 0, theSame = true;
         for (const value of queueResults) {
           const taskId = value.task_id;
-          newIds.push(taskId);
+          newIds.push(taskId); newgIds.push(value.project.hit_set_id);
           newInfo[taskId] = {project:value.project, secondsLeft:value.time_to_deadline_in_seconds, task_id:taskId, assignment_id:value.assignment_id, task_url:value.task_url.replace(".json","")};
           if (prevHits.length === 0) this.addToWatch(newInfo[taskId], this.queueContent, true);
           else if (counter < prevHits.length && taskId !== $(prevHits[counter]).data('taskId')) theSame = false;
@@ -142,14 +144,10 @@ class LogTabsClass {
         if (counter!==prevHits.length) theSame = false;
         if (prevHits.length > 0) {
           if (!theSame) {
-            for (const hit of prevHits) {
-              oldIds.push($(hit).data('taskId'));
-            }
+            for (const hit of prevHits) { oldIds.push($(hit).data('taskId')); }
             let difference2 = oldIds.map( (x, i) => { if (!newIds.includes(x)) return i; } ).filter(x => (x>=0));
             if (difference2.length > 0 ) {
-              for (const index of difference2) {
-                $(prevHits[index]).remove();
-              }
+              for (const index of difference2) { $(prevHits[index]).remove(); }
             }
             let difference1 = newIds.filter(x => !oldIds.includes(x));
             if (difference1.length > 0 ) {
@@ -164,12 +162,15 @@ class LogTabsClass {
                 }
                 if (i >= currentHits.length) this.addToWatch(newInfo[taskId], this.queueContent, true);
                 else this.addToWatch(newInfo[taskId], this.queueContent.find("div")[i], false);
-                currentHits = null;
+                currentHits = [];
               }
             }
+            difference1 = []; difference2 = [];
           }
         }
         this.taskIds = Array.from(newIds); this.taskInfo = Object.assign({}, newInfo);
+        this.groupIds = Array.from(newgIds); this.queueTotal = queueResults.length;
+        this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal}`);
         let queueWatch = this.queueContent.find("div"), firstOne = true;
         for (const hit of queueWatch) {
           const taskId = $(hit).data('taskId');
@@ -185,10 +186,10 @@ class LogTabsClass {
             firstOne = false;
           }
         }
-        queueWatch = null;
+        queueWatch = [];
       }
-      newIds = []; oldIds = [];
-      this.queueUpdating = false; prevHits = newInfo = null;
+      newIds = []; newgIds = []; prevHits = []; oldIds = [];
+      this.queueUpdating = false; newInfo = {};
     }
   }
   /** Update the queue watch captcha counter.
@@ -205,7 +206,7 @@ class LogTabsClass {
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
     const title = (data.friendlyTitle) ? data.friendlyTitle : data.title;
     this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
-    divHits = now = null;
+    divHits = []; now = null;
   }
   /** Adds the status for this panda job with the unique ID to the status log tab.
    * @param  {object} data  - Object of the data from the panda job with the unique number ID.
@@ -218,14 +219,14 @@ class LogTabsClass {
   /** Display the stats from panda job with the unique ID on the status tab or the changes to requester name and pay.
    * @param  {object} stats          - The stats for this panda job with the unique ID.
    * @param  {number} myId           - The unique ID for a panda job.
-   * @param  {number} seconds        - Number of seconds elapsed from last time job fetched url.
+   * @param  {number} mSeconds       - Number of seconds elapsed from last time job fetched url.
    * @param  {object} [changes=null] - The changes to data that needs to be shown in status tab. */
-  updateLogStatus(stats, myId, milliseconds, changes=null) {
+  updateLogStatus(stats, myId, mSeconds, changes=null) {
     if (stats) {
       this.statusContent.find(`.pcm_${myId} .fetched:first`).html(stats.fetched.value);
       this.statusContent.find(`.pcm_${myId} .accepted:first`).html(stats.accepted.value);
-      if (milliseconds>0) {
-        let elapsedSeconds = (Math.round( (milliseconds / 1000) * 10 ) / 10).toFixed(1);
+      if (mSeconds>0) {
+        let elapsedSeconds = (Math.round( (mSeconds / 1000) * 10 ) / 10).toFixed(1);
         this.statusContent.find(`.pcm_${myId} .elapsed:first`).html(elapsedSeconds + 's');
       }
     } else if (changes) {
@@ -237,9 +238,16 @@ class LogTabsClass {
   /** Remove a status line from the status tab giving it 12 seconds before removal.
    * @param  {number} myId - The unique ID for a panda job. */
   removeFromStatus(myId) {
-    this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`)
-      .css('background-color', '#260000');
+    this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`).css('background-color', '#260000');
     setTimeout( () => { this.statusContent.find(`.pcm_${myId}-stop`).remove(); }, 12000);
+  }
+	/** Returns the total number recorded of hits in queue.
+	 * @param  {string} gId='' - Group ID to search for and count the hits in queue.
+	 * @return {number}        - Returns the number of group ID hits or all hits in queue. */
+  totalResults(gId='') {
+    let total = 0;
+    if (gId && this.groupIds.length) total += arrayCount(this.groupIds, item => item === gId);
+    return total;
   }
 	/** Checks if this error is allowed to show depending on user options and class name.
 	 * (0)-fatal = Errors that can crash or stall program.
