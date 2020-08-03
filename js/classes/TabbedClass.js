@@ -35,7 +35,7 @@ class TabbedClass {
   /** Gets the tab info object for the tab with the unique number.
    * @param  {number} tabUnique - The unique tab number for the new tab from database ID.
    * @return {object}           - Returns the info object for this tab. */
-  getTabInfo(tabUnique) { return this.#dataTabs[tabUnique]; }
+  getTabInfo(tabUnique=null) { if (tabUnique) return this.#dataTabs[tabUnique]; else return this.#dataTabs; }
   /** Gets the positions of the jobs in the tab with the unique number.
    * @param  {number} tabUnique - The unique tab number for the new tab from database ID.
    * @return {array}            - Returns the array of the positions for jobs in tab. */
@@ -130,8 +130,7 @@ class TabbedClass {
     let dbId = tabData.id, err = null;
     if (!dbId) await bgPanda.db.addToDB(bgPanda.tabsStore, tabData)
     .then( id => { if (id >= 0) dbId = tabData.id = id; }, rejected => err = rejected );
-    this.#tabsArr.push(dbId); this.#dataTabs[dbId] = tabData;
-    this.unique++;
+    this.#tabsArr.push(dbId); this.#dataTabs[dbId] = tabData; this.unique++;
     await this.addTab2(dbId, active);
     if (doFunc) doFunc(err);
     return dbId;

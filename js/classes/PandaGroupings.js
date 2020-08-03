@@ -9,26 +9,7 @@ class PandaGroupings {
     this.startTimes = {};             // Object with all the start times for groupings.
     this.endTimes = {};               // Object with all the end times for groupings.
   }
-  /** Sets up the data for the start and end times for this grouping with the unique number.
-   * @param  {number} unique - The unique number for the grouping to set times for. */
-  setStartEndTimes(unique) {
-    const thisGroup = this.groups[unique], startMoment = moment(thisGroup.startTime,"hh:mm A");
-    const endSet = (thisGroup.endHours!=="0" || thisGroup.endMinutes!=="0");
-    this.startTimes[unique] = startMoment;
-    if (!endSet) this.endTimes[unique] = null;
-    else this.endTimes[unique] = moment(startMoment).add({hour:thisGroup.endHours, minute:thisGroup.endMinutes});
-}
-  /** This resets the start and end times for all the groupings for next day or first start.
-   * @param  {bool} [fillStatus=true] - Should group status be filled in also? Only on first start. */
-  resetTimes(fillStatus=true) {
-    for (const key of Object.keys(this.groups)) {
-      if (this.groups[key].startTime !== "") this.setStartEndTimes(key);
-      if (fillStatus) this.groupStatus[key] = {collecting:false};
-    }
-  }
   /** Loads up any groupings saved in datbase.
-   * Saves any errors from trying to add to database and then sends a reject.
-   * Sends success array with messages and error object from any rejects to afterFunc.
    * @async                       - To wait for the groupings to be loaded from the database.
    * @param  {function} afterFunc - Function to call after done to send success array or error object. */
   async prepare(afterFunc) {
@@ -43,7 +24,25 @@ class PandaGroupings {
     }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
   /** Removes data from class so memory isn't being used after a closing. */
-  removeAll() { this.groups = this.groupStatus = this.startTimes = this.endTimes = {}; }
+  removeAll() { this.groups = {}; this.groupStatus = {}; this.startTimes = {}; this.endTimes = {}; }
+  theGroups() { return this.groups; }
+  /** Sets up the data for the start and end times for this grouping with the unique number.
+   * @param  {number} unique - The unique number for the grouping to set times for. */
+  setStartEndTimes(unique) {
+    const thisGroup = this.groups[unique], startMoment = moment(thisGroup.startTime,"hh:mm A");
+    const endSet = (thisGroup.endHours!=="0" || thisGroup.endMinutes!=="0");
+    this.startTimes[unique] = startMoment;
+    if (!endSet) this.endTimes[unique] = null;
+    else this.endTimes[unique] = moment(startMoment).add({hour:thisGroup.endHours, minute:thisGroup.endMinutes});
+  }
+  /** This resets the start and end times for all the groupings for next day or first start.
+   * @param  {bool} [fillStatus=true] - Should group status be filled in also? Only on first start. */
+  resetTimes(fillStatus=true) {
+    for (const key of Object.keys(this.groups)) {
+      if (this.groups[key].startTime !== "") this.setStartEndTimes(key);
+      if (fillStatus) this.groupStatus[key] = {collecting:false};
+    }
+  }
   /** This method checks all the start times and starts groupings when necessary. */
   checkStartTimes() {
     if (isNewDay()) this.resetTimes(false); // Reset start and end times object if new day.

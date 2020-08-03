@@ -1,5 +1,4 @@
-/** Class for the global options and methods to change them.
- * Breaks up the options into general, timers and alarm options.
+/** Class for the global options and methods to change them. Breaks up the options into general, timers and alarm options.
  * @class PandaGOptions
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class PandaGOptions {
@@ -62,8 +61,6 @@ class PandaGOptions {
     this.timerUsed = 'mainTimer';
   }
   /** Load up global options from database or use and save default options into database.
-   * Saves any errors from trying to add to database and then sends a reject.
-   * Sends success array with messages and error object from any rejects to afterFunc.
    * @async                      - To wait for the options data to be loaded from the database.
    * @param {function} afterFunc - Function to call after done to send success array or error object. */
   async prepare(afterFunc) {
@@ -99,13 +96,20 @@ class PandaGOptions {
     }, rejected => err = rejected);
     afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
-  removeAll() { this.general = this.timers = this.alarms = this.helpers = {}; }
+  /** Removes data from memory so it's ready for closing or importing. */
+  removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; }
+  /** Import the options from an exported file.
+   * @param  {object} newData - Data with the imported objects. */
   importOptions(newData) {
-    newData.timers.timerUsed = this.timers.timerUsed;
-    this.general = newData.general; this.timers = newData.timers; this.alarms = newData.alarms;
+    newData.timers.timerUsed = this.timers.timerUsed; this.general = newData.general;
+    this.timers = newData.timers; this.alarms = newData.alarms;
     this.update(true);
   }
-  /** Updates the global options and resets anything that is needed for example tooltips. */
+  /** Returns an array of options for easy exporting.
+   * @return {array} - The array of objects to be exported. */
+  exportOptions() { return [this.general, this.timers, this.alarms, this.helpers]; }
+  /** Updates the global options and resets anything that is needed for example tooltips.
+   * @param  {bool} [tooltips=true] - Should tooltips be reset? */
   update(tooltips=true) {
     if (tooltips) {
       if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');

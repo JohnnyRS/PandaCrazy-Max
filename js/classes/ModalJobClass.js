@@ -104,7 +104,7 @@ class ModalJobClass {
         const pay = ($('#pcm_formAddPay').val()) ? $('#pcm_formAddPay').val() : '0.00';
         const startNow = $('#pcm_startCollecting').is(':checked');
         const once = $('#pcm_onlyOnce').is(':checked'); 
-        const currentTab = pandaUI.tabs.currentTab; console.log(groupVal, reqId, reqSearch, groupId);
+        const currentTab = pandaUI.tabs.currentTab;
         if (groupId && bgPanda.pandaGroupIds.hasOwnProperty(groupId) && !$(div).find('.pcm_inputError:first').data('gIdDup')) {
           $('label[for="pcm_formAddGroupID"]').css('color', 'yellow');
           $(div).find('.pcm_inputError:first').html('GroupID already added. Still want to add?').data('gIdDup',true);

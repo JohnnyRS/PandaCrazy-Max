@@ -103,7 +103,7 @@ class LogTabsClass {
       setTimeout(this.addIntoQueue.bind(this), 30, hitInfo, hitInfo2, data, task_url);
     else { // If not currently updating queue then add hit to queue watch.
       if (!this.taskIds.includes(hitInfo2.task_id)) { // Make sure hit not in queue already.
-        this.queueAdding = true; console.log(hitInfo2.task_id, JSON.stringify(data));
+        this.queueAdding = true;
         let found = this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft > data.assignedTime; } );
         let newInfo = { project: {assignable_hits_count:data.hitsAvailable, assignment_duration_in_seconds:hitInfo2.assignmentDurationInSeconds, hit_set_id:data.groupId, creation_time:hitInfo2.creationTime, description:data.description, latest_expiration_time:hitInfo2.expirationTime, monetary_reward:{amount_in_dollars:data.price}, requester_name:data.reqName, requester_id:data.reqId, title:data.title}, secondsLeft:hitInfo2.assignmentDurationInSeconds, task_id:hitInfo2.task_id, assignment_id:hitInfo2.assignment_id, task_url:task_url.replace("&auto_accept=true","")};
         if (found === -1) this.addToWatch(newInfo, this.queueContent, true);

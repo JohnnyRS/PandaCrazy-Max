@@ -38,12 +38,16 @@ class EximClass {
   }
   /** Export the data to a file. */
   async exportData() {
-    let exportJobs = [];
+    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [];
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
+    exportTabs = Object.values(pandaUI.tabs.getTabInfo());
+    exportOptions = globalOpt.exportOptions();
+    exportGrouping = groupings.theGroups();
+    alarms.exportAlarms();
     this.exportPre.jobs = exportJobs.length;
-    saveToFile({'pre':this.exportPre, 'jobs':exportJobs});
+    saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping});
     bgPanda.nullData(false);
   }
   /** Show user that the file used was not valid.
@@ -90,7 +94,6 @@ class EximClass {
       bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
       await bgPanda.recreateDB(); // Recreate database and stores.
       await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
-      await alarms.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
       await alarms.prepareAlarms(Object.values(this.importAlarmsData), false);
       await groupings.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
       $('.pcm_importButton:first').append('.');
@@ -129,7 +132,7 @@ class EximClass {
       if (!newPositions[mInfo[i].tabUnique]) newPositions[mInfo[i].tabUnique] = [];
       newPositions[mInfo[i].tabUnique].push(mInfo[i].id);
       for (const group of this.importGroupings) {
-        if (group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
+        if (group.grouping && group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
       }
     }
     for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
@@ -267,26 +270,33 @@ class EximClass {
   /** Parse option data read from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
   theOptions(rData) {
-    let tempOptions = {'generalDefault':{}, 'timersDefault':{}, 'alarmsDefault':{}, 'helpersDefault':{}};
-    for (const key of Object.keys(rData)) {
-      let keyName = (this.options.hasOwnProperty(key)) ? this.options[key] : key, optionName = null;
-      if (globalOpt['generalDefault'].hasOwnProperty(keyName)) optionName = 'generalDefault';
-      if (globalOpt['timersDefault'].hasOwnProperty(keyName)) optionName = 'timersDefault';
-      if (globalOpt['alarmsDefault'].hasOwnProperty(keyName)) optionName = 'alarmsDefault';
-      if (globalOpt['helpersDefault'].hasOwnProperty(keyName)) optionName = 'helpersDefault';
-      if (optionName) tempOptions[optionName][keyName] = rData[key];
-      else console.log('Missing option: ',key);
+    if (Array.isArray(rData)) {
+      for (const option of rData) { this.importOptions[option.category] = Object.assign({}, globalOpt[`${option.category}Default`], option); }
+    } else {
+      let tempOptions = {'generalDefault':{}, 'timersDefault':{}, 'alarmsDefault':{}, 'helpersDefault':{}};
+      for (const key of Object.keys(rData)) {
+        let keyName = (this.options.hasOwnProperty(key)) ? this.options[key] : key, optionName = null;
+        if (globalOpt['generalDefault'].hasOwnProperty(keyName)) optionName = 'generalDefault';
+        if (globalOpt['timersDefault'].hasOwnProperty(keyName)) optionName = 'timersDefault';
+        if (globalOpt['alarmsDefault'].hasOwnProperty(keyName)) optionName = 'alarmsDefault';
+        if (globalOpt['helpersDefault'].hasOwnProperty(keyName)) optionName = 'helpersDefault';
+        if (optionName) tempOptions[optionName][keyName] = rData[key];
+        else console.log('Missing option: ',key);
+      }
+      this.importOptions.general = Object.assign({}, globalOpt['generalDefault'], tempOptions['generalDefault']);
+      this.importOptions.timers = Object.assign({}, globalOpt['timersDefault'], tempOptions['timersDefault']);
+      this.importOptions.alarms = Object.assign({}, globalOpt['alarmsDefault'], tempOptions['alarmsDefault']);
+      this.importOptions.helpers = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
     }
-    this.importOptions.general = Object.assign({}, globalOpt['generalDefault'], tempOptions['generalDefault']);
-    this.importOptions.timers = Object.assign({}, globalOpt['timersDefault'], tempOptions['timersDefault']);
-    this.importOptions.alarms = Object.assign({}, globalOpt['alarmsDefault'], tempOptions['alarmsDefault']);
-    this.importOptions.alarms = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
   theGroupings(rData) {
     for (const key of Object.keys(rData)) {
-      this.importGroupings.push({'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:"", endHours:0, endMinutes:0});
+      let importGroup = {};
+      if (rData[key].hasOwnProperty('pandas')) { importGroup = rData[key]; }
+      else { importGroup = {'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:"", endHours:0, endMinutes:0}; }
+      this.importGroupings.push(importGroup);
     }
   }
   /** Parse the alarms data from an import file to the data object needed.
@@ -300,7 +310,11 @@ class EximClass {
       if (sound) {
         this.importAlarmsData[key].pay = sound.payRate; delete this.importAlarmsData[key].payRate;
         this.importAlarmsData[key].lessThan = sound.lessMinutes; delete this.importAlarmsData[key].lessMinutes;
-        this.importAlarmsData[key].obj = "data:audio/wav;base64," + sound.base64;
+        if (sound.base64) this.importAlarmsData[key].obj = "data:audio/wav;base64," + sound.base64;
+        else { 
+          let audio = alarms.theAlarms(key).audio;
+          if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
+        }
       }
       delete this.importAlarmsData[key].base64;
     }

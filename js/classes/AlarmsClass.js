@@ -220,4 +220,12 @@ class AlarmsClass {
   /** Gets the default values for the alarms and returns it.
    * @return {object} - The default values for the alarms. */
   theDefaultAlarms() { return this.dataDefault; }
+  theAlarms(name=null) { if (name) return this.data[name]; else return this.data; }
+  exportAlarms(base64=false) {
+    for (const key of Object.keys(this.data)) {
+      // if (this.data[key].audio.src.substr(0,4) === 'data') console.log('gor one');
+    }
+    console.log(JSON.stringify(this.data));
+    return this.data;
+  }
 }
