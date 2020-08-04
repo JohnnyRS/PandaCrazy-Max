@@ -20,7 +20,7 @@ async function prepare() {
   });
 }
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
-function modalLoadingData() { console.log('starting here')
+function modalLoadingData() {
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
     null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.

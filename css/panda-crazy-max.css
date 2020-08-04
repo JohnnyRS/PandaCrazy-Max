@@ -49,6 +49,9 @@ html, body { height: 100%; }
 .pcm_searching .pcm_searchDisable { background-color: #680e0e; color: #d7e0d1 !important; }
 .pcm_importButton { width:330px; }
 .pcm_importButton.disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
+.pcm_exportButton { width: 280px; }
+.importAlarms { font-size:12px; }
+.importAlarms input { height:0.9em; }
 .pcm_importStatus { margin:10px 0 10px 0; }
 .pcm_fileInput { width:100%; font-size:10px; margin-top:15px; }
 .custom-file { width:320px; }

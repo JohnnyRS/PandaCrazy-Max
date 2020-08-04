@@ -45,7 +45,7 @@ class PandaCards {
    * @return {object}      - The card element for the unique number. */
   get(myId) { return this.cards[myId]; }
   /** Remove all cards from the tab UI. */
-  removeAll() {
+  async removeAll() {
 		for (const key of Object.keys(this.cards)) { this.cards[key].df = null; }
 		this.cards = {}; this.multiple = []; this.ctrlDelete = []; this.tabs = null;
   }

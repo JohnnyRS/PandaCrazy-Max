@@ -263,10 +263,17 @@ function allTabs(search, doAfter) {
 /** Save object to a file.
  * @param  {object} theData      - The data to write to a file.
  * @param  {string} [type='Exp'] - The type of file to save to add to the filename. */
-function saveToFile(theData, type='Exp') {
-  var blob = new Blob( [JSON.stringify(theData)], {type: "text/plain"}), dl = document.createElement("A");
-  dl.href = URL.createObjectURL(blob); dl.download = `PandaCrazy${type}_${formatAMPM("short")}.json`;
-  document.body.appendChild(dl); dl.click(); dl.remove();
+async function saveToFile(theData, withAlarms=false, doneFunc=null) {
+  let blob = new Blob( [JSON.stringify(theData)], {type: "text/plain"}), dl = document.createElement("A");
+  let fileEnd = (withAlarms) ? '_w_alarms' : '';
+  dl.href = URL.createObjectURL(blob); dl.download = `PandaCrazyEXP_${formatAMPM("short")}${fileEnd}.json`;
+  document.body.appendChild(dl); dl.click();
+  setTimeout( () => {
+    dl.remove();
+    URL.revokeObjectURL(blob);
+    console.log('done');
+    if (doneFunc) doneFunc();
+  }, 0);
 }
 /** Halt the script with error messages or just warn and continue script.
  * @param  {object} error                 - The error object that needs to be displayed.

@@ -100,6 +100,17 @@ class DatabaseClass {
       }
     });
   }
+  /** Clear the data from a store name in this database.
+   * @param  {string} storeName - Store name to be used for adding data to.
+   * @return {promise}          - Key in resolve. Error object in reject. */
+  clearStore(storeName) {
+    return new Promise( (resolve, reject) => {
+      let tx = this.db.transaction( [storeName], "readwrite" );
+      tx.objectStore(storeName).clear();
+      tx.oncomplete = () => { resolve(true); }
+      tx.onabort = () => { reject(new Error(`Clear from: ${storeName} error: ${tx.error.message}`)); }
+    });
+  }
   /** Close the database. Usually before deleting it for complete reset. */
   closeDB() { this.db.close(); }
 }

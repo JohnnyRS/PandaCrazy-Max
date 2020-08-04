@@ -88,6 +88,8 @@ class AlarmsClass {
       afterFunc(success, err); // Sends any error back to the after function for processing.
     }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
+  /** Clears the database store of all the alarms usually ready for an import. */
+  async clearAlarms() { await bgPanda.db.clearStore(bgPanda.alarmsStore); }
   /** Saves the alarms to the database. Will save the audio src if not using default sound.
    * @param  {string} alarmSound - The name of the alarm to sound from the alarms object. */
   saveAlarm(alarmSound) {
@@ -220,12 +222,23 @@ class AlarmsClass {
   /** Gets the default values for the alarms and returns it.
    * @return {object} - The default values for the alarms. */
   theDefaultAlarms() { return this.dataDefault; }
+  /** Returns all the alarms or just one with the name.
+   * @param  {string} [name=null] - Name of the alarm to return or null if all of them.
+   * @return {object}             - The object with all the alarms or just one alarm. */
   theAlarms(name=null) { if (name) return this.data[name]; else return this.data; }
+  /** Creates an object with the alarms to export with audio in base64 format and then returns it.
+   * @param  {bool} [base64=false] - Should alarm sounds be included or just null them?
+   * @return {object}              - Returns the object with all the alarms. */
   exportAlarms(base64=false) {
+    let exportAlarms = {};
     for (const key of Object.keys(this.data)) {
-      // if (this.data[key].audio.src.substr(0,4) === 'data') console.log('gor one');
+      exportAlarms[key] = Object.assign({}, this.data[key]);
+      if (base64) {
+        if (this.data[key].audio.src.substr(0,4) === 'data') exportAlarms[key].obj = this.data[key].audio.src;
+        else exportAlarms[key].obj = 'default';
+      } else exportAlarms[key].obj = null;
+      delete exportAlarms[key].audio;
     }
-    console.log(JSON.stringify(this.data));
-    return this.data;
+    return exportAlarms;
   }
 }

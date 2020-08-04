@@ -81,7 +81,7 @@ class MenuClass {
        {'type':'item', 'label':'Search Jobs', 'menuFunc': () => { pandaUI.showJobsModal(); }, 'tooltip':'Search the Panda Jobs Added'},
        {'type':'item', 'label':'Search Mturk'},
        {'type':'divider'},
-       {'type':'item', 'label':'Export', 'menuFunc': () => { /* new EximClass().exportData(); */ }},
+       {'type':'item', 'label':'Export', 'menuFunc': () => { new EximClass().exportModal(); }},
        {'type':'item', 'label':'Import', 'menuFunc': () => { new EximClass().importModal(); }}]);
     this.addMenu(topMenu, 'Display', () => { pandaUI.cards.changeDisplay(2) }, 'Change how information is displayed on the jobs to Normal.', 'pcm-topMenuBtn');
     this.addSubMenu(topMenu, '',

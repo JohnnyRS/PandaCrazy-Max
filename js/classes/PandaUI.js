@@ -113,7 +113,7 @@ class PandaUI {
 	}
 	/** Removes all panda jobs from UI and stats. */
 	async removeAll() {
-		this.cards.removeAll(); this.tabs.removeAll(); this.logTabs.removeAll();
+		this.cards.removeAll(); this.tabs.wipeTabs(); this.logTabs.removeAll();
 		this.cards = null; this.pandaStats = {}; this.listener = null; this.dbStats = null;
 		this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
 		this.pandaGStats = null; this.delayedTimeout = null; this.resizeObserver = null; this.modalJob = null;
