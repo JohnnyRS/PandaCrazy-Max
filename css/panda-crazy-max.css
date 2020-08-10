@@ -8,11 +8,7 @@ html, body { height: 100%; }
 .fill { min-height: 100%; height: 100%; }
 .btn-primary-dark { background-color: #063e4d; color: #ebf0f0; }
 .btn-primary-dark:hover { color: #E0FFFF !important; background-color: #2d78b9; }
-.pcm_top {
-  height:45px;
-  border-width:1px !important;
-  border-bottom-width:4px !important;
-}
+.pcm_top { height:45px; border-width:1px !important; border-bottom-width:4px !important; line-height: 1.1em; }
 #pcm_topMenu { line-height:0px !important; vertical-align: top; background-color: #03043a; }
 .pcm_menu { height:30px; }
 #pcm_quickMenu { line-height: 1.0; vertical-align: top; border-bottom: 4px solid #e0cdcb; background-color: #03043a; }
@@ -22,6 +18,9 @@ html, body { height: 100%; }
 .pcm_dMenuButton { background-color:#063e4d; vertical-align: bottom; width:17px; line-height:1.2; font-size: 13px; padding: 7px 4px 0 4px; }
 #pcm_pandaTabs .pcm_tabs { overflow-y:auto; height: calc(100vh - 260px); }
 #pcm_logTabs .pcm_tabs { overflow-y:auto; height: 140px; }
+#pcm_triggerTabs .pcm_tabs { overflow-y:auto; height: calc(100vh - 68px); }
+#pcm_detailTabs .pcm_tabs { overflow-y:auto; height: calc(100% - 68px); }
+#pcm_detailContents { height:100%; }
 .pcm-tabDelete { line-height:1.2; color: #eb892d; }
 .pcm_detailsEdit { color: #84f79e; }
 .pcm_hitButton {
@@ -64,15 +63,15 @@ html, body { height: 100%; }
 .pcm_alarms .pcm_changeMe { font-size: 15px; }
 .pcm_alarmEdit { color:#e6ebac; font-size:15px; }
 #pcm_importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
-.card {
+.pcm_pandaCard {
   margin: 2px 2px 0 0 !important;
   border-color: #023bd6 !important;
   border-width: 2px !important;
   max-width: 220px !important;
   min-width:220px !important;
   padding: 0 0 !important;
+  background-color: #48D1CC;
 }
-.pcm_pandaCard { background-color: #48D1CC; }
 .pcm_pandaCard.pcm_searching { background-color: #04a3a3; }
 .pcm_pandaCard.pcm_oneLine { min-width:320px !important; max-width:320px !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_reqName1 { font-size:0.7em !important; font-weight:600 !important; }
@@ -81,8 +80,12 @@ html, body { height: 100%; }
 .pcm_pandaCard.pcm_oneLine .pcm_deleteButton { margin-left:4px !important; padding: 0 2px 0.5px 2px !important; }
 .pcm_pandaCard .pcm_hitStats .ridsearch { color:mediumblue; }
 .pcm_pandaCard .pcm_hitStats .gidsearch { color:indigo; }
+.pcm_triggerCard { margin:0 !important; max-width:230px; min-width:230px; color:#7FFFD4; background-color:#000080; font-size:0.8em; padding: 2px 1px !important; }
+.pcm_triggerCard.pcm_disabled { color:#adb5bd; background-color:black }
 .card-text { line-height: 1.0 !important; padding-left:1px !important; }
 .pcm_checkbox { height:11px; }
+#pcm_string_blockGid { font-size: 7px; line-height:1.9; font-weight:400 !important; }
+#pcm_selectedBox { font-size: 10px; }
 .pcm_nameGroup, .pcm_priceGroup {
   font-weight: 600 !important;
   line-height: 0.8 !important;
@@ -191,7 +194,7 @@ html, body { height: 100%; }
 }
 .pcm_inputDiv-question { margin-left:70px; }
 .pcm_jobTable { margin-bottom:5px !important; }
-.pcm_detailsTable tr { line-height: 0.8; font-size: 0.8em; }
+.pcm_detailsTable tr { line-height: 0.8; font-size: 0.7em; }
 .pcm_detailsTable tr output { width:30px !important; font-size: 0.7rem !important; height:20px; padding:0 6px; }
 .pcm_detailsTable tr .editable-submit { font-size: 0.3em !important; height:20px; }
 .pcm_detailsTable tr .editable-cancel { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
@@ -247,5 +250,5 @@ html, body { height: 100%; }
   background-color: #000000;
   padding:5px;
 }
-
+#pcm_searchDetails .tab-pane { background-color: inherit; }
 .card-deck { margin-right: 0; margin-left: 0; }

@@ -33,10 +33,12 @@ class MturkPanda extends MturkClass {
 		this.tempPaused = false;								// Used to pause timer if queue is maxxed or a mturk problem.
 		this.skippedDoNext = false;							// Used when checking skipped jobs in a recursive function.
 		this.authenticityToken = null;					// The authenticity token from mturk so hits can be returned.
-		pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
-		pandaTimer.setTimer(timer);         		// Set timer for this timer.
-		pandaTimer.pleaseSendBack();         		// Set timer for this timer.
-    pandaTimer.setHamTimer(hamTimer);   		// Set hamTimer for this timer.
+		if (timer) {
+			pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
+			pandaTimer.setTimer(timer);         		// Set timer for this timer.
+			pandaTimer.pleaseSendBack();         		// Set timer for this timer.
+			pandaTimer.setHamTimer(hamTimer);   		// Set hamTimer for this timer.
+		}
 		this.useDefault = false;								// Should we be using default values because no data in database?
 		this.db = null;						  						// Set up the database class.
 	}
@@ -93,6 +95,10 @@ class MturkPanda extends MturkClass {
       } ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
     });
 	}
+	wipeData() {
+		let db1 = new DatabaseClass(this.dbName, 1); db1.deleteDB(); db1 = null;
+		let db2 = new DatabaseClass("Pcm_PandaStats", 1); db2.deleteDB(); db2 = null;
+	}
 	/** Loads data for this particular job with unique ID in the info object or returns the value of a property.
 	 * If database rejected then give error on console and on page before stopping script.
 	 * @async 							        - To wait to get the data from the database.
@@ -112,6 +118,7 @@ class MturkPanda extends MturkClass {
 	async addToDB(newData, multiple=false) {
 		await this.db.addToDB(this.storeName, newData).then( id => {
 			if (!multiple) newData.id = id;
+			else for (const data of newData) data.myId = this.uniqueIndex++;
 		}, rejected => { extPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
 		);
 	}
@@ -129,8 +136,9 @@ class MturkPanda extends MturkClass {
 	/** Delete the panda data and stats with this unique ID from the databases.
 	 * @async								 - To wait for the deletion of data from the database.
 	 * @param  {number} myId - The unique ID for a panda job. */
-	async deleteDbData(myId) {
+	async deleteDbData(myId, data) {
 		extPandaUI.deleteFromStats(myId, this.info[myId].dbId);
+		myHistory.deleteThis(data.groupId); myHistory.deleteThis(data.reqId);
 		await this.db.deleteFromDB(this.storeName, this.info[myId].dbId).then( () => {},
 			() => { if (this.dError(1)) console.error('Got an error while trying to delete a panda from database.'); });
 		if (this.dLog(3)) console.info(`%cDeleting panda ${myId} from Database.`,CONSOLE_INFO);
@@ -347,7 +355,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} run 	 - Run it now	 @param  {number} [sDur=0] - Duration    @param  {number} [sGD=0] - Goham duration */
 	async sendToSearch(myId, dbInfo, rules, history, run, sDur=0, sGD=0) {
 		let tempInfo = {'name':dbInfo.reqName, 'reqId':dbInfo.reqId, 'groupId':dbInfo.groupId, 'title':dbInfo.title, 'reqName':dbInfo.reqName, 'pay':dbInfo.price, 'duration':dbInfo.assignedTime, 'status':'disabled', 'pandaId':myId, 'pDbId':dbInfo.id};
-		let tempOptions = {'duration':sDur * 1000, 'once':dbInfo.once, 'limitNumQueue':dbInfo.limitNumQueue, 'limitTotalQueue':dbInfo.limitTotalQueue, 'limitFetches':dbInfo.limitFetches, 'autoGoHam':false, 'goHamDuration':0, 'tempGoHam':sGD * 1000};
+		let tempOptions = {'duration':sDur * 1000, 'once':dbInfo.once, 'limitNumQueue':dbInfo.limitNumQueue, 'limitTotalQueue':dbInfo.limitTotalQueue, 'limitFetches':dbInfo.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD * 1000, 'acceptLimit':0};
 		if (run) await mySearch.addTrigger(dbInfo.search, tempInfo, tempOptions, rules, history, false);
 		else mySearch.addTrigger(dbInfo.search, tempInfo, tempOptions, rules, history, false);
 	}
@@ -366,7 +374,7 @@ class MturkPanda extends MturkClass {
 		const pandaUrl = this.createPandaUrl(dbInfo.groupId); // create the panda url for this panda
 		if (dbInfo.search) await this.sendToSearch(myId, dbInfo, rules, history, passInfo.run, sDur, sGD);
 		this.pandaUrls[myId] = {preview: this.createPreviewUrl(dbInfo.groupId), accept: pandaUrl, urlObj: new UrlClass(pandaUrl + "?format=json")};
-		myHistory.fillInHistory({[dbInfo.groupId]:dbInfo}, 'pandas');
+		myHistory.fillInHistory({[dbInfo.groupId]:dbInfo}, 'pandas', loaded);
 		if (extPandaUI && !loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
 	}
 	/** Remove the panda with the unique ID and delete from database if necessary.
@@ -379,13 +387,13 @@ class MturkPanda extends MturkClass {
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId);
 		this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
-		if (data.search !== null) {
+		if (data.search) {
 			if (data.search === "gid") flattenSortObject(this.searchesGroupIds, data.groupId, myId);
 			if (data.search === "rid") flattenSortObject(this.searchesReqIds, data.reqId, myId);
 			const value = (data.search === "gid") ? data.groupId : data.reqId;
-			mySearch.removeTrigger(_, data.id, false);
+			mySearch.removeTrigger(_, data.id, false, true);
 		}
-		if (deleteDB) this.deleteDbData(myId);
+		if (deleteDB) this.deleteDbData(myId, data);
 		delete this.dbIds[this.info[myId].dbId];
 		this.info[myId].data = null; delete this.info[myId]; delete this.pandaUrls[myId];
 	}

@@ -45,24 +45,34 @@ class DatabaseClass {
     });
   }
   /** Adds data to database with a key in data or next key available.
-   * @param {string} storeName      - Store name to be used for adding data to.
-   * @param {object} data           - Data to be added to the store name database.
-   * @param {bool} [update=false]   - True to use put for add or update. False to use add only.
-   * @param {bool} [multiple=false] - Does the data object have multiple items to add?
-   * @return {promise}              - Database key or new key in resolve. Error object in reject. */
-  addToDB(storeName, mData) {
+   * @param {string} storeName       - Store name to be used for adding data to.
+   * @param {object} mdata           - Data or an array of data to be added to the store name database.
+   * @param {bool} [onlyNew=false]   - True for only updating data that is new.
+   * @param {bool} [key=null]        - The key to look for when updating is restricted.
+   * @param {bool} [updateFunc=null] - The function to call when updating an existing data to find out if it should be updated.
+   * @return {promise}               - Database key or new key in resolve. Error object in reject. */
+  addToDB(storeName, mData, onlyNew=false, key=null, updateFunc=null) {
     return new Promise( (resolve, reject) => {
       let newId = null, tx = this.db.transaction( [storeName], "readwrite" );
       let datas = (Array.isArray(mData)) ? mData : [mData], storage = tx.objectStore(storeName);
-      for (const data of datas) {  storage.put(data).onsuccess = (e) => { data.id = newId = e.target.result; } }
+      for (const data of datas) {
+        let countRequest = storage.count(key);
+        countRequest.onsuccess = (e) => {
+          if ( (onlyNew && e.target.result === 0) || !onlyNew) { 
+            storage.put(data).onsuccess = (e) => { data.id = newId = e.target.result; }
+          } else if (updateFunc) {
+            storage.get(key).onsuccess = (e) => { if (updateFunc(e.target.result)) storage.put(e.target.result); }
+          }
+        }
+      }
       tx.onabort = () => { reject(new Error(`Add to: ${storeName} error: ${tx.error.message}`)); }
       tx.oncomplete = () => { resolve( (datas.length > 1) ? -1 : newId ); }
     });
   }
   /** Get an array or object of items from database with a key.
-   * @param {string} storeName           - Store name to be used for adding data to.
-   * @param {string} key                 - Get the item with this key.
-   * @return {promise}                   - Array or object in resolve. Error object in reject. */
+   * @param {string} storeName - Store name to be used for adding data to.
+   * @param {string} key       - Get the item with this key.
+   * @return {promise}         - Array or object in resolve. Error object in reject. */
   getFromDB(storeName, key=null) {
     return new Promise( (resolve, reject) => {
       let tx = this.db.transaction( [storeName], "readonly" );
@@ -113,4 +123,7 @@ class DatabaseClass {
   }
   /** Close the database. Usually before deleting it for complete reset. */
   closeDB() { this.db.close(); }
+  deleteDB() {
+    this.indexedDB.deleteDatabase(this.dbName);
+  }
 }

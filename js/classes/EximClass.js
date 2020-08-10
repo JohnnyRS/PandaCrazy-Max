@@ -100,7 +100,8 @@ class EximClass {
       if (Object.keys(this.importTabsData).length > 0) {
         $('#pcm_tabbedPandas').hide();
         $('.pcm_importButton:first').append('.');
-        await bgPanda.removeAll(false); // Remove all panda jobs first.
+        await bgPanda.removeAll(false);
+        await bgSearch.removeAll();
         bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
         await bgPanda.recreateDB(); // Recreate database and stores.
         await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
@@ -136,14 +137,24 @@ class EximClass {
         }
       }
       await bgPanda.addToDB(mInfo, true);
-      let newPositions = {};
+      let newPositions = {}, triggers = [], options = [], rules = [];
       for (let i = 0, len = mInfo.length; i < len; i++) {
+        if (mInfo[i].search) {
+          let value = (mInfo[i].search === 'rid') ? mInfo[i].reqId : mInfo[i].groupId;
+          if (value) {
+            triggers.push({'type':mInfo[i].search, 'value':value, 'pDbId':mInfo[i].id, 'searchUI':false, 'pandaId':mInfo[i].myId, 'name':mInfo[i].reqName, 'disabled':true});
+            options.push({'duration':0, 'once':mInfo[i].once, 'limitNumQueue':mInfo[i].limitNumQueue, 'limitTotalQueue':mInfo[i].limitTotalQueue, 'limitFetches':mInfo[i].limitFetches, 'autoGoHam':false, 'tempGoHam':0, 'acceptLimit':0});
+            let ruleSet = Object.assign({}, bgSearch.ruleSet, mData[i].rules)
+            rules.push({rules:[ruleSet], 'ruleSet':0});
+          }
+        }
         if (!newPositions[mInfo[i].tabUnique]) newPositions[mInfo[i].tabUnique] = [];
         newPositions[mInfo[i].tabUnique].push(mInfo[i].id);
         for (const group of this.importGroupings) {
           if (group.grouping && group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
         }
       }
+      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules, true);
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
       groupings.importToDB(this.importGroupings);
       let tabUniques = pandaUI.tabs.getUniques();
@@ -273,7 +284,7 @@ class EximClass {
       if (duration !== '' && duration !== '0') { totalSeconds = this.secondsDuration(duration); }
       if (rData.action.toLowerCase().indexOf('search') !== -1) search = 'rid';
       if (!rData.dateAdded) rData.dateAdded = new Date().getTime();
-      let hamD = (!rData.hamTimer) ? globalOpt.getHamDelayTimer() : rData.hamTimer;
+      let hamD = (!rData.hamTimer) ? globalOpt.getHamDelayTimer() : rData.hamTimer * 1000;
       let minutesOff = (rData.secondsOff > 0) ? Math.round(rData.secondsOff / 60) : 0;
       let dO = dataObject(rData.groupId, rData.title, rData.title, rData.requesterId, rData.requesterName, rData.pay,_, totalSeconds,_, rData.friendlyTitle, rData.friendlyRName);
       let oO = optObject(rData.once, search, rData.tabNumber, rData.queueHitLimit, rData.queueLimit,_, minutesOff, rData.stickyDelayedHam, hamD, rData.dailyLimit,_, rData.weight);

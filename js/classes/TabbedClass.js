@@ -10,12 +10,12 @@ class TabbedClass {
  * @param  {string} ulId      - The ul id name for the tab structure of page.
  * @param  {string} contentId - The contetn id name for the content area of page.
  */
-	constructor(element, divId, ulId, contentId) {
+	constructor(element, divId, ulId, contentId, uiPanda=true, idAdd='') {
     this.unique = 1;                  // Unique id of a tab initialized at 1.
     this.attachedTo = element;        // The element that the tab structure should be appended to.
     this.ulId = ulId;                 // The ul id name for the tab structure of page.
     this.contentId = contentId;       // The content id name for the content area of page.
-    this.tabIds = "pcm-t";            // The tab id name of the tab area of page.
+    this.tabIds = `pcm-t${idAdd}`;    // The tab id name of the tab area of page.
     this.topPanelHeights = 76;
     this.tabNavHeight = 0;  
     this.tabContentsHeight = 0;
@@ -26,6 +26,7 @@ class TabbedClass {
     this.draggable = false;           // Are objects in tabs draggable?
     this.defaultTabs = [{title:"Main", position:0, list:[]}, {title:"Daily", position:1, list:[]}];
     this.tabStructure(this.attachedTo, divId, ulId, contentId);
+    this.onPandaUI = uiPanda;
   }
 	/** Gets the current active tab unique number
    * @returns {number} - The unique number for the active tab. */
@@ -52,7 +53,7 @@ class TabbedClass {
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections. */
   async prepare() {
     let success = "", err = null;
-    if (this.ulId==="pcm_tabbedPandas") { // Is this tab row for the panda's?
+    if (this.ulId === 'pcm_tabbedPandas') { // Is this tab row for the panda's?
       this.addAddButton($(`#${this.ulId}`).disableSelection()); // Shows the add tab button on the tabbed panda row
       this.renameTab = true; this.deleteTab = true; this.draggable = true; // Allows renaming, deleting and dragging
       await bgPanda.db.getFromDB(bgPanda.tabsStore).then( async result => {
@@ -72,9 +73,12 @@ class TabbedClass {
         let unique = $(e.target).closest('li').data('unique');
         $(`#${this.tabIds}${unique}Content`).find('.card-deck').show();
       });
+    } else if (this.ulId === 'pcm_tabbedTriggers') {
+      $(`<li class='pcm_endTab'></li>`).appendTo($(`#${this.ulId}`).disableSelection());
+      success = 'Added all log tabs.';
     } else {
-      $(`<li class="pcm_captchaText ml-2"></li>`).appendTo($(`#${this.ulId}`).disableSelection());
-      success = "Added all log tabs.";
+      $(`<li class='pcm_endTab'></li><li class='pcm_captchaText ml-2'></li>`).appendTo($(`#${this.ulId}`).disableSelection());
+      success = 'Added all log tabs.';
     }
     this.tabNavHeight = $(`#pcm_tabbedPandas`).height();
     this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
@@ -166,7 +170,7 @@ class TabbedClass {
       .droppable( {tolerance:'pointer', over: (e, ui) => { $(e.target).find("a").click(); },
         drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
       );
-    else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_captchaText`));
+    else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_endTab`));
     let label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).disableSelection().appendTo(start);
     if (this.renameTab) $(label).bind('contextmenu', (e) => {
         if ($(e.target).closest("li").data("unique")!==0) { // First tab can not be renamed ever.
@@ -213,7 +217,7 @@ class TabbedClass {
       ));
       $(tabPane).droppable({tolerance:'pointer', drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }});
     }
-    this.resizeTabContents();
+    if (this.onPandaUI) this.resizeTabContents();
     label = null; start = null;
     return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
   }

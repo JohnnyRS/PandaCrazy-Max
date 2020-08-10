@@ -12,7 +12,7 @@ async function getBgPage() {
   })
 }
 async function prepare() {
-  await bgPage.prepareToOpen(true).then( () => {
+  await bgPage.prepareToOpen(true,_, localVersion).then( () => {
     bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(), bgHistory = bgPage.gGetHistory(), bgSearch = bgPage.gGetSearch();
     globalOpt = new PandaGOptions(), alarms = new AlarmsClass(), notify = new NotificationsClass();
     groupings = new PandaGroupings(), pandaUI = new PandaUI(), menus = new MenuClass("pcm_quickMenu");
@@ -36,6 +36,7 @@ async function startPandaCrazy() {
     groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
     menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
+    await bgSearch.loadFromDB();
     await pandaUI.prepare(showMessages); // Wait for panda jobs to load and show message or error.
     $('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'}); // Enable all tooltips.
     $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.

@@ -133,13 +133,14 @@ function arrayCount(arr, countFunc, counting=true) { // Similar to the ES6 filte
   }
   return total;
 }
+function limitQueue(arr, limitSize) { arr.length = Math.min(arr.length, limitSize); }
 /** Moves a value in an array from one position to another. The array is changed by splice so need to return array.
  * @param  {array} arr - Array @param  {number} from - From position @param  {number} to - To position */
-function arrayMove(arr,from,to) { arr.splice(to, 0, arr.splice(from, 1)[0]); }
+function arrayMove(arr, from, to) { arr.splice(to, 0, arr.splice(from, 1)[0]); }
 /** Remove a value in an array provided. Must return array because filter doesn't change the array.
  * @param  {array} arr - Array @param  {string} value - Search value
  * @return {array}     - Array with value removed. */
-function arrayRemove(arr,value) { return arr.filter( (item) => item !== value ); }
+function arrayRemove(arr, value) { return arr.filter( (item) => item !== value ); }
 /** Builds up an object with a key having an array of values. Creates key if doesn't exist in object.
  * @param  {object} obj   - Object @param  {string} key - Key value @param  {number} value - Added value */
 function buildSortObject(obj, key, value) {
@@ -158,21 +159,22 @@ function flattenSortObject(obj, key, value) {
 function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
 /** Toggles showing a text or a text input of a value for editing purposes.
  * @param  {object} thisObject     - Main object @param  {object} target      - Changed target @param  {object} obj             - Object with key
- * @param  {string} theValue       - Value       @param  {bool} [editMe=null] - Input or text? @param  {string} [textBorder=""] - Border class
- * @param  {string} [textColor=""] - Color class */
-function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="", textColor="") {
-  let parent = $(target).parent();
+ * @param  {string} theValue       - Value       @param  {bool} [editMe=null] - Input or text? @param  {string} [textBorder=''] - Border class
+ * @param  {string} [textColor=''] - Color class */
+function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='', textColor='') {
+  let parent = $(target).parent(), pre = (obj.money) ? '$' : '';
   if (editMe) {
     let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder, textColor); }
-    $(parent).empty().append($(`<input class="pcm_inputText" id="pcm_${obj.key}DetailI" type="text" value="${theValue}"></input>`).blur( (e) => doTextToggle(e) ).focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
+    $(parent).empty().append($(`<input class='pcm_inputText' id='pcm_${obj.key}DetailI' type="text" value="${theValue}"></input>`).blur( (e) => doTextToggle(e) ).focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
     $(`#pcm_${obj.key}DetailI`).focus();
   } else {
     $(`#pcm_tdLabel_${obj.key}`).css('color', '');
-    if (editMe !== null) thisObject[obj.key] = theValue = $(target).val(); // Null is on first call of function.
-    if (obj.type === 'number') thisObject[obj.key] = Number(thisObject[obj.key]);
-    if (theValue === "") { theValue = "{Empty}"; textColor = " text-danger"; }
-    if (!obj.min || theValue >= obj.min) {
-      let theSpan = $(`<span id="pcm_${obj.key}DetailS" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`);
+    if (editMe !== null) theValue = $(target).val(); // Null is on first call of function.
+    if (theValue === '') { theValue = '{Empty}'; textColor = ' text-danger'; }
+    if ( (obj.min === undefined && obj.max === undefined) || ((theValue >= obj.min) && (theValue <= obj.max)) ) {
+      if (obj.type === 'number') thisObject[obj.key] = Number((obj.minutes) ? theValue * 60000 : (obj.seconds) ? theValue * 1000 : theValue);
+      else if (theValue !== '{Empty}') thisObject[obj.key] = theValue; else thisObject[obj.key] = ''
+      let theSpan = $(`<span id='pcm_${obj.key}DetailS' class='${textBorder} font-weight-bold${textColor}'>${pre}${theValue}</span>`);
       $(parent).empty().append(theSpan);
       if (!obj.disable) $(theSpan).on('click', (e) => {
         textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
@@ -183,63 +185,67 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder="
 /** Displays an array of objects line by line in different ways and allows for toggling an edit input
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
- * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? @param  {string} [trBgColor=""] - TR background color */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor="") {
+ * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? @param  {string} [trBgColor=''] - TR background color */
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor='') {
   let row=null;
-  const trStyle = (trBgColor!=="") ? ` style="background-color:${trBgColor}"` : "";
+  const trStyle = (trBgColor!=='') ? ` style='background-color:${trBgColor}'` : '';
   if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
   for (const element of thisArrayObject) {
-    let textColor = "", padding="pl-0", valueCol=null, textBorder = "bottom-dotted";
-    let theValue = (element.orKey && thisObject[element.orKey]!=="") ? thisObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${thisObject[element.key]} - ${thisObject[element.andKey]}` : thisObject[element.key]) : "");
+    let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
+    if (element.ifNot && useObject[element.ifNot]) continue;
+    let textColor = '', padding='pl-0', valueCol=null, textBorder = 'bottom-dotted';
+    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
-    if (theValue === '') { theValue = "{Empty}"; textColor = " text-danger"; }
-    if (theValue === -1) { theValue = "0"; }
+    if (theValue === '') { theValue = '{Empty}'; textColor = ' text-danger'; }
+    if (theValue === -1) { theValue = '0'; }
     if (theValue === undefined) { theValue = element.default; }
     if (element.money) theValue = Number(theValue).toFixed(2);
-    if (element.format === "date") { theValue = formatAMPM("short",new Date(theValue)); }
-    if (element.disable) { textColor = " text-warning"; textBorder = ""; }
-    if (element.label !== "") { padding = " pl-4"; }
+    if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
+    if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
+    if (element.label !== '') { padding = ' pl-4'; }
     if (element.minutes) { theValue = theValue / 60000; }
+    if (element.seconds) { theValue = theValue / 1000; }
     const pre = (element.pre) ? element.pre : '';
-    const addSpan = (element.type === 'text' || element.type === 'number') ? "<span></span>" : "";
-    const tdWidth = (element.width) ? `width:${element.width} !important;` : "";
-    const tdStyle = ` style="padding-right:1px !important; max-width:320px; ${tdWidth}"`;
+    const addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
+    const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
+    const tdStyle = ` style='padding-right:1px !important; max-width:320px; ${tdWidth}'`;
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
-    if (table & !horizontal) row = $(`<tr class="d-flex"></tr>`).append($(`<td class='col-4 text-right'></td>`).disableSelection().append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key).disableSelection()));
+    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-4 text-right'></td>`).disableSelection().append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key).disableSelection()));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
     if (table) valueCol = $(`<td class='font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
-    else valueCol = $(`<span class="font-weight-bold pl-2 text-left text-info">${addSpan}</span>`).data('edit','off');
+    else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
     valueCol.appendTo(row);
-    if (element.type==="range") {
-      $(`<input class="pcm_inputRange" type="range" min="${element.min}" max="${element.max}" value="${theValue}"></input>`).on('input', (e) => {
-        $(`#pcm_${element.key}Detail`).val(($(e.target).val())); thisObject[element.key] = $(e.target).val();
+    if (element.type==='range') {
+      $(`<input class='pcm_inputRange' type='range' min='${element.min}' max='${element.max}' value='${theValue}'></input>`).on('input', (e) => {
+        $(`#pcm_${element.key}Detail`).val(($(e.target).val())); useObject[element.key] = Number($(e.target).val());
       } ).appendTo(valueCol);
-      $(`<input class="pcm_inputRangeText" id="pcm_${element.key}Detail" type="text" value="${theValue}" size="2"></input>`).appendTo(valueCol);
+      $(`<input class='pcm_inputRangeText' id='pcm_${element.key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(valueCol);
     } else if (element.type === 'text' || element.type === 'number') {
-        const theMin = (element.min) ? element.min : null;
-        textToggle(thisObject, $(valueCol).find("span"), element, theValue, null, textBorder, textColor);
-    } else if (element.type==="trueFalse") {
+        theValue = (element.min !== undefined) ? Math.min(Math.max(theValue, element.min), element.max) : theValue;
+        textToggle(useObject, $(valueCol).find('span'), element, theValue, null, textBorder, textColor);
+    } else if (element.type === 'trueFalse') {
       if (element.reverse) theValue = !theValue;
-      $(`<span id="pcm_${element.key}Detail" class="${textBorder} font-weight-bold${textColor}">${theValue}</span>`)
+      $(`<span id='pcm_${element.key}Detail' class='${textBorder} font-weight-bold${textColor}'>${theValue}</span>`)
       .on('click', (e) => {
-        $(e.target).html( ($(e.target).html() === "true") ? "false" : "true" );
-        thisObject[element.key] = ($(e.target).html() === 'true');
-        if (element.reverse) thisObject[element.key] = !thisObject[element.key];
+        $(e.target).html( ($(e.target).html() === 'true') ? 'false' : 'true' );
+        useObject[element.key] = ($(e.target).html() === 'true');
+        if (element.reverse) useObject[element.key] = !useObject[element.key];
       }).appendTo(valueCol);
-    } else if (element.type==="button") {
-      const button = $(`<button class="btn btn-primary${element.addClass}" id="${element.idStart}_${element.unique}">${element.label}</button>`);
+    } else if (element.type === 'button') {
+      const button = $(`<button class='btn btn-primary${element.addClass}' id='${element.idStart}_${element.unique}'>${element.btnLabel}</button>`);
       if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
       $(button).appendTo(valueCol);
-    } else if (element.type==="checkbox") {
-      const theCheckBox = createCheckBox(valueCol, "", `pcm_selection_${element.unique}`, element.unique, "", " m-0", element.inputClass);
+    } else if (element.type === 'checkbox') {
+      const theCheckBox = createCheckBox(valueCol, '', `pcm_selection_${element.unique}`, element.unique, '', ' m-0', element.inputClass);
       if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
-    } else if (element.type==="keyValue") {
+    } else if (element.type === 'keyValue') {
       const id = (element.id) ? ` id=${element.id}` : ``;
-      const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css("cursor", "default").appendTo(valueCol);
-      if (element.clickFunc) valueSpan.closest("td").on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
-    } else if (element.type==="string") {
-      const border = (element.noBorder) ? "" : " class='border'";
-      if (element.string!=="") $(`<span${border}>${element.string}</span>`).appendTo(valueCol);
+      const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css('cursor', 'default').appendTo(valueCol);
+      if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
+    } else if (element.type==='string') {
+      const id = (element.id) ? ` id=${element.id}` : ``;
+      const border = (element.noBorder) ? '' : ` class='border-light'`;
+      $(`<span${border}${id}>${element.string}</span>`).appendTo(valueCol);
     }
     row.appendTo(divContainer);
     $(row).show();
@@ -264,14 +270,13 @@ function allTabs(search, doAfter) {
  * @param  {object} theData      - The data to write to a file.
  * @param  {string} [type='Exp'] - The type of file to save to add to the filename. */
 async function saveToFile(theData, withAlarms=false, doneFunc=null) {
-  let blob = new Blob( [JSON.stringify(theData)], {type: "text/plain"}), dl = document.createElement("A");
+  let blob = new Blob( [JSON.stringify(theData)], {type: 'text/plain'}), dl = document.createElement('A');
   let fileEnd = (withAlarms) ? '_w_alarms' : '';
-  dl.href = URL.createObjectURL(blob); dl.download = `PandaCrazyEXP_${formatAMPM("short")}${fileEnd}.json`;
+  dl.href = URL.createObjectURL(blob); dl.download = `PandaCrazyEXP_${formatAMPM('short')}${fileEnd}.json`;
   document.body.appendChild(dl); dl.click();
   setTimeout( () => {
     dl.remove();
     URL.revokeObjectURL(blob);
-    console.log('done');
     if (doneFunc) doneFunc();
   }, 0);
 }
@@ -290,6 +295,13 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
     if (bgQueue) bgQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
   } else console.log('Warning: ' + alertMessage); // Show a warning alert message on the console.
+}
+/** Checks if the day sent is the same day as today.
+ * @param  {date} day - The date that needs to be compared to today.
+ * @return {bool}     - True if the date is the same as today. */
+function isSameDay(day) {
+  let d1 = new Date();
+  return day.getFullYear() === d1.getFullYear() && day.getMonth() === d1.getMonth() && day.getDate() === d1.getDate();
 }
 /** Checks if it's a new day.
  * @return {bool} - True if it's a new day. */
@@ -351,6 +363,18 @@ function sHistoryObject(rN, rid, pay=0.00, title='', desc='', dur='', date=null)
 /** Delays the script for certain amount of milliseconds.
  * @param  {number} ms - The milliseconds to delay script for. */
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function compareversion(version1, version2) {
+  let result = false; if (!version1) return true;
+  if (typeof version1 !== 'object'){ version1 = version1.toString().split('.'); }
+  if (typeof version2 !== 'object'){ version2 = version2.toString().split('.'); }
+  for (var i=0; i<(Math.max(version1.length, version2.length)); i++){
+      if (version1[i] == undefined) { version1[i]=0; }
+      if (version2[i] == undefined) { version2[i]=0; }
+      if (Number(version1[i])<Number(version2[i])) { result = true; break; }
+      if (version1[i] != version2[i]) { break; }
+  }
+  return(result);
+}
 
 /** Constant values for console coloring. */
 const CONSOLE_WARN = 'color: red;'

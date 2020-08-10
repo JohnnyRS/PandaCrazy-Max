@@ -41,7 +41,6 @@ class ModalClass {
     $(`#${idName}`).modal({backdrop:"static", keyboard:false}); // Move last modal to background.
     $(`.modal-backdrop`).each( (index, element) => { $(element).css("zIndex",1050+(index*2)).css("opacity",0.8); } );
     $(`#${idName}`).on('hide.bs.modal', (e) => { // hide.bs.modal used when modal is about to be hidden or closed.
-      this.tempObject = [];
       if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc();
       if (afterClose!==null) afterClose();
       $(e.target).remove(); // Remove the modal from document.
@@ -52,17 +51,19 @@ class ModalClass {
   }
   /** Will close a modal with the title name or the last modal shown.
    * @param {string} [title=""] - Close modal that has this title or the newest modal shown. */
-  closeModal(title="") {
+  closeModal(title='') {
     let foundTitle = -1; // -1 used in slice to get the last item in modals array.
-    if (title!=="") {
+    if (title !== '') {
       this.modals.forEach( (idName, index) => {
         if ($(`#${idName} .modal-title:first`).text() === title) foundTitle=index;
       });
     }
-    const idName = this.modals.slice(foundTitle)[0];
-    $(`#${idName}`).modal("hide"); // Hiding is basically closing it.
-    $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
-    delete this.tempObject[idName]; // Delete the temporary cloned copy of object to be saved.
+    if (title === '' || (title !== '' && foundTitle !== -1)) {
+      const idName = this.modals.slice(foundTitle)[0];
+      $(`#${idName}`).modal("hide"); // Hiding is basically closing it.
+      $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
+      delete this.tempObject[idName]; // Delete the temporary cloned copy of object to be saved.
+    }
   }
   /** Workaround for popup unload not working when crossed domains. (www.mturk.com vs worker.mturk.com)
    * Recursively will keep checking until popup window closes. Used for login popup window. */
@@ -136,14 +137,14 @@ class ModalClass {
    * @param {string} [defAns='']        - Default answer in input field initially.
    * @param {number} [max=null]         - Maximum characters allowed in input field.
    * @param {function} [afterShow=null] - Function to run after the dialog is shown after animation is stopped.  */
-  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null) {
+  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
     this.showModal(null, () => {
       let docKeys = "";
       if (question!=='') { // Should an input field be shown with a question?
-        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, '', null, '', defAns, 100, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
+        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, placeHolder, null, '', defAns, 100, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
         docKeys = '#pcm_formQuestion,';
       }
       $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.

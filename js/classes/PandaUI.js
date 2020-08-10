@@ -76,19 +76,16 @@ class PandaUI {
 						for (const dbId of positions) {
 							const myId = bgPanda.getMyId(dbId);
 							dbIds = arrayRemove(dbIds, dbId.toString());
-							if (bgPanda.info.hasOwnProperty(myId)) {
-								this.addPandaToUI(myId, bgPanda.options(myId), null, true, true);
-							} else this.tabs.removePosition(unique, dbId);
+							if (bgPanda.info.hasOwnProperty(myId)) this.addPandaToUI(myId, bgPanda.options(myId), null, true, true);
+							else this.tabs.removePosition(unique, dbId);
 							this.pandaStats[myId].updateAllStats(this.cards.get(myId));
 						}
 						this.cards.appendDoc(unique);
 					}
 					if (dbIds.length>0) {
 						for (const dbId of dbIds) {
-							const myId = bgPanda.getMyId(dbId), info = bgPanda.options(myId);
-							info.tabUnique = 1;
-							this.addPandaToUI(myId, info, null, true);
-							this.tabs.setPosition(1, Number(dbId));
+							const myId = bgPanda.getMyId(dbId), info = bgPanda.options(myId); info.tabUnique = 1;
+							this.addPandaToUI(myId, info, null, true); this.tabs.setPosition(1, Number(dbId));
 						}
 					}
 					$('#pcm_pandaTabContents').find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
@@ -101,8 +98,7 @@ class PandaUI {
 					bgPanda.useDefault = false; bgPanda.nullData();
 				}
 			}
-      this.tabPandaHeight = $(`#pcm_pandaPanel`).height();
-			this.tabLogHeight = $(`#pcm_logPanel`).height();
+      this.tabPandaHeight = $(`#pcm_pandaPanel`).height(); this.tabLogHeight = $(`#pcm_logPanel`).height();
 			this.windowHeight = window.innerHeight;
 		}
 		window.onresize = async (e) => { this.resizeTabContents(); }
@@ -138,8 +134,7 @@ class PandaUI {
 				$('#pcm_logTabContents .pcm_tabs').height(this.logTabs.tabContentsHeight - changed);
 				this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
 				this.logTabs.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
-				this.tabPandaHeight = $('#pcm_pandaPanel').height();
-				this.tabLogHeight = $(`#pcm_logPanel`).height();
+				this.tabPandaHeight = $('#pcm_pandaPanel').height(); this.tabLogHeight = $(`#pcm_logPanel`).height();
 			}
 		});
   }
@@ -192,8 +187,7 @@ class PandaUI {
 				let data = await bgPanda.dataObj(myId);
 				this.logTabs.addToStatus(data, pandaStat, myId);
 				if (!pandaStat.collecting && !alreadySearching) this.pandaGStats.addCollecting();
-				this.pandaGStats.collectingOn();
-				pandaStat.startCollecting();
+				this.pandaGStats.collectingOn(); pandaStat.startCollecting();
 				$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 				$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
 			}
@@ -253,8 +247,7 @@ class PandaUI {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
 				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => {
-					let info = bgPanda.options(myId); info.data = r;
-					this.removeJob(myId, afterFunc);
+					let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc);
 				}, rejected => console.error(rejected));
 			});
 			modal.closeModal();
@@ -300,11 +293,9 @@ class PandaUI {
 		if (this.hitQueue.length>0) {
 			if (diff === null) diff = new Date().getTime() - this.lastAdded;
 			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
-				const obj = this.hitQueue.shift();
-				this.lastAdded = new Date().getTime();
+				const obj = this.hitQueue.shift(); this.lastAdded = new Date().getTime();
 				let info = bgPanda.options(obj.myId), data = await bgPanda.dataObj(obj.myId);
-				info.autoAdded = true;
-				data.hitsAvailable = obj.hitsAvailable;
+				info.autoAdded = true; data.hitsAvailable = obj.hitsAvailable;
 				this.cards.updateAllCardInfo(obj.myId, info);
 				this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
 				if (this.hitQueue.length===0) { this.lastAdded = null; this.delayedTimeout = null; }
@@ -474,6 +465,7 @@ class PandaUI {
 			let data = bgPanda.data(key);
 			data.day = new Date().getTime(); data.dailyDone = 0;
 		}
+		bgHistory.maintenance();
 		bgPanda.nullData(false, true);
 	}
 	/** Returns the total number recorded of hits in queue.

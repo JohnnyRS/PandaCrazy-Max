@@ -165,23 +165,23 @@ class PandaGroupings {
   /** Show the groupings in a modal to toggle collecting or editing. */
   showGroupingsModal() {
     modal = new ModalClass();
-    const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "List Groupings", "", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
+    const idName = modal.prepareModal(null, '800px', 'modal-header-info modal-lg', 'List Groupings', '', 'text-right bg-dark text-light', 'modal-footer-info', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    const divContainer = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     let df = document.createDocumentFragment();
     Object.keys(this.groups).forEach(grouping => {
       this.goCheckGroup(grouping, true);
-      const bgColor = (this.groupStatus[grouping].collecting) ? "#066306" : ((Object.keys(this.groups[grouping].pandas).length===0) ? "#800517" : "");
+      const bgColor = (this.groupStatus[grouping].collecting) ? '#066306' : ((Object.keys(this.groups[grouping].pandas).length===0) ? '#800517' : '');
       displayObjectData([
-        { string:`Grouping Name and Description`, type:"keyValue", key:"name", id:`pcm_nameDesc_${grouping}`, andKey:"description", andString:`<span class="small">{${Object.keys(this.groups[grouping].pandas).length} Jobs}</span>`, unique:grouping, clickFunc: (e) => { this.toggle(e.data.unique); }
+        {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm_nameDesc_${grouping}`, 'andKey':'description', 'andString':`<span class="small">{${Object.keys(this.groups[grouping].pandas).length} Jobs}</span>`, 'unique':grouping, 'clickFunc': (e) => { this.toggle(e.data.unique); }
         },
-        { label:"Edit", type:"button", addClass:" btn-xxs", idStart:"pcm_editButton1_", width:"45px", unique:grouping, btnFunc: (e) => {
+        {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs', 'idStart':'pcm_editButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
           this.showgroupingEditModal(grouping,_,_, () => { });
         }},
-        { label:"Del", type:"button", addClass:" btn-xxs", idStart:"pcm_deleteButton1_", width:"45px", unique:grouping, btnFunc: (e) => {
+        {'btnLabel':'Del', 'type':'button', 'addClass':' btn-xxs', 'idStart':'pcm_deleteButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
           this.delete(grouping);
-          $(e.target).closest("tr").remove();
-        } }
+          $(e.target).closest('tr').remove();
+        }}
       ], df, this.groups[grouping], true, true, bgColor); }
     );
     modal.showModal(null, () => {

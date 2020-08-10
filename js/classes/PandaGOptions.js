@@ -26,8 +26,9 @@ class PandaGOptions {
       'secondTimer':1400,           // The time for the second timer.
       'thirdTimer':2100,            // The time for the third timer.
       'hamTimer':900,               // The time for the ham timer.
-      'hamDelayTimer':6,            // The duration timer in seconds for goHam on any new hits.
+      'hamDelayTimer':6000,         // The duration timer for goHam on any new hits.
       'queueTimer':2000,            // The time for the queue Timer.
+      'searchTimer':1000,           // The time for the search Timer.
       'timerIncrease':10,           // Time in milliseconds used for the timer increase button.
       'timerDecrease':10,           // Time in milliseconds used for the timer decrease button.
       'timerAddMore':650,           // Time in milliseconds used for the timer add more button.
@@ -134,19 +135,19 @@ class PandaGOptions {
     let df = document.createDocumentFragment();
     $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
-      {label:"Show Help Tooltips:", type:"trueFalse", key:"showHelpTooltips", min:0, max:24, tooltip:'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-      {label:"Disable Captcha Alert:", type:"trueFalse", key:"disableCaptchaAlert", min:0, max:24, tooltip:'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
-      {label:"Show Captcha Counter Text:", type:"trueFalse", key:"captchaCountText", tooltip:'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-      {label:"Captcha shown after #hits:", type:"text", key:"captchaAt", tooltip:'How many hits on average will mturk show a captcha for you?'}, 
-      {label:"Disable Queue Watch Color Alert:", type:"trueFalse", key:"disableQueueAlert", tooltip:'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
-      {label:"Disable Queue Watch Alarm:", type:"trueFalse", key:"disableQueueAlarm", tooltip:'Disable sounding the alarm for hits nearing the expiration time.'}, 
-      {label:"Disable Desktop Notifications:", type:"trueFalse", key:"disableNotifications", tooltip:'Disable notifications shown when accepting hits or warnings.'}, 
-      {label:"Disable Unfocused window warning:", type:"trueFalse", key:"unfocusWarning", reverse:true, tooltip:'Stop notifying me about the unfocussed window because I know what I am doing.'}
+      {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
+      {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
+      {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
+      {'label':'Captcha shown after #hits:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many hits on average will mturk show a captcha for you?'}, 
+      {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
+      {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for hits nearing the expiration time.'}, 
+      {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting hits or warnings.'}, 
+      {'label':'Disable Unfocused window warning:', 'type':'trueFalse', 'key':'unfocusWarning', 'reverse':true, 'tooltip':'Stop notifying me about the unfocussed window because I know what I am doing.'}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
+      modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
   /** Verifies all the timers changed with max and min ranges.
@@ -181,22 +182,22 @@ class PandaGOptions {
     let df = document.createDocumentFragment();
     $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
-      {label:'Main Timer:', type:'number', key:'mainTimer', tooltip:`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {label:"Timer #2:", type:'number', key:"secondTimer", tooltip:`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {label:"Timer #3:", type:"number", key:"thirdTimer", tooltip:`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {label:"GoHam Timer:", type:"number", key:"hamTimer", tooltip:`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {label:"Default GoHam Timer Delay:", type:"number", key:"hamDelayTimer", tooltip:'Change the default duration for jobs going into ham automatically by delay.', data:this.timerDur}, 
-      {label:"Check Queue Every:", type:"number", key:"queueTimer", tooltip:'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', data:this.timerQueue}, 
-      {label:"Timer Increase By:", type:"number", key:"timerIncrease", tooltip:'Change the value in milliseconds on the increase menu button to increase the current timer by.', data:this.timerChange},
-      {label:"Timer Decrease By:", type:"number", key:"timerDecrease", tooltip:'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},
-      {label:"Timer Add Timer By:", type:"number", key:"timerAddMore", tooltip:'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
-      {label:"Timer Auto Slowdown Increase:", type:"number", key:"timerAutoIncrease", tooltip:'', data:this.timerChange},
-      {label:"Default search durations for hits:", type:"number", key:"searchDuration", tooltip:'The duration temporarily used for any hits found from search jobs.', data:this.timerChange}
+      {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
+      {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
+      {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
+      {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
+      {'label':'Default GoHam Timer Delay:', 'type':'number', key:'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', data:this.timerDur}, 
+      {'label':'Check Queue Every:', 'type':'number', key:'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', data:this.timerQueue}, 
+      {'label':'Timer Increase By:', 'type':'number', key:'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', data:this.timerChange},
+      {'label':'Timer Decrease By:', 'type':'number', key:'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},
+      {'label':'Timer Add Timer By:', 'type':'number', key:'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
+      {'label':'Timer Auto Slowdown Increase:', 'type':'number', key:'timerAutoIncrease', 'tooltip':'', data:this.timerChange},
+      {'label':'Default search durations for hits:', 'type':'number', key:'searchDuration', 'tooltip':'The duration temporarily used for any hits found from search jobs.', data:this.timerChange}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class="table table-dark table-hover table-sm pcm_detailsTable table-bordered"></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
+      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
+      modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
   /** Updates the captcha text area with updated info.

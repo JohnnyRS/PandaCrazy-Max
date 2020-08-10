@@ -103,17 +103,17 @@ class PandaCards {
   createCard(myId, info) {
     const searchCard = (info.data.search) ? " pcm_searching" : "";
     let card = $(`<div class="card text-light border pcm_pandaCard${searchCard}" id="pcm_pandaCard_${myId}"></div>`).data("myId",myId);
-    let body = $(`<div class="card-body p-0"></div>`).appendTo(card);
-    let text = $(`<div class="card-text p-0" id="output_${myId}">`).appendTo(body);
-    $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${myId}"></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(text);
-    this.oneLineCard(myId, info).appendTo(text);
-    $(`<div class="pcm_priceGroup"></div>`).append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${myId}"></span>`).css('cursor', 'default')).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${myId}"></span>`)).appendTo(text);
-    $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').appendTo(text);
-    $(this.createCardStatus(myId, info)).appendTo(text);
-    $(this.createCardButtonGroup(myId, info)).appendTo(text);
+    let cardBody = $(`<div class="card-body p-0"></div>`).appendTo(card);
+    let cardText = $(`<div class="card-text p-0" id="output_${myId}">`).appendTo(cardBody);
+    $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${myId}"></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
+    this.oneLineCard(myId, info).appendTo(cardText);
+    $(`<div class="pcm_priceGroup"></div>`).append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${myId}"></span>`).css('cursor', 'default')).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${myId}"></span>`)).appendTo(cardText);
+    $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').appendTo(cardText);
+    $(this.createCardStatus(myId, info)).appendTo(cardText);
+    $(this.createCardButtonGroup(myId, info)).appendTo(cardText);
     this.cards[myId].document = card;
     this.multiple.push(myId);
-    card = null; body = null; text = null;
+    card = null; cardBody = null; cardText = null;
   }
   /** Append this card to the panda tab.
    * @param  {number} myId             - The unique ID for a panda job.

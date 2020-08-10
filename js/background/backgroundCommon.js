@@ -10,7 +10,7 @@ function checkUIConnects() {
 }
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
-  myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB();
+  mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); 
   myPanda = null; mySearch = null; myHistory = null; myQueue = null;
   pandaTimer = null; queueTimer = null; searchTimer = null;
   chrome.storage.local.set({'pcm_running':false});
@@ -20,7 +20,7 @@ function removeAll() {
  * @return {object}        - Returns the search class in background for easier access. */
 function gSetSearchUI(classUI) {
   extSearchUI = classUI;
-  if (classUI === null) { mySearch.originRemove(); mySearch.removeAll(); searchUIOpened = false; }
+  if (classUI === null) { mySearch.originRemove(); searchUIOpened = false; }
   checkUIConnects();
   return mySearch;
 }
@@ -56,13 +56,15 @@ async function gCheckPandaDB() { new Promise(resolve => {
   });
 }
 // Open the panda and search DB and sets a good variable or sets database error variable.
-async function prepareToOpen(panda=null, search=null) {
+async function prepareToOpen(panda=null, search=null, version=null) {
+  let historyWipe = false; if (compareversion(version, '0.8.7')) historyWipe = true; // For older versions of history.
   if (!panda && !search) return;
   if (!myPanda && !searchUIOpened) {
     chrome.storage.local.set({'pcm_running':true});
     myHistory = new HistoryClass();
-    await myHistory.openDB().then( async () => {
+    await myHistory.openDB(historyWipe).then( async () => {
       dbHistoryGood = true;
+      myHistory.maintenance();
       pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
       queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
       searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default
@@ -76,4 +78,11 @@ async function prepareToOpen(panda=null, search=null) {
   }
   if (panda) pandaUIOpened = true;
   if (search) searchUIOpened = true;
+}
+function wipeData() {
+  if (!myHistory && !mySearch && !myPanda) {
+    myHistory = new HistoryClass(); myHistory.wipeData(); myHistory = null;
+    mySearch = new MturkHitSearch(); mySearch.wipeData(); mySearch = null;
+    myPanda = new MturkPanda(); myPanda.wipeData(); myPanda = null;
+  }
 }

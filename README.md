@@ -22,6 +22,8 @@
 1. Export jobs have been disabled until I decide on a good format.
 
 ##### Some other changes:
+* This is a beta script there could be problems with saving and loading database.
+* There is a button to wipe all data and go back to default in the help page.
 * Older scripts that send messages to the old PC script should now work with this extension too.
 * Buttons on forums should still work but they may change in the future.
 * Buttons on some mturk pages have been changed and search multiple button has been added.
@@ -30,7 +32,7 @@
 
  Panda jobs are now saved in the database. Only relevant data is kept in memory when needed to save some memory space. Search jobs are working now also but searches are on a separate timer. Searches only check the first 25 hits every second for all the search jobs which makes it a lot more efficient to find hits from searches. Compared to the original script there can be a lot more searches running and won't cause any timer problems. Groupings are now working and can be run at a specific time for a certain duration. A lot of debugging lines have been added for future use. Queue watch is now better and a bit smarter. It only adds new hits to the queue. New icon has been added for the extension bar.
 
-Some menus still don't work. Options haven't all been tested yet. Alarms are not working.
+Some menus still don't work. Options haven't all been tested yet.
 
 This is being built by the newest ECMAScript, jquery, jquery UI and bootstrap. Coding in Visual Studio Code.
 
