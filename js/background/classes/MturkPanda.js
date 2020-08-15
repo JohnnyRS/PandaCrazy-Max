@@ -8,7 +8,7 @@ class MturkPanda extends MturkClass {
 	 * @param {number} timer		- Time to use for the timer to get next panda.
 	 * @param {number} hamTimer - Time to use for the ham timer.
 	 */
-	constructor(timer,hamTimer) {
+	constructor(timer, hamTimer) {
 		super();																// Run the super extended constructor first.
 		this.dbName = "PandaCrazyMax";					// Name of the database used for all storage.
 		this.storeName = "pandaStore"; 					// Name of the store to be used for panda jobs.
@@ -35,9 +35,9 @@ class MturkPanda extends MturkClass {
 		this.authenticityToken = null;					// The authenticity token from mturk so hits can be returned.
 		if (timer) {
 			pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
-			pandaTimer.setTimer(timer);         		// Set timer for this timer.
+			pandaTimer.theTimer(timer);         		// Set timer for this timer.
 			pandaTimer.pleaseSendBack();         		// Set timer for this timer.
-			pandaTimer.setHamTimer(hamTimer);   		// Set hamTimer for this timer.
+			pandaTimer.theHamTimer(hamTimer);   		// Set hamTimer for this timer.
 		}
 		this.useDefault = false;								// Should we be using default values because no data in database?
 		this.db = null;						  						// Set up the database class.
@@ -203,19 +203,20 @@ class MturkPanda extends MturkClass {
 		}
 	}
 	/** Changes the time for the panda timer and returns the time saved.
-	 * @param  {number} timer   - Time change @param  {number} [add=0] - Milliseconds to add @param  {number} [del=0] - Milliseconds to decrease
-	 * @return {number}				  - Returns the panda timer time that was set. */
-	timerChange(timer, add=0, del=0) {
+	 * @param  {number} [timer=null] - Time change @param  {number} [add=0] - Milliseconds to add @param  {number} [del=0] - Milliseconds to decrease
+	 * @return {number}				       - Returns the panda timer time that was set. */
+	timerChange(timer=null, add=0, del=0) {
 		let newTimer = null;
-		if (timer) newTimer = pandaTimer.setTimer(timer, true);
+		if (timer) newTimer = pandaTimer.theTimer(timer, true);
 		else if (add>0) newTimer = pandaTimer.addToTimer(add);
 		else if (del>0) newTimer = pandaTimer.delFromTimer(del);
+		else if (!timer) newTimer = pandaTimer.theTimer();
 		return newTimer
 	}
 	/** Changes the ham time for the panda timer and returns the ham time saved.
 	 * @param  {number} timer - The time to change the ham timer to.
 	 * @return {number}				- Returns the ham timer time that was set. */
-	hamTimerChange(timer) { return pandaTimer.setHamTimer(timer); }
+	hamTimerChange(timer=null) { return pandaTimer.theHamTimer(timer); }
 	/** Changes the time for the queue timer and returns the time saved.
 	 * @param  {number} timer - The time to change the queue timer to.
 	 * @return {number}				- Returns the queue timer time that was set. */
@@ -301,8 +302,9 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} tempGoHam		 - Temporary go ham duration for this job used for external panda adds.
 	 * @return {bool}								 - True if collection has started. */
 	async startCollecting(myId, goHamStart, tempDuration, tempGoHam) {
-		const data = await this.dataObj(myId);
-		let stopReason = this.checkIfLimited(myId, false, data);
+		let hitInfo = this.info[myId], data = await this.dataObj(myId);
+		let stopReason = this.checkIfLimited(myId, false, data), disabled = (hitInfo.disabled) ? hitInfo.disabled : false;
+		if (disabled) stopReason = 'Job is disabled.';
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			this.info[myId].queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
 				this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
@@ -370,7 +372,7 @@ class MturkPanda extends MturkClass {
 		this.sortUniqueIds(myId, dbInfo.groupId, dbInfo.reqId, dbInfo.search);
 		if (!dbInfo.hasOwnProperty("id")) await this.addToDB(dbInfo); // Add to database if it has no database key.
 		this.dbIds[dbInfo.id] = myId;
-		this.info[myId] = {queueUnique:null, autoAdded:autoAdded, dbId:dbInfo.id, skipped:false, autoTGoHam:"off", data:dbInfo, lastTime:null, lastElapsed:0, search:dbInfo.search };
+		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbInfo.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbInfo, 'lastTime':null, 'lastElapsed':0, 'search':dbInfo.search, 'disabled':dbInfo.disabled};
 		const pandaUrl = this.createPandaUrl(dbInfo.groupId); // create the panda url for this panda
 		if (dbInfo.search) await this.sendToSearch(myId, dbInfo, rules, history, passInfo.run, sDur, sGD);
 		this.pandaUrls[myId] = {preview: this.createPreviewUrl(dbInfo.groupId), accept: pandaUrl, urlObj: new UrlClass(pandaUrl + "?format=json")};
@@ -384,8 +386,7 @@ class MturkPanda extends MturkClass {
 	async removePanda(myId, deleteDB) {
 		const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 		this.stopCollecting(myId, data, null);
-		this.pandaUniques = arrayRemove(this.pandaUniques,myId);
-		this.searchesUniques = arrayRemove(this.searchesUniques,myId);
+		this.pandaUniques = arrayRemove(this.pandaUniques,myId); this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
 		if (data.search) {
 			if (data.search === "gid") flattenSortObject(this.searchesGroupIds, data.groupId, myId);
@@ -394,8 +395,7 @@ class MturkPanda extends MturkClass {
 			mySearch.removeTrigger(_, data.id, false, true);
 		}
 		if (deleteDB) this.deleteDbData(myId, data);
-		delete this.dbIds[this.info[myId].dbId];
-		this.info[myId].data = null; delete this.info[myId]; delete this.pandaUrls[myId];
+		delete this.dbIds[this.info[myId].dbId]; this.info[myId].data = null; delete this.info[myId]; delete this.pandaUrls[myId];
 	}
 	/** Changes the duration on the panda timer for panda with myid.
 	 * @async 									 - To wait for the loading of data if needed.
@@ -418,11 +418,10 @@ class MturkPanda extends MturkClass {
 			let [all, assignId, reqId, groupId] = details.contactRequesterUrl.match(regex);
 			data.reqId = reqId; data.groupId = groupId; assignment_id = assignId;
 		}
-		data.reqName = details.requesterName; data.title = details.projectTitle;
-		data.description = details.description; data.price = details.monetaryReward.amountInDollars;
-		data.hitsAvailable = details.assignableHitsCount; data.assignedTime = details.assignmentDurationInSeconds;
-		data.expires = details.expirationTime; extPandaUI.cards.updateAllCardInfo(myId, this.info[myId]);
-		this.updateDbData(null, data);
+		data.reqName = details.requesterName; data.title = details.projectTitle; data.description = details.description;
+		data.price = details.monetaryReward.amountInDollars; data.hitsAvailable = details.assignableHitsCount;
+		data.assignedTime = details.assignmentDurationInSeconds; data.expires = details.expirationTime;
+		extPandaUI.cards.updateAllCardInfo(myId, this.info[myId]); this.updateDbData(null, data);
 		return assignment_id;
 	}
 	/** Updates the requester name of this hit in the database.
@@ -431,9 +430,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {string} reqName - The new name of this requester. */
 	async updateReqName(myId, reqName) {
 		const data = await this.dataObj(myId);
-		data.reqName = reqName;
-		extPandaUI.cards.updateAllCardInfo(myId, this.info[myId]);
-		this.updateDbData(null, data);
+		data.reqName = reqName; extPandaUI.cards.updateAllCardInfo(myId, this.info[myId]); this.updateDbData(null, data);
 	}
 	/** If there is a queue limit for this hit with the unique ID then skip it.
 	 * @param  {number} myId - The unique ID for this job.
@@ -448,8 +445,7 @@ class MturkPanda extends MturkClass {
 			if (skipIt !== '') {
 				extPandaUI.cards.cardEffectPreviousColor(myId, true, "#ffa691");
 				pandaTimer.hamOff(info.queueUnique); // Make sure go ham is off if this panda was going ham.
-				this.pandaSkipped.push(myId); info.skipped = true;
-				this.pandaSkippedData[myId] = Object.assign({}, data);
+				this.pandaSkipped.push(myId); info.skipped = true; this.pandaSkippedData[myId] = Object.assign({}, data);
 				pandaTimer.skipThis(info.queueUnique);
 				extPandaUI.cards.collectTipChange(myId, `<br><strong>Skipping because ${skipIt}</strong>`, true);
 				return true;
@@ -468,10 +464,7 @@ class MturkPanda extends MturkClass {
 		if (unskip) {
 			extPandaUI.cards.cardEffectPreviousColor(myId,false);
 			pandaTimer.unSkipThis(this.info[myId].queueUnique); // Unskip this panda in timer.
-			if (this.pandaSkipped.includes(myId)) {
-				this.pandaSkipped = arrayRemove(this.pandaSkipped, myId);
-				delete this.pandaSkippedData[myId];
-			}
+			if (this.pandaSkipped.includes(myId)) { this.pandaSkipped = arrayRemove(this.pandaSkipped, myId); delete this.pandaSkippedData[myId]; }
 			this.info[myId].skipped = false; // This hit not skipped
 			extPandaUI.cards.collectTipChange(myId, '');
 			if (!extPandaUI.pandaStats[myId].collecting) this.info[myId].data = null;
@@ -489,10 +482,7 @@ class MturkPanda extends MturkClass {
 		else if (accepted && this.info[myId].autoAdded && data.hitsAvailable === 1) stopIt = "One Hit Available";
 		else if (data.acceptLimit>0 && data.acceptLimit<=stats.getDailyAccepted()) stopIt = "Daily Accept Limit";
 		else if (data.limitFetches>0 && data.limitFetches<=stats.getFetchedSession()) stopIt = "Fetched Limit";
-		else {
-			if (this.info[myId].skipped) this.checkSkipped(myId);
-			else this.checkQueueLimit(myId, this.info[myId], data);
-		}
+		else { if (this.info[myId].skipped) this.checkSkipped(myId); else this.checkQueueLimit(myId, this.info[myId], data); }
 		if (stopIt!==null) {
 			extPandaUI.cards.stopItNow(myId, false, stopIt);
 			extPandaUI.cards.collectTipChange(myId, `<br><strong>Stopped for ${stopIt}</strong>`, true);
@@ -564,7 +554,7 @@ class MturkPanda extends MturkClass {
 				let dateNow = new Date();
 				info.lastElapsed = (info.lastTime) ? dateNow - info.lastTime : 0;
 				info.lastTime = dateNow;
-				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalPandaFetched();
+				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 				extPandaUI.cards.highlightEffect_gid(myId);
 				if (result.type === "ok.text" && result.url.includes("assignment_id=")) {
 					extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
@@ -579,17 +569,19 @@ class MturkPanda extends MturkClass {
 					} else if (result.mode === "maxxedOut") {
 						this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full');
 					} else if (result.mode === "noMoreHits") {
-						extPandaUI.pandaGStats.addTotalPandaNoMore(); extPandaUI.pandaStats[myId].addNoMore();
+						extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore();
 					} else if (result.mode === "noQual" && stopped===null) {
 						console.log("Not qualified"); extPandaUI.cards.stopItNow(myId, true, "noQual", "#DDA0DD");
 					} else if (result.mode === "blocked") {
 						console.log("You are blocked"); extPandaUI.cards.stopItNow(myId, true, "blocked", "#575b6f");
 					} else if (result.mode === "notValid") {
 						console.log("Group ID not found"); extPandaUI.cards.stopItNow(myId, true, "notValid", "#575b6f");
+						extPandaUI.pandaGStats.addTotalPandaErrors();
 					} else if (result.mode === "unknown") {
-						console.log("unknown message: ",result.data.message);
+						console.log("unknown message: ",result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors();
 					} else if (result.mode === "cookies.large") {
 						console.log("cookie large problem"); this.tempPaused = true; pandaTimer.paused = true;
+						extPandaUI.pandaGStats.addTotalPandaErrors();
 					} else if (result.type === "ok.text") {
 						extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert();
 						console.log("captcha found"); globalOpt.resetCaptcha();

@@ -29,7 +29,7 @@ function modalLoadingData() {
  * Make sure to check for a good DB open and wait for slower computers.
  * @async - To wait for preparations for classes to end their database operations. */
 async function startPandaCrazy() {
-  $('.pcm_top').disableSelection(); $('#pcm_quickMenu').disableSelection();
+  $('.pcm_top').addClass('unSelectable'); $('#pcm_quickMenu').addClass('unSelectable');
   if (bgHistory.db && bgPanda.db && bgSearch.db) {
     await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
     alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
@@ -39,7 +39,7 @@ async function startPandaCrazy() {
     await bgSearch.loadFromDB();
     await pandaUI.prepare(showMessages); // Wait for panda jobs to load and show message or error.
     $('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'}); // Enable all tooltips.
-    $('.sortable').sortable().disableSelection(); // Set up sortables Disable selection for sortables.
+    $('.sortable').sortable().addClass('unSelectable'); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
     setTimeout( () => {
       modal.closeModal('Loading Data');
@@ -79,9 +79,9 @@ window.addEventListener('visibilitychange', (evt) => {
 }, false);
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', (e) => {
-  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).disableSelection(); }
+  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
 });
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
 document.addEventListener("keyup", (e) => {
-  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).disableSelection(); }
+  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
 });

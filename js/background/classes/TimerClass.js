@@ -70,16 +70,17 @@ class TimerClass {
 	}
 	/** Set a new time for this timer. If new time is lower than last time elapsed than do job now.
 	 * If new time is higher than last time elapsed then take the difference and use it to complete the time needed.
-	 * @param  {number} timer			 	 - The time that this timer should run at.
+	 * @param  {number} [timer=null] - The time that this timer should run at.
 	 * @param  {bool} [adjust=false] - Should the timer calculate the time difference from last timer?
 	 * @return {number}						 	 - Returns the new timer time. */
-	setTimer(timer, adjust=false) {
+	theTimer(timer=null, adjust=false) {
+		if (!timer) return this.timeout;
 		if (timer >= this.min) { // Make sure it's not under the minimum time.
 			this.timeout = timer;
 			if (adjust) this.adjustTimer(timer);
 			if (this.dLog(3)) console.debug(`%cNew timer set: ${timer}`, CONSOLE_DEBUG);
-			return this.timer; }
-		else { if (this.dError(2)) console.error('New timer would be too low!'); return null; }
+			return this.timeout;
+		} else { if (this.dError(2)) console.error('New timer would be too low!'); return null; }
 	}
 	/** Add time to the timer.
 	 * @param  {number} add - The time in milliseconds to add to the current timer. */
@@ -95,8 +96,9 @@ class TimerClass {
 	/** Set a new ham time for this timer.
 	 * @param  {number} timer - The time for hamming that this timer should run at.
 	 * @return {number}				- Returns the new ham time. */
-	setHamTimer(timer) { 
-		if (timer>=this.min) { this.hamTimer = timer; return this.timer; }
+	theHamTimer(timer=null) { 
+		if (timer >= this.min) { this.hamTimer = timer; return this.hamTimer; }
+		else if (timer === null) return this.hamTimer;
 		else { if (this.dError(2)) console.error('New ham timer would be too low!'); return null; }
 	}
 	/** This is the main loop for the timer to work with. After timeout is done it will run this method.

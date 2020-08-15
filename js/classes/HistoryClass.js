@@ -60,7 +60,11 @@ class HistoryClass {
 	closeDB() { this.db.closeDB(); this.db = null; }
 	/** Removes value key in database by changing the from value to searchResults so maintenance can delete it later.
 	 * @param  {string} value - The key value that needs to be removed. */
-	deleteThis(value) { if (value) this.db.getFromDB(this.storeHistName, value).then( r => { r.from = 'searchResults'; this.updateToDB(r); } ); }
+	deleteThis(value) {
+		if (value) this.db.getFromDB(this.storeHistName, value).then( r => {
+			if (r) { r.from = 'searchResults'; this.updateToDB(r); }
+		});
+	}
 	/** Fill in the history database with the group ID and requester info from history object.
 	 * @async														 - To wait for database to be updated.
 	 * @param  {object} history          - History object with all data.

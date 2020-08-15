@@ -210,7 +210,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
     const tdStyle = ` style='padding-right:1px !important; max-width:320px; ${tdWidth}'`;
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
-    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-4 text-right'></td>`).disableSelection().append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key).disableSelection()));
+    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-4 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
     if (table) valueCol = $(`<td class='font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
     else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
@@ -338,10 +338,10 @@ function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT=
  * @param  {number} [aL=0]	- acceptLimit   @param  {number} [day=0]	- day             @param  {number} [wt=0]	  - weight
  * @param  {number} [dd=0]	- dailyDone
  * @return {object}         - Object with options set or using default values. */
-function optObject(o=false, s=null, tab=-1, lN=0, lT=0, lF=0, dur=0, aG=false, hamD=0, aL=0, day=0, wt=0, dd=0) {
+function optObject(o=false, s=null, tab=-1, lN=0, lT=0, lF=0, dur=0, aG=false, hamD=0, aL=0, day=0, wt=0, dd=0, dis=false) {
   let today = new Date();
   if (day===0 || justDate(day) !== justDate(today)) { day = today.getTime(); dd = 0; }
-  return {'once':o, 'search':s,'limitNumQueue':Number(lN), 'limitTotalQueue':Number(lT), 'limitFetches':Number(lF), 'duration':Number(dur),'autoGoHam':aG, 'hamDuration':Number(hamD), 'acceptLimit':Number(aL), 'tabUnique':Number(tab), 'day':Number(day), 'dailyDone':Number(dd), 'weight':Number(wt)};
+  return {'once':o, 'search':s,'limitNumQueue':Number(lN), 'limitTotalQueue':Number(lT), 'limitFetches':Number(lF), 'duration':Number(dur),'autoGoHam':aG, 'hamDuration':Number(hamD), 'acceptLimit':Number(aL), 'tabUnique':Number(tab), 'day':Number(day), 'dailyDone':Number(dd), 'weight':Number(wt), 'disabled':dis};
 }
 /** Creates and returns an object for the rules for a search trigger.
  * @param  {array} [bG=[]]  - Blocked gid   @param  {array} [oG=[]]     - Only gid    @param  {array} [exc=[]]    - Exclude terms

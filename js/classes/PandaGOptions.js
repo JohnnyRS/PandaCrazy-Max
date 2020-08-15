@@ -28,7 +28,7 @@ class PandaGOptions {
       'hamTimer':900,               // The time for the ham timer.
       'hamDelayTimer':6000,         // The duration timer for goHam on any new hits.
       'queueTimer':2000,            // The time for the queue Timer.
-      'searchTimer':1000,           // The time for the search Timer.
+      'searchTimer':950,            // The time for the search Timer.
       'timerIncrease':10,           // Time in milliseconds used for the timer increase button.
       'timerDecrease':10,           // Time in milliseconds used for the timer decrease button.
       'timerAddMore':650,           // Time in milliseconds used for the timer add more button.
@@ -41,6 +41,7 @@ class PandaGOptions {
     this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
     this.timerDur = {min:0, max:600}          // The limits for the ham duration in seconds.
     this.timerQueue = {min:1000, max:60000};  // The limits for the timer queue in milliseconds when editing.
+    this.timerSearch = {min:800, max:30000};  // The limits for the timer queue in milliseconds when editing.
     this.timerChange = {min:5, max:2000};     // The limits for the timer change buttons in milliseconds when editing.
     this.alarms = {};
     this.alarmsDefault = {
@@ -95,6 +96,7 @@ class PandaGOptions {
         this.helpers = Object.assign({}, this.helpersDefault);
       }
     }, rejected => err = rejected);
+    bgPanda.timerChange(this.timers[this.timerUsed]); bgSearch.timerChange(this.timers.searchTimer); bgQueue.timerChange(this.timers.queueTimer);
     afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /** Removes data from memory so it's ready for closing or importing. */
@@ -172,11 +174,12 @@ class PandaGOptions {
       let errorFound = this.timerConfirm(changes);
       if (!errorFound) {
         this.timers = Object.assign(this.timers, changes);
-        bgPanda.timerChange(this.timers[this.timerUsed]);
-        bgPanda.hamTimerChange(this.timers.hamTimer);
-        bgPanda.queueTimerChange(this.timers.queueTimer);
+        bgPanda.timerChange(this.timers[this.timerUsed]); pandaUI.pandaGStats.setPandaTimer(this.timers[this.timerUsed]);
+        bgPanda.hamTimerChange(this.timers.hamTimer); pandaUI.pandaGStats.setHamTimer(this.timers.hamTimer);
+        bgSearch.timerChange(this.timers.searchTimer); pandaUI.pandaGStats.setSearchTimer(this.timers.searchTimer);
+        bgQueue.timerChange(this.timers.queueTimer); pandaUI.pandaGStats.setQueueTimer(this.timers.queueTimer);
         menus.updateTimerMenu(this.timers.timerIncrease, this.timers.timerDecrease, this.timers.timerAddMore);
-        modal.closeModal();
+        this.update(); modal.closeModal();
       }
     });
     let df = document.createDocumentFragment();
@@ -187,6 +190,7 @@ class PandaGOptions {
       {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
       {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
       {'label':'Default GoHam Timer Delay:', 'type':'number', key:'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', data:this.timerDur}, 
+      {'label':'Search Timer:', 'type':'number', key:'searchTimer', 'tooltip':'Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ${this.timerRange.min}.', data:this.timerSearch}, 
       {'label':'Check Queue Every:', 'type':'number', key:'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', data:this.timerQueue}, 
       {'label':'Timer Increase By:', 'type':'number', key:'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', data:this.timerChange},
       {'label':'Timer Decrease By:', 'type':'number', key:'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},

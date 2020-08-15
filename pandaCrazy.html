@@ -18,18 +18,16 @@
   <title>Panda Crazy Max</title>
 </head>
 <body>
-  <div class="container-fluid text-light border-light rounded bg-dark h-100 p-0">
-    <div class="pane pcm_top border">
-      <div class="container-fluid px-1 py-0 my-0" id="pcm_topMenu"><!-- Top Menu is dynamically created here --></div>
-      <div class="navbar navbar-text navbar-fixed-top py-0 pcm_status w-100 text-left">
-        <small>[<span class="text-danger" id="pcm_collecting">Off</span>-</small>
-        <small><span id="pcm_collectingTotal">0</span>]</small>
-        <small>[Elapsed: <span id="pcm_pandaElapsed">0ms</span>]</small>
-        <small>[Accepted: <span id="pcm_totalPandaAccepted">0</span>]</small>
-        <small>[Fetched: <span id="pcm_totalPandaFetched">0</span>]</small>
-        <!-- <small>[NoMore's: <span id="pcm_totalPandaNoMore">0</span>]</small> -->
-        <small>[PRE's: <span id="pcm_totalPres">0</span>]</small>
-        <small>[PandaPRE's: <span id="pcm_totalPandaPREs">0</span>]</small>
+  <div class='container-fluid text-light border-light rounded bg-dark h-100 p-0'>
+    <div class='pane pcm_top border'>
+      <div class='container-fluid px-1 py-0 my-0' id='pcm_topMenu'><!-- Top Menu is dynamically created here --></div>
+      <div class='navbar navbar-text navbar-fixed-top py-0 pcm_status w-100 text-left'>
+        <small>
+          <span class='text-danger' id='pcm_collecting'>Off</span> -
+          <span id='pcm_collectingTotal'>0</span>
+          <span id='pcm_statArea'>[ <span id='pcm_timerStats' class='toggle'></span> | <span id='pcm_jobFetchStats' class='toggle'></span> | 
+          <span id='pcm_preStats' class='toggle'></span> | <span id='pcm_earningsStats' class='toggle'></span> ]</span>
+        </small>
       </div>
     </div>
     <div class='panel py-0'>

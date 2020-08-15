@@ -54,8 +54,9 @@ class MenuClass {
   changeTheTimer(e, timer) {
     $('.pcm_timerButton').removeClass('pcm_buttonOn');
     if (e) $(e.target).addClass('pcm_buttonOn');
-    bgPanda.timerChange(timer);
+    this.timerChange(timer);
   }
+  timerChange(timer=null, addThis=0, delThis=0) { let newTimer = bgPanda.timerChange(timer, addThis, delThis); pandaUI.pandaGStats.setPandaTimer(newTimer); }
   /** Change the numbers on the timer buttons according to the global options being changed.
    * @param  {number} increase - New number to change on the increase timer button.
    * @param  {number} decrease - New number to change on the decrease timer button.
@@ -99,9 +100,9 @@ class MenuClass {
     this.addMenu(topMenu, '3', (e) => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-topMenuBtn pcm_timerButton');
     this.addSubMenu(topMenu, '',
       [{'type':'item', 'label':'Edit Timers', 'menuFunc': () => { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
-       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm_timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
-       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm_timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
-       {'type':'item', 'menuFunc': () => { bgPanda.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm_timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
+       {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm_timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
+       {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm_timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
+       {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm_timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
        {'type':'item', 'menuFunc': () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}]);
       this.addMenu(topMenu, 'Options', () => { globalOpt.showGeneralOptions(); }, 'Change Global, Alarms or timer Options', 'pcm-topMenuBtn');
       this.addSubMenu(topMenu, '',

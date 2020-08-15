@@ -18,7 +18,7 @@ class MturkQueue extends MturkClass {
     this.loggedOff = false;           // Are we logged off or not?
     this.authenticityToken = null;    // Keeps the authenticity token used for returning hits.
 		queueTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
-		queueTimer.setTimer(timer);       // Sets the timer for the timer class.
+		queueTimer.theTimer(timer);       // Sets the timer for the timer class.
     this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
   }
   /** Returns the value of loggedOff value;
@@ -32,7 +32,7 @@ class MturkQueue extends MturkClass {
   /** Changes the time for the queue timer and returns the time saved.
    * @param  {number} timer - The time to change the queue timer to.
 	 * @return {number}				- Returns the queue timer time that was set. */
-  timerChange(timer) { this.timer = queueTimer.setTimer(timer, true); return this.timer; }
+  timerChange(timer) { if (timer) { this.timer = queueTimer.theTimer(timer, true); } return this.timer; }
   /** Starts the queue monitor by adding a job to the timer queue. */
   startQueueMonitor() {
     if (!queueTimer.running) {
@@ -72,13 +72,13 @@ class MturkQueue extends MturkClass {
   addAccepted(pandaInfo) { this.queueAdd.push(pandaInfo.data); }
   /** Changes the timer to a longer time and informs panda and search class when logged off. */
   nowLoggedOff() {
-    this.loggedOff = true; queueTimer.setTimer(this.loggedOffTimer);
+    this.loggedOff = true; queueTimer.theTimer(this.loggedOffTimer);
     if (this.dLog(1)) console.info('%cYou are logged off from mturk.com.',CONSOLE_WARN);
     myPanda.nowLoggedOff(); mySearch.nowLoggedOff(); // Show logged off warning on all running UI's.
   }
   /** Changes the timer to the normal time and informs panda and search class when logged back in. */
   nowLoggedOn() {
-    this.loggedOff = false; queueTimer.setTimer(this.timer);
+    this.loggedOff = false; queueTimer.theTimer(this.timer);
     if (this.dLog(1)) console.info('%cYou are logged back in to mturk.com.',CONSOLE_WARN);
     myPanda.nowLoggedOn(); mySearch.nowLoggedOn(); // Remove logged off warning on all running UI's.
   }

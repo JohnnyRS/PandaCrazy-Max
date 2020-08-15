@@ -1,6 +1,6 @@
 const locationUrl = window.location.href, _ = undefined;
 const parentUrl = window.parent.location.href;
-let hitData = {}, hitsData = {}, originalSetItem = null, pcm_running = false;
+let hitData = {}, hitsData = {}, originalSetItem = null, pcm_running = false, prevAssignedhit = null;
 let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
 
 /** Sends a message to the extension with given values.
@@ -9,12 +9,12 @@ let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
  * @param  {string} [rName=''] - Requester name @param  {number} [price=0.00] - Price        @param  {string} [dur=''] - Duration
  * @param  {number} [hA=0]     - Hits available
  */
-function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0) {
+function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0, aI=null, tI=null) {
   if (typeof chrome.app.isInstalled === 'undefined')  {
     if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
     location.reload();
   } else {
-    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA});
+    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI});
   }
 }
 /** Parses the command string and sends message to extension.
@@ -31,6 +31,7 @@ function parseCommands(command, data) {
     case 'acceptedhit':
     case 'returned':
     case 'submitted':
+      sendToExt(command, data, data.groupId,_,_,_,_, data.pay,_,_, data.assignmentId, data.hitId);
       break;
     case 'externalrun':
     case 'externalstop':
@@ -62,7 +63,7 @@ function addCommands() {
 }
 /** To make older storage messages compatible to extension. */
 function pcMAX_listener() { console.log('pcMAX_listener page');
-  window.addEventListener("storage", (e) => {
+  window.addEventListener("storage", (e) => { console.log('listen to: ', e.key, JSON.parse(e.newValue));
     if (e.url === parentUrl) {
       if (e.key === 'JR_message_ping_pandacrazy') {
         localStorage.setItem("JR_message_pong_pandacrazy", JSON.stringify({"time":(new Date().getTime()),"command":'run',"url":e.url,"data":null,"theTarget":null, "version":"0.6.3","idNum":null}));
@@ -107,7 +108,18 @@ function getProjectedEarnings() {
   if (earnings.length) {
     let totalPay = earnings.html().replace('$','');
     chrome.runtime.sendMessage({time:new Date().getTime(), command:'projectedEarnings', data:{"projectedEarnings":totalPay}});
+    return true;
+  } else return false;
+}
+function checkSubmitted() { console.log(prevAssignedhit);
+  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) { console.log('Something submitter');
+    sendToExt('submitted', prevAssignedhit, prevAssignedhit.groupId,_,_,_,_, prevAssignedhit.pay,_,_, prevAssignedhit.assignmentId, prevAssignedhit.taskId);
   }
+}
+function prevAssigned() {
+  prevAssignedhit = sessionStorage.getItem('pcm_hitDoing'); console.log('prevAssignedhit: ', prevAssignedhit);
+  prevAssignedhit = (prevAssignedhit) ? JSON.parse(prevAssignedhit) : null;
+  sessionStorage.removeItem('pcm_hitDoing');
 }
 /** Returns newer buttons to work with the extension.
  * @return {object} - The jquery element for the buttons to add. */
@@ -160,17 +172,19 @@ function doPreview() { console.log('doPreview page');
 }
 /** Parses a URL with an assignment ID attached. */
 function doAssignment() { console.log('doAssignment page');
-  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings();
+  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); checkSubmitted();
+  getProjectedEarnings();
   const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/;
-  let [_, groupId, hitId, assignmentId] = locationUrl.match(regex);
-  let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)');
-  let buttons = addButtons();
+  let [_, groupId, taskId, assignmentId] = locationUrl.match(regex);
+  sessionStorage.setItem('pcm_hitDoing',JSON.stringify({'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId, 'pay':hitData.monetaryReward.amountInDollars}));
+  let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)'), buttons = addButtons();
   if (detailArea.find('div').length === 0) detailArea.append(buttons);
   else $('.navbar-content:first .navbar-nav:first').append($('<li class="nav-item" style="margin-left:0; margin-top:5px"></li>').append(buttons.css('margin-top', '5px')));
 }
 /** Adds buttons to the hits listed pages. Removes any old buttons too. */
 function hitList() {
-  addIframe(); getReactProps(); getProjectedEarnings();
+  prevAssigned(); addIframe(); getReactProps(); checkSubmitted();
+  getProjectedEarnings(); console.log('hitList page');
   $('.hit-set-table .hit-set-table-row').click( (e) => {
     let tableRow = $(e.target).closest('.table-row');
     setTimeout( () => {
@@ -191,6 +205,7 @@ function hitList() {
     },0);
   });
 }
+function dashboard() { console.log('dashboard page'); addIframe(); getProjectedEarnings(); }
 /** Adds an iframe for getting old messages and grabs any projected earnings. */
 function otherPage() { console.log('otherPage page'); addIframe(); getProjectedEarnings(); }
 /** Works on old panda crazy pages to future use of importing data. */
@@ -215,6 +230,7 @@ else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
 else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) doAssignment();
 else if (/requesters\/PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
 else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
+else if (/worker\.mturk\.com[\/]dashboard.*$/.test(locationUrl)) dashboard();
 else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
 else if (/mturkcrowd\.com/.test(locationUrl)) onForums('mturkcrowd');
 else if (/turkerview\.com/.test(locationUrl)) onForums('turkerview');

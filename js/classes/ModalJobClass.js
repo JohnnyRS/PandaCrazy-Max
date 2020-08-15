@@ -93,9 +93,9 @@ class ModalJobClass {
     const idName = modal.prepareModal(hitInfo.data, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
       if (hitInfo.search) bgSearch.optionsChanged(searchChanges, searchChanges.searchDbId);
-      hitInfo.data = Object.assign(hitInfo.data, changes);
-      bgPanda.timerDuration(myId);
-      await bgPanda.updateDbData(myId, hitInfo.data);
+      changes.disabled = (changes.disabled) ? changes.disabled : false;
+      hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
+      await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
       pandaUI.cards.updateAllCardInfo(myId, hitInfo);
       pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data);
       modal.closeModal();
@@ -119,7 +119,7 @@ class ModalJobClass {
         ridDisabled = true; ridDisableTip = ' May not be changed by user.';
       }
     }
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(df);
+    $(`<div class='pcm_detailsEdit text-center mb-2 unSelectable'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(df);
     displayObjectData([
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key':'limitNumQueue', 'min':0, 'max':24, 'ifNot':'search', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
       {'label':'Limit # of total Hits in queue:', 'type':'range', 'key':'limitTotalQueue', 'min':0, 'max':24, 'ifNot':'search', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
@@ -229,10 +229,10 @@ class ModalJobClass {
     for (const myId of jobs) {
       let status = (pandaUI.pandaStats[myId].collecting) ? 'On' : 'Off', data = await bgPanda.dataObj(myId);
       displayObjectData([
-        {'string':'', 'type':'checkbox', 'width':'20px', 'unique':myId, 'inputClass':' pcm_checkbox', 'btnFunc':checkboxFunc },
-        {'string':'Requester Name', 'type':'keyValue', 'key':'reqName', 'orKey':'friendlyReqName', 'width':'155px', id:`pcm_RQN_${myId}` },
-        {'string':'Hit Title', 'type':'keyValue', 'key':'title', 'orKey':'friendlyTitle', 'id':`pcm_TTL_${myId}` },
-        {'string':'Pay', 'type':'keyValue', 'key':'price', 'width':'45px', 'money':true, 'id':`pcm_Pay_${myId}` },
+        {'string':'', 'type':'checkbox', 'width':'20px', 'unique':myId, 'inputClass':' pcm_checkbox', 'btnFunc':checkboxFunc},
+        {'string':'Requester Name', 'type':'keyValue', 'key':'reqName', 'orKey':'friendlyReqName', 'width':'155px', id:`pcm_RQN_${myId}`},
+        {'string':'Hit Title', 'type':'keyValue', 'key':'title', 'orKey':'friendlyTitle', 'id':`pcm_TTL_${myId}`},
+        {'string':'Pay', 'type':'keyValue', 'key':'price', 'width':'45px', 'money':true, 'id':`pcm_Pay_${myId}`, 'pre':'$'},
         {'btnLabel':'Collect', 'type':'button', 'addClass':` btn-xxs pcm_button${status}`, 'idStart':'pcm_collectButton1', 'width':'62px', 'unique':myId, 'btnFunc': (e) => {
             $(`#pcm_collectButton_${e.data.unique}`).click();
           }},
@@ -251,20 +251,21 @@ class ModalJobClass {
    * @param  {string} search       - Search term to find in title or requester name.
    * @param  {object} modalControl - Jquery element of modalControl to use for these jobs.
    * @return {bool}                - True if job should be shown. */
-  jobsFilter(search, modalControl) {
-    return bgPanda.pandaUniques.filter( async (myId) => {
-      let options = bgPanda.options(myId);
-      const stats = pandaUI.pandaStats[myId];
-      let good = false;
+  async jobsFilter(search, modalControl) {
+    let newArray = [];
+    for (const myId of bgPanda.pandaUniques) {
+      let data = await bgPanda.dataObj(myId), stats = pandaUI.pandaStats[myId], good = false;
       const radioChecked = $(modalControl).find(`input[name='theJobs']:checked`).val();
-      if (radioChecked==="0") good = true;
-      else if (radioChecked==="1" && stats.collecting) good = true;
-      else if (radioChecked==="2" && !stats.collecting) good = true;
-      else if (radioChecked==="4" && options.once) good = true;
-      if (good && search!=="" && (options.title.toLowerCase().includes(search) || options.reqName.toLowerCase().includes(search))) good = true;
-      else if (good && search!=="") good = false;
-      return good;
-    } )
+      if (radioChecked === '0') good = true;
+      else if (radioChecked === '1' && stats.collecting) good = true;
+      else if (radioChecked === '2' && !stats.collecting) good = true;
+      else if (radioChecked === '3' && data.search) good = true;
+      else if (radioChecked === '4' && data.once) good = true;
+      if (good && search !== '' && (data.title.toLowerCase().includes(search) || data.reqName.toLowerCase().includes(search))) good = true;
+      else if (good && search !== '') good = false;
+      if (good) newArray.push(myId);
+    }
+    return newArray;
   }
   /** Shows a modal to list jobs filtered by a search term, collecting, search mode or once options.
    * @param  {string} [type='jobs']       - Showing just jobs or jobs for grouping?
@@ -301,25 +302,28 @@ class ModalJobClass {
     const inputControl = createInput(modalControl, '', 'pcm_searchJobs', 'Search phrase: ', 'example: receipts', (e) => {
       $(e.target).closest('.pcm_modalControl').find('.pcm_searchingJobs').click();
     }, ' pl-5');
-    $('<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>').on( 'click', (e) => {
+    $('<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>').on( 'click', async (e) => {
       $(modalBody).find('.pcm_jobTable').remove();
-      this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl), checkFunc, () => {});
+      let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
+      this.showJobsTable(modalBody, filtered, checkFunc, () => {});
       if (type==='groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm_selection_${bgPanda.dbIds[value]}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === 'jobs') $('<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>').click( (e) => {
       const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => Number(element.val())).get();
-      if (selected.length) pandaUI.removeJobs(selected, () => {
+      if (selected.length) pandaUI.removeJobs(selected, async () => {
           $(modalBody).find('.pcm_jobTable').remove();
-          this.showJobsTable(modalBody, this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl),_, () => {});
+          let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
+          this.showJobsTable(modalBody, filtered,_, () => {});
         });
     }).appendTo(inputControl);
     $(df).find('input:radio[name="theJobs"]').click( (e) => {
       $(e.target).closest('.pcm_modalControl').find('.pcm_searchingJobs').click();
     } );
-    modal.showModal(cancelFunc, () => {
+    modal.showModal(cancelFunc, async () => {
       $('<div class="pcm_modalControl w-100"></div>').append(df).insertBefore(modalBody);
       let df2 = document.createDocumentFragment();
-      this.showJobsTable(df2, this.jobsFilter('', modalControl), checkFunc, () => {});
+      let filtered = await this.jobsFilter('', modalControl);
+      this.showJobsTable(df2, filtered, checkFunc, () => {});
       $(df2).appendTo(modalBody);
       if (afterShow) afterShow(this);
     }, () => { if (afterClose) afterClose(); else modal = null; });

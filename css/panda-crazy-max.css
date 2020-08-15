@@ -27,7 +27,7 @@ html, body { height: 100%; }
   margin-top: 2px !important;
   margin-bottom: 3px !important;
   line-height:0.4 !important;
-  font-size:.775rem !important;
+  font-size:.75rem !important;
 }
 .pcm_hamButton { display: inline-block; }
 .pcm_hamButton.disabled { background-color: #A9A9A9; border-color: #808080; }
@@ -46,6 +46,7 @@ html, body { height: 100%; }
 .pcm_searching .pcm_searchCollect { background-color: #1ab71a; color: #FFFFFF; }
 .pcm_searching .pcm_searchOn { background-color: #1e581e; color: #a9fc79 !important; }
 .pcm_searching .pcm_searchDisable { background-color: #680e0e; color: #d7e0d1 !important; }
+.pcm_collectButton.pcm_collectDisable { background-color: #680e0e; color: #d7e0d1 !important; }
 .pcm_importButton { width:330px; }
 .pcm_importButton.disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
 .pcm_exportButton { width: 280px; }
@@ -252,3 +253,5 @@ html, body { height: 100%; }
 }
 #pcm_searchDetails .tab-pane { background-color: inherit; }
 .card-deck { margin-right: 0; margin-left: 0; }
+.selectable { -ms-user-select: auto; -moz-user-select: auto; -khtml-user-select: auto; -webkit-user-select: auto; user-select: auto; }
+.unSelectable { -moz-user-select: -moz-none; -khtml-user-select: none; -webkit-user-select: none; user-select: none; }

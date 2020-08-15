@@ -89,8 +89,8 @@ class SearchUI {
 	addToUI(data, status, name, unique) {
 		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '';
 		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status);
-		let body = $(`<div class='card-body p-0'></div>`).appendTo(card);
-		let text = $(`<div class='card-text p-0' id='output_${unique}'>`).appendTo(body);
+		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
+		let text = $(`<div class='card-text p-0' id='output_${unique}'>`).css('cursor', 'default').appendTo(body);
 		$(text).html(name);
 		this.multiple[data.type].push(card);
 	}

@@ -24,7 +24,7 @@ class MturkHitSearch extends MturkClass {
 		this.resultsBack = true;									// Used to make sure the last results from mturk has been processed.
 		this.loggedOff = false;         					// Are we logged off from mturk?
 		this.queueDbIds = [];											// Array of dbid's in memory which is limited by size to save memory use.
-		this.queueSize = 30;												// The number of trigger expanded info in memory.
+		this.queueSize = 30;											// The number of trigger expanded info in memory.
 		this.triggers = {};												// Object with info in memory for triggers. Stays in memory.
 		this.data = {};														// Object with all the data for triggers. Stays in memory.
 		this.options = {};												// Object with all the options for triggers. Memory limits enforced.
@@ -44,7 +44,7 @@ class MturkHitSearch extends MturkClass {
 		this.loaded = false;											// Has data been loaded from database?
 		if (timer) {
 			searchTimer.setMyClass(this);							// Tell timer what class is using it so it can send information back.
-			searchTimer.setTimer(timer);    					// Set timer for this timer.
+			searchTimer.theTimer(timer);    					// Set timer for this timer.
 		}
 		this.temps = 1;
     this.sorting = ["updated_desc", "updated_asc", "reward_asc", "reward_desc", "hits_asc", "hits_desc"];
@@ -105,7 +105,7 @@ class MturkHitSearch extends MturkClass {
 					await this.db.getFromDB(this.storeRulesName, dbId).then( async data => {
 						if (this.loaded && extSearchUI && trigger.searchUI) {
 							extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
-							if (!data.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI);
+							if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI);
 						} else if (!this.loaded) {
 							this.options[dbId] = options; this.data[dbId] = trigger; this.rules[dbId] = data.rules[data.ruleSet];
 							let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`;
@@ -136,7 +136,8 @@ class MturkHitSearch extends MturkClass {
 		const formatJson = (json) ? "&format=json" : ""; // add format json or not?
 		this.searchUrl = new UrlClass(`https://worker.mturk.com/?page_size=${pageSize}&filters%5Bqualified%5D=${onlyQual}&filters%5Bmasters%5D=${onlyMasters}&sort=${this.sort}&filters%5Bmin_reward%5D=${minReward}${formatJson}`);
 		this.searchGStats =  new SearchGStats();
-  }
+	}
+	timerChange(timer=null) { if (timer) return searchTimer.theTimer(timer); else return searchTimer.theTimer(); }
 	/** Removes all data from class to clear out memory as much as possible on exit.
 	 * @async - Just so things get cleared out before a restart. */
 	async removeAll() {

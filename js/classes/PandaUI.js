@@ -45,11 +45,8 @@ class PandaUI {
 		});
 	}
 	/** Delete the panda stats from the stat database for this panda with this unique ID and database ID.
-	 * @param  {number} myId - The unique ID for a panda job.
-	 * @param  {number} dbId - The unique database ID for a panda job. */
-	deleteFromStats(myId, dbId) {
-		this.pandaStats[myId].deleteIdFromDB(dbId);
-	}
+	 * @param  {number} myId - MyID @param  {number} dbId - Database ID */
+	deleteFromStats(myId, dbId) { this.pandaStats[myId].deleteIdFromDB(dbId); }
 	/** Loads up any panda jobs that are saved or saves default panda jobs if database was just created.
 	 * @async												- To wait for the tabs to completely load from the database.
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object. */
@@ -98,8 +95,9 @@ class PandaUI {
 					bgPanda.useDefault = false; bgPanda.nullData();
 				}
 			}
-      this.tabPandaHeight = $(`#pcm_pandaPanel`).height(); this.tabLogHeight = $(`#pcm_logPanel`).height();
-			this.windowHeight = window.innerHeight;
+			this.tabPandaHeight = $(`#pcm_pandaPanel`).height(); this.tabLogHeight = $(`#pcm_logPanel`).height(); this.windowHeight = window.innerHeight;
+			this.pandaGStats.setPandaTimer(bgPanda.timerChange()); pandaUI.pandaGStats.setHamTimer(bgPanda.hamTimerChange());
+			pandaUI.pandaGStats.setSearchTimer(bgSearch.timerChange()); pandaUI.pandaGStats.setQueueTimer(bgQueue.timerChange());
 		}
 		window.onresize = async (e) => { this.resizeTabContents(); }
 		this.resizeObserver = new ResizeObserver((entries) => this.panelResized(entries));
@@ -147,8 +145,7 @@ class PandaUI {
   /** Closes the logged off modal if it's opened. */
   nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
   /** Gets the status from the timer and shows the status on the page.
-   * @param  {bool} running - Represents the running status of the panda timer.
-   * @param  {bool} paused  - Represents if panda timer is paused or not. */
+   * @param  {bool} running - Running Status @param  {bool} paused - Paused Timer */
   collectingStatus(running, paused) {
     if (!running) this.pandaGStats.collectingOff();
 		if (paused) this.pandaGStats.collectingPaused(); else this.pandaGStats.collectingUnPaused();
@@ -213,8 +210,7 @@ class PandaUI {
 		$(`#pcm_hamButton_${myId}`).removeClass("pcm_delayedHam");
 		const previousColor = $(`#pcm_pandaCard_${myId}`).data("previousColor");
 		if (previousColor && !info.skipped) $(`#pcm_pandaCard_${myId}`).stop(true,true).removeData("previousColor").animate({"backgroundColor":previousColor},{duration:1000});
-		await bgPanda.updateDbData(myId, hitData);
-		this.logTabs.removeFromStatus(myId);
+		await bgPanda.updateDbData(myId, hitData); this.logTabs.removeFromStatus(myId);
 		if (deleteData && !info.skipped) info.data = null;
 		info.queueUnique = null; info.autoTGoHam = "off";
 	}
@@ -239,9 +235,7 @@ class PandaUI {
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
 	async removeJobs(jobsArr, afterFunc=null) {
 		let bodyText = "";
-		jobsArr.forEach( (thisId) => {
-			bodyText += "( "+$(`#pcm_hitReqName_${thisId}`).html()+" "+[$(`#pcm_hitPrice_${thisId}`).html()]+" )<BR>";
-		});
+		jobsArr.forEach( (thisId) => { bodyText += "( "+$(`#pcm_hitReqName_${thisId}`).html()+" "+[$(`#pcm_hitPrice_${thisId}`).html()]+" )<BR>"; });
 		modal = new ModalClass();
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
@@ -269,7 +263,7 @@ class PandaUI {
 	 * @param  {number} myId - The unique ID for a panda job. */
 	searchCollecting(myId) {
 		let pandaStat = this.pandaStats[myId];
-		pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaCollectingNow(myId);
+		pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaSearchCollectingNow(myId);
 	}
 	/** Show that this panda search job is disabled and not being searched anymore.
 	 * @param  {number} myId - The unique ID for a panda job. */
@@ -278,16 +272,13 @@ class PandaUI {
 		if (pandaStat) {
 			if (pandaStat.doSearching()) this.pandaGStats.subCollecting();
 			if (this.pandaGStats.collectingTotal.value < 1) this.pandaGStats.collectingOff();
-			pandaStat.doSearching(false); pandaStat.doCollecting(false); pandaStat.doSearchCollecting(false); this.cards.pandaDisabled(myId);
+			pandaStat.doSearching(false); pandaStat.doCollecting(false); pandaStat.doSearchCollecting(false); this.cards.pandaSearchDisabled(myId);
 		}
 	}
 	/** Show that this panda search job is being searched on the search page by the search class.
 	 * @param  {number} myId - The unique ID for a panda job. */
-	searchingNow(myId) {
-		let pandaStat = this.pandaStats[myId];
-		pandaStat.doSearching(true); this.cards.pandaSearchingNow(myId); }
+	searchingNow(myId) { let pandaStat = this.pandaStats[myId]; pandaStat.doSearching(true); this.cards.pandaSearchingNow(myId); }
 	/** When panda's are coming in externally too fast they need to delay collecting for 1600 milliseconds each.
-	 * This is a recursive method which will go through the delayed hitqueue and began collecting one by one.
 	 * @param  {number} [diff=null] - The difference of time since the last panda was added. */
 	async nextInDelayedQueue(diff=null) {
 		if (this.hitQueue.length>0) {
@@ -296,17 +287,14 @@ class PandaUI {
 				const obj = this.hitQueue.shift(); this.lastAdded = new Date().getTime();
 				let info = bgPanda.options(obj.myId), data = await bgPanda.dataObj(obj.myId);
 				info.autoAdded = true; data.hitsAvailable = obj.hitsAvailable;
-				this.cards.updateAllCardInfo(obj.myId, info);
-				this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
+				this.cards.updateAllCardInfo(obj.myId, info); this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
 				if (this.hitQueue.length===0) { this.lastAdded = null; this.delayedTimeout = null; }
 				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
 			} else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
 		} else this.delayedTimeout = null;
 	}
 	/** Run this panda after adding it to panda class with a temporary duration and temporary go ham duration.
-	 * @param  {number} myId 				 - The unique ID for a panda job.
-	 * @param  {number} tempDuration - The temporary duration to use for this panda job.
-	 * @param  {number} tempGoHam		 - The temporary go ham duration to use for this panda job. */
+	 * @param  {number} myId - Myid @param  {number} tempDuration - Temporary duration @param  {number} tempGoHam - Temporary go ham duration */
 	runThisPanda(myId, tempDuration, tempGoHam) {
 		let hitInfo = bgPanda.options(myId), diff = null;
 		bgPanda.checkIfLimited(myId, false, hitInfo.data);
@@ -329,11 +317,8 @@ class PandaUI {
 		if (msg.groupId !== '' && msg.reqId !== '') {
 			if (msg.command.slice(-7) === 'collect') {
 				let myId = null;
-				if (msg.groupId != '' && bgPanda.pandaGroupIds.hasOwnProperty(msg.groupId)) {
-					myId = bgPanda.pandaGroupIds[msg.groupId][0];
-				} else if (msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) {
-					myId = bgPanda.searchesReqIds[msg.reqId][0];
-				}
+				if (msg.groupId != '' && bgPanda.pandaGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.pandaGroupIds[msg.groupId][0];
+				else if (msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
 				if (myId && msg.command.includes('stop')) this.stopCollecting(myId);
 				else if (myId) this.startCollecting(myId);
 			} else {
@@ -366,7 +351,7 @@ class PandaUI {
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
 		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : r.hamDuration;
 		let dO = dataObject(r.groupId, r.description, r.title, r.reqId, r.reqName, r.price, r.hitsAvailable, r.assignedTime, r.expires, r.friendlyTitle, r.friendlyReqName);
-		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone);
+		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone, r.disabled);
 		let dbInfo = {...dO, ...oO, 'id':r.id, 'dateAdded':r.dateAdded, 'totalSeconds':r.totalSeconds, 'totalAccepted':r.totalAccepted};
 		await bgPanda.addPanda(dbInfo, false, {},_,_, update, true, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
 	}
@@ -461,12 +446,10 @@ class PandaUI {
 	async resetDailyStats() {
 		await bgPanda.getAllPanda(false);
 		for (const key of Object.keys(this.pandaStats)) {
-			this.pandaStats[key].setDailyStats();
-			let data = bgPanda.data(key);
+			this.pandaStats[key].setDailyStats(); let data = bgPanda.data(key);
 			data.day = new Date().getTime(); data.dailyDone = 0;
 		}
-		bgHistory.maintenance();
-		bgPanda.nullData(false, true);
+		bgHistory.maintenance(); bgPanda.nullData(false, true);
 	}
 	/** Returns the total number recorded of hits in queue.
 	 * @param  {string} gId='' - Group ID to search for and count the hits in queue.
@@ -494,11 +477,10 @@ class PandaUI {
 		if (isNewDay()) await this.resetDailyStats();
 		this.logTabs.updateQueue(queueResults);
 	}
+	submittedHit(taskId) { this.logTabs.removeFromQueue(taskId); }
+	setEarnings(earnings) { this.pandaGStats.thePotentialEarnings(earnings); }
+	addToEarnings(addThis) { this.pandaGStats.thePotentialEarnings(NUmber(this.pandaGStats.thePotentialEarnings()) + Number(addThis)); }
 	/** Halt this script with an error message.
-	 * @param  {object} error				 - The full Error object that gets displayed in the console.
-	 * @param  {string} alertMessage - The message that gets displayed on the page and console.
-	 * @param  {string} title				 - The title to display on the page for the error. */
-	haltScript(error, alertMessage, title) {
-		haltScript(error, alertMessage, null, title);
-	}
+	 * @param  {object} error - Error Object @param  {string} alertMessage - Alert Message @param  {string} title - Title. */
+	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }
 }

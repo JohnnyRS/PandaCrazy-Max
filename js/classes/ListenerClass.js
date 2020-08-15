@@ -9,7 +9,8 @@ class ListenerClass {
       console.log(JSON.stringify(request), sender);
       let command = request.command;
       if (command.substring(0, 3) === "add" || command.slice(-7) === 'collect') { pandaUI.addFromExternal(request); }
-      else if (request.command === 'projectedEarnings') { console.log('earnings: ',request.data.projectedEarnings); }
+      else if (request.command === 'projectedEarnings') { pandaUI.setEarnings(request.data.projectedEarnings); }
+      else if (request.command === 'submitted') { pandaUI.submittedHit(request.taskId); }
     });
   }
 }

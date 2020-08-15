@@ -215,52 +215,73 @@ class PandaCards {
   /** Show that the card is searching for hits.
    * @param  {number} myId - The unique ID for a panda job. */
   pandaSearchingNow(myId) { this.cards[myId].pandaSearchingNow(this.values); }
-  /** Show that the card is collecting now.
-   * @param  {number} myId - The unique ID for a panda job. */
-  pandaCollectingNow(myId) { this.cards[myId].pandaCollectingNow(this.values); }
   /** Show that the card is disabled now.
    * @param  {number} myId - The unique ID for a panda job. */
-  pandaDisabled(myId) { this.cards[myId].pandaDisabled(this.values); }
+  pandaSearchDisabled(myId) { this.cards[myId].pandaSearchDisabled(this.values); }
+  /** Show that the card is collecting now.
+   * @param  {number} myId - The unique ID for a panda job. */
+  pandaSearchCollectingNow(myId) { this.cards[myId].pandaSearchCollectingNow(this.values); }
+  /** Show that the card is collecting now.
+   * @param  {number} myId - The unique ID for a panda job. */
+  async pandaEnabled(myId) {
+    this.cards[myId].pandaEnabled(this.values); let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
+    info.disabled = false; data.disabled = false; bgPanda.updateDbData(null, data);
+  }
+  /** Show that the card is disabled now.
+   * @param  {number} myId - The unique ID for a panda job. */
+  async pandaDisabled(myId) {
+    this.cards[myId].pandaDisabled(this.values); let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
+    info.disabled = true; data.disabled = true; bgPanda.updateDbData(null, data);
+  }
 	/** Binds events to all cards on page. Will unbind any events too so won't double events. */
 	cardButtons() {
 		$(`.pcm_pandaCard`).unbind('click').click( e => {
 			let card = $(e.target).closest('.card'), theButton = card.find(".pcm_deleteButton"), myId = card.data('myId');
 			theButton.css("background-color", "");
 			if (e.ctrlKey) {
-				if (this.ctrlDelete.includes(myId)) { theButton.css("background-color", ""); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
-				else { theButton.css("background-color", "red"); this.ctrlDelete.push(myId); }
-			} else if (e.altKey) { this.ctrlDelete.length = 0; $(".pcm_deleteButton").css("background-color", ""); }
-			theButton = card = null;
+				if (this.ctrlDelete.includes(myId)) { theButton.css('background-color', ''); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
+				else { theButton.css('background-color', 'red'); this.ctrlDelete.push(myId); }
+			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css('background-color', ''); }
+			theButton = null; card = null;
 		})
 		$(`.pcm_collectButton, .pcm_collectButton1`).unbind('click').click( async (e) => {
-			let theButton = $(e.target).closest(".btn"), card = $(e.target).closest('.card');
-			let myId = card.data('myId'), stopped = card.data('stopped');
-			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
-			if (stopped === "noQual" || stopped === "blocked") {
-				if (pandaUI.pandaStats[myId].collecting) await pandaUI.stopCollecting(myId, "manual");
-			} else if (theButton.is(".pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable")) {
-				info.autoAdded = false;
-				if (info.search !== 'rid') await pandaUI.startCollecting(myId, false, (info.search === 'gid') ? 10000 : 0);
-				else if (info.search === 'rid') {
-					$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-					$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-          pandaUI.pandaGStats.addCollecting(); pandaUI.pandaGStats.collectingOn();
-					bgPanda.doSearching(myId, null, 10000);
-        }
-      } else if (info.search === 'rid') bgPanda.disableSearching(myId);
-			else pandaUI.stopCollecting(myId, "manual");
-			theButton = card = null;
-		});
+      let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
+      if (theButton.data('longClicked')) theButton.removeData('longClicked');
+      else {
+        let myId = card.data('myId'), stopped = card.data('stopped'), info = bgPanda.options(myId);
+        if (stopped === 'noQual' || stopped === 'blocked') {
+          if (pandaUI.pandaStats[myId].collecting) await pandaUI.stopCollecting(myId, 'manual');
+        } else if (theButton.is('.pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable')) {
+          info.autoAdded = false;
+          if (info.search !== 'rid') await pandaUI.startCollecting(myId, false, (info.search === 'gid') ? 10000 : 0);
+          else if (info.search === 'rid') {
+            $(`#pcm_collectButton_${myId}`).removeClass('pcm_buttonOff').removeClass('pcm_searchDisable').addClass('pcm_buttonOn');
+            $(`#pcm_collectButton1_${myId}`).removeClass('pcm_buttonOff').removeClass('pcm_searchDisable').addClass('pcm_buttonOn');
+            pandaUI.pandaGStats.addCollecting(); pandaUI.pandaGStats.collectingOn();
+            bgPanda.doSearching(myId, null, 10000);
+          }
+        } else if (info.search === 'rid') bgPanda.disableSearching(myId);
+        else pandaUI.stopCollecting(myId, 'manual');
+        theButton = card = null;
+      }
+		}).mayTriggerLongClicks({ delay: 500 }).unbind('longClick').on('longClick', async (e) => {
+      let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
+      if (!card.is('.pcm_searchOn')) {
+        let myId = card.data('myId'); theButton.data('longClicked', true);
+        if (theButton.is('.pcm_collectDisable')) this.pandaEnabled(myId); else this.pandaDisabled(myId);
+        theButton = null; card = null;
+      }
+    });
 		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click( async(e) => { 
-			let theButton = $(e.target).closest(".btn"), myId = $(e.target).closest('.card').data('myId');
-			if (theButton.data("longClicked")) { theButton.removeData("longClicked"); theButton.css({"background-color": "", "color": ""});}
+			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
+			if (theButton.data('longClicked')) { theButton.removeData('longClicked'); theButton.css({'background-color': '', 'color': ''});}
 			else { pandaUI.hamButtonClicked(myId, theButton); }
 			theButton = null;
-		}).mayTriggerLongClicks({ delay: 1200 }).unbind('longClick').on('longClick', async (e) => {
-			let theButton = $(e.target).closest(".btn"), myId = $(e.target).closest('.card').data('myId');
+		}).mayTriggerLongClicks({ delay: 900 }).unbind('longClick').on('longClick', async (e) => {
+			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
 			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
-			theButton.data("longClicked",true);
-			if (theButton.hasClass("pcm_delayedHam")) {
+			theButton.data('longClicked', true);
+			if (theButton.hasClass('pcm_delayedHam')) {
 				theButton.css({"background-color":this.hamBtnBgColor, "color":this.hamBtnColor}).removeClass("pcm_delayedHam");
 				info.autoTGoHam = (data.autoGoHam) ? "disable" : "off";
 			} else { 
@@ -380,17 +401,25 @@ class PandaCard {
     let cl = val.collectBtn.class; this.df.find(cl).html("-Searching-");
     this.df.find(cl, cl + '1').removeClass("pcm_searchCollect pcm_searchDisable").addClass("pcm_searchOn");
   }
+  /** Disable this search panda.
+   * @param  {object} val - The object with the values for classes and text for this card. */
+  pandaSearchDisabled(val) {
+    let cl = val.collectBtn.class; this.df.find(cl).html("-Disabled-");
+    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
+  }
   /** Mark this search panda as collecting as a regular panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
-  pandaCollectingNow(val) {
+  pandaSearchCollectingNow(val) {
     let cl = val.collectBtn.class; this.df.find(cl).html("-Collecting-");
     this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_searchDisable").addClass("pcm_searchCollect");
   }
-  /** Disable this search panda.
-   * @param  {object} val - The object with the values for classes and text for this card. */
   pandaDisabled(val) {
     let cl = val.collectBtn.class; this.df.find(cl).html("-Disabled-");
-    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
+    this.df.find(cl, cl + '1').addClass('pcm_collectDisable');
+  }
+  pandaEnabled(val) {
+    let cl = val.collectBtn.class; this.df.find(cl).html("Collect");
+    this.df.find(cl, cl + '1').removeClass("pcm_collectDisable");
   }
   /** Adds a string to or changes the collect help tip.
    * @param  {object} val         - The object with the values for classes and text for this card.
