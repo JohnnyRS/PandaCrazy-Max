@@ -3,7 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class PandaUI {
   constructor () {
-		this.cards = new PandaCards();
+		this.cards = new PandaCards();					// Class that handles the job cards and the display of info on the cards.
 		this.hitQueue = [];											// Array of panda's to add delayed when multiple panda's get added at once.
 		this.lastAdded = null;									// The time the last hit got added to delay adding hits slowly.
 		this.hamBtnBgColor = "";								// Default value for background color of the ham button from css file.
@@ -16,14 +16,13 @@ class PandaUI {
 		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database.
 		this.collectStore = "collectionStore";	// Name for collection times storage in database.
 		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database.
-    this.tabPandaHeight = 0;
-		this.tabLogHeight = 0;
-		this.windowHeight = 0;
-		this.windowChanged = true;
-		this.resizeObserver = null;
-		this.dbStats = new DatabaseClass(this.dbStatsName, 1); // The stat database for logging of panda stats.
-		this.listener = new ListenerClass();
-		this.modalJob = null;
+    this.tabPandaHeight = 0;								// Panda tab row's height.
+		this.tabLogHeight = 0;									// Log tab row's height.
+		this.windowHeight = 0;									// Window height.
+		this.resizeObserver = null;							// Observer for window size changes so size of panels can be changed.
+		this.dbStats = new DatabaseClass(this.dbStatsName, 1);  // The stat database for logging of panda stats.
+		this.listener = new ListenerClass();									  // Listener class for any message listens.
+		this.modalJob = null;																		// Modal Job class.
 	}
 	/** Gets the total hits in the queue.
    * @return {number} - Total hits in the queue. */
@@ -53,12 +52,8 @@ class PandaUI {
 	async prepare(afterFunc) {
 		let success = [], err = null;
 		this.openStatsDB();
-		this.tabs = new TabbedClass(			// Add in all the panda tabbed ID's for easy access to UI
-			$(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
-		this.cards.prepare(this.tabs);
-		this.logTabs = new LogTabsClass(); 		// Functions dealing with the tabs in UI
-		this.logTabs.updateCaptcha(globalOpt.getCaptchaCount());			// Show captcha count on bottom tabs
-		this.pandaGStats = new PandaGStats();												// Global stats for panda's
+		this.tabs = new TabbedClass($(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
+		this.cards.prepare(this.tabs); this.logTabs = new LogTabsClass(); this.logTabs.updateCaptcha(globalOpt.getCaptchaCount()); this.pandaGStats = new PandaGStats();
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			let oO = optObject(_,_,_,_,_,_,_,_, globalOpt.getHamDelayTimer());
@@ -200,7 +195,7 @@ class PandaUI {
 		let info = bgPanda.options(myId), classToo = '', pandaStat = this.pandaStats[myId];
 		if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
 		if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
-		let theStats = pandaStat.stopCollecting();
+		let theStats = pandaStat.stopCollecting(); this.pandaGStats.collectingOff();
 		info.data.totalSeconds += theStats.seconds; info.data.totalAccepted += theStats.accepted;
 		let hitData = Object.assign({}, info.data); // Make a copy of data.
 		bgPanda.stopCollecting(myId, hitData, whyStop);
@@ -220,13 +215,12 @@ class PandaUI {
 	 * @param  {function} [animate=true]	 - Should animation be used when removing a card?
 	 * @param  {function} [deleteDB=true]	 - Should the database be deleted too? */
 	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true) {
-		let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
-		this.tabs.removePosition(data.tabUnique, options.dbId);
+		let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
 		if (deleteDB) await this.stopCollecting(myId, null, false)
 		this.cards.removeCard(myId, async () => {
 			await bgPanda.removePanda(myId, deleteDB);
 			delete this.pandaStats[myId];
-			this.pandaGStats.subPanda();
+			if (data.search) this.pandaGStats.subSearch(); else this.pandaGStats.subPanda();
 			if (afterFunc!==null) afterFunc();
 		}, animate);
 	}
@@ -240,19 +234,15 @@ class PandaUI {
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
-				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => {
-					let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc);
-				}, rejected => console.error(rejected));
+				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc); },
+					rejected => console.error(rejected));
 			});
-			modal.closeModal();
-			jobsArr.length = 0;
+			modal.closeModal(); jobsArr.length = 0;
 		}, null, () => { jobsArr.length = 0; $(".pcm_deleteButton").css("background-color", ""); });
 	}
 	/** Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
-	 * @param  {number} myId 						- The unique ID for a panda job.
-	 * @param  {object} targetBtn				- The ham button that was clicked.
-	 * @param  {bool} [autoGoHam=false] - Should this ham button show it started automatically? */
+	 * @param  {number} myId - Unique ID @param  {object} targetBtn - Ham button @param  {bool} [autoGoHam=false] - Auto Go Ham? */
 	hamButtonClicked(myId, targetBtn, autoGoHam=false) {
 		let options = bgPanda.options(myId);
 		if (!this.pandaStats[myId].collecting) { this.startCollecting(myId, !autoGoHam); }
@@ -262,8 +252,7 @@ class PandaUI {
 	/** Show that this panda search job is collecting in panda mode.
 	 * @param  {number} myId - The unique ID for a panda job. */
 	searchCollecting(myId) {
-		let pandaStat = this.pandaStats[myId];
-		pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaSearchCollectingNow(myId);
+		let pandaStat = this.pandaStats[myId]; pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaSearchCollectingNow(myId);
 	}
 	/** Show that this panda search job is disabled and not being searched anymore.
 	 * @param  {number} myId - The unique ID for a panda job. */
@@ -380,28 +369,21 @@ class PandaUI {
 		}
 	}
 	/** Add this panda job to the panda UI with a card and stats.
-	 * @param  {number} myId 				   - The unique ID for a panda job.
-	 * @param  {object} pandaInfo		   - The information data for this panda.
-	 * @param  {object} newAddInfo		 - The new information data for this panda.
-	 * @param  {bool} [loaded=false]   - Was this loaded from the database or not?
-	 * @param  {bool} [multiple=false] - Are multiple panda's being loaded at once?
-	 * @return {number}							   - The unique ID for this panda job. */
+	 * @param  {number} myId 				 - Unique ID        @param  {object} pandaInfo		  - Panda Info     @param  {object} newAddInfo - New Info
+	 * @param  {bool} [loaded=false] - Database loaded? @param  {bool} [multiple=false] - Multiple jobs?
+	 * @return {number}							 - The unique ID for this panda job. */
 	addPandaToUI(myId, pandaInfo, newAddInfo, loaded=false, multiple=false) {
-		this.cards.addCard(myId, pandaInfo, loaded, multiple);
-		this.pandaStats[myId] = new PandaStats(myId, pandaInfo.dbId);
+		this.cards.addCard(myId, pandaInfo, loaded, multiple); this.pandaStats[myId] = new PandaStats(myId, pandaInfo.dbId);
 		if (pandaInfo.data.dailyDone > 0) this.pandaStats[myId].setDailyStats(pandaInfo.data.dailyDone);
 		if (pandaInfo.search && (loaded || (newAddInfo && !newAddInfo.run))) this.searchDisabled(myId);
-		this.pandaGStats.addPanda();
+		if (pandaInfo.search) this.pandaGStats.addSearch(); else this.pandaGStats.addPanda();
 		if (!multiple) {
-			this.cards.appendDoc(pandaInfo.data.tabUnique);
-			this.pandaStats[myId].updateAllStats(this.cards.get(myId));
+			this.cards.appendDoc(pandaInfo.data.tabUnique); this.pandaStats[myId].updateAllStats(this.cards.get(myId));
 			if (bgPanda.isTimerGoingHam()) $(`#pcm_hamButton_${myId}`).addClass("disabled");
 			if (newAddInfo) {
-				if ((pandaInfo.search === 'gid' || pandaInfo.search === null) && newAddInfo.run)
-					this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
+				if ((pandaInfo.search === 'gid' || pandaInfo.search === null) && newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
 				else if (pandaInfo.search === 'rid' && newAddInfo.run) {
-					this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn();
-					bgPanda.doSearching(myId, pandaInfo.data, 10000);
+					this.pandaGStats.addCollecting(); this.pandaGStats.collectingOn(); bgPanda.doSearching(myId, pandaInfo.data, 10000);
 				}
 			}
 			this.cards.cardButtons();
@@ -409,17 +391,13 @@ class PandaUI {
     return myId;
   }
   /** When a hit accepted set up the stats and display it on the card.
-   * @param  {number} myId 				- The unique ID for a panda job.
-   * @param  {number} queueUnique - The timer unique ID that this hit was accepted from.
-   * @param  {object} html 				- The html received from the fetch result.
-   * @param  {object} url					- The url which was received by a fetch result. */
+   * @param  {number} myId - Unique ID @param  {number} queueUnique - Queue ID @param  {object} html - Html object @param  {object} url - url */
 	hitAccepted(myId, queueUnique, html, url) {
 		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
     this.pandaGStats.addTotalAccepted(); this.cards.highlightEffect_card(myId);
 		let pandaInfo = bgPanda.options(myId);
     this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
-    if (pandaInfo.autoTGoHam !== "disable" &&
-       (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
+    if (pandaInfo.autoTGoHam !== "disable" && (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
       bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration * 1000);
     }
     bgPanda.resetTimerStarted(queueUnique);
@@ -430,13 +408,10 @@ class PandaUI {
 		let formInfo = formUrl.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
     bgPanda.authenticityToken = auth_token.val();
 		let hitDetails = JSON.parse(rawProps).modalOptions;
-		hitDetails.task_id = formInfo[2];
-		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data);
+		hitDetails.task_id = formInfo[2]; hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data);
 		bgPanda.queueAddAccepted(pandaInfo, hitDetails);
 		this.logTabs.addIntoQueue(pandaInfo, hitDetails, pandaInfo.data, url.replace("https://worker.mturk.com",''));
-		this.logTabs.addToLog(pandaInfo.data);
-		this.updateLogStatus(myId, 0, pandaInfo.data);
-		bgPanda.checkIfLimited(myId, true, pandaInfo.data);
+		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data); bgPanda.checkIfLimited(myId, true, pandaInfo.data);
 		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
 		alarms.doAlarms(pandaInfo.data);
 		targetDiv = rawProps = auth_token = formUrl = formInfo = hitDetails = null;
@@ -446,8 +421,7 @@ class PandaUI {
 	async resetDailyStats() {
 		await bgPanda.getAllPanda(false);
 		for (const key of Object.keys(this.pandaStats)) {
-			this.pandaStats[key].setDailyStats(); let data = bgPanda.data(key);
-			data.day = new Date().getTime(); data.dailyDone = 0;
+			this.pandaStats[key].setDailyStats(); let data = bgPanda.data(key); data.day = new Date().getTime(); data.dailyDone = 0;
 		}
 		bgHistory.maintenance(); bgPanda.nullData(false, true);
 	}
@@ -463,13 +437,8 @@ class PandaUI {
 	/** Notifies the user that they can't accept any more hits for today. */
 	mturkLimit() { if (globalOpt.isNotifications()) notify.showDailyLimit(); }
 	/** Updates the status log tab on the bottom with relevant information.
-	 * @param  {number} myId					 - The unique ID for a panda job.
-	 * @param  {number} milliseconds	 - The elapsed time since job last tried to get a hit.
-	 * @param  {object} [changes=null] - Changes for this job that needs to be shown on the status log tab. */
-	updateLogStatus(myId, milliseconds, changes=null) {
-		const stats = (changes) ? null : this.pandaStats[myId];
-		this.logTabs.updateLogStatus(stats, myId, milliseconds, changes);
-	}
+	 * @param  {number} myId - The unique ID @param  {number} milliseconds - Elapsed time @param  {object} [changes=null] - Stat changes to make */
+	updateLogStatus(myId, milliseconds, changes=null) { const stats = (changes) ? null : this.pandaStats[myId]; this.logTabs.updateLogStatus(stats, myId, milliseconds, changes); }
 	/** Save the queue results received after making sure the groupings are checked for start times to start.
 	 * @param  {object} queueResults - Object from the mturk queue with all the hits information. */
 	async gotNewQueue(queueResults) {
@@ -477,9 +446,12 @@ class PandaUI {
 		if (isNewDay()) await this.resetDailyStats();
 		this.logTabs.updateQueue(queueResults);
 	}
-	submittedHit(taskId) { this.logTabs.removeFromQueue(taskId); }
+	/** A hit was submitted.
+	 * @param  {string} taskId - The task ID of hit submitted. */
+	submittedHit(taskId) { this.logTabs.removeFromQueue(taskId); this.pandaGStats.addSubmitted(); }
+	/** Set the value of the potential earnings from mturk.
+	 * @param  {string} earnings - Earnings value from mturk. */
 	setEarnings(earnings) { this.pandaGStats.thePotentialEarnings(earnings); }
-	addToEarnings(addThis) { this.pandaGStats.thePotentialEarnings(NUmber(this.pandaGStats.thePotentialEarnings()) + Number(addThis)); }
 	/** Halt this script with an error message.
 	 * @param  {object} error - Error Object @param  {string} alertMessage - Alert Message @param  {string} title - Title. */
 	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }

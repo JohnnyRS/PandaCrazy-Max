@@ -112,9 +112,8 @@ class MturkPanda extends MturkClass {
 		);
 	}
 	/** Adds data to the database and sets the id in info to the key resolved from database.
-	 * @async													 - To wait for the adding of data in the database.
-	 * @param  {object} newData 			 - The new data to be added to the database.
-	 * @param  {bool} [multiple=false] - Does the data object have multiple items to add? */
+	 * @async										- To wait for the adding of data in the database.
+	 * @param  {object} newData - New data @param  {bool} [multiple=false] - Does the data object have multiple items to add? */
 	async addToDB(newData, multiple=false) {
 		await this.db.addToDB(this.storeName, newData).then( id => {
 			if (!multiple) newData.id = id;
@@ -123,9 +122,8 @@ class MturkPanda extends MturkClass {
 		);
 	}
 	/** Updates the data for this panda using the unique ID. Key should already be in the data object.
-	 * @async													 - To wait for the updating of data in the database
-	 * @param  {number} myId					 - The unique ID for a panda job.
-	 * @param  {object} [newData=null] - Object to update panda with or use the data in the panda info object. */
+	 * @async									- To wait for the updating of data in the database
+	 * @param  {number} myId	- TUnique ID @param  {object} [newData=null] - Object to update panda with or use the data in the panda info object. */
 	async updateDbData(myId, newData=null) {
 		await this.db.addToDB(this.storeName, (newData) ? newData : this.info[myId].data).then( id => newData.id = id,
 			rejected => { extPandaUI.haltScript(rejected, 'Failed updating data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
@@ -197,8 +195,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {object} infoObj - The object with all the timer status. */
 	timerInfo(infoObj) {
 		if (extPandaUI) {
-			if (infoObj.goingHam!==null) extPandaUI.cards.hamButtonOn(infoObj.myIdHam);
-			else extPandaUI.cards.hamButtonsOff();
+			if (infoObj.goingHam!==null) extPandaUI.cards.hamButtonOn(infoObj.myIdHam); else extPandaUI.cards.hamButtonsOff();
 			extPandaUI.collectingStatus(infoObj.running, infoObj.paused);
 		}
 	}

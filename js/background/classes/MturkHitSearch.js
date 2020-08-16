@@ -184,8 +184,7 @@ class MturkHitSearch extends MturkClass {
 			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed) => {
 				if (this.liveCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, dbId);
 				else {
-					if (this.searchGStats.isSearchOn()) extSearchUI.stopSearching();
-					else this.stopSearching();
+					if (this.searchGStats.isSearchOn()) extSearchUI.stopSearching(); else this.stopSearching();
 				}
 			});
 		}
@@ -333,7 +332,8 @@ class MturkHitSearch extends MturkClass {
 		if (dbId) {
 			let disabled = (this.triggers[dbId].status === 'disabled') ? true : false;
 			this.setDisabled(this.data[dbId].type, this.data[dbId].value, !disabled);
-			this.triggers[dbId].status = (disabled) ? 'searching' : 'disabled';
+			this.triggers[dbId].status = (disabled) ? 'searching' : 'disabled'; this.data[dbId].disabled = !disabled;
+			this.updateToDB(this.storeName, this.data[dbId]);
 			return this.triggers[dbId].status;
 		} else return null;
 	}
@@ -433,9 +433,8 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {bool} [sUI=true] - The UI that is being closed. */
 	originRemove(sUI=true) {
 		let setName = (sUI) ? 'fromSearch' : 'fromPanda';
-		for (const dbId of this[setName]) {
-			this.removeTrigger(dbId,_, sUI);
-		}
+		for (const dbId of this[setName]) { this.removeTrigger(dbId,_, sUI); }
+		if (sUI) this.loaded = false;
 	}
   /** Fetches the url for this search after timer class tells it to do so and handles mturk results.
 	 * Can detect logged out, pre's and good search results.

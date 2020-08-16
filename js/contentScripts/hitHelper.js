@@ -161,7 +161,7 @@ function buttonsSend2(command) {
 }
 /** Parses a URL with no assignment ID attached so must be a preview. */
 function doPreview() { console.log('doPreview page');
-  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings();
+  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted();
   let span = addButtons();
   span.find('.pcm-button').css({"font-size":"9px","line-height":"8px","padding":"1px","color":"black"});
   $('.project-detail-bar:first .task-project-title:first').append(span);

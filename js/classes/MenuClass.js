@@ -95,15 +95,15 @@ class MenuClass {
        {'type':'item', 'label':'Create by Selection', 'menuFunc': () => { groupings.createInstant(true); }, 'tooltip':'Create a grouping by selecting the jobs you want to start at same time.'},
        {'type':'item', 'label':'Create Instantly', 'menuFunc': () => { groupings.createInstant(); }, 'tooltip':'Create a grouping with any jobs running now with default name and description'},
        {'type':'item', 'label':'Edit', 'menuFunc': () => { groupings.showGroupingsModal(pandaUI); }, 'tooltip':'Start, stop or edit groupings you have added'}]);
-    this.addMenu(topMenu, '1', (e) => { this.changeTheTimer(e, globalOpt.useTimer1()); }, 'Change timer to the Main Timer', 'pcm-topMenuBtn pcm_timerButton pcm_buttonOn');
-    this.addMenu(topMenu, '2', (e) => { this.changeTheTimer(e, globalOpt.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-topMenuBtn pcm_timerButton');
-    this.addMenu(topMenu, '3', (e) => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-topMenuBtn pcm_timerButton');
+    this.addMenu(topMenu, '1', (e) => { this.changeTheTimer(e, globalOpt.useTimer1()); }, 'Change timer to the Main Timer', 'pcm-topMenuBtn pcm_timerButton pcm_buttonOn mainTimer');
+    this.addMenu(topMenu, '2', (e) => { this.changeTheTimer(e, globalOpt.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-topMenuBtn pcm_timerButton secondTimer');
+    this.addMenu(topMenu, '3', (e) => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-topMenuBtn pcm_timerButton thirdTimer');
     this.addSubMenu(topMenu, '',
       [{'type':'item', 'label':'Edit Timers', 'menuFunc': () => { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
        {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm_timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
        {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm_timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
        {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm_timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
-       {'type':'item', 'menuFunc': () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}]);
+       {'type':'item', 'menuFunc': () => { let currentTimer = globalOpt.timerUsed; $(`.pcm_timerButton.${currentTimer}:first`).click(); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}]);
       this.addMenu(topMenu, 'Options', () => { globalOpt.showGeneralOptions(); }, 'Change Global, Alarms or timer Options', 'pcm-topMenuBtn');
       this.addSubMenu(topMenu, '',
       [{'type':'item', 'label':'General', 'menuFunc':() => { globalOpt.showGeneralOptions(); }, 'tooltip':'Change the general options'},
@@ -121,7 +121,7 @@ class MenuClass {
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.');
     this.addMenu(group, 'Add Job', () => { pandaUI.showJobAddModal(); }, 'Add a Panda or Search Job.');
     this.addSeparator(group, ' - ');
-    this.addMenu(group, 'Reset Timer', () => { this.changeTheTimer(null, globalOpt.getCurrentTimer()); }, 'Reset the current timer to the original time.' );
+    this.addMenu(group, 'Reset Timer', () => { let currentTimer = globalOpt.timerUsed; $(`.pcm_timerButton.${currentTimer}:first`).click(); }, 'Reset the current timer to the original time.' );
     this.addMenu(group, 'Search Jobs', () => { pandaUI.showJobsModal(); }, 'Search the Panda Jobs Added' );
     this.addMenu(group, 'Search Mturk', () => {} );
     quickMenu = null; group = null;

@@ -96,11 +96,10 @@ class LogTabsClass {
   removeFromQueue(taskId) {
     let theIndex = this.taskIds.indexOf(taskId);
     if (!this.queueUpdating && theIndex !== -1) {
-      this.queueUpdating = true; this.queueTotal = Math.max(this.queueTotal - 1, 0);
-      delete this.taskInfo[taskId]; this.taskIds.splice(theIndex, 1); this.groupIds.splice(theIndex, 1); this.payRate.splice(theIndex, 1);
+      this.queueUpdating = true; delete this.taskInfo[taskId]; this.taskIds.splice(theIndex, 1); this.groupIds.splice(theIndex, 1); this.payRate.splice(theIndex, 1);
+      this.queueTotal = Math.max(this.queueTotal - 1, 0);
       this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal} - $${this.totalResults()}`);
-      $(`#pcm_TI_${taskId}`).remove();
-      this.queueUpdating = false;
+      $(`#pcm_TI_${taskId}`).remove(); this.queueUpdating = false;
     }
   }
   /** Add a new hit accepted into the queue in the correct position according to seconds left.
@@ -140,8 +139,7 @@ class LogTabsClass {
       this.queueUpdating = true;
       let prevHits = this.queueContent.find("div");
       if (queueResults.length === 0 && prevHits.length > 0) {
-        this.queueContent.empty(); this.taskIds = []; this.groupIds = []; this.payRate = []; this.taskInfo = {};
-        this.queueTotal = queueResults.length;
+        this.queueContent.empty(); this.taskIds = []; this.groupIds = []; this.payRate = []; this.taskInfo = {}; this.queueTotal = 0;
       } else if (queueResults.length > 0) {
         let counter = 0, theSame = true;
         for (const value of queueResults) {
