@@ -38,8 +38,11 @@ class PandaGStats {
 		if (text === '') {
 			if (statObj.disabled === true) $(statObj.id).hide();
 			else {
-				$(statObj.id).show().html(`${statObj.string}${statObj.value}${statObj.post}`);
-				if (statObj.updateEffect) $(statObj.id).stop(true,true).css('color','Tomato').animate({'color':'#f3fd7d'}, 3500);
+				let newValue = `${statObj.string}${statObj.value}${statObj.post}`;
+				if ($(statObj.id).html() !== newValue) {
+					$(statObj.id).show().html(newValue);
+					if (statObj.updateEffect) $(statObj.id).stop(true,true).css('color','Tomato').animate({'color':'#f3fd7d'}, 3500);
+				}
 			}
 		} else $(statObj.id).show().html(text);
 	}

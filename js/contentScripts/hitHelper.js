@@ -28,21 +28,14 @@ function parseCommands(command, data) {
     case 'unpause':
       bgPanda.pauseToggle(false);
       break;
-    case 'acceptedhit':
-    case 'returned':
-    case 'submitted':
+    case 'acceptedhit': case 'returned': case 'submitted':
       sendToExt(command, data, data.groupId,_,_,_,_, data.pay,_,_, data.assignmentId, data.hitId);
       break;
-    case 'externalrun':
-    case 'externalstop':
-    case 'externalpong':
+    case 'externalrun': case 'externalstop': case 'externalpong':
       break;
-    case 'getQueueData':
-    case 'queueData':
-    case 'projectedEarnings':
+    case 'getQueueData': case 'queueData': case 'projectedEarnings':
       break;
-    case 'startgroup':          // Start a grouping
-    case 'stopgroup':           // Stop a grouping
+    case 'startgroup': case 'stopgroup':
       break;
     case 'startcollect':        // Start collecting a job with group ID or search job with requester ID.
     case 'stopcollect':         // Stop collecting a job with group ID or search job with requester ID.
@@ -55,10 +48,11 @@ function parseCommands(command, data) {
 }
 /** Sends message commands to PandaCrazy about a new panda or search job to add. Used for forums with older PC buttons.
  * Parses the url to grab the command and the relevant information for panda. */
-function addCommands() {
-  const regex = /\/PandaCrazy([^\/]*)\/.*JRGID=([^&]*)&JRRName=(.*)&JRRID=([^&]*)&JRTitle=(.*)&JRReward=(.*)/;
+function addCommands() { console.log(locationUrl);
+  let regex = /\/PandaCrazy([^\/]*)\/.*JRGID=([^&]*)&JRRName=(.*)&JRRID=([^&]*)&JRTitle=(.*)&JRReward=(.*)/;
+  if (!locationUrl.includes('JRGID')) regex = /\/.{0,2}PandaCrazy([^\/]*)\/.*groupID=([^&]*)&requesterName=(.*)&requesterID=([^&]*)&hitTitle=(.*)&hitReward=(.*)/;
   let [_, command, groupId, reqName, reqId, title, reward] = locationUrl.match(regex);
-  command = (command==="Add") ? "addJob" : ( (command==="Search") ? "addSearchJob" : ( (command==="SearchOnce") ? "addSearchOnceJob" : "addOnceJob" ));
+  command = (command==="Add") ? "addJob" : ( (command==="Search") ? "addSearchOnceJob" : ( (command==="SearchOnce") ? "addSearchMultiJob" : "addOnceJob" ));
   chrome.runtime.sendMessage({command:command, groupId:groupId, description:"", title:title, reqId:reqId, reqName:reqName, price:reward});
 }
 /** To make older storage messages compatible to extension. */
@@ -210,9 +204,6 @@ function dashboard() { console.log('dashboard page'); addIframe(); getProjectedE
 function otherPage() { console.log('otherPage page'); addIframe(); getProjectedEarnings(); }
 /** Works on old panda crazy pages to future use of importing data. */
 function oldPandaCrazy() { console.log('old pandacrazy page'); }
-/** Works on forum pages with the name given.
- * @param  {string} name - The name of the forum this page is on. */
-function onForums(name) { console.log('onForums page name: ',name); }
 
 /** Find out if there was an external command needing to run because of a reload page. */
 chrome.storage.local.get(['pcm_running'], (result) => { pcm_running = result.pcm_running; });
@@ -225,6 +216,7 @@ if (lastExtCommand) {
 
 /** Sort pages to relevant functions. */
 if (/worker\.mturk\.com([\/]|$)([\?]|$)(.*=.*|)$/.test(locationUrl)) hitList(); // Pages with hits listed
+else if (/requesters\/.{0,2}PandaCrazy[^\/].*(JRGID|groupID)=.*(JRRName|requesterName)=/.test(locationUrl)) addCommands();
 else if (/requesters\/PandaCrazy[^\/].*JRGID=.*JRRName=/.test(locationUrl)) addCommands();
 else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
 else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) doAssignment();
@@ -232,10 +224,4 @@ else if (/requesters\/PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
 else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
 else if (/worker\.mturk\.com[\/]dashboard.*$/.test(locationUrl)) dashboard();
 else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
-else if (/mturkcrowd\.com/.test(locationUrl)) onForums('mturkcrowd');
-else if (/turkerview\.com/.test(locationUrl)) onForums('turkerview');
-else if (/mturkforum\.com/.test(locationUrl)) onForums('mturkforum');
-else if (/ourhitstop\.com/.test(locationUrl)) onForums('ourhitstop');
-else if (/hitnotifier\.com/.test(locationUrl)) onForums('hitnotifier');
-else if (/reddit\.com\/.*HITsWorthTurkingFor.*/.test(locationUrl)) onForums('reddit');
 else { console.log('unknown page'); }

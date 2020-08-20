@@ -311,9 +311,10 @@ class PandaUI {
 				if (myId && msg.command.includes('stop')) this.stopCollecting(myId);
 				else if (myId) this.startCollecting(myId);
 			} else {
-				const search = (msg.command==="addSearchJob" || msg.command==="addSearchOnceJob") ? "gid" : null;
-				const once = (msg.command==="addOnceJob" || msg.command==="addSearchOnceJob"); // Accept only 1
-				const run = (msg.command!=="addOnlyJob"); // Run this job after adding
+				const search = (msg.command === 'addSearchOnceJob') ? 'gid' : (msg.command === 'addSearchMultiJob') ? 'rid' : null;
+				const once = (msg.command === 'addOnceJob' || msg.command === 'addSearchOnceJob'); // Accept only 1
+				const run = (msg.command !== 'addOnlyJob'); // Run this job after adding
+				if (!msg.auto) msg.auto = false;
 				const duration = ((search) ? 10000 : (msg.auto) ? 120000 : 0); // Searches collect for 10 seconds and then searches. Automatic adds stops after 2 minutes.
 				let hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
 				let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
