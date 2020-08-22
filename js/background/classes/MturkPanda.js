@@ -304,7 +304,7 @@ class MturkPanda extends MturkClass {
 		if (disabled) stopReason = 'Job is disabled.';
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			this.info[myId].queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
-				this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
+				if (this.info[myId].data) this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
 			}, async (myId) => {
 				const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 				if (extPandaUI) {
@@ -389,7 +389,7 @@ class MturkPanda extends MturkClass {
 			if (data.search === "gid") flattenSortObject(this.searchesGroupIds, data.groupId, myId);
 			if (data.search === "rid") flattenSortObject(this.searchesReqIds, data.reqId, myId);
 			const value = (data.search === "gid") ? data.groupId : data.reqId;
-			mySearch.removeTrigger(_, data.id, false, true);
+			mySearch.removeTrigger(_, data.id,_, false, true);
 		}
 		if (deleteDB) this.deleteDbData(myId, data);
 		delete this.dbIds[this.info[myId].dbId]; this.info[myId].data = null; delete this.info[myId]; delete this.pandaUrls[myId];

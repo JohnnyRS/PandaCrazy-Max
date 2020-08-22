@@ -9,8 +9,8 @@ class SearchUI {
 		this.tabs = null;
 		this.reqIDTab = {};
 		this.groupIDTab = {};
-		this.scanTab = {};
-		this.multiple = {'rid':[], 'gid':[], 'scan':[]};
+		this.customTab = {};
+		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
 	}
   /** Stops the searching process. */
   stopSearching() {
@@ -42,19 +42,19 @@ class SearchUI {
   async prepareSearch() {
 		bgSearchClass.prepareSearch();
 		$("#pcm_searchNow").click( (e) => {
-			if (bgSearchClass.searchGStats.isSearchOn()) this.stopSearching();
-			else this.startSearching();
+			if (bgSearchClass.searchGStats.isSearchOn()) this.stopSearching(); else this.startSearching();
 			$(e.target).blur();
 		});
+		$('#pcm_addTriggers').click( () => { console.log('give me jobs'); } );
 		this.tabs = new TabbedClass($(`#pcm_searchTriggers`), `pcm_triggerTabs`, `pcm_tabbedTriggers`, `pcm_triggerContents`, false);
     let [_, err] = await this.tabs.prepare();
     if (!err) {
 			this.reqIDTab = await this.tabs.addTab("Requester ID", true);
 			this.groupIDTab = await this.tabs.addTab("Group ID");
-			this.scanTab = await this.tabs.addTab("Scan Search");
+			this.customTab = await this.tabs.addTab("Custom Search");
 			this.ridContent = $(`<div class='pcm_ridTriggers card-deck'></div>`).appendTo(`#${this.reqIDTab.tabContent}`);
 			this.gidContent = $(`<div class='pcm_gidTriggers card-deck'></div>`).appendTo(`#${this.groupIDTab.tabContent}`);
-			this.scanContent = $(`<div class='pcm_scanTriggers card-deck'></div>`).appendTo(`#${this.scanTab.tabContent}`);
+			this.customContent = $(`<div class='pcm_customTriggers card-deck'></div>`).appendTo(`#${this.customTab.tabContent}`);
 		}
   }
   /** Update the status bar with the hits found value or the search results value.
@@ -90,8 +90,13 @@ class SearchUI {
 		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '';
 		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status);
 		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
-		let text = $(`<div class='card-text p-0' id='output_${unique}'>`).css('cursor', 'default').appendTo(body);
-		$(text).html(name);
+		$(`<div class='card-text p-0 unSelectable' id='output_${unique}'>${name}</div>`).css('cursor', 'default').appendTo(body);
+		let buttons = $(`<span class='float-right'></span>`).appendTo(body);
+		$(`<i class="fas fa-caret-square-down pcm_optionsMenu"></i>`).click( () => console.log('what options?') ).data('unique',unique).appendTo(buttons);
+		$(`<i class="fas fa-times pcm_deleteButton"></i>`).click( (e) => {
+			let unique = $(e.target).data('unique');
+			if (unique) bgSearchClass.removeTrigger(_,_, unique, true, false);
+		} ).data('unique',unique).appendTo(buttons);
 		this.multiple[data.type].push(card);
 	}
 	appendFragments() {
@@ -101,22 +106,13 @@ class SearchUI {
 			$(this[`${key}Content`]).append(df); df = null;
 		}
 		this.cardEvents();
-		this.multiple = {'rid':[], 'gid':[], 'scan':[]};
+		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
 	}
 	/** Remove the trigger with the type and group ID or requester ID from the search UI.
 	 * @param  {string} type  - Type of the trigger [group ID or requester ID].
 	 * @param  {number} value - Group ID or Requester ID for value depending on type. */
-	removeTrigger(type, value) {
-		const active = $(`#nav-${type}TabContent div.active`);
-		if ($(active).get(0).id === `list-t${type}${value}`) {
-			if ($(active).next().length>0) { 
-				$(active).next().tab('show');
-				$(`#pcm_${type}ListTab a.active`).next().tab('show');
-			} else if ($(active).prev().length>0) {
-				$(active).prev().tab('show');
-				$(`#pcm_${type}ListTab a.active`).prev().tab('show');
-			}
-		}
-		$(`#list-t${type}${value}-list`).remove(); $(`#list-t${type}${value}`).remove();
+	removeTrigger(unique) { console.log(unique);
+		const theTrigger = $(`#pcm_triggerCard_${unique}`);
+		if (theTrigger.length) theTrigger.remove();
 	}
 }

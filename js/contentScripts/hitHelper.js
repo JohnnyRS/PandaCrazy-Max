@@ -1,6 +1,8 @@
-const locationUrl = window.location.href, _ = undefined;
-const parentUrl = window.parent.location.href;
-let hitData = {}, hitsData = {}, originalSetItem = null, pcm_running = false, prevAssignedhit = null;
+const locationUrl = window.location.href, _ = undefined, isInIframe = (parent !== window);
+const parentUrl = document.referrer;
+let hitData = {}, hitsData = {}, originalSetItem = null, prevAssignedhit = null;
+let holdArray = ['pcm_holdGID', 'pcm_holdRID', 'pcm_holdRname', 'pcm_holdTitle', 'pcm_holdReward']
+let holdThis = {'pcm_running':false, 'pcm_holdGID':'', 'pcm_holdRID':'', 'pcm_holdRname':'', 'pcm_holdTitle':'', 'pcm_holdReward':''};
 let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
 
 /** Sends a message to the extension with given values.
@@ -80,8 +82,7 @@ function fixForQueueHelper() {
 function addIframe() {
   fixForQueueHelper();
   let iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = 'https://worker.mturk.com/requesters/PandaCrazyMax/';
+  iframe.style.display = 'none'; iframe.src = 'https://worker.mturk.com/requesters/PandaCrazyMax/';
   document.body.appendChild(iframe);
 }
 /** Parses the properties on mturk page. */
@@ -105,69 +106,83 @@ function getProjectedEarnings() {
     return true;
   } else return false;
 }
-function checkSubmitted() { console.log(prevAssignedhit);
-  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) { console.log('Something submitter');
-    sendToExt('submitted', prevAssignedhit, prevAssignedhit.groupId,_,_,_,_, prevAssignedhit.pay,_,_, prevAssignedhit.assignmentId, prevAssignedhit.taskId);
-  }
-}
 function prevAssigned() {
   prevAssignedhit = sessionStorage.getItem('pcm_hitDoing'); console.log('prevAssignedhit: ', prevAssignedhit);
   prevAssignedhit = (prevAssignedhit) ? JSON.parse(prevAssignedhit) : null;
   sessionStorage.removeItem('pcm_hitDoing');
 }
+function setSendData(sendData) {
+  const regex = /\[hit_type_id\]=([^&]*)&.*\[requester_id\]=([^&]*)&/;
+  let [_, groupId, reqId] = (sendData.hasOwnProperty('contactRequesterUrl')) ? unescape(hitData.contactRequesterUrl).match(regex) : [null, null, null];
+  let data = {
+    'groupId': (sendData.hasOwnProperty('hit_set_id')) ? sendData.hit_set_id : groupId,
+    'description': sendData.description,
+    'title': (sendData.hasOwnProperty('title')) ? sendData.title : sendData.projectTitle,
+    'reqId': (sendData.hasOwnProperty('requester_id')) ? sendData.requester_id : reqId,
+    'reqName': (sendData.hasOwnProperty('requester_name')) ? sendData.requester_name : sendData.requesterName,
+    'reward': (sendData.hasOwnProperty('monetary_reward')) ? sendData.monetary_reward.amount_in_dollars : sendData.monetaryReward.amountInDollars
+  }
+  return data;
+}
+/** Format for button messages to send.
+ * @param  {object} e       - The button event given when button was clicked.
+ * @param  {string} command - The command to send for this button. */
+function buttonsSend(e, command, passData=null) {
+  let theIndex = -1, data = passData;
+  if (!passData && Object.keys(hitsData).length) { theIndex = $(e.target).closest('.table-row').index(); data = setSendData(hitsData[theIndex]); }
+  else if (!passData && Object.keys(hitData).length) { data = setSendData(hitData); }
+  if (data) this.sendToExt(command,_, data.groupId, data.description, data.title, data.reqId, data.reqName, data.reward);
+}
+function setHoldData() {
+  $(`a[href*='/projects/']`).click( (e) => {
+    theIndex = $(e.target).closest('.table-row').index();
+    let data = (theIndex) ? setSendData(hitsData[theIndex]) : null;
+    if (data) chrome.storage.local.set({'pcm_holdGID':data.groupId, 'pcm_holdRID':data.reqId, 'pcm_holdRname':data.reqName, 'pcm_holdTitle':data.title, 'pcm_holdReward':data.reward});
+  });
+}
 /** Returns newer buttons to work with the extension.
  * @return {object} - The jquery element for the buttons to add. */
-function addButtons() {
-  let buttons = $('<button class="pcm-button pcm-pandaB">Panda</button><button class="pcm-button pcm-onceB">Once</button><button class="pcm-button pcm-searchB">Search</button><button class="pcm-button pcm-search2B">S*</button>');
-  let span = $('<span class="JR_pandaCrazyMax no-wrap" style="font-size: 8px; margin-left: 10px; line-height:0.8"><span>[PC] Add:</span></span>').append(buttons);
-  span.find('.pcm-button').css({"font-size":"9px","line-height":"8px","padding":"1px","color":"black"});
+function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits', passData=null) {
+  let buttons = $(`<button class='${classButton} pcm-pandaB'>Panda</button><button class='${classButton} pcm-onceB'>Once</button><button class='${classButton} pcm-searchB'>Search</button><button class='${classButton} pcm-search2B'>S*</button>`);
+  let returnThis = $(`<span class='${className}'>[PCM]: </span>`).append(buttons);
+  returnThis.find('.pcm-pandaB').click( (e) => { buttonsSend.call(this, e, 'addJob', passData); });
+  returnThis.find('.pcm-onceB').click( (e) => { buttonsSend.call(this, e, 'addOnceJob', passData); });
+  returnThis.find('.pcm-searchB').click( (e) => { buttonsSend.call(this, e, 'addSearchOnceJob', passData); });
+  returnThis.find('.pcm-search2B').click( (e) => { buttonsSend.call(this, e, 'addSearchMultiJob', passData); });
   buttons = null;
-  return span;
+  return returnThis;
+}
+function checkSubmitted() {
+  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) { console.log('Something submitter');
+    sendToExt('submitted', prevAssignedhit, prevAssignedhit.groupId,_,_,_,_, prevAssignedhit.pay,_,_, prevAssignedhit.assignmentId, prevAssignedhit.taskId);
+  }
+}
+function noMoreHits() {
+  if (holdThis['pcm_holdGID'] && $(`.mturk-alert-content:contains('There are no more of these HITs available')`).length) {
+    $(`.mturk-alert-content:contains('There are no more of these HITs available') p:first`).append(addButtons(_,_, {
+      'groupId': holdThis['pcm_holdGID'], 'description': null, 'title': holdThis['pcm_holdTitle'], 'reqId': holdThis['pcm_holdRID'], 'reqName': holdThis['pcm_holdRname'], 'reward': holdThis['pcm_holdReward']
+    }));
+  }
 }
 /** Removes old PandCrazy buttons on mturk pages. */
 function oldPCRemoval() {
   checkButtons = (e) => {
     if (e.key === 'JR_message_pong_pandacrazy') {
-      setTimeout( () => {
-        if ($('.JR_PandaCrazy').length > 0) { $('.JR_PandaCrazy').remove(); }
-        window.removeEventListener("storage", checkButtons);
-      }, 5);
+      setTimeout( () => { if ($('.JR_PandaCrazy').length > 0) { $('.JR_PandaCrazy').remove(); } window.removeEventListener("storage", checkButtons); }, 5);
     }
   }
   window.addEventListener("storage", checkButtons);
 }
-/** Format 1 for button messages to send. Hitlist page.
- * @param  {object} e       - The button event given when button was clicked.
- * @param  {string} command - The command to send for this button. */
-function buttonsSend1(e, command) {
-  let theIndex = $(e.target).closest('.table-row').index();
-  let data = hitsData[theIndex];
-  if (data) this.sendToExt(command,null, data.hit_set_id, data.description, data.title, data.requester_id, data.requester_name, data.monetary_reward.amount_in_dollars);
-}
-/** Format 2 for button messages to send.
- * @param  {string} command - The command to send for this button. */
-function buttonsSend2(command) {
-  if (hitData) {
-    const regex = /\[hit_type_id\]=([^&]*)&.*\[requester_id\]=([^&]*)&/;
-    let [all, groupId, reqId] = unescape(hitData.contactRequesterUrl).match(regex);
-    this.sendToExt(command,null, groupId, hitData.description, hitData.projectTitle, reqId, hitData.requesterName, hitData.monetaryReward.amountInDollars);
-  }
-}
 /** Parses a URL with no assignment ID attached so must be a preview. */
 function doPreview() { console.log('doPreview page');
-  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted();
-  let span = addButtons();
+  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits();
+  let span = addButtons('pcm-buttonZonePreview no-wrap', 'pcm-buttonPreview');
   span.find('.pcm-button').css({"font-size":"9px","line-height":"8px","padding":"1px","color":"black"});
   $('.project-detail-bar:first .task-project-title:first').append(span);
-  $('.pcm-pandaB').click( (e) => { buttonsSend2.call(this, 'addJob'); });
-  $('.pcm-onceB').click( (e) => { buttonsSend2.call(this, 'addOnceJob'); });
-  $('.pcm-searchB').click( (e) => { buttonsSend2.call(this, 'addSearchJob'); });
-  $('.pcm-search2B').click( (e) => { buttonsSend2.call(this, 'addSearchOnceJob'); });
 }
 /** Parses a URL with an assignment ID attached. */
 function doAssignment() { console.log('doAssignment page');
-  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); checkSubmitted();
-  getProjectedEarnings();
+  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits();
   const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/;
   let [_, groupId, taskId, assignmentId] = locationUrl.match(regex);
   sessionStorage.setItem('pcm_hitDoing',JSON.stringify({'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId, 'pay':hitData.monetaryReward.amountInDollars}));
@@ -177,51 +192,51 @@ function doAssignment() { console.log('doAssignment page');
 }
 /** Adds buttons to the hits listed pages. Removes any old buttons too. */
 function hitList() {
-  prevAssigned(); addIframe(); getReactProps(); checkSubmitted();
-  getProjectedEarnings(); console.log('hitList page');
+  prevAssigned(); addIframe(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits(); console.log('hitList page');
   $('.hit-set-table .hit-set-table-row').click( (e) => {
     let tableRow = $(e.target).closest('.table-row');
     setTimeout( () => {
       if (tableRow.find('.JR_PandaCrazy').length > 0) { tableRow.find('.JR_PandaCrazy:first').remove(); }
-      if (tableRow.find('.JR_pandaCrazyMax').length === 0) { tableRow.find('.p-b-md').append(addButtons()); }
+      if (tableRow.find('.pcm-buttonZoneHits').length === 0) { tableRow.find('.p-b-md').append(addButtons()); }
     },0);
   });
   $('.expand-projects-button').click( (e) => {
     setTimeout( () => {
       if ($('.JR_PandaCrazy').length > 0) { $('.JR_PandaCrazy').remove(); }
-      if ($('.JR_pandaCrazyMax').length === 0) {
-        $('.p-b-md').append(addButtons());
-        $('.hit-set-table .pcm-pandaB').click( (e) => { buttonsSend1.call(this, e, 'addJob'); });
-        $('.hit-set-table .pcm-onceB').click( (e) => { buttonsSend1.call(this, e, 'addOnceJob'); });
-        $('.hit-set-table .pcm-searchB').click( (e) => { buttonsSend1.call(this, e, 'addSearchJob'); });
-        $('.hit-set-table .pcm-search2B').click( (e) => { buttonsSend1.call(this, e, 'addSearchOnceJob'); });
-      }
+      if ($('.pcm-buttonZoneHits').length === 0) $('.p-b-md').append(addButtons());
     },0);
   });
+  setHoldData();
 }
 function dashboard() { console.log('dashboard page'); addIframe(); getProjectedEarnings(); }
 /** Adds an iframe for getting old messages and grabs any projected earnings. */
-function otherPage() { console.log('otherPage page'); addIframe(); getProjectedEarnings(); }
+function otherPage() { if ($('.projects-controls').length) hitList(); else { console.log('otherPage page'); addIframe(); getProjectedEarnings(); } }
 /** Works on old panda crazy pages to future use of importing data. */
 function oldPandaCrazy() { console.log('old pandacrazy page'); }
 
-/** Find out if there was an external command needing to run because of a reload page. */
-chrome.storage.local.get(['pcm_running'], (result) => { pcm_running = result.pcm_running; });
-let lastExtCommand = localStorage.getItem('PCM_LastExtCommand');
-if (lastExtCommand) {
-  let parsed = JSON.parse(lastExtCommand);
-  this.parseCommands(parsed.command, parsed.data);
-  localStorage.removeItem('PCM_LastExtCommand');
-}
+/** load up any local storage data saved */
+chrome.storage.local.get(['pcm_running', ...holdArray], (result) => {
+  for (const key of Object.keys(result)) { holdThis[key] = result[key]; console.log(key, result[key]); }
+  chrome.storage.local.remove(holdArray);
 
-/** Sort pages to relevant functions. */
-if (/worker\.mturk\.com([\/]|$)([\?]|$)(.*=.*|)$/.test(locationUrl)) hitList(); // Pages with hits listed
-else if (/requesters\/.{0,2}PandaCrazy[^\/].*(JRGID|groupID)=.*(JRRName|requesterName)=/.test(locationUrl)) addCommands();
-else if (/requesters\/PandaCrazy[^\/].*JRGID=.*JRRName=/.test(locationUrl)) addCommands();
-else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
-else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) doAssignment();
-else if (/requesters\/PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
-else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
-else if (/worker\.mturk\.com[\/]dashboard.*$/.test(locationUrl)) dashboard();
-else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
-else { console.log('unknown page'); }
+  /** Find out if there was an external command needing to run because of a reload page. */
+  let lastExtCommand = localStorage.getItem('PCM_LastExtCommand');
+  if (lastExtCommand) {
+    let parsed = JSON.parse(lastExtCommand);
+    this.parseCommands(parsed.command, parsed.data);
+    localStorage.remove('PCM_LastExtCommand');
+  }
+
+  /** Sort pages to relevant functions. */
+  if (/worker\.mturk\.com([\/]|$)([\?]|$)(.*=.*|)$/.test(locationUrl)) hitList(); // Pages with hits listed
+  else if (/requesters\/.{0,2}PandaCrazy[^\/].*(JRGID|groupID)=.*(JRRName|requesterName)=/.test(locationUrl)) addCommands();
+  else if (/requesters\/PandaCrazy[^\/].*JRGID=.*JRRName=/.test(locationUrl)) addCommands();
+  else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
+  else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) doAssignment();
+  else if (/requesters\/PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
+  else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
+  else if (/worker\.mturk\.com[\/]dashboard.*$/.test(locationUrl)) dashboard();
+  else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
+  else { console.log('unknown page'); }
+});
+

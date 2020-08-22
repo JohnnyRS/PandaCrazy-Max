@@ -114,7 +114,7 @@ class PandaGStats {
 	}
 	/** Set the total value in queue value and then update it on the status bar.
 	 * @param  {number} value - the value to change the total value in queue value. */
-	setTotalValueInQueue(value) { this.totalEarnedInQueue.value = value; this.updateStatNav(this.totalEarnedInQueue); }
+	setTotalValueInQueue(value) { this.totalEarnedInQueue.value = value; this.updateStatNav(this.totalEarnedInQueue); this.setTotalEarned(); }
   /** Add 1 to the total number of panda's loaded and update it on the status bar. */
 	addPanda() { this.totalPandas.value++; this.updateStatNav(this.totalPandas); }
   /** Subtract 1 to the total number of panda's loaded and update it on the status bar. */

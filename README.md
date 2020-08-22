@@ -19,7 +19,7 @@
 1. GroupID search jobs (gid) will first start collecting for 10 seconds and then will use the mturk search page.
 1. RequesterID search jobs (rid) will search the requester url page first and then use the mturk search page.
 1. You may import older import files but only the jobs and tabs will be imported at this time.
-1. Export jobs have been disabled until I decide on a good format.
+1. You may export jobs and options but it will not work with the older Panda Crazy script.
 
 ##### Some other changes:
 * This is a beta script there could be problems with saving and loading database.

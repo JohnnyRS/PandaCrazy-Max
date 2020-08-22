@@ -23,20 +23,12 @@ html, body { height: 100%; }
 #pcm_detailContents { height:100%; }
 .pcm-tabDelete { line-height:1.2; color: #eb892d; }
 .pcm_detailsEdit { color: #84f79e; }
-.pcm_hitButton {
-  margin-top: 2px !important;
-  margin-bottom: 3px !important;
-  line-height:0.4 !important;
-  font-size:.75rem !important;
-}
+.pcm_hitButton { margin-top: 2px !important; margin-bottom: 3px !important; line-height:0.4 !important; font-size:.75rem !important; }
 .pcm_hamButton { display: inline-block; }
 .pcm_hamButton.disabled { background-color: #A9A9A9; border-color: #808080; }
-.pcm_deleteButton {
-  font-size:.675rem !important;
-  padding-left:3px !important;
-  padding-right:3px !important;
-  margin-left:5px !important;
-}
+.pcm_deleteButton { font-size:.675rem !important; padding-left:3px !important; padding-right:3px !important; margin-left:5px !important; }
+.fas.pcm_deleteButton { margin-left:3px !important; color:red; background-color:black; border: 1px solid firebrick; padding-top:1px; }
+.fas.pcm_optionsMenu { color: aliceblue; height:1.5em; padding: 5px 0 5px 4px; border-left: 1px solid burlywood; }
 #pcm_searching.pcm_searchOn { color: #a9fc79 !important; }
 .pcm_buttonOn { background-color: #008000; color: #FFFFFF !important; }
 .pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
@@ -81,9 +73,11 @@ html, body { height: 100%; }
 .pcm_pandaCard.pcm_oneLine .pcm_deleteButton { margin-left:4px !important; padding: 0 2px 0.5px 2px !important; }
 .pcm_pandaCard .pcm_hitStats .ridsearch { color:mediumblue; }
 .pcm_pandaCard .pcm_hitStats .gidsearch { color:indigo; }
-.pcm_triggerCard { margin:0 !important; max-width:230px; min-width:230px; color:#7FFFD4; background-color:#000080; font-size:0.8em; padding: 2px 1px !important; }
+.pcm_triggerCard { margin:0 0 0 3px !important; max-width:250px; min-width:250px; color:#7FFFD4; background-color:#000080; font-size:0.8em; padding: 1px 2px 0 2px !important; }
 .pcm_triggerCard.pcm_disabled { color:#adb5bd; background-color:black }
-.card-text { line-height: 1.0 !important; padding-left:1px !important; }
+.card-body { padding: 0 1px; }
+.card-text { line-height: 1.0 !important; display:block; padding: 0 1px; }
+#pcm_triggerTabs .card-text { display:inline-block; }
 .pcm_checkbox { height:11px; }
 #pcm_string_blockGid { font-size: 7px; line-height:1.9; font-weight:400 !important; }
 #pcm_selectedBox { font-size: 10px; }

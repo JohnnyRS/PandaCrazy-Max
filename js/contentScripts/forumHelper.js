@@ -21,6 +21,7 @@ let formatObj = {
   'DISQUAL': {'regex':/Requester:\s*(.*)\s*(http:[^\s]*)\s*HIT Title:\s*(.*)\s*Panda:\s*([^\s]*)\s*Qualification:\s*(.*)\s*(http:[^\s]*)\s*Qual Description:\s*(.*)\s*Qual/, 'order':[3,1,_,_,_,_,_,4,2,_,6,7]},
   'QUALATT': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|)\s*•\s*[^\s]*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*TO2/, 'order':[1,3,'rid-4',_,_,_,_,'gid-2']}
 };
+let MTC_enabled = true, TV_enabled = true, OHS_enabled = true, MTF_enabled = true, slack_enabled = true, discord_enabled = true;
 
 /** Sends a message to the extension with given values.
  * @param  {string} com        - Command        @param {object} data          - Data Object  @param  {string} gId      - GroupID
@@ -78,12 +79,19 @@ function fillArray(arr, values, message) {
   }
   return fills;
 }
+function setHoldData() {
+  $(`a[href*='/projects/']`).click( (e) => {
+    theIndex = $(e.target).closest('.PCM_doneButtons').data('index');
+    let data = (theIndex) ? hitInfo[theIndex] : null;
+    if (data) chrome.storage.local.set({'pcm_holdGID':data.gid, 'pcm_holdRID':data.rid, 'pcm_holdRname':data.rName, 'pcm_holdTitle':data.title, 'pcm_holdReward':data.pay});
+  });
+}
 function buttonCommand(index, command) {
   let data = hitInfo[index];
   sendToExt(command, data, data.gid, data.desc, data.title, data.rid, data.rName, data.pay,_, data.avail); // parse duration
 }
 function createButton(appendHere, addClass, text, index, clickFunc) {
-  appendHere.append($(`<button class='pcm-button ${addClass}'>${text}</button>`).data('index',index).click( (e) => { clickFunc(e); e.preventDefault(); } ));
+  appendHere.append($(`<button class='pcm-button ${addClass}'>${text}</button>`).data('index',index).click( (e) => { clickFunc(e); e.preventDefault(); e.stopPropagation(); } ));
 }
 function addButtons(message, forum, obj) {
   hitInfo[++hitCounter] = obj;
@@ -95,7 +103,7 @@ function addButtons(message, forum, obj) {
   if (mtsExport.length) mtsExport.prepend(buttons);
   else if (['MTF','MTC', 'OHS'].includes(forum) && tdFirst.length) tdFirst.prepend(buttons);
   else message.prepend(buttons);
-  message.addClass('PCM_doneButtons');
+  message.addClass('PCM_doneButtons').data('index',hitCounter);
 }
 function doParsing(format, message, text, number) {
   let values = useRegex(text, formatObj[format].regex, number);
@@ -105,7 +113,7 @@ function doParsing(format, message, text, number) {
 function parseHit(message, text, number, forum, format) {
   if (format === 'RDADRQ' && !text.includes('/projects/')) text = text.replace('Requester:',' •• Requester:');
   let obj = doParsing(format, message, text, number);
-  if (obj) { message.css('border', 'green solid 2px'); addButtons(message, forum, obj); }
+  if (obj) { addButtons(message, forum, obj); }
   else { console.log(number, format, {'text':text}); message.css('border', 'orangered solid 2px'); }
 }
 function findMessages(containerMessages, theMessage, theNumber, forum) {
@@ -138,6 +146,7 @@ function findMessages(containerMessages, theMessage, theNumber, forum) {
       }
     }
   });
+  setHoldData();
 }
 /** Works on forum pages with the name given.
  * @param  {string} name - The name of the forum this page is on. */
@@ -188,11 +197,12 @@ function discordApp() {
     }, 500);
   });
 }
-if (/mturkcrowd\.com/.test(locationUrl)) onForums('MTC');
-else if (/turkerview\.com/.test(locationUrl)) onForums('TV');
-else if (/mturkforum\.com/.test(locationUrl)) onForums('MTF');
-else if (/ourhitstop\.com/.test(locationUrl)) onForums('OHS');
-else if (/slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) slack();
-else if (/discord\.com\/channels\//.test(locationUrl)) discordApp();
-else if (/discord\.com\/app/.test(locationUrl)) discordApp('@me');
+
+if (MTC_enabled && /mturkcrowd\.com/.test(locationUrl)) onForums('MTC');
+else if (TV_enabled && /turkerview\.com/.test(locationUrl)) onForums('TV');
+else if (MTF_enabled && /mturkforum\.com/.test(locationUrl)) onForums('MTF');
+else if (OHS_enabled && /ourhitstop\.com/.test(locationUrl)) onForums('OHS');
+else if (slack_enabled && /slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) slack();
+else if (discord_enabled && /discord\.com\/channels\//.test(locationUrl)) discordApp();
+else if (discord_enabled && /discord\.com\/app/.test(locationUrl)) discordApp('@me');
 else { console.log('unknown page'); }
