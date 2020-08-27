@@ -223,7 +223,7 @@ class MturkPanda extends MturkClass {
 	/** Toggle the panda timer pause status with the value sent or returns the value of the pause value instead.
 	 * @param  {bool} val - Sets the timer to the value or returns pause status if null.
 	 * @return {number}   - Returns the status of the panda timer pause mode. */
-	pauseToggle(val=null) { if (val != null) return pandaTimer.paused(val); else return pandaTimer.pauseToggle(); }
+	pauseToggle(val=null) { let paused = (val) ? pandaTimer.paused(val) : pandaTimer.pauseToggle(); mySearch.pauseSearch(paused); return paused; }
 	/** Finds out if the panda timer is in go ham mode and returns status.
 	 * @return {bool} - Returns true if timer is in ham mode. */
 	isTimerGoingHam() { return pandaTimer.goingHam; }
@@ -380,9 +380,9 @@ class MturkPanda extends MturkClass {
 	 * @async									 - To wait for the complete deletion of the job from the database.
 	 * @param  {number} myId	 - The unique ID for a panda job.
 	 * @param  {bool} deleteDB - Should panda be deleted from database? */
-	async removePanda(myId, deleteDB) {
+	async removePanda(myId, deleteDB, whyStop=null) {
 		const tData = await this.dataObj(myId), data = Object.assign({}, tData);
-		this.stopCollecting(myId, data, null);
+		this.stopCollecting(myId, data, whyStop);
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId); this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
 		if (data.search) {
@@ -519,16 +519,6 @@ class MturkPanda extends MturkClass {
 				else { myPanda.skippedDoNext = false; delete myPanda.pandaSkippedData[nextSkipped]; }
 			} else { myPanda.skippedDoNext = false; }
 		}
-	}
-	/** Get the group id and requester id from the preview or accept url.
-	 * @param  {string} url - The url to parse and return info from.
-	 * @return {array}			- Group id is first in array. Requester Id is second in array. */
-	parsePandaUrl(url) {
-		const groupInfo = url.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
-		const requesterInfo = url.match(/\/requesters\/([^\/]*)\/projects(\/|\?|$)/);
-		let groupId = (groupInfo) ? groupInfo[1] : null;
-		let reqId = (requesterInfo) ? requesterInfo[1] : null;
-		return [groupId, reqId];
 	}
 	/** Fetches the url for this panda after timer class tells it to do so and handles mturk results.
 	 * Can detect logged out, pre's, max hits, no more hits, no qual, blocked and accepted a hit.

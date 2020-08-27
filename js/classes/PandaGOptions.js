@@ -39,7 +39,7 @@ class PandaGOptions {
       'searchDuration':12
     };
     this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
-    this.timerDur = {min:0, max:600}          // The limits for the ham duration in seconds.
+    this.timerDur = {min:1000, max:30000}     // The limits for the ham duration in milliseconds.
     this.timerQueue = {min:1000, max:60000};  // The limits for the timer queue in milliseconds when editing.
     this.timerSearch = {min:800, max:30000};  // The limits for the timer queue in milliseconds when editing.
     this.timerChange = {min:5, max:2000};     // The limits for the timer change buttons in milliseconds when editing.
@@ -55,6 +55,12 @@ class PandaGOptions {
     this.helpersDefault = {
       'category':'helpers',
       'forumButtons':true,
+      'TVButtons':true,
+      'MTCButtons':true,
+      'MTFButtons':true,
+      'OHSButtons':true,
+      'DiscordButtons':true,
+      'SlackButtons':true,
       'mturkPageButtons':true,
       'queueCommands':true
     }
@@ -183,20 +189,20 @@ class PandaGOptions {
       }
     });
     let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:<br><span class='small text-info'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
     displayObjectData([
-      {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, data:this.timerRange}, 
-      {'label':'Default GoHam Timer Delay:', 'type':'number', key:'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', data:this.timerDur}, 
-      {'label':'Search Timer:', 'type':'number', key:'searchTimer', 'tooltip':'Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ${this.timerRange.min}.', data:this.timerSearch}, 
-      {'label':'Check Queue Every:', 'type':'number', key:'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', data:this.timerQueue}, 
-      {'label':'Timer Increase By:', 'type':'number', key:'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', data:this.timerChange},
-      {'label':'Timer Decrease By:', 'type':'number', key:'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', data:this.timerChange},
-      {'label':'Timer Add Timer By:', 'type':'number', key:'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', data:this.timerChange},
-      {'label':'Timer Auto Slowdown Increase:', 'type':'number', key:'timerAutoIncrease', 'tooltip':'', data:this.timerChange},
-      {'label':'Default search durations for hits:', 'type':'number', key:'searchDuration', 'tooltip':'The duration temporarily used for any hits found from search jobs.', data:this.timerChange}
+      {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
+      {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
+      {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
+      {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
+      {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'data':this.timerDur}, 
+      {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':'Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ${this.timerRange.min}.', 'data':this.timerSearch}, 
+      {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'data':this.timerQueue}, 
+      {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'data':this.timerChange},
+      {'label':'Timer Decrease By:', 'type':'number', 'key':'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', 'data':this.timerChange},
+      {'label':'Timer Add Timer By:', 'type':'number', 'key':'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', 'data':this.timerChange},
+      {'label':'Timer Auto Slowdown Increase:', 'type':'number', 'key':'timerAutoIncrease', 'tooltip':'', 'data':this.timerChange},
+      {'label':'Default search durations for hits:', 'type':'number', 'key':'searchDuration', 'tooltip':'The duration temporarily used for any hits found from search jobs.', 'data':this.timerChange}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);

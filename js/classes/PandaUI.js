@@ -214,11 +214,11 @@ class PandaUI {
 	 * @param  {function} [afterFunc=null] - The function to run when card is removed completely.
 	 * @param  {function} [animate=true]	 - Should animation be used when removing a card?
 	 * @param  {function} [deleteDB=true]	 - Should the database be deleted too? */
-	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true) {
-		let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
-		if (deleteDB) await this.stopCollecting(myId, null, false)
+	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true, whyStop=null) {
 		this.cards.removeCard(myId, async () => {
-			await bgPanda.removePanda(myId, deleteDB);
+			let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
+			if (deleteDB) await this.stopCollecting(myId, null, false)
+			await bgPanda.removePanda(myId, deleteDB, whyStop);
 			delete this.pandaStats[myId];
 			if (data.search) this.pandaGStats.subSearch(); else this.pandaGStats.subPanda();
 			if (afterFunc!==null) afterFunc();
@@ -227,14 +227,14 @@ class PandaUI {
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
-	async removeJobs(jobsArr, afterFunc=null) {
+	async removeJobs(jobsArr, afterFunc=null, whyStop=null) {
 		let bodyText = "";
 		jobsArr.forEach( (thisId) => { bodyText += "( "+$(`#pcm_hitReqName_${thisId}`).html()+" "+[$(`#pcm_hitPrice_${thisId}`).html()]+" )<BR>"; });
 		modal = new ModalClass();
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
-				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc); },
+				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc,_,_, whyStop); },
 					rejected => console.error(rejected));
 			});
 			modal.closeModal(); jobsArr.length = 0;
@@ -252,7 +252,7 @@ class PandaUI {
 	/** Show that this panda search job is collecting in panda mode.
 	 * @param  {number} myId - The unique ID for a panda job. */
 	searchCollecting(myId) {
-		let pandaStat = this.pandaStats[myId]; pandaStat.doSearchCollecting(true); pandaStat.doSearching(true); this.cards.pandaSearchCollectingNow(myId);
+		let pandaStat = this.pandaStats[myId]; pandaStat.doSearchCollecting(true); this.cards.pandaSearchCollectingNow(myId);
 	}
 	/** Show that this panda search job is disabled and not being searched anymore.
 	 * @param  {number} myId - The unique ID for a panda job. */

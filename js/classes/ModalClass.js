@@ -122,7 +122,7 @@ class ModalClass {
    * @param  {function} noFunc     - Function to call after the no button is clicked.
    * @param  {function} cancelFunc - Function to call after the cancel button is clicked. */
   showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc) {
-    const idName = this.prepareModal(null, "600px", "modal-header-danger modal-lg", "Deleting a Panda Hit!", `<h4>Are you sure you want me to delete this job?</h4><h5 class="text-primary">${hitDetails}</h5>`, "text-center", "", "visible", "Yes", deleteFunc, "visible", "No", noFunc, "visible", "Cancel");
+    const idName = this.prepareModal(null, '600px', 'modal-header-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='text-primary'>${hitDetails}</h5>`, 'text-center bg-white text-dark', '', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', 'Cancel');
     this.showModal(cancelFunc,_, () => { modal = null; });
     $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc(); } });
   }
@@ -142,7 +142,7 @@ class ModalClass {
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
     this.showModal(null, () => {
-      let docKeys = "";
+      let docKeys = '';
       if (question!=='') { // Should an input field be shown with a question?
         createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, placeHolder, null, '', defAns, 100, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
         docKeys = '#pcm_formQuestion,';

@@ -22,8 +22,8 @@ async function startSearchCrazy() {
   window.addEventListener('beforeunload', () => { bgPage.gSetSearchUI(null); });
   await search.prepareSearch();
   await bgSearchClass.loadFromDB();
-  await bgSearchClass.addTrigger('rid', {'name':'Ben Peterson', 'reqId':'AFEG4RKNBSL4T', 'groupId':'', 'title':'', 'reqName':'Ben Peterson', 'pay':0.01, 'duration':'6 minutes', 'status':'searching'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
-  await bgSearchClass.addTrigger('gid', {'name':'Ibotta, Inc.', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
+  //await bgSearchClass.addTrigger('rid', {'name':'Ben Peterson', 'reqId':'AFEG4RKNBSL4T', 'groupId':'', 'title':'', 'reqName':'Ben Peterson', 'pay':0.01, 'duration':'6 minutes', 'status':'searching'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
+  //await bgSearchClass.addTrigger('gid', {'name':'Ibotta, Inc.', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
   search.appendFragments();
   modal.closeModal('Loading Data');
   setTimeout( () => {

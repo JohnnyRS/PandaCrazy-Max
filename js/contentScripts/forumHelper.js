@@ -21,7 +21,7 @@ let formatObj = {
   'DISQUAL': {'regex':/Requester:\s*(.*)\s*(http:[^\s]*)\s*HIT Title:\s*(.*)\s*Panda:\s*([^\s]*)\s*Qualification:\s*(.*)\s*(http:[^\s]*)\s*Qual Description:\s*(.*)\s*Qual/, 'order':[3,1,_,_,_,_,_,4,2,_,6,7]},
   'QUALATT': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|)\s*•\s*[^\s]*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*TO2/, 'order':[1,3,'rid-4',_,_,_,_,'gid-2']}
 };
-let MTC_enabled = true, TV_enabled = true, OHS_enabled = true, MTF_enabled = true, slack_enabled = true, discord_enabled = true;
+let forumButtons = true, MTC_enabled = true, TV_enabled = true, OHS_enabled = true, MTF_enabled = true, slack_enabled = true, discord_enabled = true;
 
 /** Sends a message to the extension with given values.
  * @param  {string} com        - Command        @param {object} data          - Data Object  @param  {string} gId      - GroupID
@@ -198,11 +198,13 @@ function discordApp() {
   });
 }
 
-if (MTC_enabled && /mturkcrowd\.com/.test(locationUrl)) onForums('MTC');
-else if (TV_enabled && /turkerview\.com/.test(locationUrl)) onForums('TV');
-else if (MTF_enabled && /mturkforum\.com/.test(locationUrl)) onForums('MTF');
-else if (OHS_enabled && /ourhitstop\.com/.test(locationUrl)) onForums('OHS');
-else if (slack_enabled && /slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) slack();
-else if (discord_enabled && /discord\.com\/channels\//.test(locationUrl)) discordApp();
-else if (discord_enabled && /discord\.com\/app/.test(locationUrl)) discordApp('@me');
-else { console.log('unknown page'); }
+if (forumButtons) {
+  if (MTC_enabled && /mturkcrowd\.com/.test(locationUrl)) onForums('MTC');
+  else if (TV_enabled && /turkerview\.com/.test(locationUrl)) onForums('TV');
+  else if (MTF_enabled && /mturkforum\.com/.test(locationUrl)) onForums('MTF');
+  else if (OHS_enabled && /ourhitstop\.com/.test(locationUrl)) onForums('OHS');
+  else if (slack_enabled && /slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) slack();
+  else if (discord_enabled && /discord\.com\/channels\//.test(locationUrl)) discordApp();
+  else if (discord_enabled && /discord\.com\/app/.test(locationUrl)) discordApp('@me');
+  else { console.log('unknown page'); }
+}

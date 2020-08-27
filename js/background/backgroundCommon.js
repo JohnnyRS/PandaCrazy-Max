@@ -20,7 +20,7 @@ function removeAll() {
  * @return {object}        - Returns the search class in background for easier access. */
 function gSetSearchUI(classUI) {
   extSearchUI = classUI;
-  if (classUI === null) { mySearch.originRemove(); searchUIOpened = false; }
+  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); searchUIOpened = false; }
   checkUIConnects();
   return mySearch;
 }

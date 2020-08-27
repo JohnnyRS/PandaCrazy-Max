@@ -69,7 +69,7 @@ class PandaCards {
   createCardStatus(myId, info, oneLine=false) {
     let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : ' search';
     let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
-    return `<${element} class="pcm_hitStats mr-auto" id="pcm_hitStats${one}_${myId}">[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${myId}"></span> ]${search}</${element}>`;
+    return `<${element} class="pcm_hitStats mr-auto text-truncate" id="pcm_hitStats${one}_${myId}">[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${myId}"></span> ]${search}</${element}>`;
   }
   /** Create the button group area for the panda card.
    * @param  {number} myId - The unique ID for a panda job.
@@ -87,8 +87,8 @@ class PandaCards {
    * @param  {number} myId - The unique ID for a panda job.
    * @param  {object} info - The information from a panda hit to update to card. */
   oneLineCard(myId, info) {
-    const nameGroup = $(`<div class="pcm_nameGroup row w-90"></div>`).css('cursor', 'default').hide().append(`<span class="pcm_reqName1 col mr-auto px-1 text-truncate" id="pcm_hitReqName1_${myId}"></span>`);
-    $(this.createCardStatus(myId, info, true)).appendTo(nameGroup);
+    const nameGroup = $(`<div class="pcm_nameGroup1 row w-90"></div>`).css('cursor', 'default').hide().append(`<span class="pcm_reqName1 col mr-auto px-1 text-truncate" id="pcm_hitReqName1_${myId}"></span>`);
+    $(this.createCardStatus(myId, info, true)).hide().appendTo(nameGroup);
     let buttonGroup = $(`<span class="d-flex pl-1 pcm_buttonGroup1" id="pcm_buttonGroup1_${myId}"></span>`).appendTo(nameGroup);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton1 pcm_buttonOff shadow-none" type="button" id="pcm_collectButton1_${myId}"><span>C</span></button>`);
     buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" type="button" id="pcm_hamButton1_${myId}"><span>H</span></button>`);
@@ -211,16 +211,16 @@ class PandaCards {
    * @param  {number} myId        - The unique ID for a panda job.
    * @param  {string} [change=''] - The string to change the tip to or add to.
    * @param  {bool} [add=false]   - Will the change be added to tip or replaces it? */
-  collectTipChange(myId, change='', add=false) { this.cards[myId].collectTipChange(this.values, change, add); }
+  collectTipChange(myId, change='', add=false) { if (this.cards[myId]) this.cards[myId].collectTipChange(this.values, change, add); }
   /** Show that the card is searching for hits.
    * @param  {number} myId - The unique ID for a panda job. */
-  pandaSearchingNow(myId) { this.cards[myId].pandaSearchingNow(this.values); }
+  pandaSearchingNow(myId) { if (this.cards[myId]) this.cards[myId].pandaSearchingNow(this.values); }
   /** Show that the card is disabled now.
    * @param  {number} myId - The unique ID for a panda job. */
-  pandaSearchDisabled(myId) { this.cards[myId].pandaSearchDisabled(this.values); }
+  pandaSearchDisabled(myId) { if (this.cards[myId]) this.cards[myId].pandaSearchDisabled(this.values); }
   /** Show that the card is collecting now.
    * @param  {number} myId - The unique ID for a panda job. */
-  pandaSearchCollectingNow(myId) { this.cards[myId].pandaSearchCollectingNow(this.values); }
+  pandaSearchCollectingNow(myId) { if (this.cards[myId]) this.cards[myId].pandaSearchCollectingNow(this.values); }
   /** Show that the card is collecting now.
    * @param  {number} myId - The unique ID for a panda job. */
   async pandaEnabled(myId) {
@@ -266,7 +266,7 @@ class PandaCards {
       }
 		}).mayTriggerLongClicks({ delay: 500 }).unbind('longClick').on('longClick', async (e) => {
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
-      if (!card.is('.pcm_searchOn')) {
+      if (!card.is('.pcm_searching')) {
         let myId = card.data('myId'); theButton.data('longClicked', true);
         if (theButton.is('.pcm_collectDisable')) this.pandaEnabled(myId); else this.pandaDisabled(myId);
         theButton = null; card = null;
@@ -294,7 +294,7 @@ class PandaCards {
 		$(`.pcm_deleteButton , .pcm_deleteButton1`).unbind('click').click((e) => {
 			let myId = $(e.target).closest('.card').data('myId');
 			if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
-			pandaUI.removeJobs(this.ctrlDelete);
+			pandaUI.removeJobs(this.ctrlDelete,_, 'manual');
 		});
 		$(`.pcm_detailsButton , .pcm_detailsButton1`).unbind('click').click( async (e) => {
 			let myId = $(e.target).closest('.card').data('myId');
@@ -316,13 +316,9 @@ class PandaCards {
 			let myId = $(e.target).closest('.card').data('myId');
 			$(e.target).data('double', 2);
 		});
-		$(`.pcm_reqName1`).unbind('click').click( (e) => {
-			let myId = $(e.target).closest('.card').data('myId');
-			$(e.target).hide(); $(`#pcm_hitStats1_${myId}`).show();
-		});
-		$(`.pcm_hitStats1`).unbind('click').click( (e) => {
-			let myId = $(e.target).closest('.card').data('myId');
-			$(e.target).hide(); $(`#pcm_hitReqName1_${myId}`).show();
+		$(`.pcm_nameGroup1`).unbind('click').click( (e) => {
+      let myId = $(e.target).closest('.card').data('myId'), reqName = $(`#pcm_hitReqName1_${myId}`), stats = $(`#pcm_hitStats1_${myId}`);
+      if (reqName.is(':visible')) { reqName.hide(); stats.show(); } else { stats.hide(); reqName.show(); }
     });
     $(`.pcm_pandaCard`).find('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
 	}
@@ -379,7 +375,7 @@ class PandaCard {
   updateCardDisplay(val) {
     const oneLine = (globalOpt.getCardDisplay()===0), min = (globalOpt.getCardDisplay()===1);
     this.hideShow(val.reqName.id, ".pcm_nameGroup", (!oneLine));
-    this.hideShow(val.reqName1Line.id, ".pcm_nameGroup", (oneLine));
+    this.hideShow(val.reqName1Line.id, ".pcm_nameGroup1", (oneLine));
     this.hideShow(val.price.id, ".pcm_priceGroup", (!oneLine && !min));
     this.hideShow(val.groupId.id, "", (!oneLine));
     this.hideShow(val.title.id, "", (!oneLine && !min));

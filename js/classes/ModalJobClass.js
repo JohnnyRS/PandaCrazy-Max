@@ -185,7 +185,7 @@ class ModalJobClass {
         $(div).find('.pcm_inputError:first').html('Must fill in GroupID or URL!').data('gIdEmpty',true);
       } else if (groupVal.match(/^[0-9a-zA-Z]+$/) || groupVal.includes('://')) {
         let groupId = null, reqId = null, reqSearch = false;
-        if (groupVal.includes('://')) [groupId, reqId] = bgPanda.parsePandaUrl(groupVal);
+        if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal);
         else if (groupVal.match(/^[^Aa]/)) groupId = groupVal;
         else { reqId = groupVal; reqSearch = true; }
         if (reqId && !reqSearch) { groupId = reqId; reqSearch = true; }
@@ -314,7 +314,7 @@ class ModalJobClass {
           $(modalBody).find('.pcm_jobTable').remove();
           let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
           this.showJobsTable(modalBody, filtered,_, () => {});
-        });
+        }, 'manual');
     }).appendTo(inputControl);
     $(df).find('input:radio[name="theJobs"]').click( (e) => {
       $(e.target).closest('.pcm_modalControl').find('.pcm_searchingJobs').click();

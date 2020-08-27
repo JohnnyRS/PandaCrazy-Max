@@ -63,6 +63,12 @@ function createTimeInput(label, id) {
   $(input).append(`<div class="pcm-inputClearIcon" id="pcm_clearTInput"><i class="fas fa-times fa-sm"></i></div>`);
   return input;
 }
+function inputRange(appendTo, min, max, theValue, key, setValue) {
+  $(`<input class='pcm_inputRange' type='range' min='${min}' max='${max}' value='${theValue}'></input>`).on('input', (e) => {
+    $(`#pcm_${key}Detail`).val(($(e.target).val())); setValue(Number($(e.target).val()));
+  }).appendTo(appendTo);
+  $(`<input class='pcm_inputRangeText' id='pcm_${key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(appendTo);
+}
 /** Limits a value to a low limit and hight limit.
  * @param  {number} val  - The value @param  {number} low  - The low limit @param  {number} high - The high limit
  * @return {number}      - Returns the new value in the limit range. */
@@ -149,9 +155,7 @@ function buildSortObject(obj, key, value) {
 /** Flattens the object by removing a value from the array in key value.
  * @param  {object} obj - Object @param  {string} key - Key value @param  {number} value - Remove value */
 function flattenSortObject(obj, key, value) {
-  if (obj.hasOwnProperty(key)) {
-    if (obj[key].length > 1) obj[key] = arrayRemove(obj[key], value); else delete obj[key];
-  }
+  if (obj.hasOwnProperty(key)) { if (obj[key].length > 1) obj[key] = arrayRemove(obj[key], value); else delete obj[key]; }
 }
 /** Shorten the group ID into a 2 letters then "..." and 4 letters at end.
  * @param  {string} gId - The group ID to shorten.
@@ -164,13 +168,13 @@ function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
 function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='', textColor='') {
   let parent = $(target).parent(), pre = (obj.money) ? '$' : '';
   if (editMe) {
-    let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder, textColor); }
+    let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); }
     $(parent).empty().append($(`<input class='pcm_inputText' id='pcm_${obj.key}DetailI' type="text" value="${theValue}"></input>`).blur( (e) => doTextToggle(e) ).focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
     $(`#pcm_${obj.key}DetailI`).focus();
   } else {
     $(`#pcm_tdLabel_${obj.key}`).css('color', '');
     if (editMe !== null) theValue = $(target).val(); // Null is on first call of function.
-    if (theValue === '') { theValue = '{Empty}'; textColor = ' text-danger'; }
+    if (theValue === '' || theValue === '{Empty}') { theValue = '{Empty}'; textColor = ' text-danger'; }
     if ( (obj.min === undefined && obj.max === undefined) || ((theValue >= obj.min) && (theValue <= obj.max)) ) {
       if (obj.type === 'number') thisObject[obj.key] = Number((obj.minutes) ? theValue * 60000 : (obj.seconds) ? theValue * 1000 : theValue);
       else if (theValue !== '{Empty}') thisObject[obj.key] = theValue; else thisObject[obj.key] = ''
@@ -216,10 +220,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
     valueCol.appendTo(row);
     if (element.type==='range') {
-      $(`<input class='pcm_inputRange' type='range' min='${element.min}' max='${element.max}' value='${theValue}'></input>`).on('input', (e) => {
-        $(`#pcm_${element.key}Detail`).val(($(e.target).val())); useObject[element.key] = Number($(e.target).val());
-      } ).appendTo(valueCol);
-      $(`<input class='pcm_inputRangeText' id='pcm_${element.key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(valueCol);
+      inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
     } else if (element.type === 'text' || element.type === 'number') {
         theValue = (element.min !== undefined) ? Math.min(Math.max(theValue, element.min), element.max) : theValue;
         textToggle(useObject, $(valueCol).find('span'), element, theValue, null, textBorder, textColor);
@@ -279,6 +280,16 @@ async function saveToFile(theData, withAlarms=false, doneFunc=null) {
     URL.revokeObjectURL(blob);
     if (doneFunc) doneFunc();
   }, 0);
+}
+/** Get the group id and requester id from the preview or accept url.
+ * @param  {string} url - The url to parse and return info from.
+ * @return {array}			- Group id is first in array. Requester Id is second in array. */
+function parsePandaUrl(url) {
+  const groupInfo = url.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
+  const requesterInfo = url.match(/\/requesters\/([^\/]*)\/projects(\/|\?|$)/);
+  let groupId = (groupInfo) ? groupInfo[1] : null;
+  let reqId = (requesterInfo) ? requesterInfo[1] : null;
+  return [groupId, reqId];
 }
 /** Halt the script with error messages or just warn and continue script.
  * @param  {object} error                 - The error object that needs to be displayed.
