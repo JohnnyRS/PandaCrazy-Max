@@ -4,81 +4,7 @@
 class ModalJobClass {
 	constructor() {
     this.pandaDur = {min:0, max:60} // Limits for the panda duration in minutes.
-  }
-  rulesToStr(rules, placeHere=null) {
-    let ruleStr = ''; for (const value of rules.values()) { ruleStr += `${value}, `; }
-    if (placeHere) placeHere.html(ruleStr.slice(0, -2));
-    return ruleStr;
-  }
-  /** Shows the options for search jobs and allows users to change or add rules.
-   * @param  {object} appendHere - Jquery object @param  {number} dbId - The dbId of the panda job to be shown. */
-  async searchOptions(appendHere, dbId, changes) {
-    let bGStr = '', eTStr = '', iTStr = '';
-    changes.searchDbId = await bgSearch.pingTriggers(-1, dbId).then( (d) => { return d; } );
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
-    changes.rules = bgSearch.rulesCopy(changes.searchDbId); changes.options = bgSearch.optionsCopy(changes.searchDbId);
-    bGStr = this.rulesToStr(changes.rules.blockGid); eTStr = this.rulesToStr(changes.rules.exclude); iTStr = this.rulesToStr(changes.rules.include);
-    displayObjectData([
-      {'label':"Minimum Pay:", 'type':"number", 'key':"minPay", 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The minimum pay for hit to start collecting.'},
-      {'label':"Maximum Pay:", 'type':"number", 'key':"maxPay", 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The maximum pay for hit to start collecting.'},
-      {'label':'Words or phrases Accepted only:', 'id':'pcm_string_include', 'type':'string', 'string':iTStr.slice(0, -2), 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases only will try to be collected.'},
-      {'label':"Edit", 'type':"button", 'btnLabel':'Accepted Words or Phrases', 'addClass':" btn-xxs", 'idStart':"pcm_includeWord_", 'width':"165px", 'unique':1, 'btnFunc': (e) => {
-        this.editSearchOptions(changes.rules.include, 'Word or phrase to watch for', 'Word or phrase', () => { return true; }, () => {
-          iTStr = this.rulesToStr(changes.rules.include, $('#pcm_string_include')); modal.closeModal();
-        });
-      }},
-      {'label':'Excluded words or phrases:', 'id':'pcm_string_exclude', 'type':'string', 'string':eTStr.slice(0, -2), 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases will be ignored.'},
-      {'label':"Edit", 'type':"button", 'btnLabel':'Excluded Words or Phrases', 'addClass':" btn-xxs", 'idStart':"pcm_excludeWord_", 'width':"175px", 'unique':1, 'btnFunc': (e) => {
-        this.editSearchOptions(changes.rules.exclude, 'Word or phrase to exclude', 'Word or phrase', () => { return true; }, () => {
-          eTStr = this.rulesToStr(changes.rules.exclude, $('#pcm_string_exclude')); modal.closeModal();
-        });
-      }},
-      {'label':'Excluded Group IDs', 'id':'pcm_string_blockGid', 'type':'string', 'string':bGStr.slice(0, -2), 'disable':true, 'default':0, 'tooltip':'Hits with these group IDs will try to be collected only.'},
-      {'label':"Edit", 'type':"button", 'btnLabel':'Excluded Group IDs', 'addClass':" btn-xxs", 'idStart':"pcm_excludeGid_", 'width':"175px", 'unique':1, 'btnFunc': (e) => {
-        this.editSearchOptions(changes.rules.blockGid, 'Group ID to block', 'Group ID', (value) => { return value.match(/^[^Aa][0-9a-zA-Z]{15,35}$/); }, () => {
-          bGStr = this.rulesToStr(changes.rules.blockGid, $('#pcm_string_blockGid')); modal.closeModal();
-        });
-      }},
-      {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
-      {'label':'Limit # of total Hits in queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
-      {'label':'Accept Only Once:', 'type':'trueFalse', 'key1':'options', 'key':'once', 'tooltip':'Should only one hit be accepted and then stop collecting? Great for surveys.'},
-      {'label':'Daily Accepted Hit Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many hits a day should be accepted for this job?'},
-      {'label':'Stop Collecting After (seconds):', 'type':'number', 'key1':'options', 'key':'duration', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The number of seconds for hits found to collect before stopping. Resets time if a hit gets collected.'},
-      {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a hit to do before stopping.'},
-      {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.'},
-    ], appendHere, changes, true);
-  }
-  selectBoxAdd(values, appendHere) {
-    appendHere.html('');
-    for (let i=0, len=values.length; i < len; i++) { appendHere.append(`<option value='${i}'>${values[i]}</option>`); }
-  }
-  editSearchOptions(editSet, text, text2, validFunc, saveFunc) {
-    if (!modal) modal = new ModalClass();
-    let values = Array.from(editSet);
-    const idName = modal.prepareModal(null, '640px', 'modal-header-info modal-lg', 'Edit Search Options', '', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Done', saveFunc, 'invisible', 'No', null, 'invisible', 'Cancel');
-    let df = document.createDocumentFragment();
-    let div = $(`<div><div class='pcm_inputError'></div><div style='color:aqua'>Add a ${text} or remove others.</div></div>`).appendTo(df);
-    let form = $(`<div class='form-group row'></div>`).appendTo(df);
-    let selectBox = $(`<select class='form-control input-sm col-5 mx-auto' id='pcm_selectedBox' multiple size='10'></select>`).appendTo(form);
-    this.selectBoxAdd(values, $(selectBox));
-    $(`<button class="btn btn-xs btn-primary ml-1 pcm_addToSelect">Add ${text2}</button>`).on( 'click', (e) => {
-      modal.showDialogModal('700px', `Add New ${text}`, `Type in a ${text2}.`, () => {
-        const newValue = $('#pcm_formQuestion').val();
-        if (newValue && validFunc(newValue)) { editSet.add(newValue); values = Array.from(editSet); this.selectBoxAdd(values, $(selectBox)); modal.closeModal(); }
-      }, true, false, `${text2}: `, ``, 35,_, () => {}, `Add ${text2}`,_,_,'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY');
-    }).appendTo(df);
-    $('<button class="btn btn-xs btn-primary ml-1 pcm_addToSelect">Remove Selected</button>').on( 'click', (e) => {
-      let removeList = $(selectBox).val();
-      for (const index of removeList) { editSet.delete(values[index]); }
-      values = Array.from(editSet); this.selectBoxAdd(values, $(selectBox));
-    }).appendTo(df);
-    modal.showModal(null, () => {
-      $(`#${idName} .${modal.classModalBody}`).append(df);
-      $(`#${idName}`).keypress( (e) => {
-        if((event.keyCode ? event.keyCode : event.which) == '13') saveFunc();
-      });
-    }, () => { });
+    this.modalSearch = null;
   }
   /** Shows the modal for users to change the details of the hit job with the unique ID.
    * @async                                - To wait for the data to be loaded from the database.
@@ -88,7 +14,7 @@ class ModalJobClass {
   async showDetailsModal(myId, successFunc=null, afterClose=null) {
     await bgPanda.getDbData(myId);
     let hitInfo = bgPanda.options(myId);
-    let searchChanges = {'rules':null, 'options':null, 'searchDbId':null};
+    let searchChanges = {'details':null, 'rules':null, 'options':null, 'searchDbId':null};
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, "700px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
@@ -115,7 +41,8 @@ class ModalJobClass {
         let optionTab = await searchTabs.addTab('Search Options');
         df2 = document.createDocumentFragment();
         optionsContents = $(`<div class='pcm_optionsCont card-deck'></div>`).appendTo(`#${optionTab.tabContent}`);
-        this.searchOptions(df2, hitInfo.data.id, searchChanges);
+        this.modalSearch = new ModalSearchClass(); 
+        this.modalSearch.triggerOptions(df2, null, hitInfo.data.id, searchChanges);
         ridDisabled = true; ridDisableTip = ' May not be changed by user.';
       }
     }
@@ -150,7 +77,7 @@ class ModalJobClass {
         $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df2).appendTo(optionsContents);
       }
       modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
-    }, () => { if (afterClose) afterClose(); else modal = null; });
+    }, () => { if (afterClose) afterClose(); else modal = null; this.modalSearch = null; });
   }
   /** Shows a modal for adding panda or search jobs.
    * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
@@ -205,8 +132,8 @@ class ModalJobClass {
           if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm_searchJob').is(':checked')) ? 'gid' : null);
           let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
-          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.theSearchDuration() * 60000 : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer() * 1000);
-          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer() * 1000);
+          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.theSearchDuration() : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer());
+          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer());
           modal.closeModal();
         } else {
           $('label[for="pcm_formAddGroupID"]').css('color', 'red');

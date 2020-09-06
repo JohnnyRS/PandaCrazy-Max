@@ -304,10 +304,10 @@ class PandaUI {
 	 * @param  {object} msg - The message object from the external source. */
 	addFromExternal(msg) {
 		if (msg.groupId !== '' && msg.reqId !== '') {
+			let myId = null;
 			if (msg.command.slice(-7) === 'collect') {
-				let myId = null;
 				if (msg.groupId != '' && bgPanda.pandaGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.pandaGroupIds[msg.groupId][0];
-				else if (msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
+				if (msg.groupId != '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
 				if (myId && msg.command.includes('stop')) this.stopCollecting(myId);
 				else if (myId) this.startCollecting(myId);
 			} else {
@@ -315,11 +315,16 @@ class PandaUI {
 				const once = (msg.command === 'addOnceJob' || msg.command === 'addSearchOnceJob'); // Accept only 1
 				const run = (msg.command !== 'addOnlyJob'); // Run this job after adding
 				if (!msg.auto) msg.auto = false;
-				const duration = ((search) ? 10000 : (msg.auto) ? 120000 : 0); // Searches collect for 10 seconds and then searches. Automatic adds stops after 2 minutes.
+				const duration = ((search) ? 10000 : (msg.auto) ? 12000 : 0); // Searches collect for 10 seconds and then searches. Automatic adds stops after 2 minutes.
 				let hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
-				let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
-				let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-				this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
+				if (search === 'rid' && msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
+				if (search === 'gid' && msg.groupId !== '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
+				if (myId === null) {
+					let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
+					let opt = optObject(once, search,_,_,_,_,_,_, hamD);
+					this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
+				} else if (search === 'rid') this.doSearching(myId);
+				else this.startCollecting(myId)
 			}
 		}
 	}
@@ -356,7 +361,7 @@ class PandaUI {
 	async addPanda(d={}, opt={}, add=false, run=false, ext=false, tDur=0, tGoH=0, loaded=false, addDate=null, seconds=0, accepts=0, searchType='', from='fromPanda') {
 		const dated = (addDate) ? addDate : new Date().getTime(); // get the date that this job was added.
 		let gidFound = bgPanda.checkExisting(d.groupId, searchType, from);
-		if (ext && gidFound !== null) {
+		if (ext && gidFound !== null && !opt.search) {
 			const info = bgPanda.options(gidFound);
 			if (!info.data) await bgPanda.getDbData(gidFound);
 			info.data.hitsAvailable = d.hitsAvailable; info.data.reqName = d.reqName; info.data.reqId = d.reqId;
@@ -378,6 +383,7 @@ class PandaUI {
 		if (pandaInfo.data.dailyDone > 0) this.pandaStats[myId].setDailyStats(pandaInfo.data.dailyDone);
 		if (pandaInfo.search && (loaded || (newAddInfo && !newAddInfo.run))) this.searchDisabled(myId);
 		if (pandaInfo.search) this.pandaGStats.addSearch(); else this.pandaGStats.addPanda();
+		if (pandaInfo.disabled) this.cards.pandaDisabled(myId);
 		if (!multiple) {
 			this.cards.appendDoc(pandaInfo.data.tabUnique); this.pandaStats[myId].updateAllStats(this.cards.get(myId));
 			if (bgPanda.isTimerGoingHam()) $(`#pcm_hamButton_${myId}`).addClass("disabled");
@@ -399,7 +405,7 @@ class PandaUI {
 		let pandaInfo = bgPanda.options(myId);
     this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
     if (pandaInfo.autoTGoHam !== "disable" && (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
-      bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration * 1000);
+      bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration);
     }
     bgPanda.resetTimerStarted(queueUnique);
     let targetDiv = $(html).find(".project-detail-bar .task-project-title").next("div");

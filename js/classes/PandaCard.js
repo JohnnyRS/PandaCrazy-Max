@@ -251,8 +251,9 @@ class PandaCards {
         let myId = card.data('myId'), stopped = card.data('stopped'), info = bgPanda.options(myId);
         if (stopped === 'noQual' || stopped === 'blocked') {
           if (pandaUI.pandaStats[myId].collecting) await pandaUI.stopCollecting(myId, 'manual');
-        } else if (theButton.is('.pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable')) {
-          info.autoAdded = false;
+        } else if (info.disabled) await this.pandaEnabled(myId);
+        else if (theButton.is('.pcm_buttonOff:not(.pcm_searchOn), .pcm_searchDisable')) {
+          info.autoAdded = false; await this.pandaEnabled(myId);
           if (info.search !== 'rid') await pandaUI.startCollecting(myId, false, (info.search === 'gid') ? 10000 : 0);
           else if (info.search === 'rid') {
             $(`#pcm_collectButton_${myId}`).removeClass('pcm_buttonOff').removeClass('pcm_searchDisable').addClass('pcm_buttonOn');

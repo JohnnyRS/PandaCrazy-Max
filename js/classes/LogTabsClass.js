@@ -109,7 +109,7 @@ class LogTabsClass {
    * @param  {string} [task_url=""] - The task url from the fetch results. */
   addIntoQueue(hitInfo, hitInfo2, data, task_url="") {
     this.addIntoQueue.counter = (this.addIntoQueue.counter) ? this.addIntoQueue.counter++ : 0;
-    if (this.queueUpdating && this.addIntoQueue.counter<1000) // Check if currently updating queue.
+    if (this.queueUpdating && this.addIntoQueue.counter < 1000) // Check if currently updating queue.
       setTimeout(this.addIntoQueue.bind(this), 30, hitInfo, hitInfo2, data, task_url);
     else { // If not currently updating queue then add hit to queue watch.
       if (!this.taskIds.includes(hitInfo2.task_id)) { // Make sure hit not in queue already.
@@ -132,7 +132,7 @@ class LogTabsClass {
    * @param  {object} queueResults - Object of all the hits on the mturk queue. */
   updateQueue(queueResults) {
     this.updateQueue.counter = (this.updateQueue.counter) ? this.updateQueue.counter++ : 0;
-    if (this.queueUpdating && this.updateQueue.counter<1000) // Check if currently updating queue.
+    if (this.queueUpdating && this.updateQueue.counter < 1000) // Check if currently updating queue.
       setTimeout(this.updateQueue.bind(this), 30, queueResults);
     else {
       let newIds = [], newgIds = [], newInfo = {}, oldIds = [], newPayRates = [];

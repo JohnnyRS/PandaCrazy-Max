@@ -76,11 +76,11 @@ class HistoryClass {
 			let item = history[key], hits = 1, nowDate = new Date().getTime(), passKey = (loaded) ? null : key;
 			let reqKey = (item.reqId && item.reqId !== ''), theDate = (item.date) ? Date.parse(item.date) : nowDate;
 			if (reqKey) newHits[item.reqId] = 0;
-			if (key.charAt(0).toUpperCase() !== 'A') {
+			if (key && key.charAt(0).toUpperCase() !== 'A') {
 				let pay = (item.pay) ? item.pay : item.price, duration = item.duration | item.assignedTime;
 				await this.updateToDB({'reqId':item.reqId, 'pay': pay, 'title': item.title, 'description':item.description, 'duration': duration, 'date': theDate, 'theId':key, 'from':from, 'updated':nowDate, 'filled':true}, passKey);
 			}
-			if (reqKey) await this.updateToDB({'reqName':item.reqName, 'hits':hits, 'theId':item.reqId, 'from':from, 'updated':nowDate, 'filled':true}, passKey);
+			if (reqKey && item.reqId) await this.updateToDB({'reqName':item.reqName, 'hits':hits, 'theId':item.reqId, 'from':from, 'updated':nowDate, 'filled':true}, passKey);
 		}
 	}
 }

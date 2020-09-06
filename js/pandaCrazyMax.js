@@ -44,6 +44,7 @@ async function startPandaCrazy() {
     setTimeout( () => {
       modal.closeModal('Loading Data');
       bgQueue.startQueueMonitor();
+      bgPage.pandaUILoaded();
     }, 300); // Just a small delay so messages can be read by user.
   } else { haltScript(errorObject, errorObject.message, "Problem with Database.", 'Error opening database:'); }
 }

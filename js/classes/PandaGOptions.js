@@ -36,7 +36,7 @@ class PandaGOptions {
       'stopAutoSlow':false,
       'autoSlowDown':false,
       'timerUsed':'mainTimer',
-      'searchDuration':12
+      'searchDuration':12000
     };
     this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
     this.timerDur = {min:1000, max:30000}     // The limits for the ham duration in milliseconds.
@@ -77,15 +77,14 @@ class PandaGOptions {
     await bgPanda.db.getFromDB(bgPanda.optionsStore).then( async result => {
       if (result.length) { // Options were already saved in database so load and use them.
         for (var i=0, keys=Object.keys(result); i < keys.length; i++) {
-          let thisSaved = {};
           if (['general','timers','alarms','helpers'].includes(result[i].category)) {
-            thisSaved = result[i];
             this[result[i].category] = Object.assign({}, this[result[i].category + 'Default'], result[i]);
           }
         }
         if (Object.keys(this.helpers).length === 0) { await bgPanda.db.addToDB(bgPanda.optionsStore, this.helpersDefault)
           .then( () => { this.helpers = Object.assign({}, this.helpersDefault); })
         }
+        if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
         success[0] = "Loaded all global options from database";
       } else { // Add default values to the options database and use them.
         await bgPanda.db.addToDB(bgPanda.optionsStore, this.generalDefault)
@@ -127,10 +126,11 @@ class PandaGOptions {
         $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
       }
     }
-    pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
+    if (pandaUI.logTabs) pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
     bgPanda.db.addToDB(bgPanda.optionsStore, this.general);
     bgPanda.db.addToDB(bgPanda.optionsStore, this.timers);
     bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms);
+    bgPanda.db.addToDB(bgPanda.optionsStore, this.helpers);
   }
   /** Shows the general options in a modal for changes. */
   showGeneralOptions() {
@@ -166,9 +166,7 @@ class PandaGOptions {
       let element = $(`#pcm_tdLabel_${key}`);
       if (element.length) {
         let range = element.data('range');
-        if (v[key] < range.min || v[key] > range.max) {
-          $(`#pcm_tdLabel_${key}`).css('color', 'red'); foundError = true;
-        }
+        if (v[key] < range.min || v[key] > range.max) { $(`#pcm_tdLabel_${key}`).css('color', 'red'); foundError = true; }
       }
     }
     return foundError;
@@ -176,7 +174,7 @@ class PandaGOptions {
   /** Shows the timer options in a modal for changes. */
   showTimerOptions() {
     modal = new ModalClass();
-    const idName = modal.prepareModal(this.timers, "700px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
+    const idName = modal.prepareModal(this.timers, "850px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
       let errorFound = this.timerConfirm(changes);
       if (!errorFound) {
         this.timers = Object.assign(this.timers, changes);
@@ -195,14 +193,14 @@ class PandaGOptions {
       {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
       {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
       {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
-      {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'data':this.timerDur}, 
+      {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'min':0, 'max':120, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'data':{'min':0, 'max':120000}}, 
       {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':'Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ${this.timerRange.min}.', 'data':this.timerSearch}, 
       {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'data':this.timerQueue}, 
       {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'data':this.timerChange},
       {'label':'Timer Decrease By:', 'type':'number', 'key':'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', 'data':this.timerChange},
       {'label':'Timer Add Timer By:', 'type':'number', 'key':'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', 'data':this.timerChange},
       {'label':'Timer Auto Slowdown Increase:', 'type':'number', 'key':'timerAutoIncrease', 'tooltip':'', 'data':this.timerChange},
-      {'label':'Default search durations for hits:', 'type':'number', 'key':'searchDuration', 'tooltip':'The duration temporarily used for any hits found from search jobs.', 'data':this.timerChange}
+      {'label':'Default search panda durations (Seconds):', 'type':'number', 'key':'searchDuration', 'seconds':true, 'min':0, 'max':120, 'tooltip':'The duration temporarily used for any hits found from search jobs.', 'data':{'min':0, 'max':120000}}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);

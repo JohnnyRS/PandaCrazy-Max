@@ -1,4 +1,4 @@
-let extSearchUI = null, extPandaUI = null, dbError = null;
+let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null;
 let pandaUIOpened = false, searchUIOpened = false;
 let mySearch = null, myPanda = null, myHistory = null, myQueue = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null;
@@ -13,8 +13,9 @@ function removeAll() {
   mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); 
   myPanda = null; mySearch = null; myHistory = null; myQueue = null;
   pandaTimer = null; queueTimer = null; searchTimer = null;
-  chrome.storage.local.set({'pcm_running':false});
+  if (chrome.storage) chrome.storage.local.set({'pcm_running':false});
 }
+function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
 /** Function to set up a search UI variable for the background and returns search class.
  * @param {object} classUI - Object variable for the search UI or null if UI is closing.
  * @return {object}        - Returns the search class in background for easier access. */
@@ -79,6 +80,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
   if (panda) pandaUIOpened = true;
   if (search) searchUIOpened = true;
 }
+function pandaUILoaded() { if (savedSearchUI) savedSearchUI.pandaUILoaded(); }
 function wipeData() {
   if (!myHistory && !mySearch && !myPanda) {
     myHistory = new HistoryClass(); myHistory.wipeData(); myHistory = null;

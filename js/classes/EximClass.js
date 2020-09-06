@@ -3,7 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class EximClass {
   constructor() {
-    this.exportPre = {'extVersion':'0', 'exportVersion':'JRJUN-0', 'jobs':0, 'opt':0, 'groupings':0, 'tabs':0};
+    this.exportPre = {'extVersion':'0', 'exportVersion':'JRJUN-0', 'jobs':0, 'Options':0, 'groupings':0, 'tabs':0, 'searchTriggers':0};
     this.tabPosition = 0;
     this.importJobData = {};
     this.importJobIds = [];
@@ -14,8 +14,9 @@ class EximClass {
     this.importGroupings = [];
     this.importSearchData = {};
     this.importAlarmsData = {};
+    this.importTriggersData = [];
     this.importCompleted = false;
-    this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}};
+    this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}, 'Triggers':{'func':'theTriggers', 'prop':'SearchTriggers'}};
     this.soundConvert = {'more15':'less99', 'queueFull':'fullQueue', 'loggedOut':'hasToPause', 'captchaAlarm':'captchaAlarm'};
     this.reader = new FileReader();
     this.options = {'HamCycleNumber':'hamTimer', 'cycleNumber':'mainTimer', 'cycleNumber2':'secondTimer', 'cycleNumber3':'thirdTimer', 'cycleAdding':'timerAddMore', 'cycleAutoIncrease':'timerAutoIncrease', 'cycleDecrease':'timerDecrease', 'cycleIncrease':'timerIncrease', 'savedCycleNum':'timerUsed', 'alarmVolume':'volume'};
@@ -40,7 +41,7 @@ class EximClass {
    * @param  {bool} [withAlarms=false]  - Should alarm sounds be included or just the alarm options?
    * @param  {function} [doneFunc=null] - The function to call after saving file to computer. */
   async exportData(withAlarms=false, doneFunc=null) {
-    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [];
+    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [], exportTriggers = [];
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
@@ -48,8 +49,9 @@ class EximClass {
     exportOptions = globalOpt.exportOptions();
     exportGrouping = groupings.theGroups();
     exportAlarms = alarms.exportAlarms(withAlarms);
+    exportTriggers = await bgSearch.exportTriggers(); console.log(exportTriggers);
     this.exportPre.jobs = exportJobs.length;
-    saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SoundOptions':exportAlarms}, withAlarms, () => {
+    saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers, 'SoundOptions':exportAlarms}, withAlarms, () => {
       bgPanda.nullData(false);
       if (doneFunc) doneFunc();
     });
@@ -67,7 +69,7 @@ class EximClass {
   async readData() {
     let textData = this.reader.result;
     $('.pcm_importStatus').html('');
-    $('#pcm_importCheck').html(`<div class='tabs'></div><div class='jobs'></div><div class='options'></div><div class='groupings'></div><div class='alarms'></div></div>`);
+    $('#pcm_importCheck').html(`<div class='tabs'></div><div class='jobs'></div><div class='options'></div><div class='groupings'></div><div class='alarms'></div><div class='triggers'></div></div>`);
     this.resetData();
     try {
       if (textData) {
@@ -81,6 +83,7 @@ class EximClass {
           await this.checkProps(data, version, 'Options', 'options', 'Options');
           await this.checkProps(data, version, 'Grouping', 'groupings', 'Groupings');
           await this.checkProps(data, version, 'Alarms', 'alarms', 'Alarms');
+          await this.checkProps(data, version, 'Triggers', 'triggers', 'Search Triggers');
           this.statusFile(true);
         } else { this.statusFile(false); }
         data = null;
@@ -137,15 +140,16 @@ class EximClass {
         }
       }
       await bgPanda.addToDB(mInfo, true);
-      let newPositions = {}, triggers = [], options = [], rules = [];
+      let newPositions = {}, triggers = [], options = [], rules = [], history = [], addedTime = new Date().getTime();
       for (let i = 0, len = mInfo.length; i < len; i++) {
         if (mInfo[i].search) {
           let value = (mInfo[i].search === 'rid') ? mInfo[i].reqId : mInfo[i].groupId;
           if (value) {
-            triggers.push({'type':mInfo[i].search, 'value':value, 'pDbId':mInfo[i].id, 'searchUI':false, 'pandaId':mInfo[i].myId, 'name':mInfo[i].reqName, 'disabled':true});
+            triggers.push({'type':mInfo[i].search, 'value':value, 'pDbId':mInfo[i].id, 'searchUI':false, 'pandaId':mInfo[i].myId, 'name':mInfo[i].reqName, 'disabled':true, 'numFound':0, 'added':addedTime + i, 'lastFound':null});
             options.push({'duration':0, 'once':mInfo[i].once, 'limitNumQueue':mInfo[i].limitNumQueue, 'limitTotalQueue':mInfo[i].limitTotalQueue, 'limitFetches':mInfo[i].limitFetches, 'autoGoHam':false, 'tempGoHam':0, 'acceptLimit':0});
             let ruleSet = Object.assign({}, bgSearch.ruleSet, mData[i].rules)
             rules.push({rules:[ruleSet], 'ruleSet':0});
+            history.push({'gids':{}});
           }
         }
         if (!newPositions[mInfo[i].tabUnique]) newPositions[mInfo[i].tabUnique] = [];
@@ -154,7 +158,16 @@ class EximClass {
           if (group.grouping && group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
         }
       }
-      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules, true);
+      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules, history, true);
+      let triggerData = this.importTriggersData;
+      let imTriggers = [], imOptions = [], imRules = [], imHistory = [];
+      if (triggerData.length) {
+        for (const data of this.importTriggersData) {
+          delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId; delete data.history.dbId;
+          imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history);
+        }
+        await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true);
+      }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
       groupings.importToDB(this.importGroupings);
       let tabUniques = pandaUI.tabs.getUniques();
@@ -181,10 +194,10 @@ class EximClass {
           this.reader.onload = () => this.readData();
           this.reader.readAsBinaryString($(e.target).prop("files")[0]);
           this.reader.onerror = () => { console.log('can not read the file'); }
-        })
+        });
         $('.pcm_importButton:first').on('click', async (e) => {
           if (!this.importCompleted) {
-            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true);
+            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); bgSearch.importing();
             await this.startImporting($('#pcm_importAlarms').prop('checked'));
             await delay(100);
             $('.custom-file-input').off('change');
@@ -196,7 +209,7 @@ class EximClass {
         inputContainer = null;
       }
       df = null;
-    }, () => { modal = null; if (this.importCompleted) location.reload(); });
+    }, () => { modal = null; if (this.importCompleted) { bgSearch.importingDone(); location.reload(); } });
   }
   /** Shows the export modal for user to choose to export alarm sounds or not. */
   exportModal() {
@@ -244,7 +257,7 @@ class EximClass {
   async checkProps(data, version, type, typeClass='', typeText='') {
     $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Checking`).css('color','#e4aeae');
     await delay(300);
-    let prop = this.propData[type].prop;
+    let prop = this.propData[type].prop; console.log(prop);
     if (type === 'Tabs' && data.hasOwnProperty(prop)) { for (const tab of data.Tabsdata) { this.theTabs(tab, version); } }
     else if (type !== 'Tabs') this[this.propData[type].func]((data[prop]) ? data[prop] : {}, version);
     if (data.hasOwnProperty(prop)) $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Verified`).css('color','#00fb00');
@@ -330,6 +343,8 @@ class EximClass {
       this.importOptions.alarms = Object.assign({}, globalOpt['alarmsDefault'], tempOptions['alarmsDefault']);
       this.importOptions.helpers = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
     }
+    let hamDelayTimer = this.importOptions.timers.hamDelayTimer;
+    if (hamDelayTimer < globalOpt.timerDur.min || hamDelayTimer > globalOpt.timerDur.max) this.importOptions.timers.hamDelayTimer = globalOpt.timersDefault.hamDelayTimer;
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
@@ -370,6 +385,17 @@ class EximClass {
         }
         delete this.importAlarmsData[key].base64;
       }
+    }
+  }
+  theTriggers(rData) {
+    let addedTime = new Date().getTime();
+    for (const value of Object.values(rData)) {
+      if (!value.trigger.hasOwnProperty('added')) { value.trigger.numFound = 0; value.trigger.added = addedTime++; value.trigger.lastFound=null; }
+      for (const rule of value.rules.rules) {
+				rule.blockGid = new Set(rule.blockGid); rule.blockRid = new Set(rule.blockRid); rule.exclude = new Set(rule.exclude);
+				rule.include = new Set(rule.include); rule.onlyGid = new Set(rule.onlyGid);
+      }
+      this.importTriggersData.push(value);
     }
   }
 }

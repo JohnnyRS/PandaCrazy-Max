@@ -59,7 +59,7 @@ class DatabaseClass {
         let countRequest = storage.count(key);
         countRequest.onsuccess = (e) => {
           if ( (onlyNew && e.target.result === 0) || !onlyNew) { 
-            storage.put(data).onsuccess = (e) => { data.id = newId = e.target.result; }
+            storage.put(data).onsuccess = (e) => { let mainKey = e.target.source.keyPath; data[mainKey] = newId = e.target.result; }
           } else if (updateFunc) {
             storage.get(key).onsuccess = (e) => { if (updateFunc(e.target.result)) storage.put(e.target.result); }
           }

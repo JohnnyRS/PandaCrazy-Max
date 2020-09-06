@@ -12,7 +12,7 @@ let forumObj = {
 let formatObj = {
   'TVR': {'regex':/.*\s*\[(A.*)\]\s*(.*)\s+\-\s*\$([\d.]*)\s*.*\|\s*PANDA/, 'order':[2,'rn',1,-1,-1,-1,3,'gid']},
   'MTS': {'regex':/Title:\s*(.*)\s*[\|•]\s*Accept Requester:\s*(.*)\s*\[(A[^\s]+)\]\s*Contact.*Reward:\s*\${0,1}([\d.]*)\s*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Description:\s*(.*)\s*\s*Qualifications:/, 'order':[1,2,3,7,5,6,4,'gid']},
-  'DARQ': {'regex':/Title:\s*(.*)(\s*\|\s*|\s*\[.*\|.*)PANDA Requester:\s*(.*)\s*\[(A.+)\]\s*TurkerView:.*\s*Description:\s*(.*)\s*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Reward:\s*\$([\d.]*)\s*Qualifications:/, 'order':[1,2,3,4,5,6,7,'gid']},
+  'DARQ': {'regex':/Title:\s*(.*)(?:\s*\|\s*|\s*\[.*\|.*)PANDA Requester:\s*(.*)\s*\[(A.+)\]\s*TurkerView:.*\s*Description:\s*(.*)\s*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Reward:\s*\$([\d.]*)\s*Qualifications:/, 'order':[1,2,3,4,5,6,7,'gid']},
   'DDRQ': {'regex':/Title:\s*(.*)\s*\|\s*PANDA Requester:\s*(.*)\s*\[(A[^\]]+)\].*\]\s*Description:\s*(.*)\s*Duration:\s*(.*)\s*Reward:\s*\$([\d.]*)\s*Qualifications:/, 'order':[1,2,3,4,5,_,6,'gid']},
   'RDADRQ': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|)\s*•\s*[^\s]*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*Reward:\s*\${0,1}([\d.]*)[^:]*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Description:\s*(.*)\s*(Qualifications|Requirements):/, 'order':[1,3,'rid-4',8,6,7,5,'gid-2']},
   'TARQ': {'regex':/Title:\s*(.*)\s*\|\s*PANDA Requester:\s*(.*)\s*\[(A.+)\]\s*\(.*Description:\s*(.*)\s*HITs Available:\s*([\d,]*)\s*Reward:\s*\$([\d.]*)\s*Qualifications:/, 'order':[1,2,3,4,-1,5,6,'gid']},
@@ -60,7 +60,10 @@ function gidMatch(pandaUrl) {
 }
 function ridMatch(reqUrl) { return reqUrl.match(/mturk\.com\/requesters\/(A[^\/]*)\/projects/)[1]; }
 function pandaUrl(message) { let pandaUrl = message.find('a:eq(1)').attr('href'); return gidMatch(pandaUrl); }
-function reqUrl(message) { let reqNode = message.find('a:first'), reqUrl = reqNode.attr('href'), reqName = reqNode.text(); return [ridMatch(reqUrl), reqName]; }
+function reqUrl(message) {
+  try { let reqNode = message.find('a:first'), reqUrl = reqNode.attr('href'), reqName = reqNode.text(); return [ridMatch(reqUrl), reqName]; }
+  catch (error) { console.log(message, error); return null; }
+}
 function useRegex(text, r, number) { try { let returnValue = text.match(r); return returnValue; } catch (error) { console.log(number, error); return null; } }
 function fillArray(arr, values, message) {
   let fills = [], valueIndex = -1;
@@ -128,6 +131,7 @@ function findMessages(containerMessages, theMessage, theNumber, forum) {
       for (const message of messageHits) {
         if (!(message).hasClass('PCM_doneButtons')) {
           let messageText = message.text().replace(/\n/g, ' ').replace(/tasks\s*https/, 'tasks • https').trim(), exportFormat = null;
+          messageText = messageText.replace(/mturk\.com\/requestersA/,'mturk.com/requesters/A');
           let postNumber = ($(value).find(theNumber).length) ? $(value).find(theNumber).text().trim() : '##';
           if (/s full profile check out TurkerView!/.test(messageText)) exportFormat = 'TVR';
           else if (/HIT exported from Mturk Suite/.test(messageText)) exportFormat = 'MTS';

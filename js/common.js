@@ -196,7 +196,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
   if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
   for (const element of thisArrayObject) {
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
-    if (element.ifNot && useObject[element.ifNot]) continue;
+    if (!useObject || (element.ifNot && useObject[element.ifNot])) continue;
     let textColor = '', padding='pl-0', valueCol=null, textBorder = 'bottom-dotted';
     let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
@@ -207,8 +207,6 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
     if (element.label !== '') { padding = ' pl-4'; }
-    if (element.minutes) { theValue = theValue / 60000; }
-    if (element.seconds) { theValue = theValue / 1000; }
     const pre = (element.pre) ? element.pre : '';
     const addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
@@ -222,8 +220,9 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     if (element.type==='range') {
       inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
     } else if (element.type === 'text' || element.type === 'number') {
-        theValue = (element.min !== undefined) ? Math.min(Math.max(theValue, element.min), element.max) : theValue;
-        textToggle(useObject, $(valueCol).find('span'), element, theValue, null, textBorder, textColor);
+      theValue = (element.seconds) ? theValue / 1000 : (element.minutes) ? theValue / 60000 : theValue;
+      theValue = (element.min !== undefined) ? Math.min(Math.max(theValue, element.min), element.max) : theValue;
+      textToggle(useObject, $(valueCol).find('span'), element, theValue, null, textBorder, textColor);
     } else if (element.type === 'trueFalse') {
       if (element.reverse) theValue = !theValue;
       $(`<span id='pcm_${element.key}Detail' class='${textBorder} font-weight-bold${textColor}'>${theValue}</span>`)

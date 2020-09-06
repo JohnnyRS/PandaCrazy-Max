@@ -136,7 +136,7 @@ function buttonsSend(e, command, passData=null) {
 function setHoldData() {
   $(`a[href*='/projects/']`).click( (e) => {
     theIndex = $(e.target).closest('.table-row').index();
-    let data = (theIndex) ? setSendData(hitsData[theIndex]) : null;
+    let data = (theIndex) ? setSendData(hitsData[theIndex-1]) : null;
     if (data) chrome.storage.local.set({'pcm_holdGID':data.groupId, 'pcm_holdRID':data.reqId, 'pcm_holdRname':data.reqName, 'pcm_holdTitle':data.title, 'pcm_holdReward':data.reward});
   });
 }
