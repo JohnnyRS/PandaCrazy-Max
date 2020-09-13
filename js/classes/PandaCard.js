@@ -75,8 +75,8 @@ class PandaCards {
    * @param  {number} myId - The unique ID for a panda job.
    * @param  {object} info - The information from a panda hit to update to card. */
   createCardButtonGroup(myId, info) {
-    const textCollect = (info.search) ? "-Collecting-" : "Collect";
-    let group = `<div class="card-text" id="pcm_buttonGroup_${myId}"><button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none" id="pcm_collectButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.collectTip}"><span>${textCollect}</span></button>`;
+    const textCollect = (info.search) ? '-Collecting-' : 'Collect';
+    let group = `<div class='card-text' id='pcm_buttonGroup_${myId}'><button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
     if (!info.search) group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.hamTip}"><span>GoHam</span></button>`;
     group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.details}"><span>Details</span></button>`;
     group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.delete}"><span>X</span></button>`;
@@ -243,7 +243,8 @@ class PandaCards {
 				else { theButton.css('background-color', 'red'); this.ctrlDelete.push(myId); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css('background-color', ''); }
 			theButton = null; card = null;
-		})
+    });
+    $(`.pcm_collectButton, .pcm_collectButton1`).attr('data-long-press-delay', '500');
 		$(`.pcm_collectButton, .pcm_collectButton1`).unbind('click').click( async (e) => {
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
       if (theButton.data('longClicked')) theButton.removeData('longClicked');
@@ -265,11 +266,13 @@ class PandaCards {
         else pandaUI.stopCollecting(myId, 'manual');
         theButton = card = null;
       }
-		}).mayTriggerLongClicks({ delay: 500 }).unbind('longClick').on('longClick', async (e) => {
+		}).unbind('long-press').on('long-press', async (e) => {
+      e.preventDefault();
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
       if (!card.is('.pcm_searching')) {
         let myId = card.data('myId'); theButton.data('longClicked', true);
-        if (theButton.is('.pcm_collectDisable')) this.pandaEnabled(myId); else this.pandaDisabled(myId);
+        if (theButton.is('.pcm_collectDisable')) { this.pandaEnabled(myId); }
+        else { if (pandaUI.pandaStats[myId].collecting) await pandaUI.stopCollecting(myId, 'manual'); this.pandaDisabled(myId); }
         theButton = null; card = null;
       }
     });
@@ -308,8 +311,8 @@ class PandaCards {
 			setTimeout( () => {
 				const double = parseInt( $(e.target).data('double'), 10 );
 				if (double !== 2) {
-					let myId = $(e.target).data('myId');
-					navigator.clipboard.writeText(bgPanda.pandaUrls[myId].accept);
+					let myId = $(e.target).data('myId'), info = bgPanda.options(myId);
+					navigator.clipboard.writeText((info.search === 'rid') ? bgPanda.pandaUrls[myId].reqUrl : bgPanda.pandaUrls[myId].accept);
 				}
 			}, 250);
 		});
@@ -350,7 +353,7 @@ class PandaCard {
     if (info) {
       let titleSelect = this.df.find(`${val.title.class}`);
       const titlePre = (titleSelect.attr('data-original-title')!==undefined) ? "data-original-" : "";
-      const shortenThis = (info.data[val.groupId.valueName]) ? info.data[val.groupId.valueName] : info.data[val.reqId.valueName];
+      let shortenThis = (info.data[val.groupId.valueName] && info.search !== 'rid') ? info.data[val.groupId.valueName] : info.data[val.reqId.valueName];
       let reqName = (info.data[val.friendlyReqName.valueName]!=="") ? info.data[val.friendlyReqName.valueName] : info.data[val.reqName.valueName];
       this.df.find(`${val.reqName.class}`).html(reqName);
       this.df.find(`${val.reqName.class}`).attr(`${titlePre}title`, `${reqName}<br>${info.data[val.groupId.valueName]}`).html(`${reqName}`);

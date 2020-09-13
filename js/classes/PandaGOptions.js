@@ -17,6 +17,7 @@ class PandaGOptions {
       'themeName':"normal",         // The theme name being used.
       'cardDisplay':2,              // 2 = Normal look, 1 = Minimal Info, 0 = One Liner card display.
       'logPanelHeight':0,           // The height of the bottom log panel if user resizes it.
+      'toSearchUI':false,           // Should search jobs go directly to search UI?
       'debugger':0                  // Main debugger level.
     };
     this.timers = {};               // The timers object used in script from database or default values.
@@ -150,6 +151,7 @@ class PandaGOptions {
       {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
       {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for hits nearing the expiration time.'}, 
       {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting hits or warnings.'}, 
+      {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
       {'label':'Disable Unfocused window warning:', 'type':'trueFalse', 'key':'unfocusWarning', 'reverse':true, 'tooltip':'Stop notifying me about the unfocussed window because I know what I am doing.'}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
@@ -272,6 +274,7 @@ class PandaGOptions {
   /** Gets the panda card display format
    * @return {number} - Returns the number for the display format to show information. */
   getCardDisplay() { return this.general.cardDisplay; }
+  theToSearchUI(value=null) { if (value !== null) { this.general.toSearchUI = value; this.update(false); } return this.general.toSearchUI; }
   /** Change the display number used to display information in the panda cards.
    * @param  {number} display - The number for the display format to use for information in the panda card. */
   setCardDisplay(display) { this.general.cardDisplay = display; }

@@ -23,6 +23,7 @@ html, body { height: 100%; }
 #pcm_detailContents { height:100%; }
 .pcm-tabDelete { line-height:1.2; color: #eb892d; }
 .pcm_detailsEdit { color: #84f79e; }
+.pcm_optionsEdit { color: #84f79e; }
 .pcm_hitButton { margin-top: 2px !important; margin-bottom: 3px !important; line-height:0.4 !important; font-size:.75rem !important; }
 .pcm_hamButton { display: inline-block; }
 .pcm_hamButton.disabled { background-color: #A9A9A9; border-color: #808080; }
@@ -96,6 +97,8 @@ html, body { height: 100%; }
 .pcm_searchModal .text-pcmInfo { font-size: 0.8em; }
 .btn-group-xs > .btn, .btn-xs { padding: .25rem .4rem; font-size: .875rem; line-height: .5; border-radius: .2rem; }
 .btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
+.dModalBtns > .btn-xxs { line-height: 1.0; margin:5px 0; width:90%; }
+.dModalBtns { width:15%; padding:5px 0 !important; }
 .radio-xxs { height: 12px; }
 .pcm_triggerItem { font-size: .875rem; line-height: 1.0; background-color: #1A3E5E; color: #F0E68C; }
 .pcm_triggerItem:hover .text-xs { color: #000080; }
@@ -116,7 +119,7 @@ html, body { height: 100%; }
 .modal-header-info .close { color: #ffffff !important; }
 .modal-header-info .modal-title { font-size: 1.4em !important; }
 .modal-header-info .modal-body { font-size: 0.7em !important; text-align:left !important; }
-.modal-content { background-color: white; }
+.modal-content { background-color: white; border:1px solid darkcyan !important; }
 .modal-content .modal-body h4 { margin-bottom: 0; }
 .modal-header-primary { color:#fff; padding:9px 15px; border-bottom:1px solid #eee; background-color: #428bca; }
 .fade { transition: opacity 5ms; }
@@ -152,7 +155,7 @@ html, body { height: 100%; }
 .nav-tabs > li.active > a:hover { background-color:#D6E6F3; color:#000; border: 1px solid #1A3E5E; border-bottom-color: transparent; }
 .nav-tabs > li > a:hover { background-color: #D6E6F3 !important; border-radius: 5px; color:#000; } 
 .tab-pane { border: solid 1px rgb(5, 43, 41); border-top: 0;  width: 100%; background-color: #000000; padding: 5px; }
-#pcm_searchDetails .tab-pane, #pcm_triggerDetails .tab-pane { background-color: inherit; }
+#pcm_jobDetails .tab-pane, #pcm_triggerDetails .tab-pane { background-color: inherit; }
 .card-deck { margin-right: 0; margin-left: 0; }
 .selectable { -ms-user-select: auto; -moz-user-select: auto; -khtml-user-select: auto; -webkit-user-select: auto; user-select: auto; }
 .unSelectable { -moz-user-select: -moz-none; -khtml-user-select: none; -webkit-user-select: none; user-select: none; }

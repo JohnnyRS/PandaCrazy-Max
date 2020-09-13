@@ -46,10 +46,8 @@ class EximClass {
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo());
-    exportOptions = globalOpt.exportOptions();
-    exportGrouping = groupings.theGroups();
-    exportAlarms = alarms.exportAlarms(withAlarms);
-    exportTriggers = await bgSearch.exportTriggers(); console.log(exportTriggers);
+    exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups(); exportAlarms = alarms.exportAlarms(withAlarms);
+    exportTriggers = await bgSearch.exportTriggers();
     this.exportPre.jobs = exportJobs.length;
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers, 'SoundOptions':exportAlarms}, withAlarms, () => {
       bgPanda.nullData(false);
@@ -257,7 +255,7 @@ class EximClass {
   async checkProps(data, version, type, typeClass='', typeText='') {
     $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Checking`).css('color','#e4aeae');
     await delay(300);
-    let prop = this.propData[type].prop; console.log(prop);
+    let prop = this.propData[type].prop;
     if (type === 'Tabs' && data.hasOwnProperty(prop)) { for (const tab of data.Tabsdata) { this.theTabs(tab, version); } }
     else if (type !== 'Tabs') this[this.propData[type].func]((data[prop]) ? data[prop] : {}, version);
     if (data.hasOwnProperty(prop)) $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Verified`).css('color','#00fb00');
@@ -273,6 +271,7 @@ class EximClass {
       else { this.importJobsTabs[rData.tabUnique] = {'title': '',list:[rData.id], 'id':rData.tabUnique}; this.tabPosition++; }
     }
     let hamD = (!rData.hamDuration) ? globalOpt.getHamDelayTimer() : rData.hamDuration;
+		if (typeof rData.dateAdded === 'string') rData.dateAdded = new Date(rData.dateAdded).getTime();
     let dO = dataObject(rData.groupId, rData.description, rData.title, rData.reqId, rData.reqName, rData.price, rData.hitsAvailable, rData.assignedTime, rData.expires, rData.friendlyTitle, rData.friendlyReqName);
     let oO = optObject(rData.once, rData.search, rData.tabUnique, rData.limitNumQueue, rData.limitTotalQueue, rData.limitFetches, rData.duration, rData.autoGoHam, hamD, rData.acceptLimit, rData.day, rData.weight, rData.dailyDone);
     this.importSearchData[rData.id] = {'rules':{}, 'history':{}};
@@ -297,6 +296,7 @@ class EximClass {
       if (duration !== '' && duration !== '0') { totalSeconds = this.secondsDuration(duration); }
       if (rData.action.toLowerCase().indexOf('search') !== -1) search = 'rid';
       if (!rData.dateAdded) rData.dateAdded = new Date().getTime();
+      if (typeof rData.dateAdded === 'string') rData.dateAdded = new Date(rData.dateAdded).getTime();
       let hamD = (!rData.hamTimer) ? globalOpt.getHamDelayTimer() : rData.hamTimer * 1000;
       let minutesOff = (rData.secondsOff > 0) ? Math.round(rData.secondsOff / 60) : 0;
       let dO = dataObject(rData.groupId, rData.title, rData.title, rData.requesterId, rData.requesterName, rData.pay,_, totalSeconds,_, rData.friendlyTitle, rData.friendlyRName);

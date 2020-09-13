@@ -50,9 +50,9 @@ function createCheckBox(appendHere, label, id, value, checked, divClass="", inpu
  * @param  {object} appendHere - Jquery element @param  {string} nameGroup - Input name @param  {string} value - Value
  * @param  {string} label      - Label          @param  {bool} checked     - Checked
  * @return {object}            - The Jquery object for the radio button. */
-function radioButtons(appendHere, nameGroup, value, label, checked) {
+function radioButtons(appendHere, nameGroup, value, label, checked, classAdd='') {
   const checkedText = (checked) ? " checked" : "";
-  let radioButton = $(`<label class="radio-inline my-0 mx-3 small"><input type="radio"${checkedText} name="${nameGroup}" size="sm" id="id" value="${value}" class="radio-xxs">${label}</input></label>`).appendTo(appendHere);
+  let radioButton = $(`<label class='radio-inline my-0 mx-3 small ${classAdd}'><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
   return radioButton;
 }
 /** Creates a time input using a datetimepicker from tempus dominus plugin.
@@ -191,7 +191,7 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
  * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? @param  {string} [trBgColor=''] - TR background color */
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor='') {
-  let row=null;
+  let row=null, tdCol = '';
   const trStyle = (trBgColor!=='') ? ` style='background-color:${trBgColor}'` : '';
   if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
   for (const element of thisArrayObject) {
@@ -207,14 +207,16 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
     if (element.label !== '') { padding = ' pl-4'; }
+    if (table & !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
     const pre = (element.pre) ? element.pre : '';
     const addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
-    const tdStyle = ` style='padding-right:1px !important; max-width:320px; ${tdWidth}'`;
+    const tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
+    const tdStyle = ` style='padding-right:1px !important; ${tdMaxWidth} min-width:20px; ${tdWidth}'`;
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
-    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-4 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
+    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
-    if (table) valueCol = $(`<td class='font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
+    if (table) valueCol = $(`<td class='${tdCol}font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
     else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
     valueCol.appendTo(row);
     if (element.type==='range') {

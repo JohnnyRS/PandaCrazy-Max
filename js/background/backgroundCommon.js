@@ -21,7 +21,8 @@ function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); 
  * @return {object}        - Returns the search class in background for easier access. */
 function gSetSearchUI(classUI) {
   extSearchUI = classUI;
-  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); searchUIOpened = false; }
+  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); myPanda.searchUIConnect(false); searchUIOpened = false; }
+  else if (myPanda) myPanda.searchUIConnect(true);
   checkUIConnects();
   return mySearch;
 }

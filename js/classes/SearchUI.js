@@ -194,6 +194,7 @@ class SearchUI {
 	 * @param  {object} data   - Trigger data         @param  {object} status - Trigger status @param  {string} name - Trigger name
 	 * @param  {number} unique - Trigger unique ID */
 	addToUI(data, status, name, unique) {
+		if ($(`#pcm_triggerCard_${unique}`).length) return;
 		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '';
 		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status).click( e => {
 			let theCard = $(e.target).closest('.card'), theButton = theCard.find('.pcm_deleteButton'), unique = theCard.data('unique');

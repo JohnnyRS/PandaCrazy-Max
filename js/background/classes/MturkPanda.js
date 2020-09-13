@@ -65,6 +65,8 @@ class MturkPanda extends MturkClass {
 	 * @param  {string} groupId - The groupId of the panda to creat a url.
 	 * @return {string}					- Returns the created string. */
 	createPreviewUrl(groupId) { return `https://worker.mturk.com/projects/${groupId}/tasks`; }
+	createRequesterUrl(reqId) { return `https://worker.mturk.com/requesters/${reqId}/projects`; }
+	searchUIConnect(status=true) { if (extPandaUI) extPandaUI.searchUIConnect(status); }
 	/** Tests if the database can be opened and has all the storage created.
 	 * @async 				- To wait for the results of the database testing of the storage in the database.
 	 * @return {bool} - True if database is all ready. */
@@ -161,9 +163,6 @@ class MturkPanda extends MturkClass {
 	/** Recreates the database after it's closed usually only used when importing data.
 	 * @async - To wait for the database and the search database to open. */
 	async recreateDB() { await this.openDB(true); await mySearch.openDB(true); }
-	/** This will remove all or non collecting jobs panda data from memory to save memory space.
-	 * @param  {bool} [all=true]		 - Should all the data be removed from memory or only non collecting jobs?
-	 * @param  {bool} [update=false] - Should the database get updated after removing from memory? */
 	/** Remove all panda jobs usually because panda UI is closing.
 	 * @param {bool} - Should the pandaUI be asked to remove all also?
 	 * @async 			 - To wait for all the data to be added first before removing the jobs. */
@@ -291,19 +290,17 @@ class MturkPanda extends MturkClass {
 		else return null;
 	}
 	/** Starts collecting the panda with the unique ID and send info to the panda timer.
-	 * @async												 - To wait for the data to be loaded for this job.
-	 * @param  {number} myId				 - The unique ID for a panda job.
-	 * @param  {bool} goHamStart		 - Go ham at start?
-	 * @param  {number} tempDuration - Temporary duration for this job used for external panda adds.
-	 * @param  {number} goHamDuration		 - Temporary go ham duration for this job to use.
-	 * @return {bool}								 - True if collection has started. */
+	 * @async												  - To wait for the data to be loaded for this job.
+	 * @param  {number} myId				  - Unique ID             @param  {bool} goHamStart - Go ham at start? @param  {number} tempDuration - Temporary duration
+	 * @param  {number} goHamDuration	- Temp go ham duration
+	 * @return {bool}									- True if collection has started. */
 	async startCollecting(myId, goHamStart, tempDuration, goHamDuration) {
 		let hitInfo = this.info[myId], data = await this.dataObj(myId);
 		let stopReason = this.checkIfLimited(myId, false, data), disabled = (hitInfo.disabled) ? hitInfo.disabled : false;
 		if (disabled) stopReason = 'Job is disabled.';
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			this.info[myId].queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
-				if (this.info[myId].data) this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
+				if (this.info[myId] && this.info[myId].data) this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
 			}, async (myId) => {
 				const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 				if (extPandaUI) {
@@ -326,16 +323,12 @@ class MturkPanda extends MturkClass {
 		}
 	}
 	/** Stops collecting this panda with this unique ID.
-	 * @param  {number} myId					 - The unique ID for a panda job.
-	 * @param  {number} hitData				 - The data object for this hit.
-	 * @param  {string} [whyStop=null] - Reason why collecting is stopping. */
+	 * @param  {number} myId - Unique ID @param  {number} hitData	- Data Object @param  {string} [whyStop=null] - Reason why collecting is stopping. */
 	stopCollecting(myId, hitData, whyStop=null) {
 		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
 		if (search) {
-			if (["once","Daily Accept Limit","Fetched Limit","manual","noQual","blocked"].includes(whyStop)) {
-				this.disableSearching(myId, hitData);
-			}
+			if (["once","Daily Accept Limit","Fetched Limit","manual","noQual","blocked"].includes(whyStop)) { this.disableSearching(myId, hitData); }
 		}
 		this.sendStatusToSearch(hitData, false); // Tell search page that this panda is not collecting.
 	}
@@ -349,36 +342,47 @@ class MturkPanda extends MturkClass {
 		else if (search === 'gid' && groupId.charAt(0).toUpperCase() !== 'A') buildSortObject(this.searchesGroupIds, groupId, myId);
 	}
 	/** Sends information to the search class to make a search trigger and save to database.
-	 * @param  {number} myId - MyID        @param  {object} dbInfo   - Data object @param  {object} rules   - Rules object   @param  {object} history - History object
+	 * @param  {number} myId - MyID        @param  {object} dbData   - Data object @param  {object} rules   - Rules object   @param  {object} history - History object
 	 * @param  {bool} run 	 - Run it now	 @param  {number} [sDur=0] - Duration    @param  {number} [sGD=0] - Goham duration */
-	async sendToSearch(myId, dbInfo, rules, history, run, sDur=0, sGD=0) {
-		let tempInfo = {'name':dbInfo.reqName, 'reqId':dbInfo.reqId, 'groupId':dbInfo.groupId, 'title':dbInfo.title, 'reqName':dbInfo.reqName, 'pay':dbInfo.price, 'duration':dbInfo.assignedTime, 'status':'disabled', 'pandaId':myId, 'pDbId':dbInfo.id};
-		let tempOptions = {'duration':sDur, 'once':dbInfo.once, 'limitNumQueue':dbInfo.limitNumQueue, 'limitTotalQueue':dbInfo.limitTotalQueue, 'limitFetches':dbInfo.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0};
-		if (run) await mySearch.addTrigger(dbInfo.search, tempInfo, tempOptions, rules, history, false);
-		else mySearch.addTrigger(dbInfo.search, tempInfo, tempOptions, rules, history, false);
+	async sendToSearch(myId, dbData, rules={}, history={}, run=false, sDur=0, sGD=0, sUI=false, fragments=false) {
+		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':(dbData.disabled) ? 'disabled' : 'searching', 'pandaId':myId, 'pDbId':dbData.id};
+		let tempOptions = {'duration':sDur, 'once':dbData.once, 'limitNumQueue':dbData.limitNumQueue, 'limitTotalQueue':dbData.limitTotalQueue, 'limitFetches':dbData.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0};
+		if (run) await mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
+		else mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
+		if (fragments) mySearch.appendFragments();
 	}
 	/** Add a panda to the panda UI and save to database if it wasn't saved before.
 	 * @async												 - To wait for the data to be added to database if needed.
-	 * @param  {object} dbInfo			 - Data    @param  {bool} autoAdded  - Auto added  @param  {object} passInfo     - Pass Info
+	 * @param  {object} dbData			 - Data    @param  {bool} autoAdded  - Auto added  @param  {object} passInfo     - Pass Info
 	 * @param  {object} rules 			 - Rules   @param  {object} history  - History     @param  {bool} [update=false] - Updated
 	 * @param  {bool} [loaded=false] - Loaded  @param  {number} [sDur=0] - Duration    @param  {number} [sGD=0] 		 - Goham duration */
-	async addPanda(dbInfo, autoAdded, passInfo, rules={}, history={}, update=false, loaded=false, sDur=0, sGD=0) {
+	async addPanda(dbData, autoAdded, passInfo, rules={}, history={}, update=false, loaded=false, sDur=0, sGD=0) {
 		const myId = this.uniqueIndex++; // get the next unique ID for this new panda
-		if (update) await this.updateDbData(null, dbInfo); // Updates panda if it was added by default.
-		this.sortUniqueIds(myId, dbInfo.groupId, dbInfo.reqId, dbInfo.search);
-		if (!dbInfo.hasOwnProperty("id")) await this.addToDB(dbInfo); // Add to database if it has no database key.
-		this.dbIds[dbInfo.id] = myId;
-		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbInfo.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbInfo, 'lastTime':null, 'lastElapsed':0, 'search':dbInfo.search, 'disabled':dbInfo.disabled};
-		const pandaUrl = this.createPandaUrl(dbInfo.groupId); // create the panda url for this panda
-		if (dbInfo.search) await this.sendToSearch(myId, dbInfo, rules, history, passInfo.run, sDur, sGD);
-		this.pandaUrls[myId] = {preview: this.createPreviewUrl(dbInfo.groupId), accept: pandaUrl, urlObj: new UrlClass(pandaUrl + "?format=json")};
-		myHistory.fillInHistory({[dbInfo.groupId]:dbInfo}, 'pandas', loaded);
+		if (update) await this.updateDbData(null, dbData); // Updates panda if it was added by default.
+		this.sortUniqueIds(myId, dbData.groupId, dbData.reqId, dbData.search);
+		if (!dbData.hasOwnProperty("id")) await this.addToDB(dbData); // Add to database if it has no database key.
+		this.dbIds[dbData.id] = myId;
+		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbData.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbData, 'lastTime':null, 'lastElapsed':0, 'search':dbData.search, 'disabled':dbData.disabled};
+		const pandaUrl = this.createPandaUrl(dbData.groupId), reqUrl = this.createRequesterUrl(dbData.reqId);
+		if (dbData.search) await this.sendToSearch(myId, dbData, rules, history, passInfo.run, sDur, sGD);
+		this.pandaUrls[myId] = {'preview': this.createPreviewUrl(dbData.groupId), 'accept': pandaUrl, 'reqUrl': reqUrl, 'urlObj': new UrlClass(pandaUrl + "?format=json")};
+		myHistory.fillInHistory({[dbData.groupId]:dbData}, 'pandas', loaded);
 		if (extPandaUI && !loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
+	}
+	async createSearchTrigger(myId, type) {
+		let theInfo = this.info[myId];	if (!theInfo) return false;
+		let copiedData = Object.assign({}, theInfo.data); copiedData.search = type;
+		await this.sendToSearch(myId, copiedData,_,_, true,_,_, true, true);
+	}
+	async copyToSearchJob(copyId, search) {
+		let theInfo = this.info[copyId];	if (!theInfo) return false;
+		let copiedData = Object.assign({}, theInfo.data); copiedData.dateAdded = new Date().getTime(); copiedData.search = search; delete copiedData.id;
+		if (extPandaUI) await extPandaUI.addPandaDB(copiedData, false);
+		return true;
 	}
 	/** Remove the panda with the unique ID and delete from database if necessary.
 	 * @async									 - To wait for the complete deletion of the job from the database.
-	 * @param  {number} myId	 - The unique ID for a panda job.
-	 * @param  {bool} deleteDB - Should panda be deleted from database? */
+	 * @param  {number} myId	 - The unique ID for a panda job. @param  {bool} deleteDB - Should panda be deleted from database? */
 	async removePanda(myId, deleteDB, whyStop=null) {
 		const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 		this.stopCollecting(myId, data, whyStop);
@@ -396,10 +400,7 @@ class MturkPanda extends MturkClass {
 	/** Changes the duration on the panda timer for panda with myid.
 	 * @async 									 - To wait for the loading of data if needed.
 	 * @param  {number} myId		 - The unique ID for a panda job. */
-	async timerDuration(myId) {
-		let data = await this.dataObj(myId);
-		pandaTimer.changeDuration(this.info[myId].queueUnique, data.duration);
-	}
+	async timerDuration(myId) { let data = await this.dataObj(myId); pandaTimer.changeDuration(this.info[myId].queueUnique, data.duration); }
 	/** Gets data from mturk hit details and assigns them to the panda info object.
 	 * @param  {object} details - Object with all the details from the hit.
 	 * @param  {number} myId		- The unique ID for a panda job.
@@ -496,16 +497,13 @@ class MturkPanda extends MturkClass {
 	gotNewQueue(queueResults, authenticityToken) {
 		if (extPandaUI) {
 			if (this.loggedOff) this.nowLoggedOn(); // If mturk gave queue results then user is logged on.
-			this.authenticityToken = authenticityToken; this.queueAdds = {};
-			extPandaUI.gotNewQueue(queueResults);
+			this.authenticityToken = authenticityToken; this.queueAdds = {}; extPandaUI.gotNewQueue(queueResults);
 		}
 	}
 	/** When something new is in queue then check skipped hits to see if they can be unskipped. */
 	doNewChecks() {
 		if (this.pandaSkipped.length && !this.skippedDoNext) goNext(0, this.pandaSkipped.length, this);
-		if (this.tempPaused && extPandaUI.getQueueTotal() < 25) {
-			pandaTimer.paused = false; this.tempPaused = false;
-		}
+		if (this.tempPaused && extPandaUI.getQueueTotal() < 25) { pandaTimer.paused = false; this.tempPaused = false; }
 		/** Recursion function which checks the first hit in skipped array and then places it back in array
 		 * if it needs to skip again. Uses a timeout to call the function again for each hit in skipped array.
 		 * @param  {number} count    - The current counter for next skipped hit to check.
@@ -523,10 +521,7 @@ class MturkPanda extends MturkClass {
 	/** Fetches the url for this panda after timer class tells it to do so and handles mturk results.
 	 * Can detect logged out, pre's, max hits, no more hits, no qual, blocked and accepted a hit.
 	 * @async												- To wait for the fetch to get back the result from url.
-	 * @param  {object} objUrl			- Url object to use when fetching.
-	 * @param  {number} queueUnique - Unique number for the job in timer queue.
-	 * @param  {number} elapsed			- Exact time it took for the panda timer to do next queue job.
-	 * @param  {number} myId				- The unique ID for a panda job. */
+	 * @param  {object} objUrl - Url object  @param  {number} queueUnique - Unique number @param  {number} elapsed - Elapsed Time @param  {number} myId - The unique ID */
 	async goFetch(objUrl, queueUnique, elapsed, myId) {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
 		let resultsBack = true, info = this.info[myId];

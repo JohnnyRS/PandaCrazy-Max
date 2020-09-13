@@ -60,7 +60,7 @@ class ModalSearchClass {
     async function checkTrigger() {
       const groupVal = $('#pcm_formAddGroupID').val();
       if (/(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,20}|^[^\s]{10,50})/.test(groupVal)) {
-        let groupId = null, reqId = null; console.log('data', data);
+        let groupId = null, reqId = null;
         if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal); else if (groupVal.match(/^[^Aa]/)) groupId = groupVal; else { reqId = groupVal;}
         if (!reqId && !groupId) wrongInput();
         else {
@@ -74,7 +74,7 @@ class ModalSearchClass {
       } else wrongInput();
     }
   }
-  async showDetailsModal(unique, successFunc=null, afterClose=null) {
+  async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass(); let dbId = bgSearch.uniqueToDbId(unique);
     await bgSearch.pingTriggers(dbId).then( () => { return; } );
     let searchChanges = {'details':Object.assign({}, bgSearch.data[dbId]), 'rules':null, 'options':null, 'searchDbId':null};
@@ -88,7 +88,7 @@ class ModalSearchClass {
     detailContents = $(`<div class='pcm_detailCont card-deck'></div>`).appendTo(modalBody);
     this.triggerOptions(df, dbId, null, modal.tempObject[idName]);
     modal.showModal(null, () => {
-      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df).appendTo(detailContents);
+      $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df).appendTo(detailContents);
       modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { if (afterClose) afterClose(); else modal = null; });
   }
@@ -133,7 +133,8 @@ class ModalSearchClass {
   async triggerOptions(appendHere, dbId, pdbId, changes) {
     let bGStr = '', eTStr = '', iTStr = '';
     changes.searchDbId = await bgSearch.pingTriggers(dbId, pdbId).then( (d) => { return d; } );
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
+    $(`<div class='pcm_optionsEdit text-center mb-2 w-100'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
+    let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered w-100'></table>`).appendTo(appendHere);
     changes.rules = bgSearch.rulesCopy(changes.searchDbId); changes.options = bgSearch.optionsCopy(changes.searchDbId);
     bGStr = this.rulesToStr(changes.rules.blockGid); eTStr = this.rulesToStr(changes.rules.exclude); iTStr = this.rulesToStr(changes.rules.include);
     displayObjectData([
@@ -167,6 +168,6 @@ class ModalSearchClass {
       {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a hit to do before stopping.'},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
       {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.'},
-    ], appendHere, changes, true);
+    ], theTable, changes, true);
   }
 }

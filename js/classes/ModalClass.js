@@ -140,7 +140,7 @@ class ModalClass {
   showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
     const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    const idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
+    let idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
     this.showModal(null, () => {
       let docKeys = '';
       if (question!=='') { // Should an input field be shown with a question?
@@ -148,10 +148,10 @@ class ModalClass {
         docKeys = '#pcm_formQuestion,';
       }
       $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
-        if ( (event.keyCode ? event.keyCode : event.which) == '13' ) yesFunc(); // Return key pressed.
+        if ( (e.keyCode ? e.keyCode : e.which) == '13' ) yesFunc(); // Return key pressed.
       });
         $('#pcm_formQuestion').focus().select();
-      if (afterShow) afterShow();
+      if (afterShow) afterShow(idName);
     }, () => { if (afterClose) afterClose(); else modal = null; } );
   }
 }
