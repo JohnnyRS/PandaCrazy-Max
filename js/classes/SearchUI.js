@@ -104,7 +104,7 @@ class SearchUI {
 	async prepareSearch() {
 		bgSearch.prepareSearch();
 		let controls = $('#pcm_uiSearchControls');
-		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> <button class='btn btn-primary btn-xxs' id='pcm_addCustomTriggers'>Custom</button></span> | `);
+		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> </span> | `);
 		let filters = $(`<span id='pcm_filterDropDown'></span>`).appendTo(controls);
     this.addSubMenu(filters, 'Filters ', '', 
       [{'type':'item', 'label':'<i class="far fa-check-square"></i> Show All', 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
