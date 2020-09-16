@@ -77,7 +77,7 @@ html, body { height: 100%; }
 #pcm_selectedBox { font-size: 10px; }
 .pcm_nameGroup, .pcm_nameGroup1, .pcm_priceGroup { font-weight: 600 !important; line-height: 0.8 !important; padding: 0 !important; margin: 0 !important; }
 .pcm_triggerGroup { margin:0 !important; line-height: 1.0 !important; font-weight:400 !important; font-size: 0.8em !important; }
-.pcm_triggerName { padding: 2px 0 4px 0; }
+.pcm_triggerName, .pcm_triggerStats { padding: 2px 0 4px 0; }
 .pcm_reqName, .pcm_reqName1 { color: #000080; font-weight: 700 !important; line-height: 1.2 !important; font-size: 0.8em !important; padding-left: 1px !important; }
 .pcm_groupId { color: #000000; font-weight: 700 !important; line-height: 1.0 !important; font-size: 0.530em !important; padding-top:3px !important; }
 .pcm_price, .pcm_numbers, .pcm_title { font-weight: 600 !important; line-height: 1.2 !important; font-size: 0.7em !important; }

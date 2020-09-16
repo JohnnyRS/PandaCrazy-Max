@@ -31,7 +31,7 @@ class ModalSearchClass {
         {'label':'Pay Amount:', 'type':'text', 'key':'price', 'tooltip':'The payment reward for this job. May not be changed by user.'},
       ], table1, data, true);
     }
-    $(`<div class='text-left pl-5' style='color:aqua'>Panda hits auto collecting options:</div>`).appendTo(df);
+    $(`<div class='text-left pl-5' style='color:aqua'>Panda hits auto collecting options (optional):</div>`).appendTo(df);
     let table2 = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
     displayObjectData([
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key':'limitNumQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
@@ -124,7 +124,7 @@ class ModalSearchClass {
     modal.showModal(null, () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
       $(`#${idName}`).keypress( (e) => {
-        if((event.keyCode ? event.keyCode : event.which) == '13') saveFunc();
+        if((e.keyCode ? e.keyCode : e.which) == '13') saveFunc();
       });
     }, () => { });
   }
@@ -169,5 +169,13 @@ class ModalSearchClass {
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
       {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.'},
     ], theTable, changes, true);
+  }
+  showTriggerFound() {
+    if (!modal) modal = new ModalClass();
+    const idName = modal.prepareModal(null, '640px', 'modal-header-info modal-lg', 'Edit Search Options', '', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Done', saveFunc, 'invisible', 'No', null, 'invisible', 'Cancel');
+    let df = document.createDocumentFragment();
+    modal.showModal(null, () => {
+      $(`#${idName} .${modal.classModalBody}`).append(df);
+    }, () => { });
   }
 }

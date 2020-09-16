@@ -121,9 +121,9 @@ class ModalClass {
    * @param  {function} deleteFunc - Function to call after delete button is clicked.
    * @param  {function} noFunc     - Function to call after the no button is clicked.
    * @param  {function} cancelFunc - Function to call after the cancel button is clicked. */
-  showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc) {
+  showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc, afterClose=null) {
     const idName = this.prepareModal(null, '600px', 'modal-header-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='text-primary'>${hitDetails}</h5>`, 'text-center bg-white text-dark', '', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', 'Cancel');
-    this.showModal(cancelFunc,_, () => { modal = null; });
+    this.showModal(cancelFunc,_, () => { if (afterClose) afterClose(); else modal = null; });
     $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc(); } });
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.

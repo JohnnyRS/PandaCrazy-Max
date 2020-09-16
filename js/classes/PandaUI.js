@@ -224,10 +224,10 @@ class PandaUI {
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
-	async removeJobs(jobsArr, afterFunc=null, whyStop=null) {
+	async removeJobs(jobsArr, afterFunc=null, whyStop=null, afterClose=null) {
 		let bodyText = "";
-		jobsArr.forEach( (thisId) => { bodyText += "( "+$(`#pcm_hitReqName_${thisId}`).html()+" "+[$(`#pcm_hitPrice_${thisId}`).html()]+" )<BR>"; });
-		modal = new ModalClass();
+		jobsArr.forEach( (thisId) => { bodyText += '( ' + $(`#pcm_hitReqName_${thisId}`).html()+' '+[$(`#pcm_hitPrice_${thisId}`).html()]+' )<BR>'; });
+		if (!modal) modal = new ModalClass();
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
@@ -235,7 +235,9 @@ class PandaUI {
 					rejected => console.error(rejected));
 			});
 			modal.closeModal(); jobsArr.length = 0;
-		}, null, () => { jobsArr.length = 0; $(".pcm_deleteButton").css("background-color", ""); });
+		}, () => { if (afterFunc) afterFunc('NO'); },
+			 () => { jobsArr.length = 0; $('.pcm_deleteButton').css('background-color', ''); },
+			 () => { if (afterClose) afterClose(); else modal = null; });
 	}
 	/** Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
@@ -319,7 +321,7 @@ class PandaUI {
 				if (myId === null) {
 					let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
 					let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-					if (globalOpt.theToSearchUI() && bgSearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
+					if (search && globalOpt.theToSearchUI() && bgSearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
 					else this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
 				} else if (search === 'rid') this.doSearching(myId);
 				else this.startCollecting(myId)

@@ -129,7 +129,7 @@ function setSendData(sendData) {
  * @param  {string} command - The command to send for this button. */
 function buttonsSend(e, command, passData=null) {
   let theIndex = -1, data = passData;
-  if (!passData && Object.keys(hitsData).length) { theIndex = $(e.target).closest('.table-row').index(); data = setSendData(hitsData[theIndex]); }
+  if (!passData && Object.keys(hitsData).length) { theIndex = $(e.target).closest('.table-row').index(); data = setSendData(hitsData[theIndex-1]); }
   else if (!passData && Object.keys(hitData).length) { data = setSendData(hitData); }
   if (data) this.sendToExt(command,_, data.groupId, data.description, data.title, data.reqId, data.reqName, data.reward);
 }
@@ -239,4 +239,3 @@ chrome.storage.local.get(['pcm_running', ...holdArray], (result) => {
   else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
   else { console.log('unknown page'); }
 });
-

@@ -24,7 +24,7 @@ class MturkHitSearch extends MturkClass {
 		this.resultsBack = true;									// Used to make sure the last results from mturk has been processed.
 		this.loggedOff = false;         					// Are we logged off from mturk?
 		this.queueDbIds = [];											// Array of dbid's in memory which is limited by size to save memory use.
-		this.queueSize = 30;											// The number of trigger expanded info in memory.
+		this.queueSize = 40;											// The number of trigger expanded info in memory.
 		this.triggers = {};												// Object with info in memory for triggers. Stays in memory.
 		this.data = {};														// Object with all the data for triggers. Stays in memory.
 		this.options = {};												// Object with all the options for triggers. Memory limits enforced.
@@ -119,11 +119,12 @@ class MturkHitSearch extends MturkClass {
 								extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
 								if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI);
 							} else if (!this.loaded) {
-								let stats = Object.assign({'numFound':0, 'added':new Date().getTime(), 'lastFound':null},trigger);
-								this.data[dbId] = {...trigger, 'numFound':stats.numFound, 'added':stats.added, 'lastFound':stats.lastFound};
-								this.options[dbId] = options;  this.rules[dbId] = data.rules[data.ruleSet];
+								let numHits = Object.keys(history.gids).length; 
+								let stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null, 'numHits':numHits},trigger);
+								this.data[dbId] = {...trigger, ...stats}; this.options[dbId] = options;  this.rules[dbId] = data.rules[data.ruleSet];
 								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`; this.groupIdHist[dbId] = Object.assign({'gids':{}, 'dbId':dbId}, history);
-								this.fillInObjects(this.triggersAdded++, dbId, trigger, status, valueString, trigger.searchUI); stats = {};
+								if (!trigger.hasOwnProperty('numHits')) this.updateToDB(this.storeName, this.data[dbId]);
+								this.fillInObjects(this.triggersAdded++, dbId, this.data[dbId], status, valueString, this.data[dbId].searchUI); stats = {};
 							}
 							success[0] = "Loaded all search triggers from database";
 							history = null;
@@ -283,8 +284,8 @@ class MturkHitSearch extends MturkClass {
 		}
 	}
 	maintainGidHistory(dbId, key) {
-		let thisHistory = this.groupIdHist[dbId];
-		thisHistory['gids'][key] = new Date().getTime();
+		let thisHistory = this.groupIdHist[dbId]; thisHistory.gids[key] = new Date().getTime();
+		this.data[dbId].numHits = Object.keys(thisHistory.gids).length;
 		this.updateToDB(this.storeHistoryName, this.groupIdHist[dbId], false);
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
@@ -350,11 +351,12 @@ class MturkHitSearch extends MturkClass {
 				if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(item.hit_set_id)) {
 					if ((key1 === 'rid' && !rules.blockGid.has(item.hit_set_id)) || key1 === 'gid') {
 						console.log(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${item.hit_set_id}`);
-						if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count);
-						this.sendToPanda(item, thisTrigger, this.options[dbId], key1); this.maintainGidHistory(dbId, item.hit_set_id); 
+						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime(); this.maintainGidHistory(dbId, item.hit_set_id); 
+						if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
+						this.sendToPanda(item, thisTrigger, this.options[dbId], key1);
 						if (this.options[dbId].once && key1 === 'rid') this.setTempBlockGid(item.hit_set_id, true);
 						if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
-						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime(); this.updateToDB(this.storeName, this.data[dbId]);
+						this.updateToDB(this.storeName, this.data[dbId]);
 					} else if (key1 === 'terms') {
 						console.log(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${item.hit_set_id} - ${item.monetary_reward.amount_in_dollars}`);
 						this.setTempBlockGid(item.hit_set_id, true);
@@ -449,7 +451,7 @@ class MturkHitSearch extends MturkClass {
 	/** Sets up object for the group ID history for a trigger and returns it.
 	 * @param  {object} history - Trigger History
 	 * @return {object}					- The object with the group ID history set. */
-	fillInGidHistory(history) { return Object.keys(history).map((key) => { return {'gid':key, 'date':history[key].date}; } ); }
+	fillInGidHistory(history) { return Object.keys(history).map((key) => { return {[key]:history[key].date}; } ); }
 	/** Fills objects in memory used when searching for hits. Used for adding from database or from user.
 	 * @param  {number} count	- Unique ID      @param  {number} dbId				 - Database ID    @param  {object} data - Trigger data
 	 * @param  {bool} status	- Trigger status @param  {string} valueString - Unique string 	@param  {bool} SUI 		- From searchUI? */
@@ -488,9 +490,9 @@ class MturkHitSearch extends MturkClass {
 		if (!info.pDbId) info.pDbId = -1;
 		this.triggersAdded++;
 		if (type === 'custom' && !info.idNum) { key2 = this.triggersAdded; valueString = `${type}:${key2}:${sUI}`; }
-		let theObject = {'type':type, 'value':key2, 'pDbId':info.pDbId, 'searchUI':sUI, 'name':info.name, 'disabled':(info.status === 'disabled'), 'numFound':0, 'added':new Date().getTime(), 'lastFound':null};
+		let theObject = {'type':type, 'value':key2, 'pDbId':info.pDbId, 'searchUI':sUI, 'name':info.name, 'disabled':(info.status === 'disabled'), 'numFound':0, 'added':new Date().getTime(), 'lastFound':null, 'numHits':0};
 		let theRule = Object.assign({}, this.ruleSet, rules), theRules = {rules:[theRule], 'ruleSet':0};
-		let theHistory = {'gids':this.fillInGidHistory(history)};
+		let theHistory = {'gids':this.fillInGidHistory(history)}; theObject.numHits = Object.keys(theHistory.gids).length;
 		await this.saveToDatabase(theObject, options, theRules, theHistory, false);
 		let dbId = theObject.id; this.data[dbId] = theObject;
 		this.options[dbId] = options; this.rules[dbId] = theRule;

@@ -158,11 +158,14 @@ class EximClass {
       }
       if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules, history, true);
       let triggerData = this.importTriggersData;
-      let imTriggers = [], imOptions = [], imRules = [], imHistory = [];
+      let imTriggers = [], imOptions = [], imRules = [], imHistory = [], counter = 1;
       if (triggerData.length) {
         for (const data of this.importTriggersData) {
           delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId; delete data.history.dbId;
-          imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history);
+          let numHits = Object.keys(data.history.gids).length;
+          if (numHits > 0 && data.trigger.numFound === 0) data.trigger.numFound = numHits;
+          if (numHits > 0 && data.trigger.numHits === 0) data.trigger.numHits = numHits;
+          imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history); counter++;
         }
         await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true);
       }
@@ -390,7 +393,7 @@ class EximClass {
   theTriggers(rData) {
     let addedTime = new Date().getTime();
     for (const value of Object.values(rData)) {
-      if (!value.trigger.hasOwnProperty('added')) { value.trigger.numFound = 0; value.trigger.added = addedTime++; value.trigger.lastFound=null; }
+      if (!value.trigger.hasOwnProperty('added')) { value.trigger.numFound = 0; value.trigger.added = addedTime++; value.trigger.lastFound=null; value.trigger.numHits = 0; }
       for (const rule of value.rules.rules) {
 				rule.blockGid = new Set(rule.blockGid); rule.blockRid = new Set(rule.blockRid); rule.exclude = new Set(rule.exclude);
 				rule.include = new Set(rule.include); rule.onlyGid = new Set(rule.onlyGid);

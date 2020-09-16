@@ -162,6 +162,7 @@ class SearchUI {
 	cardEvents(card=null) {
 		let element = (card) ? $(card).find('.pcm_triggerCard') : $('.pcm_triggerCard');
 		element.unbind('dblclick').on('dblclick', (e) => { this.updateTrigger($(e.target).closest('.card')); });
+    $(`.pcm_triggerCard`).find('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
 	}
 	sortCards(type) {
 		let sortBy = this.sortingValues[this.sorting];
@@ -196,18 +197,24 @@ class SearchUI {
 	addToUI(data, status, name, unique) {
 		if ($(`#pcm_triggerCard_${unique}`).length) return;
 		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '';
-		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status).click( e => {
+		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status).click( async e => {
 			let theCard = $(e.target).closest('.card'), theButton = theCard.find('.pcm_deleteButton'), unique = theCard.data('unique');
 			theButton.css({'backgroundColor':'', 'color':'', 'borderColor':''});
 			if (e.ctrlKey) {
 				if (this.ctrlDelete.includes(unique)) { this.ctrlDelete = arrayRemove(this.ctrlDelete, unique); }
 				else { theButton.css({'backgroundColor':'darkred', 'color':'yellow', 'borderColor':'yellow'}); this.ctrlDelete.push(unique); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css({'backgroundColor':'', 'color':'', 'borderColor':''}); }
+			else if (e.shiftKey) {
+				await bgSearch.pingTriggers(bgSearch.uniqueToDbId(unique)).then( () => { return; } );
+				theCard.find(`.pcm_triggerName`).toggle(); theCard.find(`.pcm_triggerStats`).toggle();
+			}
 			theButton = null; theCard = null;
 		});
 		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
 		let text = $(`<div class='card-text' id='output_${unique}'></div>`).appendTo(body);
-		let nameGroup = $(`<div class='pcm_triggerGroup row w-100 px-0'></div>`).append($(`<span class='pcm_triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm_triggerName_${unique}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${name}'>${name}</span>`).css('cursor', 'default')).appendTo(text);
+		let nameGroup = $(`<div class='pcm_triggerGroup row w-100 px-0'></div>`).appendTo(text);
+		nameGroup.append($(`<span class='pcm_triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm_triggerName_${unique}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${name}<br><small>Double click to Disable or Enable trigger.</small>'>${name}</span>`).css('cursor', 'default'));
+		nameGroup.append($(`<span class='pcm_triggerStats col mr-auto px-0 text-truncate unSelectable small' id='pcm_triggerStats_${unique}'>Found Hits: ${data.numHits} | Total: ${data.numFound}</span>`).hide());
 		let buttonGroup = $(`<span class='pcm_tButtonGroup col col-auto text-right px-0' id='pcm_tButtons_${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm_optionsMenu'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique');
@@ -232,7 +239,10 @@ class SearchUI {
 		}
 		this.cardEvents();
 	}
-	triggeredHit(unique) { $(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 ); }
+	triggeredHit(unique, triggerData) {
+		$(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
+		$(`#pcm_triggerStats_${unique}`).html(`Found Hits: ${triggerData.numHits} | Total: ${triggerData.numFound}`);
+	}
 	/** Shows the add search trigger modal. */
 	showSearchAddModal(doCustom=false) { this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerAddModal( () => this.modalSearch = null, doCustom ); }
 	/** Remove the trigger with the type and group ID or requester ID from the search UI.

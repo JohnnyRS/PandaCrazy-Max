@@ -302,12 +302,14 @@ class ModalJobClass {
       if (type==='groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm_selection_${bgPanda.dbIds[value]}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === 'jobs') $('<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>').click( (e) => {
-      const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => Number(element.val())).get();
-      if (selected.length) pandaUI.removeJobs(selected, async () => {
-          $(modalBody).find('.pcm_jobTable').remove();
-          let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
-          this.showJobsTable(modalBody, filtered,_, () => {});
-        }, 'manual');
+      const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => Number($(element).val()) ).get();
+      if (selected.length) pandaUI.removeJobs(selected, async (result) => {
+          if (result !== 'NO') {
+            $(modalBody).find('.pcm_jobTable').remove();
+            let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
+            this.showJobsTable(modalBody, filtered,_, () => {});
+          }
+        }, 'manual', () => {});
     }).appendTo(inputControl);
     $(df).find('input:radio[name="theJobs"]').click( (e) => {
       $(e.target).closest('.pcm_modalControl').find('.pcm_searchingJobs').click();

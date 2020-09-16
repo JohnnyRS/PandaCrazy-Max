@@ -236,8 +236,7 @@ class PandaCards {
 	/** Binds events to all cards on page. Will unbind any events too so won't double events. */
 	cardButtons() {
 		$(`.pcm_pandaCard`).unbind('click').click( e => {
-			let card = $(e.target).closest('.card'), theButton = card.find(".pcm_deleteButton"), myId = card.data('myId');
-			theButton.css("background-color", "");
+			let card = $(e.target).closest('.card'), theButton = card.find('.pcm_deleteButton'), myId = card.data('myId');
 			if (e.ctrlKey) {
 				if (this.ctrlDelete.includes(myId)) { theButton.css('background-color', ''); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
 				else { theButton.css('background-color', 'red'); this.ctrlDelete.push(myId); }
@@ -286,19 +285,22 @@ class PandaCards {
 			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
 			theButton.data('longClicked', true);
 			if (theButton.hasClass('pcm_delayedHam')) {
-				theButton.css({"background-color":this.hamBtnBgColor, "color":this.hamBtnColor}).removeClass("pcm_delayedHam");
-				info.autoTGoHam = (data.autoGoHam) ? "disable" : "off";
+				theButton.css({'background-color':this.hamBtnBgColor, 'color':this.hamBtnColor}).removeClass('pcm_delayedHam');
+				info.autoTGoHam = (data.autoGoHam) ? 'disable' : 'off';
 			} else { 
-				info.autoTGoHam = "on";
-				theButton.css({"background-color": "#097e9b", "color":"#FFFFFF"}).addClass("pcm_delayedHam");
+				info.autoTGoHam = 'on';
+				theButton.css({'background-color': '#097e9b', 'color':'#FFFFFF'}).addClass('pcm_delayedHam');
 				pandaUI.hamButtonClicked(myId, theButton, true);
 			}
 			theButton = null;
 		});
-		$(`.pcm_deleteButton , .pcm_deleteButton1`).unbind('click').click((e) => {
-			let myId = $(e.target).closest('.card').data('myId');
-			if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
-			pandaUI.removeJobs(this.ctrlDelete,_, 'manual');
+		$(`.pcm_deleteButton, .pcm_deleteButton1`).unbind('click').click((e) => {
+      let card = $(e.target).closest('.card'), theButton = card.find('.pcm_deleteButton'), myId = card.data('myId'); e.stopPropagation();
+      if (this.ctrlDelete.length > 0) theButton.css('background-color', 'red');
+      if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
+			pandaUI.removeJobs(this.ctrlDelete, (response) => {
+        if (response === 'NO' && this.ctrlDelete.length === 1) { this.ctrlDelete = []; $('.pcm_deleteButton').css('background-color', ''); }
+      }, 'manual');
 		});
 		$(`.pcm_detailsButton , .pcm_detailsButton1`).unbind('click').click( async (e) => {
 			let myId = $(e.target).closest('.card').data('myId');
