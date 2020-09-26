@@ -5,6 +5,7 @@ let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
+$('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1000}, trigger:'hover'});
 
 async function getBgPage() {
   chrome.runtime.getBackgroundPage(function(backgroundPage){
@@ -13,7 +14,7 @@ async function getBgPage() {
 }
 async function prepare() {
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
-    bgPanda = bgPage.gGetPanda(), bgQueue = bgPage.gGetQueue(), bgHistory = bgPage.gGetHistory(), bgSearch = bgPage.gGetSearch();
+    bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
     globalOpt = new PandaGOptions(), alarms = new AlarmsClass(), notify = new NotificationsClass();
     groupings = new PandaGroupings(), pandaUI = new PandaUI(), menus = new MenuClass("pcm_quickMenu");
     startPandaCrazy();
@@ -38,7 +39,6 @@ async function startPandaCrazy() {
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
     await bgSearch.loadFromDB();
     await pandaUI.prepare(showMessages); // Wait for panda jobs to load and show message or error.
-    $('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'}); // Enable all tooltips.
     $('.sortable').sortable().addClass('unSelectable'); // Set up sortables Disable selection for sortables.
     showMessages(['Finished loading all!'], null, "Main"); // Show last Message that all should be good.
     setTimeout( () => {

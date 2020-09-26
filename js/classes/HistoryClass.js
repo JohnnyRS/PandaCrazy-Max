@@ -31,10 +31,9 @@ class HistoryClass {
 	}
 	wipeData() { this.db.deleteDB(); }
 	async findValue(value) {
-		await this.db.getFromDB(this.storeHistName, value).then( r => {
-			console.log('found: ',r);
-		} )
+		await this.db.getFromDB(this.storeHistName, value).then( r => {} );
 	}
+	async findValues(values) { let returnValue = {}; await this.db.getFromDB(this.storeHistName,_, values).then( r => { returnValue = r; } ); return returnValue; }
 	/** Deletes data that is from searchResults and hasn't been updated in 15 days. */
 	maintenance() {
 		let beforeDate = new Date(); beforeDate.setDate( beforeDate.getDate() - 15 );

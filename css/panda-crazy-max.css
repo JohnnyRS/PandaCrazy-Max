@@ -6,6 +6,7 @@ html, body { height: 100%; }
 #pcm_volumeVertical { height:200px; margin-left:15px; }
 #pcm_volumeVertical .ui-slider-range { background-color: #cecfcf; }
 .fill { min-height: 100%; height: 100%; }
+.pcm_tvLink { color:gold; text-decoration:underline; }
 .btn-primary-dark { background-color: #063e4d; color: #ebf0f0; }
 .btn-primary-dark:hover { color: #E0FFFF !important; background-color: #2d78b9; }
 .pcm_top { height:45px; border-width:1px !important; border-bottom-width:4px !important; line-height: 1.1em; background-color:#400a0a; }
@@ -68,6 +69,7 @@ html, body { height: 100%; }
 .pcm_pandaCard .pcm_hitStats .gidsearch { color:indigo; }
 .pcm_triggerCard { margin:0 0 0 3px !important; max-width:250px; min-width:250px; color:#7FFFD4; background-color:#000080; font-size:0.9em; padding: 1px 2px 0 2px !important; }
 .pcm_triggerCard.pcm_disabled { color:#adb5bd; background-color:black }
+.pcm_triggerCard.pcm_tempDisabled { color:white; background-color:dimgray;}
 .pcm_triggerCard .pcm_tButtonGroup { border-left: 1px solid burlywood; border-bottom: 1px solid burlywood; padding: 3px 0 0 2px; margin-top: -3px; }
 .pcm_triggerGroup { padding: 3px 0 0 0; }
 .card-body { padding: 0 1px; }
@@ -78,6 +80,8 @@ html, body { height: 100%; }
 .pcm_nameGroup, .pcm_nameGroup1, .pcm_priceGroup { font-weight: 600 !important; line-height: 0.8 !important; padding: 0 !important; margin: 0 !important; }
 .pcm_triggerGroup { margin:0 !important; line-height: 1.0 !important; font-weight:400 !important; font-size: 0.8em !important; }
 .pcm_triggerName, .pcm_triggerStats { padding: 2px 0 4px 0; }
+.pcm_foundHitsTable { background-color: darkslategray; }
+.pcm_foundHitsTable small { background-color: darkgreen; color: yellow; font-size:90%; }
 .pcm_reqName, .pcm_reqName1 { color: #000080; font-weight: 700 !important; line-height: 1.2 !important; font-size: 0.8em !important; padding-left: 1px !important; }
 .pcm_groupId { color: #000000; font-weight: 700 !important; line-height: 1.0 !important; font-size: 0.530em !important; padding-top:3px !important; }
 .pcm_price, .pcm_numbers, .pcm_title { font-weight: 600 !important; line-height: 1.2 !important; font-size: 0.7em !important; }
@@ -91,15 +95,19 @@ html, body { height: 100%; }
 #pcm_logTabContents .time { color:#18e656; }
 #pcm_logTabContents .pcm_emp { color:#47cdcd; }
 .table-moreCondensed>tbody>tr>td { padding-right:1px !important; font-size: 11px; }
+.table-moreCondensed>thead { border-bottom: 3px ridge darkslategrey; border-top: 3px ridge darkslategrey; }
+.table-moreCondensed>thead>tr>td { font-size: 11px; padding:2px 1px 0 1px !important; }
 .table-xs { font-size: .575rem !important; line-height: .1 !important; }
 .text-xs { font-size: .575rem !important; color: #FFF5EE; }
 .text-pcmInfo { color: #edf5e6; padding-top:1px !important; padding-bottom:1px !important; font-size:11px; line-height:1.0; }
+.pcm_triggeredHits .text-pcmInfo { padding-top:2px !important; }
 .pcm_searchModal .text-pcmInfo { font-size: 0.8em; }
 .btn-group-xs > .btn, .btn-xs { padding: .25rem .4rem; font-size: .875rem; line-height: .5; border-radius: .2rem; }
 .btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
 .dModalBtns > .btn-xxs { line-height: 1.0; margin:5px 0; width:90%; }
 .dModalBtns { width:15%; padding:5px 0 !important; }
 .radio-xxs { height: 12px; }
+.pcm_foundHitsButton { margin-top:-2px; line-height:0.3; border:0; }
 .pcm_triggerItem { font-size: .875rem; line-height: 1.0; background-color: #1A3E5E; color: #F0E68C; }
 .pcm_triggerItem:hover .text-xs { color: #000080; }
 .pcm_triggerItem.pcm_disabled { color: #C0C0C0; }
@@ -123,7 +131,7 @@ html, body { height: 100%; }
 .modal-content .modal-body h4 { margin-bottom: 0; }
 .modal-header-primary { color:#fff; padding:9px 15px; border-bottom:1px solid #eee; background-color: #428bca; }
 .fade { transition: opacity 5ms; }
-.pcm_inputDiv-question { margin-left:70px; }
+.pcm_inputDiv-question { margin-left:20px; }
 .pcm_jobTable { margin-bottom:5px !important; }
 .pcm_detailsTable tr { line-height: 0.8; font-size: 0.7em; }
 .pcm_searchModal .pcm_detailsTable tr { font-size: 1.0em; }

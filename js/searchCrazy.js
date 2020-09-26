@@ -1,5 +1,6 @@
-let bgPage = null, search = null, bgQueue = null, bgSearch = null, modal = null;
+let bgPage = null, search = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null;
 let localVersion = localStorage.getItem('PCM_version');
+$('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1100}, trigger:'hover'});
 
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
@@ -14,7 +15,7 @@ async function getBgPage() {
 }
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion);
-  search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search);
+  search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory();
   startSearchCrazy();
 }
 /** Starts the search crazy UI and prepares all the search triggers. */

@@ -160,7 +160,7 @@ function flattenSortObject(obj, key, value) {
 /** Shorten the group ID into a 2 letters then "..." and 4 letters at end.
  * @param  {string} gId - The group ID to shorten.
  * @return {string}     - The shortened string for the group ID. */
-function shortenGroupId(gId) { return gId.slice(0, 2) + "..." + gId.slice(-4); }
+function shortenGroupId(gId, preNum=2, postNum=4) { return gId.slice(0, preNum) + "..." + gId.slice(-1 * postNum); }
 /** Toggles showing a text or a text input of a value for editing purposes.
  * @param  {object} thisObject     - Main object @param  {object} target      - Changed target @param  {object} obj             - Object with key
  * @param  {string} theValue       - Value       @param  {bool} [editMe=null] - Input or text? @param  {string} [textBorder=''] - Border class
@@ -186,11 +186,19 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
     } else $(`#pcm_tdLabel_${obj.key}`).css('color', 'red');
   }
 }
+function markInPlace(findThis, fromHere) {
+  let find = findThis.toLowerCase(), findLength = find.length, str = fromHere.toLowerCase(), start = 0, returnStr = '';
+  if (!findThis.length || !fromHere.length) return fromHere;
+  while ((index = str.indexOf(find, start)) > -1) {
+    returnStr = returnStr + fromHere.substring(start, index) + '<mark>' + fromHere.substr(index, findLength) + '</mark>'; start = index + findLength;
+  }
+  return returnStr + fromHere.substring(start);
+}
 /** Displays an array of objects line by line in different ways and allows for toggling an edit input
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
  * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? @param  {string} [trBgColor=''] - TR background color */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor='') {
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor='', append=true) {
   let row=null, tdCol = '';
   const trStyle = (trBgColor!=='') ? ` style='background-color:${trBgColor}'` : '';
   if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
@@ -198,13 +206,14 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (!useObject || (element.ifNot && useObject[element.ifNot])) continue;
     let textColor = '', padding='pl-0', valueCol=null, textBorder = 'bottom-dotted';
-    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : '');
+    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
     if (theValue === '') { theValue = '{Empty}'; textColor = ' text-danger'; }
     if (theValue === -1) { theValue = '0'; }
     if (theValue === undefined) { theValue = element.default; }
     if (element.money) theValue = Number(theValue).toFixed(2);
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
+    if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
     if (element.label !== '') { padding = ' pl-4'; }
     if (table & !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
@@ -234,7 +243,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
         if (element.reverse) useObject[element.key] = !useObject[element.key];
       }).appendTo(valueCol);
     } else if (element.type === 'button') {
-      const button = $(`<button class='btn btn-primary${element.addClass}' id='${element.idStart}_${element.unique}'>${element.btnLabel}</button>`);
+      element.btnColor = (element.hasOwnProperty('btnColor')) ? element.btnColor : 'primary'
+      const button = $(`<button class='btn btn-${element.btnColor}${element.addClass}' id='${element.idStart}_${element.unique}'>${element.btnLabel}</button>`);
       if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
       $(button).appendTo(valueCol);
     } else if (element.type === 'checkbox') {
@@ -247,9 +257,9 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     } else if (element.type==='string') {
       const id = (element.id) ? ` id=${element.id}` : ``;
       const border = (element.noBorder) ? '' : ` class='border-light'`;
-      $(`<span${border}${id}>${element.string}</span>`).appendTo(valueCol);
+      $(`<span${border}${id}>${theValue}</span>`).appendTo(valueCol);
     }
-    row.appendTo(divContainer);
+    if (append) row.appendTo(divContainer); else row.prependTo(divContainer);
     $(row).show();
   }
 }

@@ -61,7 +61,6 @@ class ModalAlarmClass {
         let name = $('#voiceSelect option:selected').data('name');
         alarms.theVoiceIndex(index); alarms.theVoiceName(name);
       });
-      modalBody.find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
       modalBody.find('.playme').click( (e) => {
         let wasPlaying = $(e.target).hasClass('btn-primary');
         modalBody.find('.playme').removeClass('btn-primary').addClass('btn-light').blur();

@@ -117,7 +117,7 @@ function parseHit(message, text, number, forum, format) {
   if (format === 'RDADRQ' && !text.includes('/projects/')) text = text.replace('Requester:',' •• Requester:');
   let obj = doParsing(format, message, text, number);
   if (obj) { addButtons(message, forum, obj); }
-  else { console.log(number, format, {'text':text}); message.css('border', 'orangered solid 2px'); }
+  else { message.css('border', 'orangered solid 2px'); }
 }
 function findMessages(containerMessages, theMessage, theNumber, forum) {
   $(containerMessages).each( (_, value) => {

@@ -28,7 +28,7 @@ class ModalClass {
     let modalHeader = $(`<div class="modal-header"><h4 class="modal-title"></h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>`);
     let modalFooter = $(`<div class="modal-footer"><button type="button" class="btn btn-success pcm_modalSave">Save</button><button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button><button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button></div>`);
     let modalContent = $(`<div class="modal-content"></div>`).append(modalHeader, `<div class="modal-body text-center py-2"></div>`, modalFooter);
-    $(`<div id=${idName} class="modal pcm_modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog my-3"></div>`).append(modalContent)).appendTo("body");
+    $(`<div id=${idName} class="modal pcm_modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog modal-dialog-scrollable my-3"></div>`).append(modalContent)).appendTo("body");
     modalHeader = modalFooter = modalContent = null;
     return idName;
   }
@@ -144,7 +144,7 @@ class ModalClass {
     this.showModal(null, () => {
       let docKeys = '';
       if (question!=='') { // Should an input field be shown with a question?
-        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, placeHolder, null, '', defAns, 100, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
+        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, placeHolder, null, '', defAns, 95, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
         docKeys = '#pcm_formQuestion,';
       }
       $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.

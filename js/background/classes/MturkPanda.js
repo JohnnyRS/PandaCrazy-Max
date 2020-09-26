@@ -56,7 +56,7 @@ class MturkPanda extends MturkClass {
 	/** Converts the unique database ID to the equivalent unique panda job ID.
 	 * @param  {number} dbId - The unique database ID for a panda job.
 	 * @return {number}			 - Returns the unique databse ID from a unique panda job ID. */
-	getMyId(dbId) { return this.dbIds[dbId]; }
+	getMyId(dbId) { let returnValue = (dbId >= 0) ? this.dbIds[dbId] : dbId; return returnValue; }
 	/** Creates a panda accept url for groupid.
 	 * @param  {string} groupId - The groupId of the panda to creat a url.
 	 * @return {string}					- Returns the created string. */

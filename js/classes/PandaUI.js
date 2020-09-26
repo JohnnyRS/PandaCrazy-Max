@@ -80,7 +80,6 @@ class PandaUI {
 							this.addPandaToUI(myId, info, null, true); this.tabs.setPosition(1, Number(dbId));
 						}
 					}
-					$('#pcm_pandaTabContents').find('[data-toggle="tooltip"]').tooltip({delay: {show:1200}, trigger:'hover'});
 					this.cards.cardButtons();
 					if (bgPanda.pandaUniques > 0) {
 						let firstPanda = bgPanda.pandaUniques[0];
@@ -270,6 +269,7 @@ class PandaUI {
 	 * @param  {number} [diff=null] - The difference of time since the last panda was added. */
 	async nextInDelayedQueue(diff=null) {
 		if (this.hitQueue.length>0) {
+			this.hitQueue.sort((a,b) => b.price - a.price);
 			if (diff === null) diff = new Date().getTime() - this.lastAdded;
 			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
 				const obj = this.hitQueue.shift(); this.lastAdded = new Date().getTime();
@@ -288,7 +288,7 @@ class PandaUI {
 		bgPanda.checkIfLimited(myId, false, hitInfo.data);
 		if (!this.pandaStats[myId].collecting) {
 			const nowDate = new Date().getTime();
-			this.hitQueue.push({myId:myId, price:hitInfo.data.price, hitsAvailable:hitInfo.data.hitsAvailable, tempDuration: tempDuration, tempGoHam:tempGoHam, delayedAt:nowDate, lowestDur:Math.min(tempDuration, tempGoHam)});
+			this.hitQueue.push({'myId':myId, 'price':hitInfo.data.price, 'hitsAvailable':hitInfo.data.hitsAvailable, 'tempDuration': tempDuration, 'tempGoHam':tempGoHam, 'delayedAt':nowDate, 'lowestDur':Math.min(tempDuration, tempGoHam)});
 			if (this.lastAdded!==null) {
 				diff = nowDate - this.lastAdded;
 				if (diff < this.hitQueue[0].lowestDur) {

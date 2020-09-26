@@ -121,7 +121,7 @@ class PandaGOptions {
    * @param  {bool} [tooltips=true] - Should tooltips be reset? */
   update(tooltips=true) {
     if (tooltips) {
-      if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
+      if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip('enable');
       else {
         $('[data-toggle="tooltip"]').tooltip('disable');
         $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
@@ -157,7 +157,6 @@ class PandaGOptions {
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
       $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-      modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
   /** Verifies all the timers changed with max and min ranges.
@@ -207,7 +206,6 @@ class PandaGOptions {
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
       $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-      modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
     }, () => { modal = null; });
   }
   /** Updates the captcha text area with updated info.

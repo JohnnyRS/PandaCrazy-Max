@@ -73,13 +73,20 @@ class DatabaseClass {
    * @param {string} storeName - Store name to be used for adding data to.
    * @param {string} key       - Get the item with this key.
    * @return {promise}         - Array or object in resolve. Error object in reject. */
-  getFromDB(storeName, key=null) {
+  getFromDB(storeName, key=null, keys=null) {
     return new Promise( (resolve, reject) => {
-      let tx = this.db.transaction( [storeName], "readonly" );
-      let store = tx.objectStore( storeName );
-      let request = (key) ? store.get(key) : store.getAll(); // Open cursor or just get an item?
-      request.onsuccess = () => resolve(request.result);
-      request.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); }
+      let tx = this.db.transaction( [storeName], "readonly" ), store = tx.objectStore( storeName ), filledData = {};
+      if (keys === null) {
+        let request = (key !== null) ? store.get(key) : store.getAll(); // Open cursor or just get an item?
+        request.onsuccess = () => resolve(request.result);
+        request.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); }
+      } else {
+        for (const thisKey of keys) {
+          filledData[thisKey] = null;
+          store.get(thisKey).onsuccess = (e) => { filledData[thisKey] = e.target.result; }
+        }
+        tx.oncomplete = () => resolve(filledData);
+      }
     });
   }
   /** Delete an item or items from a database with a key using an index if necessary.

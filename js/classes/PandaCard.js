@@ -77,9 +77,9 @@ class PandaCards {
   createCardButtonGroup(myId, info) {
     const textCollect = (info.search) ? '-Collecting-' : 'Collect';
     let group = `<div class='card-text' id='pcm_buttonGroup_${myId}'><button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
-    if (!info.search) group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" id="pcm_hamButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.hamTip}"><span>GoHam</span></button>`;
-    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" id="pcm_detailsButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.details}"><span>Details</span></button>`;
-    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" id="pcm_deleteButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.delete}"><span>X</span></button>`;
+    if (!info.search) group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_hamButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.hamTip}"><span>GoHam</span></button>`;
+    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_detailsButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.details}"><span>Details</span></button>`;
+    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_deleteButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.delete}"><span>X</span></button>`;
     group += `</div>`;
     return group;
   }
@@ -105,10 +105,10 @@ class PandaCards {
     let card = $(`<div class="card text-light border pcm_pandaCard${searchCard}" id="pcm_pandaCard_${myId}"></div>`).data("myId",myId);
     let cardBody = $(`<div class="card-body"></div>`).appendTo(card);
     let cardText = $(`<div class="card-text" id="output_${myId}">`).appendTo(cardBody);
-    $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName col mr-auto px-0 text-truncate" id="pcm_hitReqName_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${myId}"></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
+    $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName pcm_tooltipData col mr-auto px-0 text-truncate" id="pcm_hitReqName_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${myId}"></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
     this.oneLineCard(myId, info).appendTo(cardText);
     $(`<div class="pcm_priceGroup"></div>`).append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${myId}"></span>`).css('cursor', 'default')).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${myId}"></span>`)).appendTo(cardText);
-    $(`<div class="pcm_title text-truncate" id="pcm_hitTitle_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').appendTo(cardText);
+    $(`<div class="pcm_title pcm_tooltipData text-truncate" id="pcm_hitTitle_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').appendTo(cardText);
     $(this.createCardStatus(myId, info)).appendTo(cardText);
     $(this.createCardButtonGroup(myId, info)).appendTo(cardText);
     this.cards[myId].document = card;
@@ -326,7 +326,6 @@ class PandaCards {
       let myId = $(e.target).closest('.card').data('myId'), reqName = $(`#pcm_hitReqName1_${myId}`), stats = $(`#pcm_hitStats1_${myId}`);
       if (reqName.is(':visible')) { reqName.hide(); stats.show(); } else { stats.hide(); reqName.show(); }
     });
-    $(`.pcm_pandaCard`).find('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
 	}
 }
 /** This class deals with showing panda information on a card and sorts them in the panda area.

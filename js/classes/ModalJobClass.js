@@ -100,7 +100,7 @@ class ModalJobClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, "800px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
-      if (hitInfo.search) bgSearch.optionsChanged(searchChanges, searchChanges.searchDbId);
+      if (hitInfo.search) await bgSearch.optionsChanged(searchChanges, searchChanges.searchDbId);
       changes.disabled = (changes.disabled) ? changes.disabled : false;
       hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
       await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
@@ -114,7 +114,7 @@ class ModalJobClass {
     const modalBody = $(`#${idName} .${modal.classModalBody}`); modalBody.css({'padding':'1rem 0.3rem'});
     modal.showModal(null, async () => {
       let df = document.createDocumentFragment(), df2 = document.createDocumentFragment(), detailsContents = null, optionsContents = null, ridDisabled = false;
-      let detailsDiv = $(`<div id='pcm_jobDetails' class='h-100 bg-dark'></div>`).appendTo(modalBody);
+      let detailsDiv = $(`<div id='pcm_jobDetails' class='bg-dark'></div>`).appendTo(modalBody);
       let detailsTabs = new TabbedClass(detailsDiv, `pcm_detailTabs`, `pcm_tabbedDetails`, `pcm_detailsContents`, false, 'Srch');
       let [_, err] = await detailsTabs.prepare();
       if (!err) {
@@ -129,15 +129,14 @@ class ModalJobClass {
         if (!hitInfo.search) {
           let radioGroup = $(`<span class='uiGroup'></span>`);
           radioButtons(radioGroup, 'toUI', '0', 'Panda UI', true, 'toPandaUI'); radioButtons(radioGroup, 'toUI', '1', 'Search UI', false, 'toSearchUI');
-          $(`<div class='mt-1'></div>`).append(`<button class='btn btn-info btn-xs pcm_createGidJob'>Create Gid Search Job</button> <button class='btn btn-info btn-xs pcm_createRidJob'>Create Rid Search Job</button> - To: `).append(radioGroup).appendTo(detailsDiv);
-          modalBody.find(`[data-toggle='tooltip']`).tooltip({delay: {show:1200}, trigger:'hover'});
+          $(`<div class='my-2 text-center w-100'></div>`).append(`<button class='btn btn-info btn-xs pcm_createGidJob'>Create Gid Search Job</button> <button class='btn btn-info btn-xs pcm_createRidJob'>Create Rid Search Job</button> - To: `).append(radioGroup).appendTo(detailsDiv);
           this.recheckButtons(modalBody, hitInfo.data);
           modalBody.find(`.pcm_createGidJob`).click( async () => { this.createSearch(modalBody, myId, 'gid', hitInfo.data); });
           modalBody.find(`.pcm_createRidJob`).click( async () => { this.createSearch(modalBody, myId, 'rid', hitInfo.data); });
           modalBody.find(`input[name='toUI']`).on('change', (e) => { this.recheckButtons(modalBody, hitInfo.data); })
         } else {
           let value = (hitInfo.search === 'gid') ? hitInfo.data.groupId : hitInfo.data.reqId;
-          $(`<div class='my-1'></div>`).append($(`<button class='btn btn-info btn-xs pcm_toSearchUI'>Move to searchUI and create search trigger</button>`)
+          $(`<div class='my-1 text-center w-100'></div>`).append($(`<button class='btn btn-info btn-xs pcm_toSearchUI'>Move to searchUI and create search trigger</button>`)
             .data('search',hitInfo.search).data('value',value)).appendTo(detailsDiv);
           this.recheckSMoveButtons(modalBody);
           modalBody.find(`.pcm_toSearchUI`).click( async () => { this.moveToSearch(hitInfo.dbId, myId); });
@@ -164,7 +163,7 @@ class ModalJobClass {
     modal.showModal(null, () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
       $('#pcm_formAddGroupID').keypress( (e) => {
-        if((event.keyCode ? event.keyCode : event.which) == '13') checkGroupID.call(this);
+        if((e.keyCode ? e.keyCode : e.which) == '13') checkGroupID.call(this);
       });
       $('#pcm_startCollecting').click( e => $('#pcm_formAddGroupID').focus() );
       $('#pcm_onlyOnce').click( e => $('#pcm_formAddGroupID').focus() );

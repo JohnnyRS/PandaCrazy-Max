@@ -23,6 +23,9 @@ class SearchUI {
 		this.sorting = 0;
 		this.sortAscending = [true, true, true, true, true];
 		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
+		this.clickTimer = null;
+		this.hitsTabInactive = true;
+		this.triggeredHits = [];
 	}
   /** Stops the searching process. */
   stopSearching() {
@@ -81,7 +84,7 @@ class SearchUI {
 		for (const key of Object.keys(this.filters)) this.filters[key] = true;
 	}
 	disableShowAll() { let allElem = $('#pcm_filterDropDown .sub_showAll:first'); allElem.html(allElem.html().replace('fa-check-square','fa-square')); }
-	filterMe(e, prop, all=false) {
+	async filterMe(e, prop, all=false) {
 		if (all) this.enableShowAll();
 		else {
 			let html = $(e.target).html(), disabled = html.includes('fa-square'); if (prop) this.filters[prop] = disabled;
@@ -104,7 +107,7 @@ class SearchUI {
 	async prepareSearch() {
 		bgSearch.prepareSearch();
 		let controls = $('#pcm_uiSearchControls');
-		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> </span> | `);
+		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> <button class='btn btn-primary btn-xxs' id='pcm_addCustomTriggers'>Custom</button></span> | `);
 		let filters = $(`<span id='pcm_filterDropDown'></span>`).appendTo(controls);
     this.addSubMenu(filters, 'Filters ', '', 
       [{'type':'item', 'label':'<i class="far fa-check-square"></i> Show All', 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
@@ -136,11 +139,14 @@ class SearchUI {
 			this.reqIDTab = await this.tabs.addTab("Requester ID", true);
 			this.groupIDTab = await this.tabs.addTab("Group ID");
 			this.customTab = await this.tabs.addTab("Custom Search");
-			this.triggeredTab = await this.tabs.addTab("Triggered Hits");
+			this.triggeredTab = await this.tabs.addTab("Custom Triggered Hits");
 			this.ridContent = $(`<div class='pcm_ridTriggers card-deck'></div>`).appendTo(`#${this.reqIDTab.tabContent}`);
 			this.gidContent = $(`<div class='pcm_gidTriggers card-deck'></div>`).appendTo(`#${this.groupIDTab.tabContent}`);
 			this.customContent = $(`<div class='pcm_customTriggers card-deck'></div>`).appendTo(`#${this.customTab.tabContent}`);
 			this.triggeredContent = $(`<div class='pcm_triggeredHits card-deck'></div>`).appendTo(`#${this.triggeredTab.tabContent}`);
+			this.triggeredContent.hover( (e) => { this.hitsTabInactive = false; }, (e) => { this.hitsTabInactive = true; this.displayTriggeredHits(); } );
+			$(`<table class='table table-dark table-sm table-moreCondensed pcm_foundHitsTable table-bordered w-100'></table>`)
+				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:55px; max-width:55px;'>Pays</td><td style='width:40px; max-width:40px;'></td><td style='width:18px; max-width:18px;'></td><td style='width:18px; max-width:18px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
 		}
 	}
   /** Update the status bar with the hits found value or the search results value.
@@ -150,98 +156,126 @@ class SearchUI {
     else if (statusName === 'total results') $('#pcm_searchResults').html(status);
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
-	 * @param  {object} [thetrigger=null] - The jquery element @param  {object} [passInfo=null]	- Pass info @param  {bool} [toggle=true] - Toggled? */
-	updateTrigger(thetrigger=null, passInfo=null, toggle=true) {
-		let status = $(thetrigger).data('status'), unique = $(thetrigger).data('unique'), newStatus = status;
-		newStatus = bgSearch.toggleTrigger(unique);
+	 * @param  {object} [thetrigger=null] - The jquery element  @param  {bool} [toggle=true] - Toggled? */
+	updateTrigger(thetrigger, tempDisabled=false) {
+		let unique = $(thetrigger).data('unique'), newStatus = bgSearch.toggleTrigger(unique);
 		$(thetrigger).data('status', newStatus);
-		if (newStatus === 'disabled') $(thetrigger).addClass("pcm_disabled"); else $(thetrigger).removeClass("pcm_disabled");
+		if (newStatus === 'disabled') $(thetrigger).addClass('pcm_disabled'); else $(thetrigger).removeClass('pcm_disabled');
+		if (tempDisabled) $(thetrigger).addClass('pcm_tempDisabled'); else $(thetrigger).removeClass('pcm_tempDisabled');
+	}
+	tempDisable(unique, tempDisabled) {
+		this.updateTrigger($(`pcm_triggerCard_${unique}`).closest('.card'), tempDisabled);
 	}
 	/**
 	 * @param  {object} [card=null] - Jquery element to find cards. */
 	cardEvents(card=null) {
 		let element = (card) ? $(card).find('.pcm_triggerCard') : $('.pcm_triggerCard');
-		element.unbind('dblclick').on('dblclick', (e) => { this.updateTrigger($(e.target).closest('.card')); });
-    $(`.pcm_triggerCard`).find('[data-toggle="tooltip"]').tooltip({delay: {show:1300}, trigger:'hover'}).tooltip('enable');
+		element.find(`.pcm_foundHitsButton`).click( (e) => {
+			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
+			this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerFound(unique);
+		});
 	}
 	sortCards(type) {
 		let sortBy = this.sortingValues[this.sorting];
-		this.multiple[type].sort( (a, b) => {
-			let unique1 = a.data('unique'), unique2 = b.data('unique'), dbId1 = bgSearch.uniqueToDbId(unique1), dbId2 = bgSearch.uniqueToDbId(unique2);
+		$(this[`${type}Content`]).find('.card').sort( (a, b) => {
+			let unique1 = $(a).data('unique'), unique2 = $(b).data('unique'), dbId1 = bgSearch.uniqueToDbId(unique1), dbId2 = bgSearch.uniqueToDbId(unique2);
 			let compare = unique1 - unique2, temp = 0;
 			if (sortBy !== 'none') temp = bgSearch.data[dbId2][sortBy] - bgSearch.data[dbId1][sortBy];
-			if (temp !== 0) compare = temp; 
+			if (temp !== 0) compare = temp;
 			if (!this.sortAscending[this.sorting]) compare = compare * -1;
 			return compare;
-		} )
+		}).appendTo($(this[`${type}Content`]));
 	}
 	updateFilters(enabled=true, disabled=true) {
 		this.filters.enabled = enabled; this.filters.disabled = disabled;
-	}
-	filterCards(type, filter) {
-		let df = $(document.createDocumentFragment()), out=[];
-		for (const card of this.multiple[type]) {
-			let filteredOut = false, disabledStr = (!this.filters.sDisabled) ? 'disabled' : '', enabledStr = (!this.filters.sEnabled) ? 'searching' : '';
-			if (disabledStr && disabledStr === card.data('status')) filteredOut = true;
-			if (enabledStr && enabledStr === card.data('status')) filteredOut = true;
-			if (filter && filter.term && !card.find('.pcm_triggerName').text().toLowerCase().includes(filter.term)) filteredOut = true;
-			if (!filteredOut) df.append(card);
-			else out.push(card);
-		}
-		$(this[`${type}Content`]).append(df); df = null;
-		return out;
 	}
 	/** Add the trigger info to the specific tabs for trigger.
 	 * @param  {object} data   - Trigger data         @param  {object} status - Trigger status @param  {string} name - Trigger name
 	 * @param  {number} unique - Trigger unique ID */
 	addToUI(data, status, name, unique) {
 		if ($(`#pcm_triggerCard_${unique}`).length) return;
-		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '';
-		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`).data('unique',unique).data('status', status).click( async e => {
-			let theCard = $(e.target).closest('.card'), theButton = theCard.find('.pcm_deleteButton'), unique = theCard.data('unique');
-			theButton.css({'backgroundColor':'', 'color':'', 'borderColor':''});
-			if (e.ctrlKey) {
-				if (this.ctrlDelete.includes(unique)) { this.ctrlDelete = arrayRemove(this.ctrlDelete, unique); }
-				else { theButton.css({'backgroundColor':'darkred', 'color':'yellow', 'borderColor':'yellow'}); this.ctrlDelete.push(unique); }
-			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css({'backgroundColor':'', 'color':'', 'borderColor':''}); }
-			else if (e.shiftKey) {
-				await bgSearch.pingTriggers(bgSearch.uniqueToDbId(unique)).then( () => { return; } );
-				theCard.find(`.pcm_triggerName`).toggle(); theCard.find(`.pcm_triggerStats`).toggle();
-			}
-			theButton = null; theCard = null;
-		});
+		let disabledClass = (status === 'disabled') ? ' pcm_disabled' : '', clicks = 0;
+		let card = $(`<div class='card border pcm_triggerCard${disabledClass}' id='pcm_triggerCard_${unique}'></div>`)
+			.data('unique',unique).data('status', status).data('clicks',0).click( async e => {
+				let theCard = $(e.target).closest('.card'), theButton = theCard.find('.pcm_deleteButton'), unique = theCard.data('unique');
+				theButton.css({'backgroundColor':'', 'color':'', 'borderColor':''});
+				if (e.ctrlKey) {
+					if (this.ctrlDelete.includes(unique)) { this.ctrlDelete = arrayRemove(this.ctrlDelete, unique); }
+					else { theButton.css({'backgroundColor':'darkred', 'color':'yellow', 'borderColor':'yellow'}); this.ctrlDelete.push(unique); }
+				} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css({'backgroundColor':'', 'color':'', 'borderColor':''}); }
+				else {
+					if (++clicks === 1) {
+						this.clickTimer = setTimeout( async (theCard) => {
+							clicks = 0; theCard.find(`.pcm_tooltipData`).tooltip('hide');
+							theCard.find(`.pcm_triggerName`).toggle(); theCard.find(`.pcm_triggerStats`).toggle();
+						}, 400, theCard );
+					} else { clearTimeout(this.clickTimer); clicks = 0; this.updateTrigger($(e.target).closest('.card')); }
+				}
+				theButton = null; theCard = null;
+			});
 		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
 		let text = $(`<div class='card-text' id='output_${unique}'></div>`).appendTo(body);
-		let nameGroup = $(`<div class='pcm_triggerGroup row w-100 px-0'></div>`).appendTo(text);
-		nameGroup.append($(`<span class='pcm_triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm_triggerName_${unique}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${name}<br><small>Double click to Disable or Enable trigger.</small>'>${name}</span>`).css('cursor', 'default'));
-		nameGroup.append($(`<span class='pcm_triggerStats col mr-auto px-0 text-truncate unSelectable small' id='pcm_triggerStats_${unique}'>Found Hits: ${data.numHits} | Total: ${data.numFound}</span>`).hide());
+		let nameGroup = $(`<div class='pcm_triggerGroup row w-100 px-0 pcm_tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
+		nameGroup.append($(`<span class='pcm_triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm_triggerName_${unique}'>${name}</span>`).css('cursor', 'default'));
+		nameGroup.append($(`<span class='pcm_triggerStats col mr-auto px-0 text-truncate unSelectable small' id='pcm_triggerStats_${unique}'><button class='pcm_foundHitsButton btn btn-light btn-xxs'>Found Hits</button>: <span>${data.numHits} | Total: ${data.numFound}</span></span>`).hide());
 		let buttonGroup = $(`<span class='pcm_tButtonGroup col col-auto text-right px-0' id='pcm_tButtons_${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm_optionsMenu'></i>`).click( (e) => {
-			let unique = $(e.target).closest('.card').data('unique');
+			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			this.modalSearch = new ModalSearchClass(); this.modalSearch.showDetailsModal(unique);
 		}).data('unique',unique).appendTo(buttonGroup);
 		$(`<i class='fas fa-times pcm_deleteButton'></i>`).click( (e) => {
-			let unique = $(e.target).closest('.card').data('unique');
+			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			if (!this.ctrlDelete.includes(unique)) this.ctrlDelete.push(unique);
 			this.removeJobs(this.ctrlDelete);
 		} ).data('unique',unique).appendTo(buttonGroup);
 		// if (data.type === 'custom') { text.append(`<div>Status</div>`); }
 		this.multiple[data.type].push(card);
 	}
-	redoFilters(type) {
-		$(this[`${type}Content`]).find('.card').each( (i, ele) => { let cloned = $(ele).clone(true); $(ele).remove(); this.multiple[type].push(cloned); });
+	redoFilters(type, filter={}) {
+		$(this[`${type}Content`]).find('.card').each( (i, ele) => {
+			let filteredOut = false, disabledStr = (!this.filters.sDisabled) ? 'disabled' : '', enabledStr = (!this.filters.sEnabled) ? 'searching' : '';
+			if (disabledStr && disabledStr === $(ele).data('status')) filteredOut = true;
+			if (enabledStr && enabledStr === $(ele).data('status')) filteredOut = true;
+			if (filter && filter.term && !$(ele).find('.pcm_triggerName').text().toLowerCase().includes(filter.term)) filteredOut = true;
+			if (!filteredOut) $(ele).show(); else $(ele).hide();
+		});
+		this.sortCards(type);
 	}
 	/** Appends any cards created in the document fragment to the card deck to show cards faster. */
 	appendFragments() {
 		for (const type of Object.keys(this.multiple)) {
-			this.sortCards(type);
-			this.multiple[type] = this.filterCards(type, {});
+			let df = $(document.createDocumentFragment());
+			for (const card of this.multiple[type]) { df.append(card); }
+			$(this[`${type}Content`]).append(df); df = null; this.multiple[type] = [];
+			this.redoFilters(type); this.sortCards(type);
 		}
 		this.cardEvents();
 	}
-	triggeredHit(unique, triggerData) {
+	displayTriggeredHits(trigger=null, hit=null, term=null) {
+		if (hit !== null) this.triggeredHits.push({'trigger':trigger, 'hit':hit});
+		while (this.triggeredHits.length && this.hitsTabInactive) {
+			let found = this.triggeredHits.pop(), hitData = found.hit, df = document.createDocumentFragment();
+			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title;
+			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
+			let foundData = {'reqName':hitData.requester_name, 'title':markedTitle, 'price':`$${hitData.monetary_reward.amount_in_dollars.toFixed(2)}`};
+			displayObjectData([
+				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink'},
+				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px'}, {'type':'keyValue', 'key':'title', 'maxWidth':'460px'}, {'type':'keyValue', 'key':'price'},
+				{'label':'Collect', 'type':'button', 'btnLabel':'Collect', 'btnColor':'primary', 'addClass':" btn-xxs", 'btnFunc': () => {
+					bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1800);
+				}},
+				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':" btn-xxs", 'btnFunc': () => {
+					bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1800);
+				}},
+			], df, foundData, true, true, '#0b716c');
+			$(df).find('.pcm_tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
+			this.triggeredContent.find(`tbody`).prepend(df);
+		}
+	}
+	triggeredHit(unique, triggerData, hitData=null, term=null) {
 		$(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
-		$(`#pcm_triggerStats_${unique}`).html(`Found Hits: ${triggerData.numHits} | Total: ${triggerData.numFound}`);
+		$(`#pcm_triggerStats_${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
+		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term);
 	}
 	/** Shows the add search trigger modal. */
 	showSearchAddModal(doCustom=false) { this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerAddModal( () => this.modalSearch = null, doCustom ); }

@@ -102,7 +102,7 @@ class TabbedClass {
    * @param  {string} ulId      - The ul id name for the ul of the tab structure.
    * @param  {string} contentId - The content id name for the content area. */
   tabStructure(element, divId, ulId, contentId) {
-    $(`<div id="${divId}" class="h-100 p-0"></div>`).append($(`<ul class="nav nav-tabs" id="${ulId}" role="tablist"></ul>`)).append($(`<div id="${contentId}" class="tab-content"></div>`)).appendTo($(element));
+    $(`<div id="${divId}" class="p-0"></div>`).append($(`<ul class="nav nav-tabs" id="${ulId}" role="tablist"></ul>`)).append($(`<div id="${contentId}" class="tab-content"></div>`)).appendTo($(element));
   }
   /** Append the jquery element to the tab content with this unique number.
    * @param  {object} doc       - The jquery element to append to the tab content.
