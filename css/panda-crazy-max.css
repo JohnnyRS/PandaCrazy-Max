@@ -104,7 +104,9 @@ html, body { height: 100%; }
 .pcm_searchModal .text-pcmInfo { font-size: 0.8em; }
 .btn-group-xs > .btn, .btn-xs { padding: .25rem .4rem; font-size: .875rem; line-height: .5; border-radius: .2rem; }
 .btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
+.pcm_foundHitsTable .btn-xxs { padding: .25rem .2rem; font-size: .55rem; line-height: .4; border-radius: .2rem; }
 .dModalBtns > .btn-xxs { line-height: 1.0; margin:5px 0; width:90%; }
+.btn-pcmUsed { background-color: darkslategray; color: burlywood; }
 .dModalBtns { width:15%; padding:5px 0 !important; }
 .radio-xxs { height: 12px; }
 .pcm_foundHitsButton { margin-top:-2px; line-height:0.3; border:0; }

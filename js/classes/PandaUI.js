@@ -13,36 +13,16 @@ class PandaUI {
 		this.logTabs = null;										// The log tabs on the bottom of the page with queue watch.
 		this.pandaGStats = null;								// The global stats for all the panda's and display stats to status area.
 		this.delayedTimeout = null;					    // Used to delay adding jobs externally to get control.
-		this.dbStatsName = "Pcm_PandaStats";		// Name for panda stats database.
-		this.collectStore = "collectionStore";	// Name for collection times storage in database.
-		this.acceptedStore = "acceptedStore";		// Name for accepted times storage in database.
     this.tabPandaHeight = 0;								// Panda tab row's height.
 		this.tabLogHeight = 0;									// Log tab row's height.
 		this.windowHeight = 0;									// Window height.
 		this.resizeObserver = null;							// Observer for window size changes so size of panels can be changed.
-		this.dbStats = new DatabaseClass(this.dbStatsName, 1);  // The stat database for logging of panda stats.
 		this.listener = new ListenerClass();									  // Listener class for any message listens.
 		this.modalJob = null;																		// Modal Job class.
 	}
 	/** Gets the total hits in the queue.
    * @return {number} - Total hits in the queue. */
 	getQueueTotal() { return this.logTabs.queueTotal; }
-	/** Opens the stat database and creates the stores if needed.
-	 * @return {Promise<response|Error>} - Resolves with the response and rejects with the error. */
-	openStatsDB() { // Open or create database in the background first.
-		return new Promise( (resolve, reject) => { // using a promise to make opening database synchronous so it waits.
-			this.dbStats.openDB( true, (e) => {
-				if (e.oldVersion == 0) { // Had no database so let's initialise it.
-					e.target.result.createObjectStore(this.collectStore, {keyPath:"id", autoIncrement:"true"})
-					.createIndex("dbId", "dbId", {unique:false}); // dbId is an index to search faster.
-					let objStore = e.target.result.createObjectStore(this.acceptedStore, {keyPath:"id", autoIncrement:"true"});
-					objStore.createIndex("dbId", "dbId", {unique:false}); // dbId is an index to search faster.
-					objStore.createIndex("gid", "gid", {unique:false}); // gid is an index to search faster on Group Ids.
-					objStore.createIndex("rid", "rid", {unique:false}); // rid is an index to search faster on Requester Ids.
-				}
-			} ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
-		});
-	}
 	/** Delete the panda stats from the stat database for this panda with this unique ID and database ID.
 	 * @param  {number} myId - MyID @param  {number} dbId - Database ID */
 	deleteFromStats(myId, dbId) { this.pandaStats[myId].deleteIdFromDB(dbId); }
@@ -51,13 +31,12 @@ class PandaUI {
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object. */
 	async prepare(afterFunc) {
 		let success = [], err = null;
-		this.openStatsDB();
 		this.tabs = new TabbedClass($(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
 		this.cards.prepare(this.tabs); this.logTabs = new LogTabsClass(); this.logTabs.updateCaptcha(globalOpt.getCaptchaCount()); this.pandaGStats = new PandaGStats();
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
 			let oO = optObject(_,_,_,_,_,_,_,_, globalOpt.getHamDelayTimer());
-			if (bgPanda.useDefault) await this.addPanda(dataObject("3SHL2XNU5XNTJYNO5JDRKKP26VU0PY", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01"), oO,_,_,_,_,_,true);
+			if (MYDB.useDefault('panda')) await this.addPanda(dataObject("3SHL2XNU5XNTJYNO5JDRKKP26VU0PY", "Tell us if two receipts are the same", "Tell us if two receipts are the same", "AGVV5AWLJY7H2", "Ibotta, Inc.", "0.01"), oO,_,_,_,_,_,true);
 			else err = await bgPanda.getAllPanda(); // Not using initializing default value so load from database
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
@@ -83,10 +62,9 @@ class PandaUI {
 					this.cards.cardButtons();
 					if (bgPanda.pandaUniques > 0) {
 						let firstPanda = bgPanda.pandaUniques[0];
-						this.hamBtnBgColor = $(`#pcm_hamButton_${firstPanda}`).css("background-color");
-						this.hamBtnColor = $(`#pcm_hamButton_${firstPanda}`).css("color");
+						this.hamBtnBgColor = $(`#pcm_hamButton_${firstPanda}`).css("background-color"); this.hamBtnColor = $(`#pcm_hamButton_${firstPanda}`).css("color");
 					}
-					bgPanda.useDefault = false; bgPanda.nullData();
+					bgPanda.nullData();
 				}
 			}
 			this.tabPandaHeight = $(`#pcm_pandaPanel`).height(); this.tabLogHeight = $(`#pcm_logPanel`).height(); this.windowHeight = window.innerHeight;
@@ -102,8 +80,7 @@ class PandaUI {
 	/** Removes all panda jobs from UI and stats. */
 	async removeAll() {
 		this.cards.removeAll(); this.tabs.wipeTabs(); this.logTabs.removeAll();
-		this.cards = null; this.pandaStats = {}; this.listener = null; this.dbStats = null;
-		this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
+		this.cards = null; this.pandaStats = {}; this.listener = null; this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
 		this.pandaGStats = null; this.delayedTimeout = null; this.resizeObserver = null; this.modalJob = null;
 	}
   /** Resizes the tab contents according to window size changes. */
@@ -111,8 +88,7 @@ class PandaUI {
     let windowChange = this.innerHeight - window.innerHeight;
     $('#pcm_pandaTabContents .pcm_tabs').height(`${this.tabs.tabContentsHeight - windowChange}px`);
 		$('#pcm_pandaPanel').height(`${this.tabPandaHeight - windowChange}px`);
-		this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
-    this.innerHeight = window.innerHeight;
+		this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height(); this.innerHeight = window.innerHeight;
     this.tabPandaHeight = $('#pcm_pandaPanel').height();
 	}
 	/** Resizes the panda and log panels when user is resizing them.
@@ -122,8 +98,7 @@ class PandaUI {
 			if (!Array.isArray(entries) || !entries.length) { return; }
 			let changed = $('#pcm_pandaPanel').height() - this.tabPandaHeight;
 			if (changed !== 0) {
-				$('#pcm_pandaTabContents .pcm_tabs').height(this.tabs.tabContentsHeight + changed);
-				$('#pcm_logTabContents .pcm_tabs').height(this.logTabs.tabContentsHeight - changed);
+				$('#pcm_pandaTabContents .pcm_tabs').height(this.tabs.tabContentsHeight + changed); $('#pcm_logTabContents .pcm_tabs').height(this.logTabs.tabContentsHeight - changed);
 				this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
 				this.logTabs.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
 				this.tabPandaHeight = $('#pcm_pandaPanel').height(); this.tabLogHeight = $(`#pcm_logPanel`).height();
@@ -132,8 +107,7 @@ class PandaUI {
   }
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
-		modal = new ModalClass();
-		modal.showLoggedOffModal( () => { modal = null; bgPanda.unPauseTimer(); } );
+		modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgPanda.unPauseTimer(); } );
 		if (globalOpt.isNotifications() && !bgPanda.isLoggedOff()) notify.showLoggedOff();
 	}
   /** Closes the logged off modal if it's opened. */
@@ -230,7 +204,7 @@ class PandaUI {
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
-				bgPanda.db.getFromDB(bgPanda.storeName, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc,_,_, whyStop); },
+				MYDB.getFromDB('panda',_, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc,_,_, whyStop); },
 					rejected => console.error(rejected));
 			});
 			modal.closeModal(); jobsArr.length = 0;
@@ -403,16 +377,13 @@ class PandaUI {
 	hitAccepted(myId, queueUnique, html, url) {
 		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
     this.pandaGStats.addTotalAccepted(); this.cards.highlightEffect_card(myId);
-		let pandaInfo = bgPanda.options(myId);
-    this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
+		let pandaInfo = bgPanda.options(myId); this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
     if (pandaInfo.autoTGoHam !== "disable" && (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === "on")) {
       bgPanda.timerGoHam(queueUnique, pandaInfo.data.hamDuration);
     }
     bgPanda.resetTimerStarted(queueUnique);
-    let targetDiv = $(html).find(".project-detail-bar .task-project-title").next("div");
-		let rawProps = targetDiv.find("span").attr("data-react-props");
-		let auth_token = $(html).find(`input[name="authenticity_token"]:first`);
-		let formUrl = auth_token.closest('form').attr('action');
+    let targetDiv = $(html).find(".project-detail-bar .task-project-title").next("div"), rawProps = targetDiv.find("span").attr("data-react-props");
+		let auth_token = $(html).find(`input[name="authenticity_token"]:first`), formUrl = auth_token.closest('form').attr('action');
 		let formInfo = formUrl.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
     bgPanda.authenticityToken = auth_token.val();
 		let hitDetails = JSON.parse(rawProps).modalOptions;

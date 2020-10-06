@@ -47,16 +47,13 @@ class AlarmsClass {
   theVoiceName(name) { globalOpt.alarms.ttsName = name; globalOpt.update(false); }
   /** Prepare the alarms by getting the src of the alarm url and save to database if using default values.
    * @async                - To wait for the alarm data to completely load into memory.
-   * @param  {object} data - The alarms data object that has all the alarms.
-   * @param  {bool} fromDB - Did these alarms come from the database or default values?
+   * @param  {object} data - Data object @param  {bool} fromDB - Did these alarms come from the database or default values?
    * @return {object}      - Error object to return if error happened. */
   async prepareAlarms(data, fromDB) {
     let err = null; this.myAudio = null;  
     for (const value of data) {
       delete value.audio;
-      if (!fromDB) { // Use default values and save to database.
-        await bgPanda.db.addToDB(bgPanda.alarmsStore, value).then(id => value.id = id, rejected => err = rejected);
-      }
+      if (!fromDB) { await MYDB.addToDB('panda', 'alarms', value).then(id => value.id = id, rejected => err = rejected); }
       if (!value.obj) { // If no audio obj then set up src with default filename.
         value.audio = new Audio();
         value.audio.src = chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`);
@@ -78,10 +75,10 @@ class AlarmsClass {
         if (name !== '') { for (const voice of this.voices) { if (voice.name === name) this.voiceIndex = i; i++; }}
       }
     });
-    bgPanda.db.getFromDB(bgPanda.alarmsStore).then( async (result) => {
+    MYDB.getFromDB('panda', 'alarms').then( async (result) => {
       let valuesLen = result.length;
-      if (valuesLen === 0 && !this.useDefault) await bgPanda.db.deleteFromDB(bgPanda.alarmsStore, null);
-      if (valuesLen !== 0 && result[0].mute === undefined) await bgPanda.db.deleteFromDB(bgPanda.alarmsStore, null);
+      if (valuesLen === 0 && !MYDB.useDefault('panda')) await MYDB.deleteFromDB('panda', 'alarms', null);
+      if (valuesLen !== 0 && result[0].mute === undefined) await MYDB.deleteFromDB('panda', 'alarms', null);
       if (valuesLen !== 0 && result[0].mute !== undefined) err = await this.prepareAlarms(result, true);
       else err = await this.prepareAlarms(Object.values(this.dataDefault), false);
       if (!err) success[0] = "All alarms have been loaded up.";
@@ -89,14 +86,14 @@ class AlarmsClass {
     }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
   /** Clears the database store of all the alarms usually ready for an import. */
-  async clearAlarms() { await bgPanda.db.clearStore(bgPanda.alarmsStore); }
+  async clearAlarms() { await MYDB.clearStore('panda', 'alarms'); }
   /** Saves the alarms to the database. Will save the audio src if not using default sound.
    * @param  {string} alarmSound - The name of the alarm to sound from the alarms object. */
   saveAlarm(alarmSound) {
     let saveThis = Object.assign({}, this.data[alarmSound]);
     if (saveThis.audio.src.substr(0,4) === 'data') saveThis.obj = saveThis.audio.src;
     delete saveThis.audio;
-		bgPanda.db.addToDB(bgPanda.alarmsStore, saveThis).then( () => {},
+		MYDB.addToDB('panda', 'alarms', saveThis).then( () => {},
 			rejected => { pandaUI.haltScript(rejected, 'Failed updating data to database for an alarm so had to end script.', 'Error adding alarm data. Error:'); }
 		);
   }
@@ -168,6 +165,7 @@ class AlarmsClass {
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
   /** This plays the queue full alarm. */
   doFullAlarm() { this.playSound('queueFull'); }
+  doFoundHit() { this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null; this.voices = this.synth.getVoices(); this.speakThisNow('MONEY', () => {}); }
 	/** Method to decide which alarm to play according to the hit minutes and price.
 	 * @param  {object} hitData - The hit information to use to decide on alarm to sound. */
 	doAlarms(hitData) {

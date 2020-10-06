@@ -14,7 +14,7 @@ let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
 function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0, aI=null, tI=null) {
   if (typeof chrome.app.isInstalled === 'undefined')  {
     if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
-    location.reload();
+    window.location.reload();
   } else {
     chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI});
   }

@@ -1,16 +1,15 @@
-let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null;
-let pandaUIOpened = false, searchUIOpened = false;
-let mySearch = null, myPanda = null, myHistory = null, myQueue = null;
+let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
+let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null;
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
 function checkUIConnects() {
   if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.stopSearching(); }
-  if (!pandaUIOpened && !searchUIOpened) removeAll();
+  if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; } 
 }
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
-  mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); 
+  mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB();
   myPanda = null; mySearch = null; myHistory = null; myQueue = null;
   pandaTimer = null; queueTimer = null; searchTimer = null;
   if (chrome.storage) chrome.storage.local.set({'pcm_running':false});
@@ -46,6 +45,7 @@ function gGetSearch() { return mySearch; }
 function gGetHistory() { return myHistory; }
 /** Checks to make sure the database is fully opened and if not it will keep checking for 30 seconds.
  * @return {promise} - Returns true if database opened. Rejects if timedout waiting for an open database. */
+function gGetMYDB() { return MYDB; }
 async function gCheckPandaDB() { new Promise(resolve => {
     let counting = 0;
     checkDBs = () => {
@@ -60,32 +60,38 @@ async function gCheckPandaDB() { new Promise(resolve => {
 // Open the panda and search DB and sets a good variable or sets database error variable.
 async function prepareToOpen(panda=null, search=null, version=null) {
   let historyWipe = false; if (compareversion(version, '0.8.7')) historyWipe = true; // For older versions of history.
-  if (!panda && !search) return;
-  if (!myPanda && !searchUIOpened) {
-    chrome.storage.local.set({'pcm_running':true});
-    myHistory = new HistoryClass();
-    await myHistory.openDB(historyWipe).then( async () => {
-      dbHistoryGood = true;
-      myHistory.maintenance();
-      pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
-      queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
-      searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default
-      myQueue = new MturkQueue(2000);
-      myPanda = new MturkPanda(995, 950);
-      await myPanda.openDB().then( async () => {
-        mySearch = new MturkHitSearch(950);
-        await mySearch.openDB().then(_, rejected => { dbError = rejected; console.error(rejected); } )
-      }, rejected => { dbError = rejected; });
+  if (!panda && !search) return; else if (panda) pandaOpening = true; else if (search) searchOpening = true;
+  if (panda && searchOpening) await delay(1500); else if (search && pandaOpening) await delay(1500);
+  if (!MYDB) MYDB = new DatabasesClass();
+  await MYDB.openSearching().then( async () => {
+    await MYDB.openHistory(historyWipe).then( async () => {
+      if (!myPanda && !searchUIOpened) {
+        chrome.storage.local.set({'pcm_running':true});
+        myHistory = new HistoryClass();
+        dbHistoryGood = true;
+        myHistory.maintenance();
+        pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
+        queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
+        searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default
+        myQueue = new MturkQueue(2000);
+        myPanda = new MturkPanda(995, 950);
+        await MYDB.openPCM().then( async () => {
+          await MYDB.openStats(true).then( async () => { mySearch = new MturkHitSearch(950); }, rejected => { dbError = rejected; });
+        }, rejected => { dbError = rejected; });
+      }
+      if (panda) { pandaUIOpened = true; pandaOpening = false; }
+      if (search) { searchUIOpened = true; searchOpening = false; }
     }, rejected => { dbError = rejected; console.error(rejected); } );
-  }
-  if (panda) pandaUIOpened = true;
-  if (search) searchUIOpened = true;
+  }, rejected => { dbError = rejected; console.error(rejected); } );
 }
 function pandaUILoaded() { if (savedSearchUI) savedSearchUI.pandaUILoaded(); }
-function wipeData() {
+async function wipeData() {
   if (!myHistory && !mySearch && !myPanda) {
-    myHistory = new HistoryClass(); myHistory.wipeData(); myHistory = null;
-    mySearch = new MturkHitSearch(); mySearch.wipeData(); mySearch = null;
-    myPanda = new MturkPanda(); myPanda.wipeData(); myPanda = null;
+    if (!MYDB) MYDB = new DatabasesClass();
+    pandaTimer = new TimerClass(995,970,'pandaTimer'); searchTimer = new TimerClass(950,920,'searchTimer');
+    myHistory = new HistoryClass(); await myHistory.wipeData();
+    mySearch = new MturkHitSearch(950); await mySearch.wipeData();
+    myPanda = new MturkPanda(995, 950); await myPanda.wipeData();
+    myPanda = null; mySearch = null; myHistory = null; pandaTimer = null; searchTimer = null; MYDB = null;
   }
 }

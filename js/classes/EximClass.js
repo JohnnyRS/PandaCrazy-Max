@@ -210,7 +210,7 @@ class EximClass {
         inputContainer = null;
       }
       df = null;
-    }, () => { modal = null; if (this.importCompleted) { bgSearch.importingDone(); location.reload(); } });
+    }, () => { modal = null; if (this.importCompleted) { bgSearch.importingDone(); window.location.reload(); } });
   }
   /** Shows the export modal for user to choose to export alarm sounds or not. */
   exportModal() {

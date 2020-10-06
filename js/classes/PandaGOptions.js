@@ -75,23 +75,23 @@ class PandaGOptions {
   async prepare(afterFunc) {
     let success = [], err = null;
     this.captchaCounter = 0; this.lastQueueAlert = -1; this.timerUsed = 'mainTimer';
-    await bgPanda.db.getFromDB(bgPanda.optionsStore).then( async result => {
+    await MYDB.getFromDB('panda', 'options').then( async result => {
       if (result.length) { // Options were already saved in database so load and use them.
         for (var i=0, keys=Object.keys(result); i < keys.length; i++) {
           if (['general','timers','alarms','helpers'].includes(result[i].category)) {
             this[result[i].category] = Object.assign({}, this[result[i].category + 'Default'], result[i]);
           }
         }
-        if (Object.keys(this.helpers).length === 0) { await bgPanda.db.addToDB(bgPanda.optionsStore, this.helpersDefault)
+        if (Object.keys(this.helpers).length === 0) { await MYDB.addToDB('panda', 'options', this.helpersDefault)
           .then( () => { this.helpers = Object.assign({}, this.helpersDefault); })
         }
         if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
         success[0] = "Loaded all global options from database";
       } else { // Add default values to the options database and use them.
-        await bgPanda.db.addToDB(bgPanda.optionsStore, this.generalDefault)
-        .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.timersDefault)
-          .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.alarmsDefault)
-            .then( async () => { await bgPanda.db.addToDB(bgPanda.optionsStore, this.helpersDefault)
+        await MYDB.addToDB('panda', 'options', this.generalDefault)
+        .then( async () => { await MYDB.addToDB('panda', 'options', this.timersDefault)
+          .then( async () => { await MYDB.addToDB('panda', 'options', this.alarmsDefault)
+            .then( async () => { await MYDB.addToDB('panda', 'options', this.helpersDefault)
               .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
             }, rejected => { err = rejected; })
           }, rejected => { err = rejected; })
@@ -128,10 +128,10 @@ class PandaGOptions {
       }
     }
     if (pandaUI.logTabs) pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
-    bgPanda.db.addToDB(bgPanda.optionsStore, this.general);
-    bgPanda.db.addToDB(bgPanda.optionsStore, this.timers);
-    bgPanda.db.addToDB(bgPanda.optionsStore, this.alarms);
-    bgPanda.db.addToDB(bgPanda.optionsStore, this.helpers);
+    MYDB.addToDB('panda', 'options', this.general);
+    MYDB.addToDB('panda', 'options', this.timers);
+    MYDB.addToDB('panda', 'options', this.alarms);
+    MYDB.addToDB('panda', 'options', this.helpers);
   }
   /** Shows the general options in a modal for changes. */
   showGeneralOptions() {

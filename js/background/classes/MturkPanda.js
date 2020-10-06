@@ -10,12 +10,6 @@ class MturkPanda extends MturkClass {
 	 */
 	constructor(timer, hamTimer) {
 		super();																// Run the super extended constructor first.
-		this.dbName = "PandaCrazyMax";					// Name of the database used for all storage.
-		this.storeName = "pandaStore"; 					// Name of the store to be used for panda jobs.
-		this.tabsStore = "tabsStore";						// Name of the store for panda tabs.
-		this.optionsStore = "optionsStore";			// Name of the store for options.
-		this.groupingStore = "groupingStore";		// Name of the store for saving groupings.
-		this.alarmsStore = "alarmsStore";				// Name of the store for saving user selected alarms.
 		this.uniqueIndex = 0;										// unique number for a panda.
 		this.pandaUniques = [];									// Array of all unique numbers being used now.
 		this.searchesUniques = [];							// Array of all search jobs unique numbers being used now.
@@ -39,8 +33,6 @@ class MturkPanda extends MturkClass {
 			pandaTimer.pleaseSendBack();         		// Set timer for this timer.
 			pandaTimer.theHamTimer(hamTimer);   		// Set hamTimer for this timer.
 		}
-		this.useDefault = false;								// Should we be using default values because no data in database?
-		this.db = null;						  						// Set up the database class.
 	}
 	/** Returns the option info about a panda job with the unique ID.
 	 * @param  {number} myId - The unique ID for a panda job.
@@ -71,44 +63,24 @@ class MturkPanda extends MturkClass {
 	 * @async 				- To wait for the results of the database testing of the storage in the database.
 	 * @return {bool} - True if database is all ready. */
 	async testDB() {
-		let result = await this.db.testDB().then( () => { return true; }, () => {
-			return this.openDB(true).then( () => { return true; }, rejected => { dbError = rejected; return false; });
+		let result = await MYDB.testDB().then( () => { return true; }, () => {
+			return MYDB.openPCM(true).then( () => { return true; }, rejected => { dbError = rejected; return false; });
 		});
 		return result;
 	}
-  /** Open database or create it with all storage objects. This uses a promise so program will wait.
-	 * @param  {bool}	[del=false]				 - Should the database be deleted first?
-	 * @return {Promise<response|Error>} - Resolves with the response and rejects with the error. */
-  openDB(del=false) {
-    return new Promise( (resolve, reject) => {
-			this.db = new DatabaseClass(this.dbName, 1);
-    	this.db.openDB( del, (e) => {
-				if (e.oldVersion === 0) { // Had no database so let's initialise it.
-          e.target.result.createObjectStore(this.storeName, {keyPath:"id", autoIncrement:"true"})
-          	.createIndex("groupId", "groupId", {unique:false});
-          e.target.result.createObjectStore(this.tabsStore, {keyPath:"id", autoIncrement:"true"})
-          	.createIndex("position", "position", {unique:false});
-          e.target.result.createObjectStore(this.optionsStore, {keyPath:"category"});
-					e.target.result.createObjectStore(this.alarmsStore, {keyPath:"id", autoIncrement:"true"})
-						.createIndex("name", "name", {unique:false});
-					e.target.result.createObjectStore(this.groupingStore, {keyPath:"id", autoIncrement:"true"});
-					this.useDefault = true; // If data initialized then let other classes know to use default values.
-        }
-      } ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
-    });
-	}
-	wipeData() {
-		let db1 = new DatabaseClass(this.dbName, 1); db1.deleteDB(); db1 = null;
-		let db2 = new DatabaseClass("Pcm_PandaStats", 1); db2.deleteDB(); db2 = null;
+	async wipeData() {
+		await MYDB.openPCM().then( async () => {
+			await MYDB.deleteDB('panda');
+			await MYDB.openStats().then( async () => { await MYDB.deleteDB('stats'); } );
+		});
 	}
 	/** Loads data for this particular job with unique ID in the info object or returns the value of a property.
 	 * If database rejected then give error on console and on page before stopping script.
 	 * @async 							        - To wait to get the data from the database.
-	 * @param  {number} myId        - The unique ID for a panda job.
-	 * @param  {string} [prop=null] - The property to load from database and returned. Does not load data in memory.
+	 * @param  {number} myId        - Unique ID @param  {string} [prop=null] - The property to load from database and returned.
 	 * @return {object} 		        - Returns the value of the property supplied from databse or nothing. */
 	async getDbData(myId, prop=null) {
-		await this.db.getFromDB(this.storeName, this.info[myId].dbId)
+		await MYDB.getFromDB('panda',_, this.info[myId].dbId)
 		.then( r => { if (prop && r.hasOwnProperty(prop)) return r[prop]; else this.info[myId].data = r; },
 			rejected => { extPandaUI.haltScript(rejected, 'Failed loading data from database for a panda so had to end script.', `Error getting data for ${myId} Error:`); }
 		);
@@ -117,7 +89,7 @@ class MturkPanda extends MturkClass {
 	 * @async										- To wait for the adding of data in the database.
 	 * @param  {object} newData - New data @param  {bool} [multiple=false] - Does the data object have multiple items to add? */
 	async addToDB(newData, multiple=false) {
-		await this.db.addToDB(this.storeName, newData).then( id => {
+		await MYDB.addToDB('panda',_, newData).then( id => {
 			if (!multiple) newData.id = id;
 			else for (const data of newData) data.myId = this.uniqueIndex++;
 		}, rejected => { extPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
@@ -127,7 +99,7 @@ class MturkPanda extends MturkClass {
 	 * @async									- To wait for the updating of data in the database
 	 * @param  {number} myId	- TUnique ID @param  {object} [newData=null] - Object to update panda with or use the data in the panda info object. */
 	async updateDbData(myId, newData=null) {
-		await this.db.addToDB(this.storeName, (newData) ? newData : this.info[myId].data).then( id => newData.id = id,
+		await MYDB.addToDB('panda',_, (newData) ? newData : this.info[myId].data).then( id => newData.id = id,
 			rejected => { extPandaUI.haltScript(rejected, 'Failed updating data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
 		);
 		const dbId = (newData) ? newData.id : this.info[myId].id;
@@ -139,7 +111,7 @@ class MturkPanda extends MturkClass {
 	async deleteDbData(myId, data) {
 		extPandaUI.deleteFromStats(myId, this.info[myId].dbId);
 		myHistory.deleteThis(data.groupId); myHistory.deleteThis(data.reqId);
-		await this.db.deleteFromDB(this.storeName, this.info[myId].dbId).then( () => {},
+		await MYDB.deleteFromDB('panda',_, this.info[myId].dbId).then( () => {},
 			() => { if (this.dError(1)) console.error('Got an error while trying to delete a panda from database.'); });
 		if (this.dLog(3)) console.info(`%cDeleting panda ${myId} from Database.`,CONSOLE_INFO);
 	}
@@ -149,7 +121,7 @@ class MturkPanda extends MturkClass {
 	 * @return {object}								- Returns rejected object on database error. */
 	async getAllPanda(addPanda=true) {
 		let err = null;
-		await this.db.getFromDB(this.storeName).then( async result => {
+		await MYDB.getFromDB('panda',_).then( async result => {
 			for (const r of result) {
 				if (addPanda) await extPandaUI.addPandaDB(r); // Add panda straight from the database info.
 				else if (this.dbIds.hasOwnProperty(r.id)) this.info[this.dbIds[r.id]].data = r; // Add the data to memory
@@ -159,10 +131,10 @@ class MturkPanda extends MturkClass {
 		return err;
 	}
 	/** Closes the database and sets the database variable to null. */
-	closeDB() { this.db.closeDB(); this.db = null; }
+	closeDB() { MYDB.closeDB('panda'); MYDB.closeDB('stats'); }
 	/** Recreates the database after it's closed usually only used when importing data.
 	 * @async - To wait for the database and the search database to open. */
-	async recreateDB() { await this.openDB(true); await mySearch.openDB(true); }
+	async recreateDB() { await MYDB.openPCM(true); await MYDB.openStats(true); await MYDB.openSearching(true); }
 	/** Remove all panda jobs usually because panda UI is closing.
 	 * @param {bool} - Should the pandaUI be asked to remove all also?
 	 * @async 			 - To wait for all the data to be added first before removing the jobs. */
@@ -245,7 +217,7 @@ class MturkPanda extends MturkClass {
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - The object data for job to send status of to search class.
 	 * @param  {bool} status - The collection status of this panda. */
-	sendStatusToSearch(data, status) { mySearch.pandaStatus(data.groupId, status); }
+	sendStatusToSearch(data, status, collected=false) { mySearch.pandaStatus(data.groupId, status, collected); }
 	/** Will add fetched to search jobs when seach class fetches a hit list. */
 	searchFetched() {
 		for (const unique of this.searchesUniques) { if (extPandaUI.pandaStats[unique].doSearching()) extPandaUI.pandaStats[unique].addFetched(); }
@@ -539,7 +511,7 @@ class MturkPanda extends MturkClass {
 				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 				extPandaUI.cards.highlightEffect_gid(myId);
 				if (result.type === "ok.text" && result.url.includes("assignment_id=")) {
-					extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
+					this.sendStatusToSearch(info.data, true, true); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
 				} else {
 					let stopped = this.checkIfLimited(myId, false, info.data);
 					if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }

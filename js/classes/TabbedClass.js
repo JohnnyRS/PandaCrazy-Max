@@ -46,7 +46,7 @@ class TabbedClass {
    * @param  {array} newList    - The array of positions to set for this tab. */
   setpositions(tabUnique, newList) {
     this.#dataTabs[tabUnique].list = newList;
-    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+    MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
   }
   /** Prepare the tabbed areas on this page at the start up of the program.
    * @async                   - To wait for the loading of the tab data from the database.
@@ -56,7 +56,7 @@ class TabbedClass {
     if (this.ulId === 'pcm_tabbedPandas') { // Is this tab row for the panda's?
       this.addAddButton($(`#${this.ulId}`).addClass('unSelectable')); // Shows the add tab button on the tabbed panda row
       this.renameTab = true; this.deleteTab = true; this.draggable = true; // Allows renaming, deleting and dragging
-      await bgPanda.db.getFromDB(bgPanda.tabsStore).then( async result => {
+      await MYDB.getFromDB('panda', 'tabs').then( async result => {
         const theData = (result.length) ? result : this.defaultTabs;
         let active = true;
         for (let index=0, len=theData.length; index<len; index++) {
@@ -132,7 +132,7 @@ class TabbedClass {
    * @return {number}                 - The database ID that is set when added into database. */
   async addFromDB(tabData, active, doFunc=null) {
     let dbId = tabData.id, err = null;
-    if (!dbId) await bgPanda.db.addToDB(bgPanda.tabsStore, tabData)
+    if (!dbId) await MYDB.addToDB('panda', 'tabs', tabData)
     .then( id => { if (id >= 0) dbId = tabData.id = id; }, rejected => err = rejected );
     this.#tabsArr.push(dbId); this.#dataTabs[dbId] = tabData; this.unique++;
     await this.addTab2(dbId, active);
@@ -148,7 +148,7 @@ class TabbedClass {
     let arrPos = this.#tabsArr.length, unique = this.unique++;
     let thisTab = {title:name, position:arrPos, list:[]};
     if (manualAdd) {
-      await bgPanda.db.addToDB(bgPanda.tabsStore, thisTab)
+      await MYDB.addToDB('panda', 'tabs', thisTab)
       .then( async dbId => {
         if (dbId >= 0) {
           this.#dataTabs[dbId] = thisTab; this.#dataTabs[dbId].id = unique = dbId; this.#tabsArr.push(dbId);
@@ -205,7 +205,7 @@ class TabbedClass {
         delete this.#dataTabs[unique];
         this.#tabsArr = arrayRemove(this.#tabsArr, unique);
         for (const key of this.#tabsArr) { this.#dataTabs[key].position = counter++; }
-        bgPanda.db.deleteFromDB(bgPanda.tabsStore, unique);
+        MYDB.deleteFromDB('panda', 'tabs', unique);
         this.resizeTabContents();
         modal.closeModal();
       }, true, true);
@@ -253,13 +253,13 @@ class TabbedClass {
     if (unique===tabUnique && action === "sortable") {
       const pos1 = tabsInfo.list.indexOf(hitData.id);
       arrayMove(tabsInfo.list, pos1, theItem.index());
-      await bgPanda.db.addToDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
+      await MYDB.addToDB('panda', 'tabs', tabsInfo); // Wait and update tab positions
     } else if (unique!==tabUnique && action !== "sortable") {
       this.removePosition(tabUnique, hitData.id); this.setPosition(unique, hitData.id);
       setTimeout( () => { $(theItem).detach().appendTo($(`#pcm-t${unique}Content .card-deck:first`)); });
       hitData.tabUnique = unique;
       await bgPanda.updateDbData(myId, hitData);
-      await bgPanda.db.addToDB(bgPanda.tabsStore, tabsInfo); // Wait and update tab positions
+      await MYDB.addToDB('panda', 'tabs', tabsInfo); // Wait and update tab positions
     }
     theItem = activeTab = null;
   }
@@ -275,13 +275,13 @@ class TabbedClass {
    * @param  {number} id        - The unique ID for the panda that is being positioned. */
   setPosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list.push(id);
-    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+    MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
   }
   /** Removes the panda from this tab unique ID and then saves the updated positions to database.
    * @param  {number} tabUnique - The tab unique ID that the panda should be removed from.
    * @param  {number} id        - The unique ID for the panda that is being removed from position. */
   removePosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list = arrayRemove(this.#dataTabs[tabUnique].list, id);
-    bgPanda.db.addToDB(bgPanda.tabsStore, this.#dataTabs[tabUnique]);
+    MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
   }
 }

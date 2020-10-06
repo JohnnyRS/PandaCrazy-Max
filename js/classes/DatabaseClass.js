@@ -1,3 +1,83 @@
+class DatabasesClass {
+  constructor() {
+    this.history = {'dbName':'Pcm_History', 'storeName':'theHistory', 'db':null, 'default':false};
+    this.stats = {'dbName':'Pcm_PandaStats', 'storeName':'collectionStore', 'accepted':'acceptedStore', 'db':null, 'default':false};
+    this.panda = {'dbName':'PandaCrazyMax', 'storeName':'pandaStore', 'tabs':'tabsStore', 'options':'optionsStore', 'alarms':'alarmsStore', 'grouping':'groupingStore', 'db':null, 'default':false};
+    this.searching = {'dbName':'Pcm_Searching', 'storeName':'searchTriggers', 'options':'searchOptions', 'rules':'searchRules', 'history':'searchHistory', 'db':null, 'default':false};
+  }
+  openPCM(del=false) {
+    return new Promise( (resolve, reject) => {
+      this.panda.db = new DatabaseClass(this.panda.dbName, 1);
+      this.panda.db.openDB( del, (e) => {
+        if (e.oldVersion === 0) {
+          e.target.result.createObjectStore(this.panda.storeName, {keyPath:"id", autoIncrement:"true"}).createIndex("groupId", "groupId", {unique:false});
+          e.target.result.createObjectStore(this.panda.tabs, {keyPath:"id", autoIncrement:"true"}).createIndex("position", "position", {unique:false});
+          e.target.result.createObjectStore(this.panda.options, {keyPath:"category"});
+          e.target.result.createObjectStore(this.panda.alarms, {keyPath:"id", autoIncrement:"true"}).createIndex("name", "name", {unique:false});
+          e.target.result.createObjectStore(this.panda.grouping, {keyPath:"id", autoIncrement:"true"});
+          this.panda.default = true;
+        }
+      }).then( response => { if (response === 'OPENED') resolve(this.panda.db); }, rejected => { console.error(rejected); reject(rejected); });
+    });
+  }
+  openHistory(del=false) {
+		return new Promise( (resolve, reject) => {
+      this.history.db = new DatabaseClass(this.history.dbName, 1);
+			this.history.db.openDB( del, (e) => {
+				if (e.oldVersion === 0) {
+          let store1 = e.target.result.createObjectStore(this.history.storeName, {keyPath:'theId', autoIncrement:'false'});
+          store1.createIndex('reqId', 'reqId', {unique:false}); store1.createIndex('pay', 'pay', {unique:false});
+          store1.createIndex('from', 'from', {unique:false}); store1.createIndex('date', 'date', {unique:false});
+          store1.createIndex('updated', 'updated', {unique:false}); store1.createIndex('searchDate', ['from', 'updated'], {unique:false});
+          this.history.default = true;
+        }
+			}).then( response => { if (response === 'OPENED') resolve(this.history.db); }, rejected => { console.error(rejected); reject(rejected); });
+		});
+  }
+  openSearching(del=false) {
+		return new Promise( (resolve, reject) => {
+			this.searching.db = new DatabaseClass(this.searching.dbName, 1);
+    	this.searching.db.openDB( del, (e) => {
+				if (e.oldVersion === 0) {
+          let store1 = e.target.result.createObjectStore(this.searching.storeName, {keyPath:'id', autoIncrement:'true'});
+          store1.createIndex('type', 'type', {unique:false}); store1.createIndex('value', 'value', {unique:false}); store1.createIndex('unique', ['type', 'value'], {unique:false});
+					e.target.result.createObjectStore(this.searching.options, {keyPath:"dbId", autoIncrement:"false"});
+					e.target.result.createObjectStore(this.searching.rules, {keyPath:"dbId", autoIncrement:"false"});
+					e.target.result.createObjectStore(this.searching.history, {keyPath:"dbId", autoIncrement:"false"});
+          this.searching.default = true;
+        }
+      }).then( response => { if (response === 'OPENED') resolve(this.searching.db); }, rejected => { console.error(rejected); reject(rejected); });
+		});
+  }
+  openStats(del=false) {
+		return new Promise( (resolve, reject) => {
+			this.stats.db = new DatabaseClass(this.stats.dbName, 1);
+    	this.stats.db.openDB( del, (e) => {
+				if (e.oldVersion === 0) { // Had no database so let's initialise it.
+					e.target.result.createObjectStore(this.stats.storeName, {keyPath:"id", autoIncrement:"true"}).createIndex("dbId", "dbId", {unique:false});
+					let objStore = e.target.result.createObjectStore(this.stats.accepted, {keyPath:"id", autoIncrement:"true"});
+					objStore.createIndex("dbId", "dbId", {unique:false}); // dbId is an index to search faster.
+					objStore.createIndex("gid", "gid", {unique:false}); // gid is an index to search faster on Group Ids.
+					objStore.createIndex("rid", "rid", {unique:false}); // rid is an index to search faster on Requester Ids.
+          this.stats.default = true;
+				}
+      }).then( response => { if (response === 'OPENED') resolve(this.stats.db); }, rejected => { console.error(rejected); reject(rejected); });
+		});
+  }
+  closeDB(target) { this[target].db.closeDB(); this[target].db = null; }
+  async deleteDB(target) { if (this[target].db !== null) this[target].db.closeDB(); await this[target].db.deleteDB(); this[target].db = null; }
+  useDefault(target) { return this[target].default; }
+  getFromDB(target, store='storeName', key=null, keys=null) {
+		return new Promise( (resolve, reject) => { this[target].db.getFromDB(this[target][store], key, keys).then( r => resolve(r), e => reject(e) ); });
+  }
+  addToDB(target, store='storeName', mData=null, onlyNew=false, key=null, updateFunc=null) {
+		return new Promise( (resolve, reject) => { this[target].db.addToDB(this[target][store], mData, onlyNew, key, updateFunc).then( r => resolve(r), e => reject(e) ); });
+  }
+  deleteFromDB(target, store='storeName', key=null, indexName=null) {
+		return new Promise( (resolve, reject) => { this[target].db.deleteFromDB(this[target][store], key, indexName).then( r => resolve(r), e => reject(e) ); });
+  }
+  testDB() { return new Promise( (resolve, reject) => { this.panda.db.testDB().then( r => resolve(r), e => reject(e) ); }); }
+}
 /** Class for using datbases with promises for operations so it can wait for completion of function.
  * @class DatabaseClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
@@ -21,36 +101,34 @@ class DatabaseClass {
       request.onerror = () => { request.result.close(); reject('bad'); }
     });
   }
+  deleteDB() { 
+    return new Promise( (resolve, reject) => {
+      let deleteRequest = this.indexedDB.deleteDatabase(this.dbName);
+      deleteRequest.onerror = () => { reject(new Error(`Delete: ${this.dbName} error: ${deleteRequest.error.message}`)); }
+      deleteRequest.onsuccess = () => { resolve('SUCCESS'); }
+    });
+  }
   /** Opens this database using dbName and dbVersion properties of class.
    * Assigns db property to opened database request.
-   * @param {bool} deleteFirst - Delete database before opening or creating it?
-   * @param {function} upgrade - Function to be used when upgrade is needed because newer version.
+   * @param {bool} deleteFirst - Delete database @param {function} upgrade - Function to be used when upgrade is needed because newer version.
    * @return {promise}         - Database version in resolve. Error object in reject. */
   openDB(deleteFirst, upgrade) {
-    return new Promise( (resolve, reject) => {
-      if (!this.indexedDB) reject(new Error("indexedDB is Not supported"));
+    return new Promise( async (resolve, reject) => {
+      if (!this.indexedDB) reject(new Error('indexedDB is Not supported'));
       else {
-        if (deleteFirst) { // Used to delete database before opening so upgrade is used.
-          let deleteRequest = this.indexedDB.deleteDatabase( this.dbName );
-          deleteRequest.onerror = () => { // If request to delete fails then send error to console.
-            console.error(new Error(`Delete: ${this.dbName} error: ${deleteRequest.error.message}`));
-          }
-        }
+        if (deleteFirst) await this.deleteDB();
         let openRequest = this.indexedDB.open( this.dbName, this.dbVersion );
         openRequest.onupgradeneeded = e => { upgrade(e); } // if need to upgrade then call upgrade function
-        openRequest.onsuccess = () => { this.db = openRequest.result; resolve("OPENED"); } // set database pointer
+        openRequest.onsuccess = () => { this.db = openRequest.result; resolve('OPENED'); } // set database pointer
         openRequest.onerror = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
         openRequest.onabort = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
       }  
     });
   }
   /** Adds data to database with a key in data or next key available.
-   * @param {string} storeName       - Store name to be used for adding data to.
-   * @param {object} mdata           - Data or an array of data to be added to the store name database.
-   * @param {bool} [onlyNew=false]   - True for only updating data that is new.
-   * @param {bool} [key=null]        - The key to look for when updating is restricted.
-   * @param {bool} [updateFunc=null] - The function to call when updating an existing data to find out if it should be updated.
-   * @return {promise}               - Database key or new key in resolve. Error object in reject. */
+   * @param {string} storeName - Store name @param {object} mdata    - Data             @param {bool} [onlyNew=false]   - True for only updating data that is new.
+   * @param {bool} [key=null]  - Key @param {bool} [updateFunc=null] - Update function
+   * @return {promise}         - Database key or new key in resolve. Error object in reject. */
   addToDB(storeName, mData, onlyNew=false, key=null, updateFunc=null) {
     return new Promise( (resolve, reject) => {
       let newId = null, tx = this.db.transaction( [storeName], "readwrite" );
@@ -129,8 +207,5 @@ class DatabaseClass {
     });
   }
   /** Close the database. Usually before deleting it for complete reset. */
-  closeDB() { this.db.close(); }
-  deleteDB() {
-    this.indexedDB.deleteDatabase(this.dbName);
-  }
+  closeDB() { if (this.db) this.db.close(); }
 }

@@ -1,37 +1,35 @@
 let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, pandaUI = null; history = null;
-let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null;
+let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
 let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
 $('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1000}, trigger:'hover'});
 
-async function getBgPage() {
-  chrome.runtime.getBackgroundPage(function(backgroundPage){
-    bgPage = backgroundPage; prepare();
-  })
-}
-async function prepare() {
-  await bgPage.prepareToOpen(true,_, localVersion).then( () => {
-    bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
-    globalOpt = new PandaGOptions(), alarms = new AlarmsClass(), notify = new NotificationsClass();
-    groupings = new PandaGroupings(), pandaUI = new PandaUI(), menus = new MenuClass("pcm_quickMenu");
-    startPandaCrazy();
-  });
-}
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
     null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
 }
+async function getBgPage() {
+  chrome.runtime.getBackgroundPage( (backgroundPage) => { bgPage = backgroundPage; prepare(); });
+}
+async function prepare() {
+  await bgPage.prepareToOpen(true,_, localVersion).then( () => {
+    bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
+    globalOpt = new PandaGOptions(); alarms = new AlarmsClass(); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    groupings = new PandaGroupings(); pandaUI = new PandaUI(); menus = new MenuClass("pcm_quickMenu");
+    startPandaCrazy();
+  });
+}
 /** Starts the process of loading data in the program and check for errors as it goes.
  * Make sure to check for a good DB open and wait for slower computers.
  * @async - To wait for preparations for classes to end their database operations. */
 async function startPandaCrazy() {
   $('.pcm_top').addClass('unSelectable'); $('#pcm_quickMenu').addClass('unSelectable');
-  if (bgHistory.db && bgPanda.db && bgSearch.db) {
+  if (bgHistory && bgPanda && bgSearch) {
     await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
     alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
     groupings.prepare(showMessages); // Wait for groupings to load and show message or error.

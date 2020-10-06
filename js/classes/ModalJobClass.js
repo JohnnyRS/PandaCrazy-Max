@@ -90,6 +90,11 @@ class ModalJobClass {
       }
     }, true, true,_,_,_,_, () => {});
   }
+  async searchOptionsChanged(changes, sChanges) {
+    let sOptions = sChanges.options;
+    changes = Object.assign(changes,{'acceptLimit':sOptions.acceptLimit, 'autoGoHam':sOptions.autoGoHam, 'duration':sOptions.duration, 'limitFetches':sOptions.limitFetches, 'limitNumQueue':sOptions.limitNumQueue, 'limitTotalQueue':sOptions.limitTotalQueue, 'once':sOptions.once});
+    await bgSearch.optionsChanged(sChanges, sChanges.searchDbId);
+  }
   /** Shows the modal for users to change the details of the hit job with the unique ID.
    * @async                - To wait for the data to be loaded from the database.
    * @param  {number} myId - Unique ID @param  {function} [successFunc=null] - Save Function @param  {function} [afterClose=null]  - Close function */
@@ -100,7 +105,7 @@ class ModalJobClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, "800px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
-      if (hitInfo.search) await bgSearch.optionsChanged(searchChanges, searchChanges.searchDbId);
+      if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
       changes.disabled = (changes.disabled) ? changes.disabled : false;
       hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
       await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;

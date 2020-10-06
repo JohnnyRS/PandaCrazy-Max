@@ -202,9 +202,10 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
   let row=null, tdCol = '';
   const trStyle = (trBgColor!=='') ? ` style='background-color:${trBgColor}'` : '';
   if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
-  for (const element of thisArrayObject) {
+  for (const element of thisArrayObject) { 
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (!useObject || (element.ifNot && useObject[element.ifNot])) continue;
+    if (element.keyCheckNot && useObject[element.keyCheck] === element.keyCheckNot) continue;
     let textColor = '', padding='pl-0', valueCol=null, textBorder = 'bottom-dotted';
     let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
@@ -221,11 +222,13 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     const addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
     const tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
-    const tdStyle = ` style='padding-right:1px !important; ${tdMaxWidth} min-width:20px; ${tdWidth}'`;
-    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${element.tooltip}'` : ``;
-    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
+    const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
+    const tdStyle = ` style='padding-right:1px !important; ${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
+    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}'` : ``;
+    const toolTipClass = (element.tooltip) ? ` pcm_tooltipData`: '';
+    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel${toolTipClass}' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
-    if (table) valueCol = $(`<td class='${tdCol}font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate'${tdStyle}>${addSpan}</td>`);
+    if (table) valueCol = $(`<td class='${tdCol}font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
     else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
     valueCol.appendTo(row);
     if (element.type==='range') {

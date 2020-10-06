@@ -26,6 +26,7 @@ class SearchUI {
 		this.clickTimer = null;
 		this.hitsTabInactive = true;
 		this.triggeredHits = [];
+		this.triggeredUnique = 0;
 	}
   /** Stops the searching process. */
   stopSearching() {
@@ -33,16 +34,16 @@ class SearchUI {
 		bgSearch.stopSearching(); $('.pcm_top').css('background-color','#400a0a');
 	}
   /** Starts the searching prcoess. */
-  startSearching() { bgSearch.searchGStats.searchingOn(); bgSearch.startSearching(); $('.pcm_top').css('background-color','#0b3e0b'); }
+  startSearching() { if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm_top').css('background-color','#0b3e0b'); }}
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
-	nowLoggedOff() { modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); } ); }
+	nowLoggedOff() { modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); }); }
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
 	importing() {
 		this.stopSearching(); modal = new ModalClass(); modal.showDialogModal('700px', 'Importing Data', 'Please Wait. Loading up all data for you.', null , false, false, '', '', null);
 	}
 	importingDone() { this.wasImporting = true; bgPage.searchUIImporting(); }
-	pandaUILoaded() { if (this.wasImporting) location.reload(); }
+	pandaUILoaded() { if (this.wasImporting) window.location.reload(); }
 	/** Updates the stat object with the text provided or the stat value.
 	 * @param  {object} statObj - Stat object @param  {string} text - The text to display in the stat area. */
 	updateStatNav(statObj, text) {
@@ -146,8 +147,9 @@ class SearchUI {
 			this.triggeredContent = $(`<div class='pcm_triggeredHits card-deck'></div>`).appendTo(`#${this.triggeredTab.tabContent}`);
 			this.triggeredContent.hover( (e) => { this.hitsTabInactive = false; }, (e) => { this.hitsTabInactive = true; this.displayTriggeredHits(); } );
 			$(`<table class='table table-dark table-sm table-moreCondensed pcm_foundHitsTable table-bordered w-100'></table>`)
-				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:55px; max-width:55px;'>Pays</td><td style='width:40px; max-width:40px;'></td><td style='width:18px; max-width:18px;'></td><td style='width:18px; max-width:18px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
+				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:45px; max-width:45px;'>Pays</td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
 		}
+
 	}
   /** Update the status bar with the hits found value or the search results value.
    * @param  {string} statusName - The status name @param  {string} status		 - The status value */
@@ -157,15 +159,13 @@ class SearchUI {
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} [thetrigger=null] - The jquery element  @param  {bool} [toggle=true] - Toggled? */
-	updateTrigger(thetrigger, tempDisabled=false) {
-		let unique = $(thetrigger).data('unique'), newStatus = bgSearch.toggleTrigger(unique);
-		$(thetrigger).data('status', newStatus);
+	updateTrigger(thetrigger, theStatus=null, tempDisabled=false) {
+		let unique = $(thetrigger).data('unique'), newStatus = (theStatus) ? theStatus : bgSearch.toggleTrigger(unique);
+		$(thetrigger).stop(true,true).data('status', newStatus);
 		if (newStatus === 'disabled') $(thetrigger).addClass('pcm_disabled'); else $(thetrigger).removeClass('pcm_disabled');
 		if (tempDisabled) $(thetrigger).addClass('pcm_tempDisabled'); else $(thetrigger).removeClass('pcm_tempDisabled');
 	}
-	tempDisable(unique, tempDisabled) {
-		this.updateTrigger($(`pcm_triggerCard_${unique}`).closest('.card'), tempDisabled);
-	}
+	disableMe(unique, theStatus=null) { this.updateTrigger($(`#pcm_triggerCard_${unique}`), theStatus); }
 	/**
 	 * @param  {object} [card=null] - Jquery element to find cards. */
 	cardEvents(card=null) {
@@ -251,6 +251,17 @@ class SearchUI {
 		}
 		this.cardEvents();
 	}
+	async addTrigger(hitData, once=true) {
+		let gId = hitData.hit_set_id, rId = hitData.requester_id;
+		bgSearch.setTempBlockGid(gId, true);
+		let unique = await bgSearch.addTrigger('gid', {'name':hitData.title, 'reqId':hitData.requester_id, 'groupId':gId, 'title':hitData.title, 'reqName':hitData.requester_name, 'pay':hitData.monetary_reward.amount_in_dollars, 'status':'finding'}, {'duration': 12000, 'once':once, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'tempGoHam':5000, 'acceptLimit':0});
+		if (unique) {
+			search.appendFragments();
+			bgSearch.doRidSearch(rId, async (timerUnique, elapsed, rId) => {
+				await bgSearch.goFetch(bgSearch.createReqUrl(rId), timerUnique, elapsed, rId, bgSearch.uniqueToDbId(unique), 'gid', gId, true, gId);
+			});
+		}
+	}
 	displayTriggeredHits(trigger=null, hit=null, term=null) {
 		if (hit !== null) this.triggeredHits.push({'trigger':trigger, 'hit':hit});
 		while (this.triggeredHits.length && this.hitsTabInactive) {
@@ -258,15 +269,16 @@ class SearchUI {
 			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title;
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
 			let foundData = {'reqName':hitData.requester_name, 'title':markedTitle, 'price':`$${hitData.monetary_reward.amount_in_dollars.toFixed(2)}`};
+			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++;
 			displayObjectData([
-				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink'},
-				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px'}, {'type':'keyValue', 'key':'title', 'maxWidth':'460px'}, {'type':'keyValue', 'key':'price'},
-				{'label':'Collect', 'type':'button', 'btnLabel':'Collect', 'btnColor':'primary', 'addClass':" btn-xxs", 'btnFunc': () => {
-					bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1800);
-				}},
-				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':" btn-xxs", 'btnFunc': () => {
-					bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1800);
-				}},
+				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink', 'tooltip':`Turkerview Requester Link`},
+				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${foundData.reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
+				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title}`},
+				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount hit pays.`},
+				{'type':'button', 'btnLabel':'P', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customPanda_', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
+				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customOnce_', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
+				{'type':'button', 'btnLabel':'S', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch1_', 'unique':unique, 'tooltip':`Create search trigger to collect once for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData); }},
+				{'type':'button', 'btnLabel':'*', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch_', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
 			], df, foundData, true, true, '#0b716c');
 			$(df).find('.pcm_tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
 			this.triggeredContent.find(`tbody`).prepend(df);

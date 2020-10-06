@@ -5,49 +5,25 @@
  */
 class HistoryClass {
   constructor() {
-		this.dbHistoryName = "Pcm_History";		// Name of the database used for all storage.
-    this.storeHistName = 'theHistory';
-    this.useDefault = false;
-		this.db = new DatabaseClass(this.dbHistoryName, 1);  // Set up the search database class.
   }
-  /** Opens the history database or creates it if not found.
-   * @param  {bool} [del=true] - Delete database before opening it.
-	 * @return {promise}         - Error if rejected. */
-  openDB(del=false) {
-		return new Promise( (resolve, reject) => {
-			this.db.openDB( del, (e) => {
-				if (e.oldVersion === 0) { // Had no database so let's initialise it.
-          let store1 = e.target.result.createObjectStore(this.storeHistName, {keyPath:'theId', autoIncrement:'false'});
-          store1.createIndex('reqId', 'reqId', {unique:false});
-          store1.createIndex('pay', 'pay', {unique:false});
-          store1.createIndex('from', 'from', {unique:false});
-          store1.createIndex('date', 'date', {unique:false});
-          store1.createIndex('updated', 'updated', {unique:false});
-          store1.createIndex('searchDate', ['from', 'updated'], {unique:false});
-          this.useDefault = true;
-        }
-			} ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
-		});
-	}
-	wipeData() { this.db.deleteDB(); }
+	async wipeData() { await MYDB.openHistory().then( async () => { await MYDB.deleteDB('history'); }) }
 	async findValue(value) {
-		await this.db.getFromDB(this.storeHistName, value).then( r => {} );
+		await MYDB.getFromDB('history',_, value).then( r => {} );
 	}
-	async findValues(values) { let returnValue = {}; await this.db.getFromDB(this.storeHistName,_, values).then( r => { returnValue = r; } ); return returnValue; }
+	async findValues(values) { let returnValue = {}; await MYDB.getFromDB('history',_,_, values).then( r => { returnValue = r; } ); return returnValue; }
 	/** Deletes data that is from searchResults and hasn't been updated in 15 days. */
 	maintenance() {
 		let beforeDate = new Date(); beforeDate.setDate( beforeDate.getDate() - 15 );
 		let keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
-		this.db.deleteFromDB(this.storeHistName, keyRange, 'searchDate').then( null, (rejected) => console.error(rejected));
+		MYDB.deleteFromDB('history',_, keyRange, 'searchDate').then( null, (rejected) => console.error(rejected));
 	}
 	/** Updates the database with new data.
 	 * @async											 - To wait for the database to be updated.
-	 * @param  {object} newData    - New data to be saved in database.
-	 * @param  {string} [key=null] - If key exists then update only if it is not from searchresults or not the same day. */
+	 * @param  {object} newData    - New data  @param  {string} [key=null] - The key */
 	async updateToDB(newData, key=null) {
-		if (this.db) {
+		if (MYDB) {
 			let onlyNew = (key) ? true : false;
- 			await this.db.addToDB(this.storeHistName, newData, onlyNew, key, (r) => {
+ 			await MYDB.addToDB('history',_, newData, onlyNew, key, (r) => {
 				let updateThis = false;
 				if (newData.from !== 'searchResults' && newData.from !== r.from) { r.from = newData.from; updateThis = true; }
 				else updateThis = !isSameDay(new Date(r.updated));
@@ -56,19 +32,15 @@ class HistoryClass {
 		}
 	}
 	/** Close the database usually when importing. */
-	closeDB() { this.db.closeDB(); this.db = null; }
+	closeDB() { MYDB.closeDB('history'); }
 	/** Removes value key in database by changing the from value to searchResults so maintenance can delete it later.
 	 * @param  {string} value - The key value that needs to be removed. */
 	deleteThis(value) {
-		if (value) this.db.getFromDB(this.storeHistName, value).then( r => {
-			if (r) { r.from = 'searchResults'; this.updateToDB(r); }
-		});
+		if (value) MYDB.getFromDB('history',_, value).then( r => { if (r) { r.from = 'searchResults'; this.updateToDB(r); } });
 	}
 	/** Fill in the history database with the group ID and requester info from history object.
-	 * @async														 - To wait for database to be updated.
-	 * @param  {object} history          - History object with all data.
-	 * @param  {string} [from='unknown'] - Where data comes from.
-	 * @param  {bool} [loaded=false]   - If data is loaded from database then no need to update history. */
+	 * @async										- To wait for database to be updated.
+	 * @param  {object} history - History object @param  {string} [from='unknown'] - Originated @param  {bool} [loaded=false]   - Data loaded? */
 	async fillInHistory(history, from='unknown', loaded=false) {
 		let newHits = {};
 		for (const key of Object.keys(history)) {

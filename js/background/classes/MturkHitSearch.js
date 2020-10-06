@@ -12,7 +12,7 @@ class MturkHitSearch extends MturkClass {
 		this.searchesString = '';									// Temporary id's of hits to find new hits in results. Limited to 100 hits remembered.
 		this.livePandaUIStr = '';									// Live search triggers from pandaUI
 		this.liveSearchUIStr = '';								// Live search triggers from searchUI
-		this.liveTermStr = ''; this.liveTermReg = null; this.liveTermData = {}; this.liveTermArr = []; this.liveCounter = 0;
+		this.liveTermStr = ''; this.liveTermReg = null; this.liveTermData = {}; this.liveTermArr = []; this.liveCounter = 0; this.termCounter = 0;
 		this.triggersAdded = 0;										// The number of triggers added. Also used for a unique number for each trigger.
 		this.pandaCollecting = [];								// Array of all panda gId's collecting now from pandaUI.
 		this.searchGStats = null;									// global search stats.
@@ -33,24 +33,16 @@ class MturkHitSearch extends MturkClass {
 		this.fromSearch = new Set();
 		this.pausedPandaUI = false;
 		this.pausedSearchUI = false;
-		this.tempBlockGid = new Set(); this.blockedReqId = new Set(); this.blockedGroupId = new Set();
-		this.dbSearchName = "Pcm_Searching";			// Name of the database used for all storage.
-		this.storeName = 'searchTriggers';				// The database storage name for the triggers.
-		this.storeOptionsName = 'searchOptions';	// The database storage name for the options for triggers
-		this.storeRulesName = 'searchRules';			// The database storage name for the rules for triggers.
-		this.storeHistoryName = 'searchHistory';  // The database storage name for the history for triggers.
+		this.tempBlockGid = new Set(); this.blockedReqId = new Set(); this.blockedGroupId = new Set(); this.customGidSkip = [];
     this.sort = "updated_desc";     					// Sort by updated_desc by default.
     this.pandaDur = {min:0, max:60} 					// Limits for the panda duration in minutes.
-		this.db = null;													  // Set up the search database class.
 		this.loaded = false;											// Has data been loaded from database?
 		if (timer) {
 			searchTimer.setMyClass(this);							// Tell timer what class is using it so it can send information back.
 			searchTimer.theTimer(timer);    					// Set timer for this timer.
 		}
-		this.useDefault = false;
 		this.temps = 1;
 		this.defaultDuration = 12000;
-		this.allData = {'options':'searchOptions', 'rules':this.storeRulesName, 'history':this.storeHistoryName, 'data':this.storeName};
     this.sorting = ["updated_desc", "updated_asc", "reward_asc", "reward_desc", "hits_asc", "hits_desc"];
 		this.dbIds = {'pDbId':{}, 'values':{}, 'unique':{}};
 		this.ruleSet = {'blockGid': new Set(), 'blockRid': new Set(), 'onlyGid': new Set(), 'terms': false, 'exclude': new Set(), 'include': new Set(), 'payRange': false, 'minPay': 0.00, 'maxPay': 0.00};
@@ -73,59 +65,41 @@ class MturkHitSearch extends MturkClass {
 	 * @return {number}	       - The dbID for this trigger to use for all other data. */
 	uniqueToDbId(unique) { return this.dbIds.unique[unique]; }
 	pandaToDbId(pDbId) { return this.dbIds.pDbId[pDbId]; }
-	/** Opens the search database and deletes data if needed.
-	 * @param  {book} [del=false]        - Delete database first before opening.
-	 * @return {Promise<response|Error>} - Resolves with the response and rejects with the error. */
-	openDB(del=false) {
-		return new Promise( (resolve, reject) => {
-			this.db = new DatabaseClass(this.dbSearchName, 1);
-    	this.db.openDB( del, (e) => {
-				if (e.oldVersion === 0) { // Had no database so let's initialise it.
-          let store1 = e.target.result.createObjectStore(this.storeName, {keyPath:'id', autoIncrement:'true'});
-          store1.createIndex('type', 'type', {unique:false});
-          store1.createIndex('value', 'value', {unique:false});
-          store1.createIndex('unique', ['type', 'value'], {unique:false});
-					e.target.result.createObjectStore(this.storeOptionsName, {keyPath:"dbId", autoIncrement:"false"});
-					e.target.result.createObjectStore(this.storeRulesName, {keyPath:"dbId", autoIncrement:"false"});
-					e.target.result.createObjectStore(this.storeHistoryName, {keyPath:"dbId", autoIncrement:"false"});
-					this.useDefault = true;
-        }
-      } ).then( response => resolve(response), rejected => { console.error(rejected); reject(rejected); });
-		});
-	}
-	wipeData() { let db = new DatabaseClass(this.dbSearchName, 1); db.deleteDB(); db = null; }
+	async wipeData() { await MYDB.openSearching().then( async () => { await MYDB.deleteDB('searching'); }); }
 	/** Updates the database with new data.
 	 * @async 										 - So the data gets added or updated to the database.
 	 * @param  {string} storeName  - Storage name @param  {object} newData - New Data @param  {bool} [onlyNew=false] - Only new data saved? 
 	 * @param  {string} [key=null] - Key name */
-	async updateToDB(storeName, newData, onlyNew=false, key=null) {
-		if (this.db) {
-			await this.db.addToDB(storeName, newData, onlyNew, key)
+	async updateToDB(name, newData, onlyNew=false, key=null) {
+		if (MYDB) {
+			await MYDB.addToDB('searching', name, newData, onlyNew, key)
 			.then(_, rejected => { console.error(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
 		}
 	}
 	/** Close the database usually for importing or UI closing. */
-	closeDB() { this.db.closeDB(); this.db = null; }
+	closeDB() { MYDB.closeDB('searching'); this.db = null; }
 	/** Loads data from database into memory using restrictions and adds to UI.
 	 * @async  - So the data can be loaded into memory. */
 	async loadFromDB() {
 		let success = [], err = null;
-		await this.db.getFromDB(this.storeName).then( async result => {
+		await MYDB.getFromDB('searching').then( async result => {
 			for (const trigger of result) {
 				let dbId = trigger.id, status = (trigger.disabled) ? 'disabled' : 'searching';
-				await this.db.getFromDB(this.allData['options'], dbId).then( async options => {
-					await this.db.getFromDB(this.storeRulesName, dbId).then( async data => {
-						await this.db.getFromDB(this.storeHistoryName, dbId).then( async history => {
+				await MYDB.getFromDB('searching', 'options', dbId).then( async options => {
+					await MYDB.getFromDB('searching', 'rules', dbId).then( async data => {
+						await MYDB.getFromDB('searching', 'history', dbId).then( async history => {
 							if (this.loaded && extSearchUI && trigger.searchUI) {
 								extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
 								if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI);
 							} else if (!this.loaded) {
-								let numHits = Object.keys(history.gids).length, stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null, 'numHits':numHits},trigger);
-								this.data[dbId] = {...trigger, ...stats}; this.options[dbId] = options; this.rules[dbId] = data.rules[data.ruleSet];
 								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`;
-								if (!history.gids.hasOwnProperty('date')) { history.gids = this.fillInGidHistory(history.gids); }
-								if (!trigger.hasOwnProperty('numHits')) this.updateToDB(this.storeName, this.data[dbId]);
-								this.fillInObjects(this.triggersAdded++, dbId, this.data[dbId], status, valueString, this.data[dbId].searchUI); stats = {};
+								if (!this.dbIds.values.hasOwnProperty(valueString)) {
+									let numHits = Object.keys(history.gids).length, stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null, 'numHits':numHits},trigger);
+									this.data[dbId] = {...trigger, ...stats}; this.options[dbId] = options; this.rules[dbId] = data.rules[data.ruleSet];
+									if (!history.gids.hasOwnProperty('date')) { history.gids = this.fillInGidHistory(history.gids); }
+									if (!trigger.hasOwnProperty('numHits')) this.updateToDB(_, this.data[dbId]);
+									this.fillInObjects(this.triggersAdded++, dbId, this.data[dbId], status, valueString, this.data[dbId].searchUI); stats = {};
+								}
 							}
 							success[0] = "Loaded all search triggers from database";
 							history = null;
@@ -138,24 +112,24 @@ class MturkHitSearch extends MturkClass {
 			result = [];
 		}, rejected => err = rejected );
 		this.loaded = true;
-		if (this.useDefault) {
+		if (MYDB.useDefault('searching')) {
 			await this.addTrigger('rid', {'name':'Ibotta, Inc. Requester Trigger', 'reqId':'AGVV5AWLJY7H2', 'groupId':'', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
 			await this.addTrigger('gid', {'name':'Ibotta, Inc. GroupID Trigger', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0});
 		}
 	}
 	async getDBData(name, dbId) {
 		let returnValue = null;
-		await this.db.getFromDB(this.allData[name], dbId).then( result => { returnValue = result; }, () => { delete this[name][dbId]; returnValue = null; });
+		await MYDB.getFromDB('searching', name, dbId).then( result => { returnValue = result; }, () => { delete this[name][dbId]; returnValue = null; });
 		return returnValue;
 	}
 	/** Gets data according to the storage name and loads it into memory.
 	 * @param  {string} name - Database storage name to save in @param  {number} dbId - Database ID */
 	async getFromDB(name, dbId) {
-		let returnValue = null, gotData = await this.getDBData(name, dbId); if (!gotData) return null;
-		if (name === 'options') returnValue = gotData; else if (name === 'rulesets') returnValue = gotData;
-		else if (name === 'rules') { let ruleSet = gotData.ruleSet; returnValue = gotData.rules[ruleSet]; }
+		let storeName = (name === 'rulesets') ? 'rules' : name;
+		let returnValue = await this.getDBData(storeName, dbId); if (!returnValue) return null;
+		if (name === 'rules') { let ruleSet = returnValue.ruleSet; returnValue = returnValue.rules[ruleSet]; }
 		else if (name === 'history') {
-			if (!gotData.gids.hasOwnProperty('date')) gotData.gids = this.fillInGidHistory(gotData.gids); returnValue = Object.assign({'gids':{}, 'dbId':dbId}, gotData);
+			if (!returnValue.gids.hasOwnProperty('date')) returnValue.gids = this.fillInGidHistory(returnValue.gids); returnValue = Object.assign({'gids':{}, 'dbId':dbId}, returnValue);
 		}
 		return returnValue;
 	}
@@ -173,16 +147,13 @@ class MturkHitSearch extends MturkClass {
 	 * @async - Just so things get cleared out before a restart. */
 	async removeAll() {
 		this.searchesString = ''; this.livePandaUIStr = ''; this.liveSearchUIStr = ''; this.liveCounter = 0; this.pandaCollecting = [];
-		this.searchGStats = null; this.options = {}; this.data = {}; this.rules = {}; this.dbIds.pDbId = {};
+		this.searchGStats = null; this.options = {}; this.data = {}; this.rules = {}; this.dbIds.pDbId = {}; this.termCounter = 0;
 		this.fromPanda.clear(); this.fromSearch.clear(); this.tempBlockGid.clear(); this.dbIds.values = {}; this.dbIds.unique = {}; this.loaded = false;
 	}
 	/** Add database ID to a queue of data allowed in memory. Deletes data which isn't used much.
 	 * @param  {number} item - Database ID */
 	addToQueueMem(item) {
-		if (this.queueDbIds.unshift(item) > this.queueSize) {
-			let deleteThis = this.queueDbIds.pop();
-			delete this.options[deleteThis]; delete this.rules[deleteThis];
-		}
+		if (this.queueDbIds.unshift(item) > this.queueSize) { let deleteThis = this.queueDbIds.pop(); delete this.options[deleteThis]; delete this.rules[deleteThis]; }
 	}
 	/**
 	 * @param  {number} dbId - Database ID    @param  {number} [pDbId=null]  - Panda database ID
@@ -191,10 +162,10 @@ class MturkHitSearch extends MturkClass {
 		if (!this.rules[dbId]) this.rules[dbId]= await this.getFromDB('rules', dbId); if (!this.options[dbId]) this.options[dbId] = await this.getFromDB('options', dbId);
 		this.queueDbIds = arrayRemove(this.queueDbIds, dbId); this.addToQueueMem(dbId);
 	}
-	rulesChanged(dbId, newRules) { this.updateToDB(this.storeRulesName, {rules:[newRules], 'dbId':dbId, 'ruleSet':0}, false); }
+	rulesChanged(dbId, newRules) { this.updateToDB('rules', {rules:[newRules], 'dbId':dbId, 'ruleSet':0}, false); }
 	async theData(dbId, name, changed=null) {
 		let returnValue = null;
-		if (changed && name !== 'rules') this.updateToDB(this.allData[name], changed, false); else if (changed) this.rulesChanged(dbId, changed);
+		if (changed && name !== 'rules') this.updateToDB(name, changed, false); else if (changed) this.rulesChanged(dbId, changed);
 		if (!this[name][dbId]) await this.pingTriggers(dbId); else if (changed) this[name][dbId] = changed; returnValue = this[name][dbId];
 		return returnValue;
 	}
@@ -228,16 +199,18 @@ class MturkHitSearch extends MturkClass {
 	/** This method will start the searching of the mturk queue.
 	 * @param  {number} dbId - The database ID of the trigger that is starting. */
 	startSearching(dbId) {
+		this.termCounter = Object.keys(this.liveTermData).length;
 		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
-		if (!this.timerUnique && this.liveCounter) { // Make sure it's not already searching.
+		if (!this.timerUnique && (this.liveCounter || this.termCounter)) { // Make sure it's not already searching.
 			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed, theId) => {
-				if (this.liveCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, theId, dbId);
-				else {
-					if (this.searchGStats && this.searchGStats.isSearchOn()) extSearchUI.stopSearching(); else this.stopSearching();
-				}
+				if (this.liveCounter || this.termCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, theId, dbId);
+				else { if (this.searchGStats && this.searchGStats.isSearchOn()) extSearchUI.stopSearching(); else this.stopSearching(); }
 			});
+			return true;
 		}
+		else return false;
 	}
+	doRidSearch(unique, doThis=null) { return searchTimer.addToQueue(unique, (timerUnique, elapsed, rId) => { if (doThis) doThis(timerUnique, elapsed, rId); }); }
 	/** Mark a trigger as searching now.
 	 * @param  {number} pDbId - The panda ID @param  {bool} [sUI=true] - do search from search UI or panda UI? */
 	doSearching(pDbId, sUI=true) {
@@ -270,7 +243,7 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Gets the status from panda UI of this particular panda job.
 	 * @param  {string} gId	 - The group ID @param  {bool} status - The status of the panda in panda UI. */
-	async pandaStatus(gId, status) {
+	async pandaStatus(gId, status, collected=false) {
 		let dbId = (this.isAll('gid', gId)) ? this.theDbId('gid', gId) : null;
 		if (dbId) {
 			if (status) {
@@ -278,17 +251,22 @@ class MturkHitSearch extends MturkClass {
 				if (dbId && this.triggers[dbId].status === 'disabled') this.triggers[dbId].status = 'collecting';
 			} else {
 				this.pandaCollecting = arrayRemove(this.pandaCollecting, gId);
-				if (dbId) {
-					this.triggers[dbId].status = (this.triggers[dbId].status === 'collecting') ? 'searching' : 'disabled';
-					this.setTempBlockGid(gId, false);
+				if (this.triggers[dbId].status === 'collecting') this.triggers[dbId].status = 'searching';
+			}
+			if (collected) {
+				let options = await this.theData(dbId, 'options'), unique = this.triggers[dbId].count;
+				if (options.once) {
+					this.toggleTrigger(unique);
+					if (extSearchUI) extSearchUI.disableMe(unique, this.triggers[dbId].status);
 				}
 			}
 		}
+		if (!status) this.setTempBlockGid(gId, false);
 	}
 	async maintainGidHistory(dbId, key, sent) {
 		let thisHistory = await this.getFromDB('history', dbId); thisHistory.gids[key] = {'date':new Date().getTime(), 'sent':sent};
 		this.data[dbId].numHits = Object.keys(thisHistory.gids).length;
-		this.updateToDB(this.storeHistoryName, thisHistory, false);
+		this.updateToDB('history', thisHistory, false);
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
 	 * @param  {object} trigger	- The trigger  @param  {string} gId - Blocked group ID */
@@ -297,6 +275,13 @@ class MturkHitSearch extends MturkClass {
 		if (block === null) block = !blocked;
 		if ((block && !blocked) || (!block && blocked)) { if (block) this.tempBlockGid.add(gId); else this.tempBlockGid.delete(gId); }
 	}
+	setCustomGidSkip(gId, skip) {
+		let gidSkipped = this.customGidSkip.includes(gId);
+		if (skip && !gidSkipped) this.customGidSkip.push(gId);
+		else if (!skip && gidSkipped) this.customGidSkip = arrayRemove(this.customGidSkip, gId);
+		if (this.customGidSkip.length > 600) this.customGidSkip.shift();
+	}
+	createReqUrl(rId) { return new UrlClass(`https://worker.mturk.com/requesters/${rId}/projects`); }
 	/** Find out if this group ID or requester ID is temporarily blocked.
 	 * @param  {object} trigger	- The trigger @param  {string} gId - The group ID
 	 * @return {bool}						- True if gId is blocked on this trigger. */
@@ -324,15 +309,11 @@ class MturkHitSearch extends MturkClass {
 	async sendToPanda(item, dbId, type='', useOnce=null, useDur=null, useFetches=null) {
 		let info = this.triggers[dbId], options = await this.theData(dbId, 'options');
 		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.duration) ? options.duration : this.defaultDuration;
-		if (tempDur < 1000 || tempDur > 120000) { tempDur = options.duration = this.defaultDuration; this.updateToDB(this.storeOptionsName, options, false); }
-		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, goFetch = (useFetches !== null) ? useFetches : options.limitFetches;
+		if (tempDur < 1000 || tempDur > 120000) { tempDur = options.duration = this.defaultDuration; this.updateToDB('options', options, false); }
+		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, useFetch = (useFetches !== null) ? useFetches : options.limitFetches;
 		let dO = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count);
-		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, goFetch, _, options.autoGoHam, options.goHamDuration);
+		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, useFetch, _, options.autoGoHam, options.goHamDuration);
 		if (extPandaUI) extPandaUI.addFromSearch(dO, oO, true, true, true, goDur, (options.autoGoHam) ? options.tempGoHam: 0, type, pandaId, info.setName);
-	}
-	tempDisable(dbId, tempDisabled=false) {
-		let thisTrigger = this.triggers[dbId]; thisTrigger.tempDisabled = tempDisabled;
-		if (extPandaUI) extPandaUI.tempDisable(thisTrigger.count, tempDisabled);
 	}
 	/** Check all live triggers for this item.
 	 * @param  {object} item - The hit item that needs to be checked for any trigger detection. */
@@ -344,30 +325,31 @@ class MturkHitSearch extends MturkClass {
 		let gidFound = liveStr.includes(`[gid:${item.hit_set_id}]]`);
 		let ridFound = liveStr.includes(`[rid:${item.requester_id}]]`);
 		let titleDescription = item.title.toLowerCase() + ' , ' + item.description.toLowerCase();
-		if (Object.keys(this.liveTermData).length) for (const key of Object.keys(this.liveTermData)) { if (titleDescription.includes(key.toLowerCase())) termsFound.push(key); }
+		if (this.searchGStats && this.searchGStats.isSearchOn() && Object.keys(this.liveTermData).length) {
+			for (const key of Object.keys(this.liveTermData)) { if (titleDescription.includes(key.toLowerCase())) termsFound.push(key); }
+		}
 		if (gidFound || ridFound || termsFound.length) {
 			let key1 = (gidFound) ? 'gid' : (ridFound) ? 'rid' : 'terms', key2 = (gidFound) ? item.hit_set_id : item.requester_id;
 			if (key1 !== 'terms') termsFound = [key1];
 			for (const term of termsFound) {
 				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term] : [this.theDbId(key1, key2)];
 				for (const dbId of dbIdArr) {
-					let triggered = true, thisTrigger = this.triggers[dbId];
+					let triggered = true, thisTrigger = this.triggers[dbId], gid = item.hit_set_id;
 					let options = await this.theData(dbId, 'options'), rules = await this.theData(dbId, 'rules');
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
 					if (rules.terms) triggered = triggered & this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
-					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(item.hit_set_id)) {
-						console.log(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${item.hit_set_id} - ${item.monetary_reward.amount_in_dollars}`);
-						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime(); this.maintainGidHistory(dbId, item.hit_set_id, true); 
-						if ((key1 === 'rid' && !rules.blockGid.has(item.hit_set_id)) || key1 === 'gid') {
+					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(gid)) {
+						console.log(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gid} - ${item.monetary_reward.amount_in_dollars}`);
+						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime(); this.maintainGidHistory(dbId, gid, true); 
+						if ((key1 === 'rid' && !rules.blockGid.has(gid)) || key1 === 'gid') {
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
 							this.sendToPanda(item, dbId, key1);
-							if (options.once && key1 === 'rid') this.setTempBlockGid(item.hit_set_id, true);
+							if (options.once && key1 === 'rid') this.setTempBlockGid(gid, true);
 							if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
-							this.updateToDB(this.storeName, this.data[dbId]);
-						} else if (key1 === 'terms') {
+							this.updateToDB(_, this.data[dbId]);
+						} else if (key1 === 'terms' && !this.customGidSkip.includes(gid)) {
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId], item, term);
-							this.setTempBlockGid(item.hit_set_id, true);
-							this.updateToDB(this.storeName, this.data[dbId]);
+							this.setCustomGidSkip(gid, true); this.updateToDB(_, this.data[dbId]);
 						}
 						break;
 					}	
@@ -385,6 +367,7 @@ class MturkHitSearch extends MturkClass {
 		let liveStr = (sUI) ? 'liveSearchUIStr' : 'livePandaUIStr', triggerString = `[[${type}:${value}]]`;
 		if (enable) this[liveStr] += triggerString;
 		else this[liveStr] = this[liveStr].replace(triggerString, '');
+		this.termCounter = Object.keys(this.liveTermData).length;
 		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
 	}
 	/** Sets up the live terms data for faster searching of terms.
@@ -403,8 +386,9 @@ class MturkHitSearch extends MturkClass {
 		let dbId = this.theDbId(type, value), rules = await this.theData(dbId, 'rules');
 		if (type === 'custom') this.termData(!disabled, rules, dbId);
 		else this.liveString(type, value, !disabled, sUI);
-		if (this.searchGStats && this.searchGStats.isSearchOn() && this.liveCounter === 0) this.stopSearching();
-		else if (this.liveCounter) this.startSearching();
+		if (this.searchGStats && this.searchGStats.isSearchOn()) { if (this.liveCounter === 0 && this.termCounter === 0) this.stopSearching(); }
+		else if (this.liveCounter > 0) this.startSearching();
+		else this.stopSearching();
 	}
 	/** Toggles the status of the trigger.
 	 * @param  {string} type  - Type of trigger @param  {string} value - Group ID or requester ID
@@ -412,10 +396,10 @@ class MturkHitSearch extends MturkClass {
 	toggleTrigger(unique) {
 		let dbId = this.dbIds.unique[unique];
 		if (dbId) {
-			let disabled = (this.triggers[dbId].status === 'disabled') ? true : false;
+			let oldStatus = this.triggers[dbId].status, disabled = (oldStatus === 'disabled') ? true : false;
 			this.setDisabled(this.data[dbId].type, this.data[dbId].value, !disabled);
 			this.triggers[dbId].status = (disabled) ? 'searching' : 'disabled'; this.data[dbId].disabled = !disabled;
-			this.updateToDB(this.storeName, this.data[dbId]);
+			this.updateToDB(_, this.data[dbId]);
 			return this.triggers[dbId].status;
 		} else return null;
 	}
@@ -426,7 +410,7 @@ class MturkHitSearch extends MturkClass {
 		await this.theData(dbId, 'rules', changes.rules); await this.theData(dbId, 'options', changes.options);
 		if (changes.hasOwnProperty('details') && changes.details) {
 			this.data[dbId].name = changes.details.name; this.data[dbId].disabled = changes.details.disabled;
-			this.updateToDB(this.storeName, this.data[dbId], false);
+			this.updateToDB(_, this.data[dbId], false);
 		}
 	}
 	/** Returns a copy of the options object using the database ID.
@@ -446,13 +430,13 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} triggers - Trigger Object @param  {object} options - Trigger options @param  {object} rules - Trigger rules @param  {bool} multiple - Save object is array.*/
 	async saveToDatabase(data, options=null, rules=null, history=null, multiple=false) {
 		let dbId = null;
-		await this.updateToDB(this.storeName, data, false);
+		await this.updateToDB(_, data, false);
 		if (multiple) {
 			for (let i = 0, len = data.length; i < len; i++) { options[i].dbId = data[i].id; rules[i].dbId = data[i].id; history[i].dbId = data[i].id }
 		} else { dbId = data.id; if (options !== null) options.dbId = dbId; if (rules !== null) rules.dbId = dbId; if (history !== null) history.dbId = dbId; }
-		if (options !== null) await this.updateToDB(this.storeOptionsName, options, !multiple, dbId);
-		if (rules !== null) await this.updateToDB(this.storeRulesName, rules, !multiple, dbId);
-		if (history !== null) await this.updateToDB(this.storeHistoryName, history, !multiple, dbId);
+		if (options !== null) await this.updateToDB('options', options, !multiple, dbId);
+		if (rules !== null) await this.updateToDB('rules', rules, !multiple, dbId);
+		if (history !== null) await this.updateToDB('history', history, !multiple, dbId);
 	}
 	/** Sets up object for the group ID history for a trigger and returns it.
 	 * @param  {object} history - Trigger History
@@ -472,7 +456,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {number} count	- Unique ID      @param  {number} dbId				 - Database ID    @param  {object} data - Trigger data
 	 * @param  {bool} status	- Trigger status @param  {string} valueString - Unique string 	@param  {bool} SUI 		- From searchUI? */
 	async fillInObjects(count, dbId, data, status, valueString, sUI) {
-		let reqUrl = (data.type === 'rid') ? new UrlClass(`https://worker.mturk.com/requesters/${data.value}/projects`) : null;
+		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
 		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl};
 		if (data.pDbId !== -1) this.dbIds.pDbId[data.pDbId] = dbId; this.dbIds.values[valueString] = dbId; this.dbIds.unique[count] = dbId;
@@ -530,11 +514,10 @@ class MturkHitSearch extends MturkClass {
 			delete this.options[dbId]; delete this.rules[dbId]; delete this.triggers[dbId];
 			delete this.dbIds.pDbId[pDbId]; delete this.dbIds.values[`${tempData.type}:${tempData.value}:${sUI}`];
 			if (removeDB) {
-				this.db.deleteFromDB(this.storeName, dbId); this.db.deleteFromDB(this.storeRulesName, dbId);
-				this.db.deleteFromDB(this.storeOptionsName, dbId);
-				this.db.deleteFromDB(this.storeHistoryName, dbId);
+				MYDB.deleteFromDB('searching',_, dbId); MYDB.deleteFromDB('searching', 'rules', dbId);
+				MYDB.deleteFromDB('searching', 'options', dbId); MYDB.deleteFromDB('searching', 'history', dbId);
 			}
-			if (this.searchGStats && this.searchGStats.isSearchOn() && this.liveCounter === 0) this.stopSearching();
+			if (this.searchGStats && this.searchGStats.isSearchOn() && this.liveCounter === 0 && this.termCounter === 0) this.stopSearching();
 			myPanda.searchUIConnect(true);
 		}
 	}
@@ -550,7 +533,7 @@ class MturkHitSearch extends MturkClass {
    * @param  {object} objUrl	   - Url object        @param  {number} queueUnique - Queue Unique ID @param  {number} elapsed	 - Elapsed Time
 	 * @param  {number} rId    		 - Requester ID      @param  {number} dbId 				- Database ID     @param  {string} [type=''] - Type for trigger
 	 * @param  {string} [value=''] - Value for trigger @param  {bool} [sUI=true]		- From UI */
-  async goFetch(objUrl, queueUnique, elapsed, rId, dbId, type='', value='', sUI=true) {
+  async goFetch(objUrl, queueUnique, elapsed, rId, dbId, type='', value='', sUI=true, lookGid=null) {
 		if (this.searchGStats) this.searchGStats.setSearchElapsed(elapsed); // Pass elapsed time to global search stats
 		if (this.searchGStats && (rId === -1 || this.resultsBack)) {
 			if (rId !== -1) this.resultsBack = false;
@@ -579,7 +562,7 @@ class MturkHitSearch extends MturkClass {
 							}
 						} while (i < result.data.results.length);
 						let sortArray = Object.keys(rewardSort).sort((a,b) => b - a);
-						for (const key of sortArray) { if (this.liveCounter) this.checkTriggers(rewardSort[key]); }
+						for (const key of sortArray) { if (this.liveCounter || this.termCounter) this.checkTriggers(rewardSort[key]); }
 						myHistory.fillInHistory(tempNewHits, 'searchResults');
 						this.searchesString = tempString + this.searchesString;
 						this.searchesString = this.searchesString.substr(0,4700);
@@ -588,19 +571,24 @@ class MturkHitSearch extends MturkClass {
 				} else if (result.type === "ok.text") {
 					let reactProps = $(result.data).find('.row.m-b-md div:eq(1)').data('react-props');
 					if (reactProps) {
-						let hitsData = reactProps.bodyData, rewardSort = {};
+						let hitsData = reactProps.bodyData, rewardSort = {}, foundData = null;
 						if (hitsData.length > 0) {
-							for (const hit of hitsData) { rewardSort[hit.monetary_reward.amount_in_dollars] = hit; }
-							let sortArray = Object.keys(rewardSort).sort((a,b) => b - a);
-							let requesterName = $(result.data).find('h1.m-b-md').text();
-							if (requesterName !== '') myPanda.updateReqName(_, requesterName, this.triggers[dbId].pDbId);
-							for (const key of sortArray) { this.checkTriggers(rewardSort[key], [{'type':'rid', 'value':rId}]) }
+							for (const hit of hitsData) {
+								if (!lookGid) rewardSort[hit.monetary_reward.amount_in_dollars] = hit;
+								else if (lookGid === hit.hit_set_id) foundData = hit;
+							}
+							if (!lookGid) {
+								let sortArray = Object.keys(rewardSort).sort((a,b) => b - a);
+								let requesterName = $(result.data).find('h1.m-b-md').text();
+								if (requesterName !== '') myPanda.updateReqName(_, requesterName, this.triggers[dbId].pDbId);
+								for (const key of sortArray) { this.checkTriggers(rewardSort[key], [{'type':'rid', 'value':rId}]) }
+							} else if (foundData) this.sendToPanda(foundData, dbId, lookGid);
 						}
 						hitsData = null;
 					}
 					searchTimer.deleteFromQueue(queueUnique); this.triggers[dbId].status = 'searching';
 					this.setDisabled(type, value, false, sUI);
-					if (!this.timerUnique) this.startSearching(dbId);
+					if (!lookGid && !this.timerUnique) this.startSearching(dbId);
 				}
 			}
 			result = {};

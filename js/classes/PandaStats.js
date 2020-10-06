@@ -17,8 +17,6 @@ class PandaStats {
     this.collectAccepted = 0;                 // The number of hits accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
     this.dailyAccepted = 0;                   // The number of accepted hits today.
-    this.collectStore = "collectionStore";    // The store name for the collection stat storage.
-    this.acceptedStore = "acceptedStore";     // The store name for the accepted stat storage.
     this.fetched = { value:0, session:0, id:'#pcm_hitFetched', class:'.pcm_hitFetched', label:'Fetched', id2:'#pcm_hitFetched1' };
     this.accepted = { value:0, id:'#pcm_hitAccepted', class:'.pcm_hitAccepted', label:"Acc", id2:'#pcm_hitAccepted1' };
     this.noMore = { value:0, id:'#pcm_hitNoMore', class:'.pcm_hitNoMore', label:'NM', id2:'#pcm_hitNoMore1' };
@@ -32,16 +30,16 @@ class PandaStats {
   setDailyStats(total=0) { this.dailyAccepted = total; }
   /** Stores the data in the collect stats database for collecting times of panda jobs.
    * @param  {object} data - The data to store in the database stats for collecting. */
-  collectStatsDB(data) { pandaUI.dbStats.addToDB(this.collectStore, data).then( () => {} ); }
+  collectStatsDB(data) { MYDB.addToDB('stats',_, data).then( () => {} ); }
   /** Stores the data in the accepted stats database for accepted hits times of panda jobs.
    * @param  {object} data - The data to store in the database stats for accepted hits. */
-  acceptedStatsDB(data) { pandaUI.dbStats.addToDB(this.acceptedStore, data).then( () => {} ); }
+  acceptedStatsDB(data) { MYDB.addToDB('stats', 'accepted', data).then( () => {} ); }
   /** Deletes all stats for panda with the unique id from the panda stats database.
    * @param  {number} dbId - The database id of the panda to delete all stats from. */
   deleteIdFromDB(dbId) {
-		pandaUI.dbStats.deleteFromDB(this.collectStore, dbId, "dbId")
+		MYDB.deleteFromDB('stats',_, dbId, "dbId")
     .then( null, (rejected) => console.error(rejected));
-		pandaUI.dbStats.deleteFromDB(this.acceptedStore, dbId, "dbId")
+		MYDB.deleteFromDB('stats', 'accepted', dbId, "dbId")
     .then( null, (rejected) => console.error(rejected));
   }
   /** Updates all the stats in the panda card. */

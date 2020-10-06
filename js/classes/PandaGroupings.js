@@ -15,7 +15,7 @@ class PandaGroupings {
   async prepare(afterFunc) {
     let success = [], err = null;
     this.groups = {}; this.groupStatus = {}; this.unique = 1; this.startTimes = {}; this.endTimes = {};
-    bgPanda.db.getFromDB(bgPanda.groupingStore).then( (result) => {
+    MYDB.getFromDB('panda', 'grouping').then( (result) => {
       let i = 1;
       for (const value of result) { this.groups[i++] = value;  }
       this.unique = result.length + 1; this.resetTimes(true);
@@ -67,7 +67,7 @@ class PandaGroupings {
   }
   /** Adds groupings from an array to the database usually when importing.
    * @param  {array} additions - Groupings additions to add to database. */
-  importToDB(additions) { for (const newGroup of additions) { bgPanda.db.addToDB(bgPanda.groupingStore, newGroup); } }
+  importToDB(additions) { for (const newGroup of additions) { MYDB.addToDB('panda', 'grouping', newGroup); } }
   /** Adds a grouping with the name, description and data for it.
    * @param  {string} name        - The name for this new grouping.
    * @param  {string} description - The description for this new grouping.
@@ -78,7 +78,7 @@ class PandaGroupings {
     const newUnique = this.unique;
     newGroup.pandas = additions;
     this.groups[newUnique] = newGroup;
-    bgPanda.db.addToDB(bgPanda.groupingStore, newGroup).then( (id) => { if (id >= 0) this.groups[newUnique].id = id; } );
+    MYDB.addToDB('panda', 'grouping', newGroup).then( (id) => { if (id >= 0) this.groups[newUnique].id = id; } );
     this.groupStatus[newUnique] = {collecting:false};
     if (this.groups[newUnique].startTime!=="") this.setStartEndTimes(newUnique);
     return this.unique++;
@@ -110,7 +110,7 @@ class PandaGroupings {
    * @async                    - To wait for the deletion of the panda job from the database.
    * @param  {number} grouping - The unique number for the grouping to be deleted. */
   async delete(grouping) {
-    await bgPanda.db.deleteFromDB(bgPanda.groupingStore, this.groups[grouping].id)
+    await MYDB.deleteFromDB('panda', 'grouping', this.groups[grouping].id)
     .then( null, (rejected) => console.error(rejected));
     delete this.groups[grouping]; delete this.groupStatus[grouping]; delete this.startTimes[grouping]; delete this.endTimes[grouping];
   }
@@ -210,7 +210,7 @@ class PandaGroupings {
       const bgColor = (jobNumbers>0) ? "" : "#800517";
       $(`#pcm_nameDesc_${grouping}`).html(`${this.groups[grouping].name} - ${this.groups[grouping].description} - <span class="small">{${jobNumbers} Jobs}</span>`)
       $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", bgColor).effect( "highlight", {color:"#3CB371"}, 1500);
-      bgPanda.db.addToDB(bgPanda.groupingStore, this.groups[grouping]);
+      MYDB.addToDB('panda', 'grouping', this.groups[grouping]);
       if (afterFunc!==null) setTimeout( () => { afterFunc(); }, 300 );
     }, async (e) => {
       let info = bgPanda.options(e.data.unique);
