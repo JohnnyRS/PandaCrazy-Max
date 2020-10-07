@@ -198,12 +198,13 @@ class MturkHitSearch extends MturkClass {
 	importingDone() { if (extSearchUI) extSearchUI.importingDone(); }
 	/** This method will start the searching of the mturk queue.
 	 * @param  {number} dbId - The database ID of the trigger that is starting. */
-	startSearching(dbId) {
+	startSearching() {
 		this.termCounter = Object.keys(this.liveTermData).length;
-		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
-		if (!this.timerUnique && (this.liveCounter || this.termCounter)) { // Make sure it's not already searching.
+		let liveLength = this.livePandaUIStr.length + this.liveSearchUIStr.length;
+		if (!this.timerUnique && (liveLength || this.termCounter)) { // Make sure it's not already searching.
+			this.liveCounter = liveLength;
 			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed, theId) => {
-				if (this.liveCounter || this.termCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, theId, dbId);
+				if (this.liveCounter || this.termCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, theId);
 				else { if (this.searchGStats && this.searchGStats.isSearchOn()) extSearchUI.stopSearching(); else this.stopSearching(); }
 			});
 			return true;
