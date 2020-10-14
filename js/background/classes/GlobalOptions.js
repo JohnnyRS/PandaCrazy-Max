@@ -69,6 +69,13 @@ class PandaGOptions {
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
   }
+  doChanges(optionName, changes) { this[optionName] = changes; }
+  doTimers(changes=null) { if (changes) this.doChanges('timers', changes); else return this.timers; }
+  doGeneral(changes=null) { if (changes) this.doChanges('general', changes); else return this.general; }
+  getTimerRange() { return this.timerRange; }
+  getTimerSearch() { return this.timerSearch; }
+  getTimerQueue() { return this.timerQueue; }
+  getTimerChange() { return this.timerChange; }
   /** Load up global options from database or use and save default options into database.
    * @async                      - To wait for the options data to be loaded from the database.
    * @param {function} afterFunc - Function to call after done to send success array or error object. */
@@ -96,14 +103,12 @@ class PandaGOptions {
             }, rejected => { err = rejected; })
           }, rejected => { err = rejected; })
         }, rejected => err = rejected);
-        this.general = Object.assign({}, this.generalDefault);
-        this.timers = Object.assign({}, this.timersDefault);
-        this.alarms = Object.assign({}, this.alarmsDefault);
-        this.helpers = Object.assign({}, this.helpersDefault);
+        this.general = Object.assign({}, this.generalDefault); this.timers = Object.assign({}, this.timersDefault);
+        this.alarms = Object.assign({}, this.alarmsDefault); this.helpers = Object.assign({}, this.helpersDefault);
       }
     }, rejected => err = rejected);
-    bgPanda.timerChange(this.timers[this.timerUsed]); bgSearch.timerChange(this.timers.searchTimer); bgQueue.timerChange(this.timers.queueTimer);
-    afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
+    myPanda.timerChange(this.timers[this.timerUsed]); mySearch.timerChange(this.timers.searchTimer); myQueue.timerChange(this.timers.queueTimer);
+    if (afterFunc) afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /** Removes data from memory so it's ready for closing or importing. */
   removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; }
@@ -121,43 +126,17 @@ class PandaGOptions {
    * @param  {bool} [tooltips=true] - Should tooltips be reset? */
   update(tooltips=true) {
     if (tooltips) {
-      if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip('enable');
-      else {
-        $('[data-toggle="tooltip"]').tooltip('disable');
-        $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
-      }
+      // if (this.general.showHelpTooltips) $(`[data-toggle="tooltip"]`).tooltip('enable');
+      // else {
+        // $('[data-toggle="tooltip"]').tooltip('disable');
+        // $(`.card`).find(`span[data-toggle="tooltip"], div[data-toggle="tooltip"]`).tooltip('enable');
+      // }
     }
-    if (pandaUI.logTabs) pandaUI.logTabs.updateCaptcha(this.getCaptchaCount());
+    if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
     MYDB.addToDB('panda', 'options', this.general);
     MYDB.addToDB('panda', 'options', this.timers);
     MYDB.addToDB('panda', 'options', this.alarms);
     MYDB.addToDB('panda', 'options', this.helpers);
-  }
-  /** Shows the general options in a modal for changes. */
-  showGeneralOptions() {
-    modal = new ModalClass();
-    const idName = modal.prepareModal(this.general, "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
-      this.general = Object.assign(this.general, changes);
-      modal.closeModal();
-      this.update();
-    });
-    let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
-    displayObjectData([
-      {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-      {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
-      {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-      {'label':'Captcha shown after #hits:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many hits on average will mturk show a captcha for you?'}, 
-      {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
-      {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for hits nearing the expiration time.'}, 
-      {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting hits or warnings.'}, 
-      {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
-      {'label':'Disable Unfocused window warning:', 'type':'trueFalse', 'key':'unfocusWarning', 'reverse':true, 'tooltip':'Stop notifying me about the unfocussed window because I know what I am doing.'}
-    ], df, modal.tempObject[idName], true);
-    modal.showModal(_, () => {
-      const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-    }, () => { modal = null; });
   }
   /** Verifies all the timers changed with max and min ranges.
    * @param  {object} v - The changed timer object to verify. */
@@ -172,42 +151,6 @@ class PandaGOptions {
     }
     return foundError;
   }
-  /** Shows the timer options in a modal for changes. */
-  showTimerOptions() {
-    modal = new ModalClass();
-    const idName = modal.prepareModal(this.timers, "850px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
-      let errorFound = this.timerConfirm(changes);
-      if (!errorFound) {
-        this.timers = Object.assign(this.timers, changes);
-        bgPanda.timerChange(this.timers[this.timerUsed]); pandaUI.pandaGStats.setPandaTimer(this.timers[this.timerUsed]);
-        bgPanda.hamTimerChange(this.timers.hamTimer); pandaUI.pandaGStats.setHamTimer(this.timers.hamTimer);
-        bgSearch.timerChange(this.timers.searchTimer); pandaUI.pandaGStats.setSearchTimer(this.timers.searchTimer);
-        bgQueue.timerChange(this.timers.queueTimer); pandaUI.pandaGStats.setQueueTimer(this.timers.queueTimer);
-        menus.updateTimerMenu(this.timers.timerIncrease, this.timers.timerDecrease, this.timers.timerAddMore);
-        this.update(); modal.closeModal();
-      }
-    });
-    let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:<br><span class='small text-info'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
-    displayObjectData([
-      {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
-      {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
-      {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
-      {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds. Minimum is ${this.timerRange.min}.`, 'data':this.timerRange}, 
-      {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'min':0, 'max':120, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'data':{'min':0, 'max':120000}}, 
-      {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':'Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ${this.timerRange.min}.', 'data':this.timerSearch}, 
-      {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'data':this.timerQueue}, 
-      {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'data':this.timerChange},
-      {'label':'Timer Decrease By:', 'type':'number', 'key':'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', 'data':this.timerChange},
-      {'label':'Timer Add Timer By:', 'type':'number', 'key':'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', 'data':this.timerChange},
-      {'label':'Timer Auto Slowdown Increase:', 'type':'number', 'key':'timerAutoIncrease', 'tooltip':'', 'data':this.timerChange},
-      {'label':'Default search panda durations (Seconds):', 'type':'number', 'key':'searchDuration', 'seconds':true, 'min':0, 'max':120, 'tooltip':'The duration temporarily used for any hits found from search jobs.', 'data':{'min':0, 'max':120000}}
-    ], df, modal.tempObject[idName], true);
-    modal.showModal(_, () => {
-      const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
-    }, () => { modal = null; });
-  }
   /** Updates the captcha text area with updated info.
    * @return {number} - Returns the value in the captcha counter. */
   updateCaptcha() {
@@ -220,10 +163,9 @@ class PandaGOptions {
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
    * @return {bool}           - True if the queue alert should be sounded. */
   checkQueueAlert(seconds) {
-    let returnValue = false, saveMinutes = true;
+    let returnValue = false, minutes = Math.trunc(seconds/60);
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
-    const minutes = Math.trunc(seconds/60);
-    if (alarms.getData('queueAlert').lessThan * 60 > seconds) {
+    if (MyAlarms.getData('queueAlert').lessThan * 60 > seconds) {
       if (this.lastQueueAlert===-1 || this.lastQueueAlert > minutes) { returnValue = true; }
       this.lastQueueAlert = minutes;
     } else this.lastQueueAlert = -1;

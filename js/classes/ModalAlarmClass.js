@@ -7,11 +7,8 @@ class ModalAlarmClass {
     this.audio = null;
   }
   /** Creates a Jquery button and returns it.
-   * @param  {string} text            - The text to display on the button.
-   * @param  {string} [theClass='']   - A class name to use for this button.
-   * @param  {string} [color='light'] - The color name to use for bootstrap class name.
-   * @param  {string} [title='']      - The title to use for the button which works with the help tip.
-   * @param  {string} [size='xxs']    - The bootstrap class to use for the size of the button.
+   * @param  {string} text   - Button Text @param  {string} [theClass] - Class Name @param  {string} [color] - Color Name @param  {string} [title] - Title
+   * @param  {string} [size] - Button Size
    * @return {object}                 - The Jquery button element created. */
   btnStr(text, theClass='', color='light', title='', size='xxs') {
     let titleStr = (title !== '') ? ` title='${title}'` : '';
@@ -21,10 +18,8 @@ class ModalAlarmClass {
    * @param  {string} name - The name of the alarm to add.
    * @return {object}      - Jquery object of the div element created. */
   addDivAlarms(name) {
-    let data = alarms.getData(name);
-    let colorM = (data.mute) ? 'success' : _, colorT = (data.tts) ? 'success' : _;
-    let desc = data.desc, pay = data.pay, lessThan = (data.lessThan) ? data.lessThan : '';
-    let payStr = (pay) ? ` <span class='pay bg-info px-1' title='Change the less than pay rate.'>$${pay}</span>` : '';
+    let data = alarms.getData(name), colorM = (data.mute) ? 'success' : _, colorT = (data.tts) ? 'success' : _, desc = data.desc, pay = data.pay;
+    let lessThan = (data.lessThan) ? data.lessThan : '', payStr = (pay) ? ` <span class='pay bg-info px-1' title='Change the less than pay rate.'>$${pay}</span>` : '';
     let lessThanStr = (lessThan > 0 && name !== 'queueAlert') ? ` with a short timer less than <span class='minutes bg-info px-1' title='Change the less than minute(s).'>${lessThan}</span> minute(s)` : '';
     if (name === 'queueAlert') lessThanStr = ` <span class='minutes bg-info px-1' title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
     return $(`<div class='${name}'></div>`).data('snd',name).append(this.btnStr('Play','playme',_, 'Play the sound now!')).append(this.btnStr('Mute','muteMe', colorM, 'Mute this sound.')).append(this.btnStr('TTS','ttsMe', colorT, 'Use Text to Speech instead.')).append(this.btnStr('Change','newSnd',_, 'Change the alarm to your own sound file.')).append(`<span class="ml-2">${desc}</span>${payStr}${lessThanStr}</div>`);
@@ -43,7 +38,7 @@ class ModalAlarmClass {
   /** Shows the modal for the alrams so users can change alarm options.
    * @param  {function} [afterClose=null] - Function to call after modal is closed. */
   async showAlarmsModal(afterClose=null) {
-    modal = new ModalClass();
+    if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(this.alarms, "900px", "modal-header-info modal-lg", "Alarm Options", "", "text-right bg-dark text-light", "modal-footer-info");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<div class='text-left pcm_alarms'></div>`);
@@ -148,8 +143,7 @@ class ModalAlarmClass {
     });
   }
   /** Reads a file, sets up the audio and plays the audio to user.
-   * @param  {string} name - The name of the alarm for this audio file.
-   * @param  {string} type - The type of audio being read. */
+   * @param  {string} name - Alarm Name @param  {string} type - Audio Type */
   readData(name, type) {
     let readerContents = this.reader.result;
     let base64Audio = btoa(readerContents);

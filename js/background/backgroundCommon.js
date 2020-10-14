@@ -1,11 +1,11 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null;
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null;
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
 function checkUIConnects() {
   if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.stopSearching(); }
-  if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; } 
+  if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; MyOptions = null; MyAlarms = null; } 
 }
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
@@ -20,7 +20,7 @@ function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); 
  * @return {object}        - Returns the search class in background for easier access. */
 function gSetSearchUI(classUI) {
   extSearchUI = classUI;
-  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); myPanda.searchUIConnect(false); searchUIOpened = false; }
+  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); myPanda.searchUIConnect(false); MyAlarms.setAudioClass(null, 'search'); searchUIOpened = false; }
   else if (myPanda) myPanda.searchUIConnect(true);
   checkUIConnects();
   return mySearch;
@@ -28,7 +28,7 @@ function gSetSearchUI(classUI) {
 /** Function to set up a panda UI variable for the background use. Also checks on the status of the panda UI to see if it's closing.
  * @param {pandaUI} classUI - Object variable for the panda UI or null if UI is closing. */
 async function gSetPandaUI(classUI) {
-  if (!classUI) { myPanda.removeAll(true); pandaUIOpened = false; }
+  if (classUI === null) { myPanda.removeAll(true); MyAlarms.setAudioClass(null, 'panda'); pandaUIOpened = false; }
   extPandaUI = classUI; checkUIConnects();
 }
 /** Sends back the panda class object so pages can use it easily.
@@ -46,6 +46,8 @@ function gGetHistory() { return myHistory; }
 /** Checks to make sure the database is fully opened and if not it will keep checking for 30 seconds.
  * @return {promise} - Returns true if database opened. Rejects if timedout waiting for an open database. */
 function gGetMYDB() { return MYDB; }
+function gGetOptions() { return MyOptions; }
+function gGetAlarms(audioClass, ui) { MyAlarms.setAudioClass(audioClass, ui); return MyAlarms; }
 async function gCheckPandaDB() { new Promise(resolve => {
     let counting = 0;
     checkDBs = () => {
@@ -63,6 +65,8 @@ async function prepareToOpen(panda=null, search=null, version=null) {
   if (!panda && !search) return; else if (panda) pandaOpening = true; else if (search) searchOpening = true;
   if (panda && searchOpening) await delay(1500); else if (search && pandaOpening) await delay(1500);
   if (!MYDB) MYDB = new DatabasesClass();
+  if (!MyOptions) MyOptions = new PandaGOptions();
+  if (!MyAlarms) MyAlarms = new AlarmsClass();
   await MYDB.openSearching().then( async () => {
     await MYDB.openHistory(historyWipe).then( async () => {
       if (!myPanda && !searchUIOpened) {
@@ -76,7 +80,11 @@ async function prepareToOpen(panda=null, search=null, version=null) {
         myQueue = new MturkQueue(2000);
         myPanda = new MturkPanda(995, 950);
         await MYDB.openPCM().then( async () => {
-          await MYDB.openStats(true).then( async () => { mySearch = new MturkHitSearch(950); }, rejected => { dbError = rejected; });
+          await MYDB.openStats(true).then( async () => {
+            mySearch = new MturkHitSearch(950);
+            await MyOptions.prepare();
+            MyAlarms.prepare();
+          }, rejected => { dbError = rejected; });
         }, rejected => { dbError = rejected; });
       }
       if (panda) { pandaUIOpened = true; pandaOpening = false; }

@@ -43,6 +43,8 @@ class MturkHitSearch extends MturkClass {
 		}
 		this.temps = 1;
 		this.defaultDuration = 12000;
+		this.customHistDays = 10;
+		this.triggerHistDays = 45;
     this.sorting = ["updated_desc", "updated_asc", "reward_asc", "reward_desc", "hits_asc", "hits_desc"];
 		this.dbIds = {'pDbId':{}, 'values':{}, 'unique':{}};
 		this.ruleSet = {'blockGid': new Set(), 'blockRid': new Set(), 'onlyGid': new Set(), 'terms': false, 'exclude': new Set(), 'include': new Set(), 'payRange': false, 'minPay': 0.00, 'maxPay': 0.00};
@@ -245,29 +247,33 @@ class MturkHitSearch extends MturkClass {
 	/** Gets the status from panda UI of this particular panda job.
 	 * @param  {string} gId	 - The group ID @param  {bool} status - The status of the panda in panda UI. */
 	async pandaStatus(gId, status, collected=false) {
-		let dbId = (this.isAll('gid', gId)) ? this.theDbId('gid', gId) : null;
+		let dbId = (this.isAll('gid', gId)) ? this.theDbId('gid', gId) : null, disabled = false;
 		if (dbId) {
-			if (status) {
-				this.pandaCollecting.push(gId);
-				if (dbId && this.triggers[dbId].status === 'disabled') this.triggers[dbId].status = 'collecting';
-			} else {
-				this.pandaCollecting = arrayRemove(this.pandaCollecting, gId);
-				if (this.triggers[dbId].status === 'collecting') this.triggers[dbId].status = 'searching';
-			}
 			if (collected) {
 				let options = await this.theData(dbId, 'options'), unique = this.triggers[dbId].count;
 				if (options.once) {
-					this.toggleTrigger(unique);
+					this.toggleTrigger(unique); disabled = true;
 					if (extSearchUI) extSearchUI.disableMe(unique, this.triggers[dbId].status);
 				}
+			}
+			if (status) {
+				this.pandaCollecting.push(gId);
+				if (dbId && this.triggers[dbId].status === 'disabled' && !disabled) this.triggers[dbId].status = 'collecting';
+			} else {
+				this.pandaCollecting = arrayRemove(this.pandaCollecting, gId);
+				if (this.triggers[dbId].status === 'collecting' && !disabled) this.triggers[dbId].status = 'searching';
 			}
 		}
 		if (!status) this.setTempBlockGid(gId, false);
 	}
 	async maintainGidHistory(dbId, key, sent) {
+		let limitDays = (this.data[dbId].type === 'custom') ? this.customHistDays : this.triggerHistDays;
+		let beforeDate = new Date(), thisTrigger = this.triggers[dbId]; beforeDate.setDate( beforeDate.getDate() - limitDays );
 		let thisHistory = await this.getFromDB('history', dbId); thisHistory.gids[key] = {'date':new Date().getTime(), 'sent':sent};
 		this.data[dbId].numHits = Object.keys(thisHistory.gids).length;
+		if (!thisTrigger.histDaily) for (const key of Object.keys(thisHistory.gids)) { if (thisHistory.gids[key].date < beforeDate) delete thisHistory.gids[key]; }
 		this.updateToDB('history', thisHistory, false);
+		this.triggers[dbId].histDaily = true;
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
 	 * @param  {object} trigger	- The trigger  @param  {string} gId - Blocked group ID */
@@ -318,7 +324,7 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Check all live triggers for this item.
 	 * @param  {object} item - The hit item that needs to be checked for any trigger detection. */
-	async checkTriggers(item) {
+	async checkTriggers(item, started=true) {
 		let temps = this.temps++, termsFound = [];
 		// console.time(`checkTriggers${temps}`);
 		let liveStr = ((!this.pausedPandaUI) ? this.livePandaUIStr : '') + ((this.searchGStats.isSearchOn() && !this.pausedSearchUI) ? this.liveSearchUIStr : '');
@@ -349,13 +355,14 @@ class MturkHitSearch extends MturkClass {
 							if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
 							this.updateToDB(_, this.data[dbId]);
 						} else if (key1 === 'terms' && !this.customGidSkip.includes(gid)) {
-							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId], item, term);
-							this.setCustomGidSkip(gid, true); this.updateToDB(_, this.data[dbId]);
+							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId], item, term, started);
+							this.setCustomGidSkip(gid, true); this.updateToDB(_, this.data[dbId]); started = false;
 						}
 						break;
 					}	
 				}
 			}
+			return started;
 		}
 		// console.timeEnd(`checkTriggers${temps}`);
 		liveStr = ''; item = {}; termsFound = [];
@@ -459,12 +466,12 @@ class MturkHitSearch extends MturkClass {
 	async fillInObjects(count, dbId, data, status, valueString, sUI) {
 		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
-		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl};
+		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false};
 		if (data.pDbId !== -1) this.dbIds.pDbId[data.pDbId] = dbId; this.dbIds.values[valueString] = dbId; this.dbIds.unique[count] = dbId;
 		this.addToQueueMem(dbId);
 		if (extSearchUI && sUI) {
 			extSearchUI.addToUI(data, status, data.name, count);
-			if (!data.disabled) this.setDisabled(data.type, data.value, false, data.searchUI);
+			if (status === 'searching') this.setDisabled(data.type, data.value, false, data.searchUI);
 		}
 	}
 	async moveToSearch(pDbId, status) {
@@ -562,8 +569,8 @@ class MturkHitSearch extends MturkClass {
 								tempNewHits[dO.groupId] = dO; rewardSort[thisItem.monetary_reward.amount_in_dollars] = thisItem;
 							}
 						} while (i < result.data.results.length);
-						let sortArray = Object.keys(rewardSort).sort((a,b) => b - a);
-						for (const key of sortArray) { if (this.liveCounter || this.termCounter) this.checkTriggers(rewardSort[key]); }
+						let sortArray = Object.keys(rewardSort).sort((a,b) => b - a), started = true;
+						for (const key of sortArray) { if (this.liveCounter || this.termCounter) started = this.checkTriggers(rewardSort[key], started); }
 						myHistory.fillInHistory(tempNewHits, 'searchResults');
 						this.searchesString = tempString + this.searchesString;
 						this.searchesString = this.searchesString.substr(0,4700);
@@ -579,10 +586,9 @@ class MturkHitSearch extends MturkClass {
 								else if (lookGid === hit.hit_set_id) foundData = hit;
 							}
 							if (!lookGid) {
-								let sortArray = Object.keys(rewardSort).sort((a,b) => b - a);
-								let requesterName = $(result.data).find('h1.m-b-md').text();
+								let sortArray = Object.keys(rewardSort).sort((a,b) => b - a), requesterName = $(result.data).find('h1.m-b-md').text(), started = true;
 								if (requesterName !== '') myPanda.updateReqName(_, requesterName, this.triggers[dbId].pDbId);
-								for (const key of sortArray) { this.checkTriggers(rewardSort[key], [{'type':'rid', 'value':rId}]) }
+								for (const key of sortArray) { started = this.checkTriggers(rewardSort[key], started); }
 							} else if (foundData) this.sendToPanda(foundData, dbId, lookGid);
 						}
 						hitsData = null;

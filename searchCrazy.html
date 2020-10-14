@@ -17,21 +17,11 @@
 <body>
   <div class="container-fluid text-light border-light rounded bg-dark h-100 p-0">
     <div class="pane pcm_top border">
-      <div class='m-0'>
-        <button class="btn btn-primary btn-xxs" id="pcm_searchNow">Search Now</button>
-        <small>[<span class="text-danger" id="pcm_searching">Off</span>]</small>
-        <small>[Elapsed: <span id="pcm_searchElapsed">0ms</span>]</small>
-        <small>[Fetched: <span id="pcm_searchTotalFetched">0</span>]</small>
-        <small>[SearchPRE's: <span id="pcm_totalSearchPREs">0</span>]</small>
-        <small>[Hits Available: <span id="pcm_searchResults">0</span>]</small>
-        <small>[Hits in DB: <span id="pcm_searchHitsFound">0</span>]</small>
-      </div>
-      <div id='pcm_uiSearchControls'>
-      </div>
+      <div class='m-0' id='pcm_uiSearchStats'></div>
+      <div id='pcm_uiSearchControls'></div>
     </div>
     <div class="panel p-0">
-      <div class="panel-body pcm_searchMain p-0" id="pcm_searchTriggers">
-      </div>
+      <div class="panel-body pcm_searchMain p-0" id="pcm_searchTriggers"></div>
     </div>
   </div>
   <div id="pcm_modal" class="modal fade" tabindex = "-1" role="dialog">
@@ -49,11 +39,10 @@
     </div>
   </div>
   <script src="js/common.js"></script>
-  <script src="js/classes/AlarmsClass.js"></script>
+  <script src="js/classes/myAudioClass.js"></script>
   <script src="js/classes/ModalClass.js"></script>
   <script src="js/classes/ModalSearchClass.js"></script>
   <script src="js/classes/TabbedClass.js"></script>
-  <script src="js/classes/SearchGStats.js"></script>
   <script src="js/classes/SearchUI.js"></script>
   <script src="js/searchCrazy.js"></script>
 </body>

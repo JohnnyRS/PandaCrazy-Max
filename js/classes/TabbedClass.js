@@ -141,9 +141,7 @@ class TabbedClass {
   }
   /** Add tab to the page with name and active status. Only used for manual additions to get unique ID.
    * @async                           - To wait for the loading of the data from database.
-   * @param  {string} name            - The name of this new tab.
-   * @param  {bool} [active=false]    - Is this tab active?
-   * @param  {bool} [manualAdd=false] - Was tab manually added? */
+   * @param  {string} name - Tab Name @param  {bool} [active] - Activated @param  {bool} [manualAdd] - Added Manually */
   async addTab(name, active=false, manualAdd=false) {
     let arrPos = this.#tabsArr.length, unique = this.unique++;
     let thisTab = {title:name, position:arrPos, list:[]};
@@ -175,10 +173,13 @@ class TabbedClass {
     if (this.renameTab) $(label).bind('contextmenu', (e) => {
         if ($(e.target).closest("li").data("unique")!==0) { // First tab can not be renamed ever.
           modal = new ModalClass();
-          modal.showDialogModal("700px", "Rename Tab Title", "Type in the title of this tab you want renamed.", () => {
+          modal.showDialogModal("700px", "Rename Tab Title", "Type in the title of this tab you want renamed.", async () => {
             e.preventDefault(); e.stopPropagation();
             const title = $('#pcm_formQuestion').val();
-            if (title && title!=="") { this.#dataTabs[unique].title = title; $(e.target).html(title); }
+            if (title && title !== "") {
+              this.#dataTabs[unique].title = title; $(e.target).html(title);
+              await MYDB.addToDB('panda', 'tabs', this.#dataTabs[unique]);
+            }
             modal.closeModal();
           }, true, false, "Title: ", $(e.target).text(), 10,_,_, 'Rename Tab');
         }

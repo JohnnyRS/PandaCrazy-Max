@@ -1,5 +1,5 @@
 let bgPage = null; // Get the background page object for easier access.
-let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, pandaUI = null; history = null;
+let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, pandaUI = null; history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
 let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
@@ -19,7 +19,7 @@ async function getBgPage() {
 async function prepare() {
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
-    globalOpt = new PandaGOptions(); alarms = new AlarmsClass(); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new PandaGroupings(); pandaUI = new PandaUI(); menus = new MenuClass("pcm_quickMenu");
     startPandaCrazy();
   });
@@ -30,8 +30,6 @@ async function prepare() {
 async function startPandaCrazy() {
   $('.pcm_top').addClass('unSelectable'); $('#pcm_quickMenu').addClass('unSelectable');
   if (bgHistory && bgPanda && bgSearch) {
-    await globalOpt.prepare(showMessages); // Wait for global options to load and show message or error.
-    alarms.prepare(showMessages); // Wait for alarms to load and show message or error.
     groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
     menus.prepare();
     bgPage.gSetPandaUI(pandaUI); // Pass the pandaUI class value to the background page for easy access.
@@ -78,9 +76,9 @@ window.addEventListener('visibilitychange', (evt) => {
 }, false);
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', (e) => {
-  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
+  if ((e.keyCode ? e.keyCode : e.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
 });
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
 document.addEventListener("keyup", (e) => {
-  if ((event.keyCode ? event.keyCode : event.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
+  if ((e.keyCode ? e.keyCode : e.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
 });

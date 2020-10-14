@@ -1,4 +1,4 @@
-let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null;
+let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let localVersion = localStorage.getItem('PCM_version');
 $('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1100}, trigger:'hover'});
 
@@ -9,20 +9,18 @@ function modalLoadingData() {
     null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
 }
 async function getBgPage() {
-  chrome.runtime.getBackgroundPage( async (backgroundPage) => {
-    bgPage = backgroundPage; await prepare();
-  });
+  chrome.runtime.getBackgroundPage( async (backgroundPage) => { bgPage = backgroundPage; await prepare(); });
 }
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion).then( () => {
-    search = new SearchUI(); alarms = new AlarmsClass(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory();
+    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB();
+    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search');
     startSearchCrazy();
   });
 }
 /** Starts the search crazy UI and prepares all the search triggers. */
 async function startSearchCrazy() {
   window.addEventListener('beforeunload', () => { bgPage.gSetSearchUI(null); });
-  // alarms.prepare(showMessages);
   await search.prepareSearch();
   await bgSearch.loadFromDB();
   search.appendFragments();

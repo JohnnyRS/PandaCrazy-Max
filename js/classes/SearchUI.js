@@ -36,7 +36,7 @@ class SearchUI {
   /** Starts the searching prcoess. */
   startSearching() { if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm_top').css('background-color','#0b3e0b'); }}
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
-	nowLoggedOff() { modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); }); }
+	nowLoggedOff() { if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); }); }
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
 	importing() {
@@ -107,23 +107,38 @@ class SearchUI {
 	 * @async - To wait for created tabs to be completed. */
 	async prepareSearch() {
 		bgSearch.prepareSearch();
+		let topBar = $(`#pcm_uiSearchStats`);
+		topBar.append(`<button class='btn btn-primary btn-xxs' id='pcm_searchNow'>Search Now</button> `);
+		topBar.append(`<small>[<span class='text-danger' id='pcm_searching'>Off</span>]</small> `);
+		topBar.append(` - <small>[Elapsed: <span id='pcm_searchElapsed'>0ms</span>]</small> `);
+		topBar.append(`<small>[Fetched: <span id='pcm_searchTotalFetched'>0</span>]</small> `);
+		topBar.append(`<small>[SearchPRE's: <span id='pcm_totalSearchPREs'>0</span>]</small> `);
+		topBar.append(`<small>[Hits Available: <span id='pcm_searchResults'>0</span>]</small> `);
 		let controls = $('#pcm_uiSearchControls');
 		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> <button class='btn btn-primary btn-xxs' id='pcm_addCustomTriggers'>Custom</button></span> | `);
+		let options = $(`<span id='pcm_searchOptionsDropDown'></span>`).appendTo(controls);
+    this.addSubMenu(options, 'Options ', '', 
+      [{'type':'item', 'label':`Alarms`, 'menuFunc': (e) => {  }, class:'searchAlarms', 'tooltip':'Change alarms for search triggers'},
+			]
+		);
+		controls.append(' | ');
 		let filters = $(`<span id='pcm_filterDropDown'></span>`).appendTo(controls);
     this.addSubMenu(filters, 'Filters ', '', 
-      [{'type':'item', 'label':'<i class="far fa-check-square"></i> Show All', 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
-       {'type':'item', 'label':'<i class="far fa-check-square"></i> Show Enabled', 'menuFunc': (e) => { this.filterMe(e, 'sEnabled'); }, class:'sub_showEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
-       {'type':'item', 'label':'<i class="far fa-check-square"></i> Show Disabled', 'menuFunc': (e) => { this.filterMe(e, 'sDisabled'); }, class:'sub_showDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
-			]);
+      [{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
+       {'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': (e) => { this.filterMe(e, 'sEnabled'); }, class:'sub_showEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
+       {'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': (e) => { this.filterMe(e, 'sDisabled'); }, class:'sub_showDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
+			]
+		);
 		let sorting = $(`<span id='pcm_sortingDropDown' class='pl-2'></span>`).appendTo(controls);
     this.addSubMenu(sorting, 'Sorting ', '', 
-      [{'type':'item', 'label':'<span><i class="fas fa-minus"></i> None</span>', 'menuFunc': (e) => { this.sortMe(e, 0); }, class:'sub_sortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
-       {'type':'item', 'label':'<i class="fas fa-sort-down"></i> Sort by Added', 'menuFunc': (e) => { this.sortMe(e, 1); }, class:'sub_sortAdded', 'tooltip':'Sort by trigger was added.'},
-       {'type':'item', 'label':'<i class="fas fa-sort-down"></i> Sort by Found Hits', 'menuFunc': (e) => { this.sortMe(e, 2); }, class:'sub_sortFound', 'tooltip':'Sort by Number of Found Hits.'},
-       {'type':'item', 'label':'<i class="fas fa-sort-down"></i> Sort by Last Found', 'menuFunc': (e) => { this.sortMe(e, 3); }, class:'sub_sortLast', 'tooltip':'Sort by Last Time Hits Found.'},
-			]);
+      [{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': (e) => { this.sortMe(e, 0); }, class:'sub_sortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
+       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': (e) => { this.sortMe(e, 1); }, class:'sub_sortAdded', 'tooltip':'Sort by trigger was added.'},
+       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found Hits`, 'menuFunc': (e) => { this.sortMe(e, 2); }, class:'sub_sortFound', 'tooltip':'Sort by Number of Found Hits.'},
+       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': (e) => { this.sortMe(e, 3); }, class:'sub_sortLast', 'tooltip':'Sort by Last Time Hits Found.'},
+			]
+		);
 		$(`#pcm_sortingDropDown .dropdown-item`).eq(this.sorting).addClass('selectedItem');
-		$("#pcm_searchNow").click( (e) => {
+		$(`#pcm_searchNow`).click( (e) => {
 			if (bgSearch.searchGStats.isSearchOn()) this.stopSearching();
 			else if (bgSearch.isPandaUI()) this.startSearching();
 			else { if (!modal) modal = new ModalClass();
@@ -137,10 +152,10 @@ class SearchUI {
 		this.tabs = new TabbedClass($(`#pcm_searchTriggers`), `pcm_triggerTabs`, `pcm_tabbedTriggers`, `pcm_triggerContents`, false);
     let [_, err] = await this.tabs.prepare();
     if (!err) {
-			this.reqIDTab = await this.tabs.addTab("Requester ID", true);
-			this.groupIDTab = await this.tabs.addTab("Group ID");
-			this.customTab = await this.tabs.addTab("Custom Search");
-			this.triggeredTab = await this.tabs.addTab("Custom Triggered Hits");
+			this.reqIDTab = await this.tabs.addTab('Requester ID', true);
+			this.groupIDTab = await this.tabs.addTab('Group ID');
+			this.customTab = await this.tabs.addTab('Custom Search');
+			this.triggeredTab = await this.tabs.addTab('Custom Triggered Hits');
 			this.ridContent = $(`<div class='pcm_ridTriggers card-deck'></div>`).appendTo(`#${this.reqIDTab.tabContent}`);
 			this.gidContent = $(`<div class='pcm_gidTriggers card-deck'></div>`).appendTo(`#${this.groupIDTab.tabContent}`);
 			this.customContent = $(`<div class='pcm_customTriggers card-deck'></div>`).appendTo(`#${this.customTab.tabContent}`);
@@ -150,12 +165,6 @@ class SearchUI {
 				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:45px; max-width:45px;'>Pays</td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
 		}
 
-	}
-  /** Update the status bar with the hits found value or the search results value.
-   * @param  {string} statusName - The status name @param  {string} status		 - The status value */
-  updateStatus(statusName, status) {
-    if (statusName === 'hits found') $('#pcm_searchHitsFound').html(status);
-    else if (statusName === 'total results') $('#pcm_searchResults').html(status);
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} [thetrigger=null] - The jquery element  @param  {bool} [toggle=true] - Toggled? */
@@ -284,10 +293,11 @@ class SearchUI {
 			this.triggeredContent.find(`tbody`).prepend(df);
 		}
 	}
-	triggeredHit(unique, triggerData, hitData=null, term=null) {
+	triggeredHit(unique, triggerData, hitData=null, term=null, started=true) {
 		$(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm_triggerStats_${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
 		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term);
+		if (term && started) alarms.playSound('triggeredAlarm');
 	}
 	/** Shows the add search trigger modal. */
 	showSearchAddModal(doCustom=false) { this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerAddModal( () => this.modalSearch = null, doCustom ); }

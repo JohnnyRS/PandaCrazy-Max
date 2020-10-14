@@ -1,4 +1,4 @@
-let todayDay = new Date().getDate();
+let todayDay = new Date().getDate(), MYAUDIO = null;
 const _ = undefined;
 
 /** Creates a Jquery input object and returns it and appends to element if appendHere is passed.
@@ -399,6 +399,9 @@ function compareversion(version1, version2) {
       if (version1[i] != version2[i]) { break; }
   }
   return(result);
+}
+function playAudio(audioData) {
+
 }
 
 /** Constant values for console coloring. */

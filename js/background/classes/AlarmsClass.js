@@ -20,22 +20,34 @@ class AlarmsClass {
       'queueFull':{'filename':"Your queue is full - Paul.mp3", 'name':'queueFull', 'obj':null, 'desc':"You have a full queue! Pausing!", 'pay':"", 'lessThan':-1, 'mute':false, 'tts':false},
       'queueAlert':{'filename':"Ship_Brass_Bell.mp3", 'name':'queueAlert', 'obj':null, 'desc':"Lowest timed hit in queue is less than", 'pay':"", 'lessThan':4, 'mute':false, 'tts':false},
       'loggedOut':{'filename':"CrowCawSynthetic.wav", 'name':'loggedOut', 'obj':null, 'desc':"You are logged out.", 'pay':"", 'lessThan':-1, 'mute':false, 'tts':false},
-      'captchaAlarm':{'filename':"CrowCawSynthetic2.wav", 'name':'captchaAlarm', 'obj':null, 'desc':"Found a captcha.", 'pay':"", 'lessThan':-1, 'mute':false, 'tts':false}
+      'captchaAlarm':{'filename':"CrowCawSynthetic2.wav", 'name':'captchaAlarm', 'obj':null, 'desc':"Found a captcha.", 'pay':"", 'lessThan':-1, 'mute':false, 'tts':false},
+      'triggeredAlarm':{'filename':"triggeredHit.mp3", 'name':'triggeredAlarm', 'obj':null, 'desc':"Found a Custom Search Trigger.", 'pay':"", 'lessThan':-1, 'mute':false, 'tts':false},
     };
+    this.searchAlarms = ['triggeredAlarm'];
     this.data = {};
     this.myAudio = null;
+    this.audio = {'panda': null, 'search':null};
+  }
+  setTheAudio(alarmKey, src=null) {
+    let alarm = this.data[alarmKey], thisAudio = this.audio.panda;
+    if (src === null) src = (!alarm.obj) ? alarm.audio.src : alarm.obj;
+    if (this.searchAlarms.includes(alarmKey)) thisAudio = this.audio.search;
+    alarm.audio = (thisAudio) ? thisAudio.newAudio(alarm.name, src) : null;
+    if (!thisAudio) alarm.obj = src; else alarm.obj = null;
+  }
+  setAudioClass(audioClass, ui) {
+    this.audio[ui] = audioClass;
+    for (const alarmKey of Object.keys(this.data)) { this.setTheAudio(alarmKey); }
   }
   /** Removes any data that should be removed when closing down. */
   removeAll() { this.modal = null; this.voices = []; this.data = {}; this.myAudio = null; }
   /** Uses the Text to speach sythesis to speak a text provided. Will cancel any text speaking first.
-   * @param  {string} thisText       - The text which needs to be spoken.
-   * @param  {string} [endFunc=null] - The function to run when the text spoken ends. */
+   * @param  {string} thisText       - The text  @param  {string} [endFunc=null] - The function to run when the text spoken ends. */
   async speakThisNow(thisText, endFunc=null) {
     if (this.synth) {
         this.synth.cancel();
         let speech = new window.SpeechSynthesisUtterance(thisText);
-        speech.voice = this.voices[this.voiceIndex];
-        speech.onend = () => { if (endFunc) endFunc(); }
+        speech.voice = this.voices[this.voiceIndex]; speech.onend = () => { if (endFunc) endFunc(); }
         this.synth.speak(speech);
     }
   }
@@ -44,7 +56,7 @@ class AlarmsClass {
   theVoiceIndex(index) { this.voiceIndex = index; }
   /** Changes the name of the voice being used for text to speech and then saves it to database.
    * @param  {string} name - The name to use for the voice. */
-  theVoiceName(name) { globalOpt.alarms.ttsName = name; globalOpt.update(false); }
+  theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update(false); }
   /** Prepare the alarms by getting the src of the alarm url and save to database if using default values.
    * @async                - To wait for the alarm data to completely load into memory.
    * @param  {object} data - Data object @param  {bool} fromDB - Did these alarms come from the database or default values?
@@ -54,11 +66,8 @@ class AlarmsClass {
     for (const value of data) {
       delete value.audio;
       if (!fromDB) { await MYDB.addToDB('panda', 'alarms', value).then(id => value.id = id, rejected => err = rejected); }
-      if (!value.obj) { // If no audio obj then set up src with default filename.
-        value.audio = new Audio();
-        value.audio.src = chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`);
-      } else { value.audio = new Audio(value.obj); value.obj = null; }
-      this.data[value.name] = value;
+      let theSrc = (!value.obj) ? chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`) : value.obj;
+      this.data[value.name] = value; this.setTheAudio(value.name, theSrc);
     }
     return err;
   }
@@ -71,19 +80,20 @@ class AlarmsClass {
     this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
     this.synth.addEventListener('voiceschanged', () => {
       if (this.voices.length == 0) {
-        this.voices = this.synth.getVoices(); let i = 0, name = globalOpt.alarms.ttsName;
+        this.voices = this.synth.getVoices(); let i = 0, name = MyOptions.alarms.ttsName;
         if (name !== '') { for (const voice of this.voices) { if (voice.name === name) this.voiceIndex = i; i++; }}
       }
     });
     MYDB.getFromDB('panda', 'alarms').then( async (result) => {
-      let valuesLen = result.length;
+      let valuesLen = result.length, defaultLen = Object.values(this.dataDefault).length, fromDB = false;
+      let alarmData = (valuesLen === defaultLen) ? result : Object.assign(Object.values(this.dataDefault), result);
       if (valuesLen === 0 && !MYDB.useDefault('panda')) await MYDB.deleteFromDB('panda', 'alarms', null);
       if (valuesLen !== 0 && result[0].mute === undefined) await MYDB.deleteFromDB('panda', 'alarms', null);
-      if (valuesLen !== 0 && result[0].mute !== undefined) err = await this.prepareAlarms(result, true);
-      else err = await this.prepareAlarms(Object.values(this.dataDefault), false);
+      if (valuesLen === defaultLen && result[0].mute !== undefined) fromDB = true;
+      err = await this.prepareAlarms(alarmData, fromDB);
       if (!err) success[0] = "All alarms have been loaded up.";
-      afterFunc(success, err); // Sends any error back to the after function for processing.
-    }, (rejected) => { err = rejected; afterFunc(success, err); } );
+      if (afterFunc) afterFunc(success, err); // Sends any error back to the after function for processing.
+    }, (rejected) => { err = rejected; if (afterFunc) afterFunc(success, err); } );
   }
   /** Clears the database store of all the alarms usually ready for an import. */
   async clearAlarms() { await MYDB.clearStore('panda', 'alarms'); }
@@ -91,7 +101,7 @@ class AlarmsClass {
    * @param  {string} alarmSound - The name of the alarm to sound from the alarms object. */
   saveAlarm(alarmSound) {
     let saveThis = Object.assign({}, this.data[alarmSound]);
-    if (saveThis.audio.src.substr(0,4) === 'data') saveThis.obj = saveThis.audio.src;
+    if (this.data[alarmSound].audio.src.substr(0,4) === 'data') saveThis.obj = this.data[alarmSound].audio.src;
     delete saveThis.audio;
 		MYDB.addToDB('panda', 'alarms', saveThis).then( () => {},
 			rejected => { pandaUI.haltScript(rejected, 'Failed updating data to database for an alarm so had to end script.', 'Error adding alarm data. Error:'); }
@@ -114,10 +124,7 @@ class AlarmsClass {
     return options;
   }
   /** Play the sound with the name provided or text to speech if not muted. Also changes the volume.
-   * @param  {string} alarmSound     - The name of the alarm to sound from the alarms object.
-   * @param  {bool} [testing=false]  - Sound the alarm even if it is muted.
-   * @param  {string} [speakThis=''] - The text to use for text to speech or just use description in data object.
-   * @param  {string} [endFunc=null] - The function to run when the sound or text spoken ends. */
+   * @param  {string} alarmSound - Alarm name @param  {bool} [testing=false] - Test alarm @param  {string} [speakThis=''] - TTS text @param  {string} [endFunc=null] - End function */
   playSound(alarmSound, testing=false, speakThis='', endFunc=null) {
     if (!this.data[alarmSound].mute || testing) {
       if (this.data[alarmSound].tts) {
@@ -126,8 +133,11 @@ class AlarmsClass {
       } else {
         const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
         if (isPlaying) { this.myAudio.load(); this.myAudio = null; }
-        this.myAudio = this.data[alarmSound].audio; this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100;
-        this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { endFunc(); }
+        this.myAudio = this.data[alarmSound].audio;
+        if (this.myAudio) {
+          this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100;
+          this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { endFunc(); }
+        }
       }
     }
   }
@@ -165,7 +175,6 @@ class AlarmsClass {
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
   /** This plays the queue full alarm. */
   doFullAlarm() { this.playSound('queueFull'); }
-  doFoundHit() { this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null; this.voices = this.synth.getVoices(); this.speakThisNow('MONEY', () => {}); }
 	/** Method to decide which alarm to play according to the hit minutes and price.
 	 * @param  {object} hitData - The hit information to use to decide on alarm to sound. */
 	doAlarms(hitData) {
@@ -176,13 +185,13 @@ class AlarmsClass {
       let centsStr = (cents > 0) ? ((cents === 0.01) ? '1 cent' : `${cents} cents`) : '';
       speakThis = `Accepted hit from ${hitData.reqName}. Duration ${minutes} minutes. Paying ${dollarStr} ${centsStr}.`;
     }
-    if ( hitData.price < parseFloat(this.data.less2.pay) ) {
+    if (this.data.less2 && hitData.price < parseFloat(this.data.less2.pay)) {
 			if (minutes <= this.data.less2.lessThan) this.playSound("less2Short",_, speakThis); else this.playSound("less2",_, speakThis);
-		} else if ( hitData.price <= parseFloat(this.data.less5.pay) ) {
+		} else if (this.data.less5 && hitData.price <= parseFloat(this.data.less5.pay)) {
 			if (minutes <= this.data.less5.lessThan) this.playSound("less5Short",_, speakThis); else this.playSound("less5",_, speakThis);
-		} else if ( hitData.price <= parseFloat(this.data.less15.pay) ) {
+		} else if (this.data.less15 && hitData.price <= parseFloat(this.data.less15.pay)) {
 			if (minutes <= this.data.less15.lessThan) this.playSound("less15Short",_, speakThis); else this.playSound("less15",_, speakThis);
-		} else if ( hitData.price < parseFloat(this.data.more15.pay) ) { this.playSound("more15",_, speakThis); }
+		} else if (this.data.more15 && hitData.price < parseFloat(this.data.more15.pay)) { this.playSound("more15",_, speakThis); }
   }
   /** Shows the alarms modal to change alarms and other options. */
   showAlarmsModal() {
@@ -191,7 +200,7 @@ class AlarmsClass {
   }
   /** Sets the volume used for the alarms and plays the first alarm for a test.
    * @param  {number} volume - The number to use for the volume for alarms from 0 to 100. */
-  setVolume(volume) { this.volume = volume; globalOpt.theVolume(volume); this.playSound('less2', true); }
+  setVolume(volume) { this.volume = volume; MyOptions.theVolume(volume); this.playSound('less2', true); }
   /** Sets the volume used for the alarms and plays the first alarm for a test.
    * @param  {string} alarmSound - The name of the alarm to return the TTS value for.
    * @param  {number} newPay     - The new value for the pay rate in decimal format. */

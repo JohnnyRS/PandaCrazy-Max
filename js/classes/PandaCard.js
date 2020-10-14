@@ -1,5 +1,5 @@
 /** A class that deals with the basic cards for panda jobs to show on tab UI.
- * @class UrlClass
+ * @class PandaCards
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class PandaCards {
   constructor() {

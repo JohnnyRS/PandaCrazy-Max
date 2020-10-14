@@ -46,7 +46,7 @@ class SearchGStats {
 	addTotalSearchPRE() { this.totalSearchPREs.value++; this.updateStatNav(this.totalSearchPREs); }
 	/** Set the total search hits value to value and update stat in status bar.
 	 * @param  {number} value - The new value for the total number of hits in the database. */
-	addTotalSearchHits(value) { this.totalSearchHits.value = value; this.updateStatNav(this.totalSearchHits); }
+	addTotalSearchHits(value) { this.totalSearchHits.value = value; }
 	/** Set the total search results value to value and update stat in status bar.
 	 * @param  {number} value - The new value for the total amount of hits found in one search result. */
 	addTotalSearchResults(value) { this.totalSearchResults.value = value; this.updateStatNav(this.totalSearchResults); }

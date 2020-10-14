@@ -189,8 +189,8 @@ class ModalSearchClass {
     modal.showModal(null, async () => {
       let groupHist = await bgSearch.getFromDB('history', dbId), rules = await bgSearch.theData(dbId, 'rules'), blocked = rules.blockGid;
       let gidsHistory = await bgHistory.findValues(Object.keys(groupHist.gids));
-      let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered m-0 w-100'></table>`)
-        .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:180px; max-width:180px;'>Title</td><td>Description</td><td style='width:50px; max-width:50px;'>Pays</td><td style='width:40px; max-width:40px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
+      let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-moreCondensed table-bordered m-0'></table>`)
+        .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:130px; max-width:130px;'>Title</td><td style='width:440px; max-width:440px'>Descriptions</td><td style='width:52px; max-width:52px;'>Pays</td><td style='width: 70px; max-width:70px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
       for (const key of Object.keys(groupHist.gids)) {
         let dateString = '----', title = '----', description = '----', pays = '----';
         if (gidsHistory[key]) {
@@ -200,9 +200,10 @@ class ModalSearchClass {
         }
         let tempObj = {'date':dateString,'gid':shortenGroupId(key, 4, 4), 'title':title, 'desc':description, 'pays':'$' + pays};
         let btnLabel = (blocked.has(key)) ? 'Unblock' : 'Block Hit', btnColor = (blocked.has(key)) ? 'danger' : 'primary';
-        displayObjectData([ {'type':'keyValue', 'key':'date'},
-          {'type':'keyValue', 'key':'gid'}, {'type':'keyValue', 'key':'title', 'maxWidth':'120px'}, {'type':'keyValue', 'key':'desc'}, {'type':'keyValue', 'key':'pays'},
-          {'label':'block', 'type':'button', 'btnLabel':btnLabel, 'btnColor':btnColor, 'addClass':" btn-xxs", 'btnFunc': (e) => {
+        displayObjectData([
+          {'type':'keyValue', 'key':'date', 'maxWidth':'75px'}, {'type':'keyValue', 'key':'gid', 'maxWidth':'82px'},
+          {'type':'keyValue', 'key':'title', 'maxWidth':'130px'}, {'type':'keyValue', 'key':'desc', 'maxWidth':'440px'}, {'type':'keyValue', 'key':'pays', 'maxWidth':'52px'},
+          {'label':'block', 'type':'button', 'btnLabel':btnLabel, 'btnColor':btnColor, 'addClass':" btn-xxs", 'maxWidth':'70px', 'btnFunc': (e) => {
             if (blocked.has(key)) { blocked.delete(key); $(e.target).removeClass(`btn-danger`).addClass(`btn-primary`).html('Block Hit'); }
             else { blocked.add(key); $(e.target).removeClass(`btn-primary`).addClass(`btn-danger`).html('Unblock'); }
             rules.blockGid = blocked; bgSearch.theData(dbId, 'rules', rules)

@@ -222,7 +222,11 @@ class ModalJobClass {
    * @param  {function} [afterClose=null]   - Function to call after the modal is closed. */
   async showJobsTable(modalBody, jobs, checkboxFunc=null, afterClose=null) {
     const divContainer = $(`<table class='table table-dark table-sm table-moreCondensed pcm_jobTable table-bordered w-auto'></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
-    displayObjectData([ {'string':'', 'type':'string'}, {'string':'Requester Name', 'type':'string', 'noBorder':true}, {'string':'Title', 'type':'string', 'noBorder':true}, {'string':'Pay', 'type':'string', 'noBorder':true}, {'string':'', 'type':'string'}, {'string':'', 'type':'string'} ], divContainer, bgPanda.info, true, true, '#0b716c');
+    displayObjectData([
+      {'string':'', 'type':'checkbox', 'btnFunc': (e) => { $(`.modal-body input[type='checkbox']`).prop('checked', $(e.target).is(':checked')); }},
+      {'string':'Requester Name', 'type':'string', 'noBorder':true}, {'string':'Title', 'type':'string', 'noBorder':true}, {'string':'Pay', 'type':'string', 'noBorder':true},
+      {'string':' ', 'type':'string'}, {'string':' ', 'type':'string'}
+    ], divContainer, bgPanda.info, true, true, '#0b716c');
     for (const myId of jobs) {
       let status = (pandaUI.pandaStats[myId].collecting) ? 'On' : 'Off', data = await bgPanda.dataObj(myId);
       displayObjectData([
@@ -265,14 +269,9 @@ class ModalJobClass {
     return newArray;
   }
   /** Shows a modal to list jobs filtered by a search term, collecting, search mode or once options.
-   * @param  {string} [type='jobs']       - Showing just jobs or jobs for grouping?
-   * @param  {number} [groupUnique=-1]    - Only used for editing grouping jobs with this unique number.       
-   * @param  {object} [thisObj=null]      - Only used for editing grouping jobs so it saves when user wants.
-   * @param  {function} [saveFunc=null]   - Function to call when save button clicked.
-   * @param  {function} [checkFunc=null]  - Function to call when checkbox clicked on a job.
-   * @param  {function} [cancelFunc=null] - Function to call when cancel button clicked.
-   * @param  {function} [afterShow=null]  - Function to call when modal is shown after animations stopped.
-   * @param  {function} [afterClose=null] - Function to call after the modal is closed. */
+   * @param  {string} [type]        - Job Type           @param  {number} [groupUnique]  - Grouping Number     @param  {object} [thisObj]      - Grouping Object
+   * @param  {function} [saveFunc]  - Save Function      @param  {function} [checkFunc]  - Checkbox Function   @param  {function} [cancelFunc] - Cancel Function
+   * @param  {function} [afterShow] - AfterShow Function @param  {function} [afterClose] - AfterClose Function */
  showJobsModal(type='jobs', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null, afterClose=null) {
     if (!modal) modal = new ModalClass();
     const theTitle = (type==='groupingEdit') ? 'Edit Groupings' : 'List Jobs';

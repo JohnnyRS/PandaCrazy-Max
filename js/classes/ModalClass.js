@@ -33,20 +33,17 @@ class ModalClass {
     return idName;
   }
   /** Show this modal dialog to user allowing multiple modals to be shown with zIndex.
-   * @param {function} [cancelFunc=null] - Function to call when the cancel button is clicked.
-   * @param {function} [afterShow=null]  - Function to call after the modal dialog animations stopped.
-   * @param {function} [afterClose=null] - Function to call when the modal dialog is about to close. */
+   * @param {function} [cancelFunc=null] - Cancel Function @param {function} [afterShow=null]  - After Show Function @param {function} [afterClose=null] - After Close Function */
   showModal(cancelFunc=null, afterShow=null, afterClose=null) {
     const idName = this.modals.slice(-1)[0]; // Get the last modal id name opened.
     $(`#${idName}`).modal({backdrop:"static", keyboard:false}); // Move last modal to background.
     $(`.modal-backdrop`).each( (index, element) => { $(element).css("zIndex",1050+(index*2)).css("opacity",0.8); } );
     $(`#${idName}`).on('hide.bs.modal', (e) => { // hide.bs.modal used when modal is about to be hidden or closed.
       if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc();
-      if (afterClose!==null) afterClose();
-      $(e.target).remove(); // Remove the modal from document.
-      this.modals.pop(); // Remove this modal from array of modals.
+      if (afterClose !== null) afterClose();
+      $(e.target).remove(); this.modals.pop();
+      $(e.target).data('bs.modal', null).remove();
     });
-    $(`#${idName}`).on('hide.bs.modal', (e) => { $(e.target).data('bs.modal', null).remove();  });
     if (afterShow) $(`#${idName}`).on('shown.bs.modal', () => { afterShow(); });
   }
   /** Will close a modal with the title name or the last modal shown.
@@ -55,7 +52,7 @@ class ModalClass {
     let foundTitle = -1; // -1 used in slice to get the last item in modals array.
     if (title !== '') {
       this.modals.forEach( (idName, index) => {
-        if ($(`#${idName} .modal-title:first`).text() === title) foundTitle=index;
+        if ($(`#${idName} .modal-title:first`).text() === title) foundTitle = index;
       });
     }
     if (title === '' || (title !== '' && foundTitle !== -1)) {
@@ -72,22 +69,12 @@ class ModalClass {
     else if (bgQueue) bgQueue.nowLoggedOn();
   }
   /** Prepare a modal dialog for showing data with different buttons.
-   * @param {object} dataObject                 - Cloned data so original won't get changed until saved.
-   * @param {number} width                      - Width of the modal dialog.
-   * @param {string} addHeaderClass             - Class name used for the header class of modal.
-   * @param {string} title                      - The title for the modal.
-   * @param {string} body                       - Html code placed in the body of the modal.
-   * @param {string} bodyClass                  - Class name used for the body of the modal.
-   * @param {string} footerClass                - Class name used for the foot of the modal.
-   * @param {string} [saveButton='invisible']   - Class name to be added to the save button. Invisible is default.
-   * @param {string} [saveText='Save']          - Text to show on the save button.
-   * @param {function} [saveFunc=null]          - Function to be called when the save button is clicked.
-   * @param {string} [noButton='invisible']     - Class name to be added to the no button. Invisible is default.
-   * @param {string} [noText='No']              - Text to show on the no button.
-   * @param {function} [noFunc=null]            - Function to be called when the no button is clicked.
-   * @param {string} [cancelButton='invisible'] - Class name to be added to the cancel button. Invisible is default.
-   * @param {string} [cancelText='Cancel']      - Text to show on the cancel button.
-   * @return {string}                           - Id name of modal prepared. */
+   * @param {object} dataObject   - Cloned Data   @param {number} width          - Width             @param {string} addHeaderClass - Header Class Name
+   * @param {string} title        - Title         @param {string} body           - Body Html         @param {string} bodyClass      - Body Class Name
+   * @param {string} footerClass  - Footer Class  @param {string} [saveButton]   - Save Class        @param {string} [saveText]     - Save Text
+   * @param {function} [saveFunc] - Save Function @param {string} [noButton]     - No Class Name     @param {string} [noText]       - No Text
+   * @param {function} [noFunc]   - No Function   @param {string} [cancelButton] - Cancel Class Name @param {string} [cancelText]   - Cancel Text
+   * @return {string}             - Id Name */
   prepareModal(dataObject, width, addHeaderClass, title, body, bodyClass, footerClass, saveButton='invisible', saveText='Save', saveFunc=null, noButton='invisible', noText='No', noFunc=null, cancelButton='invisible', cancelText='Cancel') {
     const idName = this.createModal();
     this.tempObject[idName] = Object.assign({}, dataObject);
@@ -108,7 +95,7 @@ class ModalClass {
     if (this.modalLoggedOff === 0) {
       this.modalLoggedOff++;
       const idName = this.prepareModal(null, '600px', 'modal-header-warning', `Program Paused!`, '<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href="https://worker.mturk.com/" target="_blank" title="https://worker.mturk.com/" class="pcm_mturkLink">https://worker.mturk.com/</a></h5>', 'text-center');
-      this.showModal(null, null, () => { this.modalLoggedOff=0; if (afterClose) afterClose(); });
+      this.showModal(null, null, () => { this.modalLoggedOff=0; if (afterClose) afterClose(); else modal = null; });
       $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
@@ -117,29 +104,22 @@ class ModalClass {
     }
   }
   /** Shows a modal to verify the jobs user wants to be deleted.
-   * @param  {string} hitDetails   - Short details of hit or hits to be deleted.
-   * @param  {function} deleteFunc - Function to call after delete button is clicked.
-   * @param  {function} noFunc     - Function to call after the no button is clicked.
-   * @param  {function} cancelFunc - Function to call after the cancel button is clicked. */
+   * @param  {string} hitDetails - Hit Details @param  {function} deleteFunc - Detail Function @param  {function} noFunc - No Function @param  {function} cancelFunc - Cancel Function */
   showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc, afterClose=null) {
     const idName = this.prepareModal(null, '600px', 'modal-header-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='text-primary'>${hitDetails}</h5>`, 'text-center bg-white text-dark', '', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', 'Cancel');
-    this.showModal(cancelFunc,_, () => { if (afterClose) afterClose(); else modal = null; });
-    $(`#${idName}`).on('keypress', e =>{ if (e.which == 13) { this.closeModal(); if (deleteFunc) deleteFunc(); } });
+    this.showModal(cancelFunc, () => {
+        $(`#${idName}`).find(`.pcm_modalSave`).focus();
+        $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { if (deleteFunc) deleteFunc(); this.closeModal(); } });
+      }, () => { if (afterClose) afterClose(); else modal = null; }
+    );
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.
-   * @param {number} width              - Size of the modal dialog.
-   * @param {string} title              - Title of the modal dialog.
-   * @param {string} body               - Html to be displayed in the body section of dialog.
-   * @param {function} yesFunc          - Function to call after yes button is pressed.
-   * @param {bool} yesBtn               - Show the yes button or not.
-   * @param {bool} noBtn                - Show the no button or not.
-   * @param {string} [question='']      - Quesion to be asked before the input field as label.
-   * @param {string} [defAns='']        - Default answer in input field initially.
-   * @param {number} [max=null]         - Maximum characters allowed in input field.
-   * @param {function} [afterShow=null] - Function to run after the dialog is shown after animation is stopped.  */
+   * @param {number} width              - Width               @param {string} title       - Title @param {string} body                - Body Html
+   * @param {function} yesFunc          - Yes Function        @param {bool} yesBtn        - Show Yes @param {bool} noBtn              - Show No
+   * @param {string} [question='']      - Quesion             @param {string} [defAns=''] - Default Answer @param {number} [max=null] - Maximum Characters
+   * @param {function} [afterShow=null] - After Show Function */
   showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
-    const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible';
-    const noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
+    const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     let idName = this.prepareModal(null, width, 'modal-header-info modal-lg', title, body, 'text-right bg-dark text-light', 'modal-footer-info', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
     this.showModal(null, () => {
       let docKeys = '';
