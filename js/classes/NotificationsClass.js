@@ -47,7 +47,4 @@ class NotificationsClass {
   showDailyLimit() {
     this.show('ALERT: CONGRATS!', 'You have reached your daily limit!! You must wait for tomorrow. Go outside and see the sun!', 'dailyLimit', '3alert3', true);
   }
-  showNotFocussed() {
-    this.show('Panda Crazy not Focussed.', 'Please put Panda Crazy in it\'s own window and not a tab or minimized so it works efficiently as fast as possible. This warning may be disabled in the options/general menu', 'unfocussed', 'PC Alert', true);
-  }
 }

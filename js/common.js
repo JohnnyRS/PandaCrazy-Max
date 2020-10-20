@@ -257,10 +257,10 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       const id = (element.id) ? ` id=${element.id}` : ``;
       const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css('cursor', 'default').appendTo(valueCol);
       if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
-    } else if (element.type==='string') {
+    } else if (element.type === 'string') {
       const id = (element.id) ? ` id=${element.id}` : ``;
-      const border = (element.noBorder) ? '' : ` class='border-light'`;
-      $(`<span${border}${id}>${theValue}</span>`).appendTo(valueCol);
+      const border = (element.noBorder) ? '' : ` border-light`;
+      $(`<span class='${textColor}${border}'${id}>${theValue}</span>`).appendTo(valueCol);
     }
     if (append) row.appendTo(divContainer); else row.prependTo(divContainer);
     $(row).show();
@@ -363,10 +363,10 @@ function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT=
  * @param  {number} [aL=0]	- acceptLimit   @param  {number} [day=0]	- day             @param  {number} [wt=0]	  - weight
  * @param  {number} [dd=0]	- dailyDone
  * @return {object}         - Object with options set or using default values. */
-function optObject(o=false, s=null, tab=-1, lN=0, lT=0, lF=0, dur=0, aG=false, hamD=0, aL=0, day=0, wt=0, dd=0, dis=false) {
+function optObject(o=false, s=null, tab=-1, lN=0, lT=0, lF=0, dur=0, aG=false, hamD=0, aL=0, day=0, wt=0, dd=0, dis=false, mute=false) {
   let today = new Date();
   if (day===0 || justDate(day) !== justDate(today)) { day = today.getTime(); dd = 0; }
-  return {'once':o, 'search':s,'limitNumQueue':Number(lN), 'limitTotalQueue':Number(lT), 'limitFetches':Number(lF), 'duration':Number(dur),'autoGoHam':aG, 'hamDuration':Number(hamD), 'acceptLimit':Number(aL), 'tabUnique':Number(tab), 'day':Number(day), 'dailyDone':Number(dd), 'weight':Number(wt), 'disabled':dis};
+  return {'once':o, 'search':s,'limitNumQueue':Number(lN), 'limitTotalQueue':Number(lT), 'limitFetches':Number(lF), 'duration':Number(dur),'autoGoHam':aG, 'hamDuration':Number(hamD), 'acceptLimit':Number(aL), 'tabUnique':Number(tab), 'day':Number(day), 'dailyDone':Number(dd), 'weight':Number(wt), 'disabled':dis, 'mute':mute};
 }
 /** Creates and returns an object for the rules for a search trigger.
  * @param  {array} [bG=[]]  - Blocked gid   @param  {array} [oG=[]]     - Only gid    @param  {array} [exc=[]]    - Exclude terms
@@ -399,9 +399,6 @@ function compareversion(version1, version2) {
       if (version1[i] != version2[i]) { break; }
   }
   return(result);
-}
-function playAudio(audioData) {
-
 }
 
 /** Constant values for console coloring. */

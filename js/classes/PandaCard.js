@@ -69,17 +69,18 @@ class PandaCards {
   createCardStatus(myId, info, oneLine=false) {
     let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : ' search';
     let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
-    return `<${element} class="pcm_hitStats mr-auto text-truncate" id="pcm_hitStats${one}_${myId}">[ <span class="pcm_hitAccepted" id="pcm_hitAccepted${one}_${myId}"></span> | <span class="pcm_hitFetched" id="pcm_hitFetched${one}_${myId}"></span> ]${search}</${element}>`;
+    return `<${element} class='pcm_hitStats mr-auto text-truncate' id='pcm_hitStats${one}_${myId}'>[ <span class='pcm_hitAccepted' id='pcm_hitAccepted${one}_${myId}'></span> | <span class='pcm_hitFetched' id='pcm_hitFetched${one}_${myId}'></span> ]${search}</${element}>`;
   }
   /** Create the button group area for the panda card.
    * @param  {number} myId - The unique ID for a panda job.
    * @param  {object} info - The information from a panda hit to update to card. */
   createCardButtonGroup(myId, info) {
     const textCollect = (info.search) ? '-Collecting-' : 'Collect';
-    let group = `<div class='card-text' id='pcm_buttonGroup_${myId}'><button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
-    if (!info.search) group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_hamButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.hamTip}"><span>GoHam</span></button>`;
-    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_detailsButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.details}"><span>Details</span></button>`;
-    group += `<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_tooltipData pcm_buttonOff shadow-none" id="pcm_deleteButton_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title="${this.values.delete}"><span>X</span></button>`;
+    let group = `<div class='card-text' id='pcm_buttonGroup_${myId}'>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
+    if (!info.search) group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_hamButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>GoHam</span></button>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_detailsButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.details}'><span>Details</span></button>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_deleteButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.delete}'><span>X</span></button>`;
     group += `</div>`;
     return group;
   }
@@ -87,13 +88,13 @@ class PandaCards {
    * @param  {number} myId - The unique ID for a panda job.
    * @param  {object} info - The information from a panda hit to update to card. */
   oneLineCard(myId, info) {
-    const nameGroup = $(`<div class="pcm_nameGroup1 row w-90"></div>`).css('cursor', 'default').hide().append(`<span class="pcm_reqName1 col mr-auto px-1 text-truncate" id="pcm_hitReqName1_${myId}"></span>`);
+    const nameGroup = $(`<div class='pcm_nameGroup1 row w-90'></div>`).css('cursor', 'default').hide().append(`<span class='pcm_reqName1 col mr-auto px-1 text-truncate' id='pcm_hitReqName1_${myId}'></span>`);
     $(this.createCardStatus(myId, info, true)).hide().appendTo(nameGroup);
-    let buttonGroup = $(`<span class="d-flex pl-1 pcm_buttonGroup1" id="pcm_buttonGroup1_${myId}"></span>`).appendTo(nameGroup);
-    buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton1 pcm_buttonOff shadow-none" type="button" id="pcm_collectButton1_${myId}"><span>C</span></button>`);
-    buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none" type="button" id="pcm_hamButton1_${myId}"><span>H</span></button>`);
-    buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none" type="button" id="pcm_detailsButton1_${myId}"><span>D</span></button>`);
-    buttonGroup.append(`<button class="btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none" type="button" id="pcm_deleteButton1_${myId}"><span>X</span></button>`);
+    let buttonGroup = $(`<span class='d-flex pl-1 pcm_buttonGroup1' id='pcm_buttonGroup1_${myId}'></span>`).appendTo(nameGroup);
+    buttonGroup.append(`<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton1 pcm_buttonOff shadow-none' type='button' id='pcm_collectButton1_${myId}'><span>C</span></button>`);
+    buttonGroup.append(`<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_buttonOff shadow-none' type='button' id='pcm_hamButton1_${myId}'><span>H</span></button>`);
+    buttonGroup.append(`<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_buttonOff shadow-none' type='button' id='pcm_detailsButton1_${myId}'><span>D</span></button>`);
+    buttonGroup.append(`<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_buttonOff shadow-none' type='button' id='pcm_deleteButton1_${myId}'><span>X</span></button>`);
     buttonGroup = null;
     return nameGroup;
   }
@@ -101,14 +102,14 @@ class PandaCards {
    * @param  {number} myId       - The unique ID for a panda job.
    * @param  {object} info       - The information from a panda hit to update to card. */
   createCard(myId, info) {
-    const searchCard = (info.data.search) ? " pcm_searching" : "";
-    let card = $(`<div class="card text-light border pcm_pandaCard${searchCard}" id="pcm_pandaCard_${myId}"></div>`).data("myId",myId);
-    let cardBody = $(`<div class="card-body"></div>`).appendTo(card);
-    let cardText = $(`<div class="card-text" id="output_${myId}">`).appendTo(cardBody);
-    $(`<div class="pcm_nameGroup row w-100 px-0"></div>`).append($(`<span class="pcm_reqName pcm_tooltipData col mr-auto px-0 text-truncate" id="pcm_hitReqName_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></span>`).css('cursor', 'default')).append($(`<span class="pcm_groupId col col-auto text-right px-0" id="pcm_groupId_${myId}"></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
+    const searchCard = (info.data.search) ? ' pcm_searching' : '', mutedCard = (info.data.mute) ? ' pcm_mutedCard' : '';
+    let card = $(`<div class='card text-light border pcm_pandaCard${searchCard}${mutedCard}' id='pcm_pandaCard_${myId}'></div>`).data('myId',myId);
+    let cardBody = $(`<div class='card-body'></div>`).appendTo(card);
+    let cardText = $(`<div class='card-text' id='output_${myId}'>`).appendTo(cardBody);
+    $(`<div class='pcm_nameGroup row w-100 px-0'></div>`).append($(`<span class='pcm_reqName pcm_tooltipData col mr-auto px-0 text-truncate' id='pcm_hitReqName_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></span>`).css('cursor', 'default')).append($(`<span class='pcm_groupId col col-auto text-right px-0' id='pcm_groupId_${myId}'></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
     this.oneLineCard(myId, info).appendTo(cardText);
-    $(`<div class="pcm_priceGroup"></div>`).append($(`<span class="pcm_price text-truncate" id="pcm_hitPrice_${myId}"></span>`).css('cursor', 'default')).append($(`<span class="pcm_numbers text-truncate pl-1" id="pcm_numbers_${myId}"></span>`)).appendTo(cardText);
-    $(`<div class="pcm_title pcm_tooltipData text-truncate" id="pcm_hitTitle_${myId}" data-toggle="tooltip" data-html="true" data-placement="bottom" title=""></div>`).css('cursor', 'default').appendTo(cardText);
+    $(`<div class='pcm_priceGroup'></div>`).append($(`<span class='pcm_price text-truncate' id='pcm_hitPrice_${myId}'></span>`).css('cursor', 'default')).append($(`<span class='pcm_numbers text-truncate pl-1' id='pcm_numbers_${myId}'></span>`)).appendTo(cardText);
+    $(`<div class='pcm_title pcm_tooltipData text-truncate' id='pcm_hitTitle_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></div>`).css('cursor', 'default').appendTo(cardText);
     $(this.createCardStatus(myId, info)).appendTo(cardText);
     $(this.createCardButtonGroup(myId, info)).appendTo(cardText);
     this.cards[myId].document = card;
@@ -145,63 +146,58 @@ class PandaCards {
   }
 	/** Show that this ham button with this unique ID is in auto go ham mode.
 	 * @param  {number} myId - The unique ID for a panda job. */
-	startAutoGoHam(myId) { $(`#pcm_hamButton_${myId}`).addClass("pcm_delayedHam"); }
+	startAutoGoHam(myId) { $(`#pcm_hamButton_${myId}`).addClass('pcm_delayedHam'); }
 	/** Disable all other ham buttons which don't use the unique ID for the panda job.
 	 * @param  {number} [myId=null] - The unique ID for a panda job. */
 	disableOtherHamButtons(myId=null) {
-		if (myId!==null) $(`#pcm_hamButton_${myId}`).removeClass("pcm_buttonOff").addClass("pcm_buttonOn");
-		$(".pcm_hamButton.pcm_buttonOff").addClass("disabled");
+		if (myId!==null) $(`#pcm_hamButton_${myId}`).removeClass('pcm_buttonOff').addClass('pcm_buttonOn');
+		$('.pcm_hamButton.pcm_buttonOff').addClass('disabled');
 	}
 	/** Turn on the ham button for this panda job with the unique ID.
 	 * @param  {number} myId - The unique ID for a panda job. */
 	hamButtonOn(myId) {
-		$(`#pcm_hamButton_${myId}`).removeClass("pcm_buttonOff").addClass("pcm_buttonOn");
+		$(`#pcm_hamButton_${myId}`).removeClass('pcm_buttonOff').addClass('pcm_buttonOn');
 		this.disableOtherHamButtons(myId);
 	}
 	/** Turn off all the ham buttons on the page. */
 	hamButtonsOff() { this.enableAllHamButtons(); }
 	/** Enable all the ham buttons on the page. */
-	enableAllHamButtons() { $(".pcm_hamButton").removeClass("disabled").removeClass("pcm_buttonOn").addClass("pcm_buttonOff"); }
+	enableAllHamButtons() { $('.pcm_hamButton').removeClass('disabled').removeClass('pcm_buttonOn').addClass('pcm_buttonOff'); }
   /** Make the color of the panda card with this unique ID to the previous color in the card data.
    * @param  {number} myId - The unique ID for a panda job. */
-  cardPreviousColor(myId) { return $(`#pcm_pandaCard_${myId}`).data("previousColor"); }
+  cardPreviousColor(myId) { return $(`#pcm_pandaCard_${myId}`).data('previousColor'); }
   /** Highlight the panda card's gid number with this unique ID.
    * @param  {number} myId - The unique ID for a panda job. */
-  highlightEffect_gid(myId) { $(`#pcm_groupId_${myId}, #pcm_buttonGroup1_${myId}`).effect( "highlight", {color:"#E6E6FA"}, 300 ); }
+  highlightEffect_gid(myId) { if (GvFocus) $(`#pcm_groupId_${myId}, #pcm_buttonGroup1_${myId}`).effect('highlight', {color:'#E6E6FA'}, 300); }
   /** Highlight the panda card according to the action and duration.
-   * @param  {number} myId 						 - The unique ID for a panda job.
-   * @param  {string} [action=""] 		 - The action that will be causing the highlight effect.
-   * @param  {number} [duration=15000] - The duration the highlight effect should last. */
-  highlightEffect_card(myId, action="", duration=15000) {
-    let theColor = (action==="stop") ? "#FFA691" : "#ffff99";
-    $(`#pcm_pandaCard_${myId}`).stop(true,true).effect( "highlight", {color:theColor}, duration );
+   * @param  {number} myId - Unique ID @param  {string} [action] - Effect Action @param  {number} [duration] - Effect Duration */
+  highlightEffect_card(myId, action='', duration=15000) {
+    let theColor = (action==='stop') ? '#FFA691' : '#ffff99';
+    $(`#pcm_pandaCard_${myId}`).stop(true,true).effect( 'highlight', {color:theColor}, duration );
   }
   /** Show that this panda is not collecting anymore and show effect or a new background color.
-   * @param  {number} myId 						 - The unique ID for a panda job.
-   * @param  {bool} [stopEffect=false] - Should any card effect be stopped?
-   * @param  {string} [whyStop=null]	 - The reason why this panda is stopping.
-   * @param  {string} [newBgColor=""]	 - The new background color of the panda card. */
-  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor="") {
+   * @param  {number} myId - Unique ID  @param  {bool} [stopEffect] - Stop Effects? @param  {string} [whyStop] - Stop Reason @param  {string} [newBgColor] - Background color */
+  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor='') {
     if (stopEffect) this.stopEffect_card(myId); 
-    if (newBgColor!=="") {
-      $(`#pcm_pandaCard_${myId}`).data("previousColor1", $(`#pcm_pandaCard_${myId}`).data('stopped',whyStop)
-      .css("background-color")).css("background-color", newBgColor);
+    if (newBgColor!=='') {
+      $(`#pcm_pandaCard_${myId}`).data('previousColor1', $(`#pcm_pandaCard_${myId}`).data('stopped',whyStop)
+      .css('background-color')).css('background-color', newBgColor);
     }
-		if (stopEffect) this.highlightEffect_card(myId,"stop",7500);
+		if (stopEffect) this.highlightEffect_card(myId,'stop',7500);
 		pandaUI.stopCollecting(myId, whyStop);
   }
   /** Either change background color to provided color and save the previous color or change the
 	 * background color to the previous color saved in data and remove the previous color data.
    * @param  {number} myId 				 - The unique ID for a panda job.
    * @param  {bool} addPrev				 - Add previous color data to the panda card.
-   * @param  {string} [bgColor=""] - The new background color or leave it as is. */
-  cardEffectPreviousColor(myId, addPrev, bgColor="") {
+   * @param  {string} [bgColor=''] - The new background color or leave it as is. */
+  cardEffectPreviousColor(myId, addPrev, bgColor='') {
     this.stopEffect_card(myId);
-    if (addPrev) $(`#pcm_pandaCard_${myId}`).data("previousColor", $(`#pcm_pandaCard_${myId}`)
-      .css("background-color")).css("background-color", bgColor);
+    if (addPrev) $(`#pcm_pandaCard_${myId}`).data('previousColor', $(`#pcm_pandaCard_${myId}`)
+      .css('background-color')).css('background-color', bgColor);
     else {
-      const prevColor = $(`#pcm_pandaCard_${myId}`).data("previousColor");
-      $(`#pcm_pandaCard_${myId}`).removeData("previousColor").animate({"backgroundColor":prevColor},{duration:1000});
+      const prevColor = $(`#pcm_pandaCard_${myId}`).data('previousColor');
+      $(`#pcm_pandaCard_${myId}`).removeData('previousColor').animate({'backgroundColor':prevColor},{duration:1000});
     }
   }
   /** Stop any effect for the card with the unique ID.
@@ -227,6 +223,7 @@ class PandaCards {
     this.cards[myId].pandaEnabled(this.values); let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
     info.disabled = false; data.disabled = false; bgPanda.updateDbData(null, data);
   }
+  pandaMute(myId, value) { this.cards[myId].pandaMute(value); }
   /** Show that the card is disabled now.
    * @param  {number} myId - The unique ID for a panda job. */
   async pandaDisabled(myId) {
@@ -242,8 +239,12 @@ class PandaCards {
 				else { theButton.css('background-color', 'red'); this.ctrlDelete.push(myId); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm_deleteButton').css('background-color', ''); }
 			theButton = null; card = null;
-    });
-    $(`.pcm_collectButton, .pcm_collectButton1`).attr('data-long-press-delay', '500');
+    }).unbind('contextmenu').contextmenu( async e => {
+      e.preventDefault();
+      let card = $(e.target).closest('.card'), myId = card.data('myId'), data = await bgPanda.dataObj(myId);
+      data.mute = !data.mute; bgPanda.updateDbData(myId, data); this.pandaMute(myId, data.mute);
+      return false;
+    } );
 		$(`.pcm_collectButton, .pcm_collectButton1`).unbind('click').click( async (e) => {
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
       if (theButton.data('longClicked')) theButton.removeData('longClicked');
@@ -275,24 +276,25 @@ class PandaCards {
         theButton = null; card = null;
       }
     });
-		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click( async(e) => { 
+		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click( async (e) => {
 			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
-			if (theButton.data('longClicked')) { theButton.removeData('longClicked'); theButton.css({'background-color': '', 'color': ''});}
-			else { pandaUI.hamButtonClicked(myId, theButton); }
-			theButton = null;
-		}).mayTriggerLongClicks({ delay: 900 }).unbind('longClick').on('longClick', async (e) => {
+			if (theButton.data('longClicked')) { theButton.removeData('longClicked'); theButton.css({'background-color': '', 'color': ''}); }
+			else { pandaUI.hamButtonClicked(myId, theButton,_, true); console.log('I was clicked',theButton.data('longClicked')); }
+			e.preventDefault(); theButton = null; return false;
+		}).unbind('long-press').on('long-press', async (e) => {
+      e.preventDefault();
 			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
 			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
 			theButton.data('longClicked', true);
 			if (theButton.hasClass('pcm_delayedHam')) {
-				theButton.css({'background-color':this.hamBtnBgColor, 'color':this.hamBtnColor}).removeClass('pcm_delayedHam');
+				theButton.removeClass('pcm_delayedHam').addClass('pcm_noDelay').css({'background-color':this.hamBtnBgColor, 'color':this.hamBtnColor});
 				info.autoTGoHam = (data.autoGoHam) ? 'disable' : 'off';
 			} else { 
 				info.autoTGoHam = 'on';
-				theButton.css({'background-color': '#097e9b', 'color':'#FFFFFF'}).addClass('pcm_delayedHam');
-				pandaUI.hamButtonClicked(myId, theButton, true);
+				theButton.css({'background-color': '#097e9b', 'color':'#FFFFFF'}).removeClass('pcm_noDelay').addClass('pcm_delayedHam');
+				pandaUI.hamButtonClicked(myId, theButton, true, true);
 			}
-			theButton = null;
+			theButton = null; return false;
 		});
 		$(`.pcm_deleteButton, .pcm_deleteButton1`).unbind('click').click((e) => {
       let card = $(e.target).closest('.card'), theButton = card.find('.pcm_deleteButton'), myId = card.data('myId'); e.stopPropagation();
@@ -348,46 +350,42 @@ class PandaCard {
    * @param  {object} doc - The jquery document fragment to set for this card. */
   set document(doc) { this.df = doc; }
   /** Updates the information in the panda card with the newer information.
-   * @param  {object} info - The information from a panda hit to update to card.
-   * @param  {object} val  - The object with the values for classes and text for this card. */
+   * @param  {object} info - Information  @param  {object} val  - Values object */
   updateAllCardInfo(info, val) {
     if (info) {
       let titleSelect = this.df.find(`${val.title.class}`);
-      const titlePre = (titleSelect.attr('data-original-title')!==undefined) ? "data-original-" : "";
+      const titlePre = (titleSelect.attr('data-original-title')!==undefined) ? 'data-original-' : '';
       let shortenThis = (info.data[val.groupId.valueName] && info.search !== 'rid') ? info.data[val.groupId.valueName] : info.data[val.reqId.valueName];
-      let reqName = (info.data[val.friendlyReqName.valueName]!=="") ? info.data[val.friendlyReqName.valueName] : info.data[val.reqName.valueName];
+      let reqName = (info.data[val.friendlyReqName.valueName]!=='') ? info.data[val.friendlyReqName.valueName] : info.data[val.reqName.valueName];
       this.df.find(`${val.reqName.class}`).html(reqName);
       this.df.find(`${val.reqName.class}`).attr(`${titlePre}title`, `${reqName}<br>${info.data[val.groupId.valueName]}`).html(`${reqName}`);
       this.df.find(`${val.reqName1Line.class}`).attr(`${titlePre}title`, `${reqName}<br>${info.data[val.groupId.valueName]}`).html(`${reqName}`);
       this.df.find(`${val.groupId.class}`).html(`${shortenGroupId(shortenThis)}`);
       this.df.find(`${val.price.class}`).html(`${parseFloat(info.data[val.price.valueName]).toFixed(2)}`);
       if (info.data[val.numbers.valueName]>1) this.df.find(`${val.numbers.class}`).html(`[${info.data[val.numbers.valueName]}]`);
-      let title = (info.data[val.friendlyTitle.valueName]!=="") ? info.data[val.friendlyTitle.valueName] : info.data[val.title.valueName];
+      let title = (info.data[val.friendlyTitle.valueName]!=='') ? info.data[val.friendlyTitle.valueName] : info.data[val.title.valueName];
       titleSelect.attr(`${titlePre}title`, `${title}`).html(`${title}`); titleSelect = null;
     }
   }
   /** Hides or shows the element with the ID value and using closest if needed.
-   * @param  {number} id      - The id value to use for the element.
-   * @param  {string} closest - A string representing the selector for closest method to use.
-   * @param  {bool} show      - Should this element be shown or hidden?
-   */
+   * @param  {number} id - ID Name @param  {string} closest - Closest Selector @param  {bool} show - Shown or hidden? */
   hideShow(id, closest, show) {
-    let ele = (closest!=="") ? $(`${id}_${this.myId}`).closest(closest) : $(`${id}_${this.myId}`);
+    let ele = (closest!=='') ? $(`${id}_${this.myId}`).closest(closest) : $(`${id}_${this.myId}`);
     if (show) $(ele).show(); else $(ele).hide(); ele = null;
   }
   /** Update the card display by showing or hiding different elements in the card.
    * @param  {object} val - The object with the values for classes and text for this card. */
   updateCardDisplay(val) {
     const oneLine = (globalOpt.getCardDisplay()===0), min = (globalOpt.getCardDisplay()===1);
-    this.hideShow(val.reqName.id, ".pcm_nameGroup", (!oneLine));
-    this.hideShow(val.reqName1Line.id, ".pcm_nameGroup1", (oneLine));
-    this.hideShow(val.price.id, ".pcm_priceGroup", (!oneLine && !min));
-    this.hideShow(val.groupId.id, "", (!oneLine));
-    this.hideShow(val.title.id, "", (!oneLine && !min));
-    this.hideShow("#pcm_hitStats", "", (!oneLine));
-    this.hideShow("#pcm_buttonGroup", "", (!oneLine));
-    const addThis = (oneLine) ? "pcm_oneLine" : "";
-    const removeThis = (!oneLine) ? "pcm_oneLine" : "";
+    this.hideShow(val.reqName.id, '.pcm_nameGroup', (!oneLine));
+    this.hideShow(val.reqName1Line.id, '.pcm_nameGroup1', (oneLine));
+    this.hideShow(val.price.id, '.pcm_priceGroup', (!oneLine && !min));
+    this.hideShow(val.groupId.id, '', (!oneLine));
+    this.hideShow(val.title.id, '', (!oneLine && !min));
+    this.hideShow('#pcm_hitStats', '', (!oneLine));
+    this.hideShow('#pcm_buttonGroup', '', (!oneLine));
+    const addThis = (oneLine) ? 'pcm_oneLine' : '';
+    const removeThis = (!oneLine) ? 'pcm_oneLine' : '';
     $(`#pcm_pandaCard_${this.myId}`).addClass(addThis).removeClass(removeThis);
   }
   /** Remove this panda card from UI. */
@@ -399,29 +397,30 @@ class PandaCard {
   /** Mark this search panda as searching in the search class.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaSearchingNow(val) {
-    let cl = val.collectBtn.class; this.df.find(cl).html("-Searching-");
-    this.df.find(cl, cl + '1').removeClass("pcm_searchCollect pcm_searchDisable").addClass("pcm_searchOn");
+    let cl = val.collectBtn.class; this.df.find(cl).html('-Searching-');
+    this.df.find(cl, cl + '1').removeClass('pcm_searchCollect pcm_searchDisable').addClass('pcm_searchOn');
   }
   /** Disable this search panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaSearchDisabled(val) {
-    let cl = val.collectBtn.class; this.df.find(cl).html("-Disabled-");
-    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_buttonOn pcm_searchCollect").addClass("pcm_searchDisable pcm_buttonOff");
+    let cl = val.collectBtn.class; this.df.find(cl).html('-Disabled-');
+    this.df.find(cl, cl + '1').removeClass('pcm_searchOn pcm_buttonOn pcm_searchCollect').addClass('pcm_searchDisable pcm_buttonOff');
   }
   /** Mark this search panda as collecting as a regular panda.
    * @param  {object} val - The object with the values for classes and text for this card. */
   pandaSearchCollectingNow(val) {
-    let cl = val.collectBtn.class; this.df.find(cl).html("-Collecting-");
-    this.df.find(cl, cl + '1').removeClass("pcm_searchOn pcm_searchDisable").addClass("pcm_searchCollect");
+    let cl = val.collectBtn.class; this.df.find(cl).html('-Collecting-');
+    this.df.find(cl, cl + '1').removeClass('pcm_searchOn pcm_searchDisable').addClass('pcm_searchCollect');
   }
   pandaDisabled(val) {
-    let cl = val.collectBtn.class; this.df.find(cl).html("-Disabled-");
+    let cl = val.collectBtn.class; this.df.find(cl).html('-Disabled-');
     this.df.find(cl, cl + '1').addClass('pcm_collectDisable');
   }
   pandaEnabled(val) {
-    let cl = val.collectBtn.class; this.df.find(cl).html("Collect");
-    this.df.find(cl, cl + '1').removeClass("pcm_collectDisable");
+    let cl = val.collectBtn.class; this.df.find(cl).html('Collect');
+    this.df.find(cl, cl + '1').removeClass('pcm_collectDisable');
   }
+  pandaMute(value) { if (value) this.df.addClass('pcm_mutedCard'); else this.df.removeClass('pcm_mutedCard'); }
   /** Adds a string to or changes the collect help tip.
    * @param  {object} val         - The object with the values for classes and text for this card.
    * @param  {string} [change=''] - The string to add to or change the collect help tip.

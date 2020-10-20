@@ -36,7 +36,10 @@ class SearchUI {
   /** Starts the searching prcoess. */
   startSearching() { if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm_top').css('background-color','#0b3e0b'); }}
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
-	nowLoggedOff() { if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); }); }
+	nowLoggedOff() {
+		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); });
+		if (!bgSearch.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+	}
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
 	importing() {
@@ -117,24 +120,32 @@ class SearchUI {
 		let controls = $('#pcm_uiSearchControls');
 		controls.append(`<span>Add: <button class='btn btn-primary btn-xxs' id='pcm_addTriggers'>Triggers</button> <button class='btn btn-primary btn-xxs' id='pcm_addCustomTriggers'>Custom</button></span> | `);
 		let options = $(`<span id='pcm_searchOptionsDropDown'></span>`).appendTo(controls);
-    this.addSubMenu(options, 'Options ', '', 
-      [{'type':'item', 'label':`Alarms`, 'menuFunc': (e) => {  }, class:'searchAlarms', 'tooltip':'Change alarms for search triggers'},
+    this.addSubMenu(options, 'Options ', '', [
+				{'type':'item', 'label':`General`, 'menuFunc': () => {
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions();
+					}, class:'searchGeneral', 'tooltip':'Change search general options'},
+				{'type':'item', 'label':`Alarms`, 'menuFunc': () => {
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAlarms();
+					}, class:'searchAlarms', 'tooltip':'Change alarms for search triggers'},
+				{'type':'item', 'label':`Advanced`, 'menuFunc': () => {
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced();
+					}, class:'searchAdvanced', 'tooltip':'Change search advanced options'},
 			]
 		);
 		controls.append(' | ');
 		let filters = $(`<span id='pcm_filterDropDown'></span>`).appendTo(controls);
-    this.addSubMenu(filters, 'Filters ', '', 
-      [{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
-       {'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': (e) => { this.filterMe(e, 'sEnabled'); }, class:'sub_showEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
-       {'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': (e) => { this.filterMe(e, 'sDisabled'); }, class:'sub_showDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
+    this.addSubMenu(filters, 'Filters ', '', [
+				{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': (e) => { this.filterMe(e, '', true); }, class:'sub_showAll', 'tooltip':'Add a new Panda or Search Job'},
+      	{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': (e) => { this.filterMe(e, 'sEnabled'); }, class:'sub_showEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
+      	{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': (e) => { this.filterMe(e, 'sDisabled'); }, class:'sub_showDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
 			]
 		);
 		let sorting = $(`<span id='pcm_sortingDropDown' class='pl-2'></span>`).appendTo(controls);
-    this.addSubMenu(sorting, 'Sorting ', '', 
-      [{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': (e) => { this.sortMe(e, 0); }, class:'sub_sortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
-       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': (e) => { this.sortMe(e, 1); }, class:'sub_sortAdded', 'tooltip':'Sort by trigger was added.'},
-       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found Hits`, 'menuFunc': (e) => { this.sortMe(e, 2); }, class:'sub_sortFound', 'tooltip':'Sort by Number of Found Hits.'},
-       {'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': (e) => { this.sortMe(e, 3); }, class:'sub_sortLast', 'tooltip':'Sort by Last Time Hits Found.'},
+    this.addSubMenu(sorting, 'Sorting ', '', [
+				{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': (e) => { this.sortMe(e, 0); }, class:'sub_sortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
+				{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': (e) => { this.sortMe(e, 1); }, class:'sub_sortAdded', 'tooltip':'Sort by trigger was added.'},
+				{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found Hits`, 'menuFunc': (e) => { this.sortMe(e, 2); }, class:'sub_sortFound', 'tooltip':'Sort by Number of Found Hits.'},
+				{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': (e) => { this.sortMe(e, 3); }, class:'sub_sortLast', 'tooltip':'Sort by Last Time Hits Found.'},
 			]
 		);
 		$(`#pcm_sortingDropDown .dropdown-item`).eq(this.sorting).addClass('selectedItem');
@@ -164,7 +175,6 @@ class SearchUI {
 			$(`<table class='table table-dark table-sm table-moreCondensed pcm_foundHitsTable table-bordered w-100'></table>`)
 				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:45px; max-width:45px;'>Pays</td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
 		}
-
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} [thetrigger=null] - The jquery element  @param  {bool} [toggle=true] - Toggled? */
@@ -223,7 +233,7 @@ class SearchUI {
 				theButton = null; theCard = null;
 			});
 		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
-		let text = $(`<div class='card-text' id='output_${unique}'></div>`).appendTo(body);
+		let text = $(`<div class='card-text' id='output_${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
 		let nameGroup = $(`<div class='pcm_triggerGroup row w-100 px-0 pcm_tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
 		nameGroup.append($(`<span class='pcm_triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm_triggerName_${unique}'>${name}</span>`).css('cursor', 'default'));
 		nameGroup.append($(`<span class='pcm_triggerStats col mr-auto px-0 text-truncate unSelectable small' id='pcm_triggerStats_${unique}'><button class='pcm_foundHitsButton btn btn-light btn-xxs'>Found Hits</button>: <span>${data.numHits} | Total: ${data.numFound}</span></span>`).hide());
@@ -279,7 +289,7 @@ class SearchUI {
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
 			let foundData = {'reqName':hitData.requester_name, 'title':markedTitle, 'price':`$${hitData.monetary_reward.amount_in_dollars.toFixed(2)}`};
 			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++;
-			displayObjectData([
+			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink', 'tooltip':`Turkerview Requester Link`},
 				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${foundData.reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
 				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title}`},

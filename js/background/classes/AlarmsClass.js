@@ -71,19 +71,20 @@ class AlarmsClass {
     }
     return err;
   }
+  setUpVoices() {
+    if (this.voices.length === 0) {
+      this.voices = this.synth.getVoices(); let i = 0, name = MyOptions.alarms.ttsName;
+      if (name !== '') { for (const voice of this.voices) { if (voice.name === name) this.voiceIndex = i; i++; }}
+    }
+  }
   /** Loads up the alarms from the database or saves default values if no alarms are in the database.
    * Saves any errors from trying to add to database and then sends a reject.
    * @async                       - To wait for the alarm data to be loaded from database.
    * @param  {function} afterFunc - Function to call after done to send success error. */
   async prepare(afterFunc) {
     let success = [], err = null;
-    this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null;
-    this.synth.addEventListener('voiceschanged', () => {
-      if (this.voices.length == 0) {
-        this.voices = this.synth.getVoices(); let i = 0, name = MyOptions.alarms.ttsName;
-        if (name !== '') { for (const voice of this.voices) { if (voice.name === name) this.voiceIndex = i; i++; }}
-      }
-    });
+    this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null; this.setUpVoices();
+    this.synth.addEventListener('voiceschanged', () => this.setUpVoices());
     MYDB.getFromDB('panda', 'alarms').then( async (result) => {
       let valuesLen = result.length, defaultLen = Object.values(this.dataDefault).length, fromDB = false;
       let alarmData = (valuesLen === defaultLen) ? result : Object.assign(Object.values(this.dataDefault), result);
@@ -173,6 +174,8 @@ class AlarmsClass {
   doQueueAlarm(minutes) { minutes++; this.playSound('queueAlert',_, `A hit in your queue has less than ${minutes} minute${(minutes > 1) ? 's' : ''} left before it expires.`); }
   /** This plays the captcha alert alarm. */
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
+  /** This plays the logged out alarm. */
+  doLoggedOutAlarm() { this.playSound('loggedOut'); }
   /** This plays the queue full alarm. */
   doFullAlarm() { this.playSound('queueFull'); }
 	/** Method to decide which alarm to play according to the hit minutes and price.

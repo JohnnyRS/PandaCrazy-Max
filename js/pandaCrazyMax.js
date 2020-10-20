@@ -1,6 +1,6 @@
 let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, pandaUI = null; history = null, myAudio = null;
-let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
+let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, GvFocus = false;
 let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
 if (gManifestData.version !== localVersion) gNewVersion = true;
@@ -17,6 +17,7 @@ async function getBgPage() {
   chrome.runtime.getBackgroundPage( (backgroundPage) => { bgPage = backgroundPage; prepare(); });
 }
 async function prepare() {
+  $(window).on( 'focus blur', () => GvFocus = document.hasFocus() );
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
     globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
@@ -68,12 +69,6 @@ window.addEventListener('beforeunload', async (e) => {
   globalOpt = null; notify = null; alarms = null; menus = null; modal = null; groupings = null; errorObject = null; bgPanda = null;
   bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false;
 });
-/** Detects when user opens another tab in same window with PCmax or minimizes. Not sure if this is needed with extension. */
-window.addEventListener('visibilitychange', (evt) => {
-  if (globalOpt && notify && 'hidden' in document && document.hidden) {
-    if (globalOpt.isNotifications() && globalOpt.isUnfocusWarning()) notify.showNotFocussed();
-  }
-}, false);
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', (e) => {
   if ((e.keyCode ? e.keyCode : e.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }

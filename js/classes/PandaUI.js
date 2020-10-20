@@ -108,10 +108,11 @@ class PandaUI {
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgPanda.unPauseTimer(); } );
-		if (globalOpt.isNotifications() && !bgPanda.isLoggedOff()) notify.showLoggedOff();
+		if (!bgPanda.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes the logged off modal if it's opened. */
-  nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
+	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
+	pandaMute(myId, value) { this.cards.pandaMute(myId, value); }
 	searchUIConnect(status=true) { if (this.modalJob) this.modalJob.searchUIConnect(status); }
   /** Gets the status from the timer and shows the status on the page.
    * @param  {bool} running - Running Status @param  {bool} paused - Paused Timer */
@@ -191,14 +192,14 @@ class PandaUI {
 			await bgPanda.removePanda(myId, deleteDB, whyStop);
 			delete this.pandaStats[myId];
 			if (data.search) this.pandaGStats.subSearch(); else this.pandaGStats.subPanda();
-			if (afterFunc!==null) afterFunc();
+			if (afterFunc!==null) afterFunc('YES');
 		}, animate);
 	}
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
 	async removeJobs(jobsArr, afterFunc=null, whyStop=null, afterClose=null) {
-		let bodyText = "";
+		let bodyText = '';
 		jobsArr.forEach( (thisId) => { bodyText += '( ' + $(`#pcm_hitReqName_${thisId}`).html()+' '+[$(`#pcm_hitPrice_${thisId}`).html()]+' )<BR>'; });
 		if (!modal) modal = new ModalClass();
 		modal.showDeleteModal(bodyText, () => {
@@ -215,10 +216,11 @@ class PandaUI {
 	/** Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
 	 * @param  {number} myId - Unique ID @param  {object} targetBtn - Ham button @param  {bool} [autoGoHam=false] - Auto Go Ham? */
-	hamButtonClicked(myId, targetBtn, autoGoHam=false) {
+	hamButtonClicked(myId, targetBtn, autoGoHam=false, manual=false) {
 		let options = bgPanda.options(myId);
 		if (!this.pandaStats[myId].collecting) { this.startCollecting(myId, !autoGoHam); }
-		else if (targetBtn.hasClass("pcm_buttonOff") && targetBtn.hasClass("pcm_delayedHam")) bgPanda.timerGoHam(options.queueUnique);
+		else if (targetBtn.hasClass('pcm_buttonOff') && targetBtn.hasClass('pcm_delayedHam') && !manual) bgPanda.timerGoHam(options.queueUnique);
+		else if (targetBtn.hasClass('pcm_buttonOff') && manual)  bgPanda.timerGoHam(options.queueUnique);
 		else bgPanda.timerHamOff();
 	}
 	/** Show that this panda search job is collecting in panda mode.
@@ -318,10 +320,12 @@ class PandaUI {
 	async addPandaDB(r, loaded=true) { 
 		let update = gNewVersion, tabUniques = this.tabs.getUniques();
 		if (typeof r.dateAdded === 'string') { r.dateAdded = new Date(r.dateAdded).getTime(); update = true; }
+		if (!r.hasOwnProperty('mute')) { r.mute = false; update = true; }
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
 		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : r.hamDuration;
 		let dO = dataObject(r.groupId, r.description, r.title, r.reqId, r.reqName, r.price, r.hitsAvailable, r.assignedTime, r.expires, r.friendlyTitle, r.friendlyReqName);
-		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone, r.disabled);
+		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit,
+			r.day, r.weight, r.dailyDone, r.disabled, r.mute);
 		let dbInfo = {...dO, ...oO, 'dateAdded':r.dateAdded, 'totalSeconds':r.totalSeconds, 'totalAccepted':r.totalAccepted};
 		if (r.hasOwnProperty("id")) dbInfo.id = r.id;
 		await bgPanda.addPanda(dbInfo, false, {},_,_, update, loaded, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
@@ -386,13 +390,13 @@ class PandaUI {
 		let auth_token = $(html).find(`input[name="authenticity_token"]:first`), formUrl = auth_token.closest('form').attr('action');
 		let formInfo = formUrl.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/);
     bgPanda.authenticityToken = auth_token.val();
-		let hitDetails = JSON.parse(rawProps).modalOptions;
-		hitDetails.task_id = formInfo[2]; hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data);
-		bgPanda.queueAddAccepted(pandaInfo, hitDetails);
+		let hitDetails = JSON.parse(rawProps).modalOptions; hitDetails.task_id = formInfo[2];
+		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data); bgPanda.queueAddAccepted(pandaInfo, hitDetails);
 		this.logTabs.addIntoQueue(pandaInfo, hitDetails, pandaInfo.data, url.replace("https://worker.mturk.com",''));
-		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data); bgPanda.checkIfLimited(myId, true, pandaInfo.data);
+		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data);
 		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
-		alarms.doAlarms(pandaInfo.data);
+		if (!pandaInfo.data.mute) alarms.doAlarms(pandaInfo.data);
+		bgPanda.checkIfLimited(myId, true, pandaInfo.data);
 		targetDiv = rawProps = auth_token = formUrl = formInfo = hitDetails = null;
 	}
 	/** Does any resetting of any values needed when the new day happens.

@@ -330,21 +330,28 @@ class EximClass {
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
   theOptions(rData) {
     if (Array.isArray(rData)) {
-      for (const option of rData) { this.importOptions[option.category] = Object.assign({}, globalOpt[`${option.category}Default`], option); }
+      for (const cat of ['general', 'timers', 'alarms', 'helpers', 'search']) {
+        let count = arrayCount(rData, (item) => {
+          if (item.category === cat) { this.importOptions[cat] = Object.assign({}, globalOpt[cat + 'Default'], item); return true; } else return false;
+        }, true);
+        if (count === 0) { this.importOptions[cat] = Object.assign({}, globalOpt[cat + 'Default']); }
+      }
     } else {
-      let tempOptions = {'generalDefault':{}, 'timersDefault':{}, 'alarmsDefault':{}, 'helpersDefault':{}};
+      let tempOptions = {'generalDefault':{}, 'timersDefault':{}, 'alarmsDefault':{}, 'helpersDefault':{}, 'searchDefault':{}};
       for (const key of Object.keys(rData)) {
         let keyName = (this.options.hasOwnProperty(key)) ? this.options[key] : key, optionName = null;
         if (globalOpt['generalDefault'].hasOwnProperty(keyName)) optionName = 'generalDefault';
         if (globalOpt['timersDefault'].hasOwnProperty(keyName)) optionName = 'timersDefault';
         if (globalOpt['alarmsDefault'].hasOwnProperty(keyName)) optionName = 'alarmsDefault';
         if (globalOpt['helpersDefault'].hasOwnProperty(keyName)) optionName = 'helpersDefault';
+        if (globalOpt['searchDefault'].hasOwnProperty(keyName)) optionName = 'searchDefault';
         if (optionName) tempOptions[optionName][keyName] = rData[key];
       }
       this.importOptions.general = Object.assign({}, globalOpt['generalDefault'], tempOptions['generalDefault']);
       this.importOptions.timers = Object.assign({}, globalOpt['timersDefault'], tempOptions['timersDefault']);
       this.importOptions.alarms = Object.assign({}, globalOpt['alarmsDefault'], tempOptions['alarmsDefault']);
       this.importOptions.helpers = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
+      this.importOptions.search = Object.assign({}, globalOpt['searchDefault'], tempOptions['searchDefault']);
     }
     let hamDelayTimer = this.importOptions.timers.hamDelayTimer;
     if (hamDelayTimer < globalOpt.timerDur.min || hamDelayTimer > globalOpt.timerDur.max) this.importOptions.timers.hamDelayTimer = globalOpt.timersDefault.hamDelayTimer;
@@ -370,23 +377,6 @@ class EximClass {
           if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
         } else if (rData[key].obj.substr(0,4) === 'data') this.importAlarmsData[key].obj = rData[key].obj;
         else this.importAlarmsData[key].obj = null;
-      }
-    } else {
-      let defaultAlarms = alarms.theDefaultAlarms();
-      for (const key of Object.keys(defaultAlarms)) {
-        let importKey = (rData[key]) ? key : (this.soundConvert[key]) ? this.soundConvert[key] : null;
-        let sound = (importKey) ? rData[importKey] : {};
-        this.importAlarmsData[key] = Object.assign({}, defaultAlarms[key], sound);
-        if (sound) {
-          this.importAlarmsData[key].pay = sound.payRate; delete this.importAlarmsData[key].payRate;
-          this.importAlarmsData[key].lessThan = sound.lessMinutes; delete this.importAlarmsData[key].lessMinutes;
-          if (sound.base64) this.importAlarmsData[key].obj = "data:audio/wav;base64," + JSON.parse(sound.base64);
-          else { 
-            let audio = alarms.theAlarms(key).audio;
-            if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
-          }
-        }
-        delete this.importAlarmsData[key].base64;
       }
     }
   }

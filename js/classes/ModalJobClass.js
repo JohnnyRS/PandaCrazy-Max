@@ -35,7 +35,7 @@ class ModalJobClass {
       {'label':'Price', 'type':'text', 'key':'price', 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
       {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this hit will no longer be on mturk. May not be changed by user.'},
-      {'label':'Date Added', 'type':'text', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this hit was added to PandaCrazy Max. May not be changed by user.'},
+      {'label':'Date Added', 'type':'string', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this hit was added to PandaCrazy Max. May not be changed by user.'},
       {'label':'Total Seconds Collecting', 'type':'text', 'key':'totalSeconds', 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect hits since it was added. May not be changed by user.'},
       {'label':'Total Accepted Hits', 'type':'text', 'key':'totalAccepted', 'disable':true, 'tooltip':'The total amount of hits collected by this job since it was added. May not be changed by user.'}
     ], theTable, changes, true);
@@ -106,6 +106,7 @@ class ModalJobClass {
     const idName = modal.prepareModal(hitInfo.data, "800px", "modal-header-info modal-lg", "Details for a hit", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
       if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
+      changes.mute = hitInfo.data.mute; // Makes sure mute button changes will be saved.
       changes.disabled = (changes.disabled) ? changes.disabled : false;
       hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
       await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
@@ -131,10 +132,12 @@ class ModalJobClass {
         else this.pandaOptions(df, modal.tempObject[idName]);
         this.pandaDetails(df2, modal.tempObject[idName], ridDisabled);
         optionsContents.append(df); detailsContents.append(df2);
+        let muteText = (hitInfo.data.mute) ? 'Unmute Job Alarms' : 'Mute Job Alarms';
+        $(`<div class='mt-1 text-center w-100'></div>`).append(`<button class='btn btn-info btn-xs pcm_muteJob'>${muteText}</button> <button class='btn btn-info btn-xs pcm_deleteJob'>Delete Job</button>`).appendTo(detailsDiv);
         if (!hitInfo.search) {
           let radioGroup = $(`<span class='uiGroup'></span>`);
           radioButtons(radioGroup, 'toUI', '0', 'Panda UI', true, 'toPandaUI'); radioButtons(radioGroup, 'toUI', '1', 'Search UI', false, 'toSearchUI');
-          $(`<div class='my-2 text-center w-100'></div>`).append(`<button class='btn btn-info btn-xs pcm_createGidJob'>Create Gid Search Job</button> <button class='btn btn-info btn-xs pcm_createRidJob'>Create Rid Search Job</button> - To: `).append(radioGroup).appendTo(detailsDiv);
+          $(`<div class='mb-2 text-center w-100'></div>`).append(`<button class='btn btn-info btn-xs pcm_createGidJob'>Create Gid Search Job</button> <button class='btn btn-info btn-xs pcm_createRidJob'>Create Rid Search Job</button> - To: `).append(radioGroup).appendTo(detailsDiv);
           this.recheckButtons(modalBody, hitInfo.data);
           modalBody.find(`.pcm_createGidJob`).click( async () => { this.createSearch(modalBody, myId, 'gid', hitInfo.data); });
           modalBody.find(`.pcm_createRidJob`).click( async () => { this.createSearch(modalBody, myId, 'rid', hitInfo.data); });
@@ -146,6 +149,11 @@ class ModalJobClass {
           this.recheckSMoveButtons(modalBody);
           modalBody.find(`.pcm_toSearchUI`).click( async () => { this.moveToSearch(hitInfo.dbId, myId); });
         }
+        modalBody.find(`.pcm_muteJob`).click( async () => {
+          hitInfo.data.mute = !hitInfo.data.mute; muteText = (hitInfo.data.mute) ? 'Unmute Job Alarms' : 'Mute Job Alarms';
+          $(`button.pcm_muteJob`).text(muteText); await bgPanda.updateDbData(myId, hitInfo.data); pandaUI.pandaMute(myId, hitInfo.data.mute);
+        });
+        modalBody.find(`.pcm_deleteJob`).click( async () => { pandaUI.removeJobs([myId], (response) => { if (response === 'YES') { modal.closeModal(); } }, 'manual', () => {}); });
       }
     }, () => { if (afterClose) afterClose(); else modal = null; this.modalSearch = null; });
   }

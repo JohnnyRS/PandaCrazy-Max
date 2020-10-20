@@ -58,7 +58,7 @@ class ModalSearchClass {
     }
     /** Verifies that the groupID inputted is correct. */
     async function checkTrigger(doCustom) {
-      const groupVal = $('#pcm_formAddGroupID').val(), trigName = $('#pcm_formTriggerName').val(), minPay = parseFloat($('#pcm_formMinPay').val());
+      let groupVal = $('#pcm_formAddGroupID').val(), trigName = $('#pcm_formTriggerName').val(), minPay = parseFloat($('#pcm_formMinPay').val());
       if (doCustom && groupVal.length <= 3) wrongInput('All custom Triggers MUST have a term to search for with more than 3 characters!', $(`label[for='pcm_formAddGroupID']`));
       else if (doCustom && trigName.length <= 3) wrongInput('You must fill in the Unique Trigger Name!', $(`label[for='pcm_formTriggerName']`));
       else if (doCustom && (isNaN(minPay) || minPay === 0)) wrongInput('All custom Triggers need to have a minimum pay rate!', $(`label[for='pcm_formMinPay']`));
@@ -212,5 +212,42 @@ class ModalSearchClass {
       }
       $(`#${idName} .${modal.classModalBody}`).append(df);
     });
+  }
+  showSearchAlarms() { let modalAlarms = new ModalAlarmClass(); modalAlarms.showAlarmsModal( () => modalAlarms = null, true ); }
+  showSearchOptions() {
+    if (!modal) modal = new ModalClass();
+    let theData = {'toSearchUI':globalOpt.theToSearchUI(), 'searchTimer':globalOpt.theSearchTimer(), 'options':globalOpt.doSearch()}
+    const idName = modal.prepareModal(theData, '860px', 'modal-header-info modal-lg', 'Edit Search General Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', (changes) => { console.log(changes);
+      globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false);
+      globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer);
+      modal.closeModal();
+    }, 'invisible', 'No', null, 'invisible', 'Cancel');
+    let df = document.createDocumentFragment();
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    displayObjectData( [
+      {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+      {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ok.`},
+      {'label':'Default trigger duration in seconds:', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDuration', 'tooltip':`The default duration for new triggers to use on panda jobs.`},
+      {'label':'Page size for mturk search page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of hits used on mturk first search page. The higher the number can slow searching but also can give a better chance of finding hits you want.`},
+    ], df, modal.tempObject[idName], true);
+    modal.showModal(() => {}, async () => {
+      $(`#${idName} .${modal.classModalBody}`).append(df);
+    }, () => { modal = null; });
+  }
+  showSearchAdvanced() {
+    if (!modal) modal = new ModalClass();
+    const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', 'Edit Search Advanced Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', () => {
+      globalOpt.doSearch(changes); modal.closeModal();
+    }, 'invisible', 'No', null, 'invisible', 'Cancel');
+    let df = document.createDocumentFragment();
+    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    displayObjectData( [
+      {'label':'Number of trigger data to keep in memory:', 'type':'number', 'key':'queueSize', 'tooltip':`To save memory the script will only keep this number of most active trigger data in memory and the rest in the database. Loading from database can be slower.`},
+      {'label':'Trigger hits history days expiriration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`Hits found by trigger is saved in the database and this number represents the days to keep those hits saved.`},
+      {'label':'CUSTOM hits history days expiration:', 'type':'number', 'key':'customHistDays', 'tooltip':`Custom triggered hits can find a large amount of hits so this number represents how many days to save these found hits. Should be lower than regular triggers.`},
+    ], df, modal.tempObject[idName], true);
+    modal.showModal(() => {}, async () => {
+      $(`#${idName} .${modal.classModalBody}`).append(df);
+    }, () => { modal = null; });
   }
 }

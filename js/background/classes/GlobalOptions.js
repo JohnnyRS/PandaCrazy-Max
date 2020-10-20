@@ -65,13 +65,23 @@ class PandaGOptions {
       'mturkPageButtons':true,
       'queueCommands':true
     }
+    this.search = {}
+    this.searchDefault = {
+      'category':'search',
+      'pageSize':45,
+      'queueSize':30,
+      'defaultDuration':12000,
+      'customHistDays':10,
+      'triggerHistDays':45,
+    }
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
   }
-  doChanges(optionName, changes) { this[optionName] = changes; }
-  doTimers(changes=null) { if (changes) this.doChanges('timers', changes); else return this.timers; }
-  doGeneral(changes=null) { if (changes) this.doChanges('general', changes); else return this.general; }
+  doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(false); }
+  doTimers(changes=null, update=true) { if (changes) this.doChanges('timers', changes, update); else return this.timers; }
+  doGeneral(changes=null, update=true) { if (changes) this.doChanges('general', changes, update); else return this.general; }
+  doSearch(changes=null, update=true) { if (changes) this.doChanges('search', changes, update); else return this.search; }
   getTimerRange() { return this.timerRange; }
   getTimerSearch() { return this.timerSearch; }
   getTimerQueue() { return this.timerQueue; }
@@ -84,13 +94,9 @@ class PandaGOptions {
     this.captchaCounter = 0; this.lastQueueAlert = -1; this.timerUsed = 'mainTimer';
     await MYDB.getFromDB('panda', 'options').then( async result => {
       if (result.length) { // Options were already saved in database so load and use them.
-        for (var i=0, keys=Object.keys(result); i < keys.length; i++) {
-          if (['general','timers','alarms','helpers'].includes(result[i].category)) {
-            this[result[i].category] = Object.assign({}, this[result[i].category + 'Default'], result[i]);
-          }
-        }
-        if (Object.keys(this.helpers).length === 0) { await MYDB.addToDB('panda', 'options', this.helpersDefault)
-          .then( () => { this.helpers = Object.assign({}, this.helpersDefault); })
+        for (const cat of ['general', 'timers', 'alarms', 'helpers', 'search']) {
+          let count = arrayCount(result, (item) => { if (item.category === cat) { this[cat] = Object.assign({}, this[cat + 'Default'], item); return true; } else return false; }, true);
+          if (count === 0) { await MYDB.addToDB('panda', 'options', this[cat + 'Default']).then( () => { this[cat] = Object.assign({}, this[cat + 'Default']); }); }
         }
         if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
         success[0] = "Loaded all global options from database";
@@ -99,29 +105,30 @@ class PandaGOptions {
         .then( async () => { await MYDB.addToDB('panda', 'options', this.timersDefault)
           .then( async () => { await MYDB.addToDB('panda', 'options', this.alarmsDefault)
             .then( async () => { await MYDB.addToDB('panda', 'options', this.helpersDefault)
-              .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
+              .then( async () => { await MYDB.addToDB('panda', 'options', this.searchDefault)
+                .then( () => success[0] = "Added default global options to database.", rejected => err = rejected );
+              }, rejected => { err = rejected; })
             }, rejected => { err = rejected; })
           }, rejected => { err = rejected; })
         }, rejected => err = rejected);
         this.general = Object.assign({}, this.generalDefault); this.timers = Object.assign({}, this.timersDefault);
         this.alarms = Object.assign({}, this.alarmsDefault); this.helpers = Object.assign({}, this.helpersDefault);
+        this.search = Object.assign({}, this.searchDefault);
       }
     }, rejected => err = rejected);
-    myPanda.timerChange(this.timers[this.timerUsed]); mySearch.timerChange(this.timers.searchTimer); myQueue.timerChange(this.timers.queueTimer);
     if (afterFunc) afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
   /** Removes data from memory so it's ready for closing or importing. */
-  removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; }
+  removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; this.search = {}; }
   /** Import the options from an exported file.
    * @param  {object} newData - Data with the imported objects. */
   importOptions(newData) {
-    newData.timers.timerUsed = this.timers.timerUsed; this.general = newData.general;
-    this.timers = newData.timers; this.alarms = newData.alarms;
+    newData.timers.timerUsed = this.timers.timerUsed; this.general = newData.general; this.timers = newData.timers; this.alarms = newData.alarms;
     this.update(true);
   }
   /** Returns an array of options for easy exporting.
    * @return {array} - The array of objects to be exported. */
-  exportOptions() { return [this.general, this.timers, this.alarms, this.helpers]; }
+  exportOptions() { return [this.general, this.timers, this.alarms, this.helpers, this.search]; }
   /** Updates the global options and resets anything that is needed for example tooltips.
    * @param  {bool} [tooltips=true] - Should tooltips be reset? */
   update(tooltips=true) {
@@ -133,10 +140,8 @@ class PandaGOptions {
       // }
     }
     if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
-    MYDB.addToDB('panda', 'options', this.general);
-    MYDB.addToDB('panda', 'options', this.timers);
-    MYDB.addToDB('panda', 'options', this.alarms);
-    MYDB.addToDB('panda', 'options', this.helpers);
+    MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
+    MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
   }
   /** Verifies all the timers changed with max and min ranges.
    * @param  {object} v - The changed timer object to verify. */
@@ -183,9 +188,6 @@ class PandaGOptions {
   /** Is the captcha alert enabled?
    * @return {bool} - True if captcha alert is enabled. */
   isCaptchaAlert() { return !this.general.disableCaptchaAlert; }
-  /** Should user be warned about unfocussed window?
-   * @return {bool} - True if warning about unfocussed window is enabled. */
-  isUnfocusWarning() { return this.general.unfocusWarning; }
   /** Change timer to using the main timer and return that value.
    * @return {number} - Returns the value for the main timer. */
   useTimer1() { this.timerUsed = 'mainTimer'; return this.timers.mainTimer; }
@@ -214,7 +216,9 @@ class PandaGOptions {
   /** Gets the panda card display format
    * @return {number} - Returns the number for the display format to show information. */
   getCardDisplay() { return this.general.cardDisplay; }
-  theToSearchUI(value=null) { if (value !== null) { this.general.toSearchUI = value; this.update(false); } return this.general.toSearchUI; }
+  theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update(false); } return this.general.toSearchUI; }
+  theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update(false); } return this.timers.searchTimer; }
+  getQueueTimer() { return this.timers.queueTimer; }
   /** Change the display number used to display information in the panda cards.
    * @param  {number} display - The number for the display format to use for information in the panda card. */
   setCardDisplay(display) { this.general.cardDisplay = display; }

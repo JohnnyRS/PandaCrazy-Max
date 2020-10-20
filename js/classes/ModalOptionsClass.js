@@ -8,8 +8,7 @@ class ModalOptionsClass {
   showGeneralOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doGeneral(), "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
-      globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
-      modal.closeModal(); globalOpt.update();
+      globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes)); modal.closeModal();
     });
     let df = document.createDocumentFragment();
     $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
@@ -35,13 +34,13 @@ class ModalOptionsClass {
     const idName = modal.prepareModal(globalOpt.doTimers(), "850px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
       let errorFound = globalOpt.timerConfirm(changes);
       if (!errorFound) {
-        globalOpt.doTimers(Object.assign(globalOpt.doTimers(), changes));
+        globalOpt.doTimers(changes);
         bgPanda.timerChange(globalOpt.getCurrentTimer()); pandaUI.pandaGStats.setPandaTimer(globalOpt.getCurrentTimer());
         bgPanda.hamTimerChange(changes.hamTimer); pandaUI.pandaGStats.setHamTimer(changes.hamTimer);
         bgSearch.timerChange(changes.searchTimer); pandaUI.pandaGStats.setSearchTimer(changes.searchTimer);
         bgQueue.timerChange(changes.queueTimer); pandaUI.pandaGStats.setQueueTimer(changes.queueTimer);
         menus.updateTimerMenu(changes.timerIncrease, changes.timerDecrease, changes.timerAddMore);
-        globalOpt.update(); modal.closeModal(); changes = {};
+        modal.closeModal(); changes = {};
       }
     });
     let df = document.createDocumentFragment(), timerRange = globalOpt.getTimerRange(), timerChange = globalOpt.getTimerChange();

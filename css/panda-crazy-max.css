@@ -36,6 +36,7 @@ html, body { height: 100%; }
 .pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm_buttonOff { background-color: #D3D3D3; color: #000000; }
 .pcm_buttonOff.pcm_delayedHam { background-color: #087d9b; color: #f3e3e3; }
+.pcm_buttonOff.pcm_noDelay { background-color: #D3D3D3 !important; color: #000000 !important; }
 .pcm_dropdownMenu { line-height:1.5; background-color: #cdd9f3; }
 .pcm_searching .pcm_searchCollect { background-color: #1ab71a; color: #FFFFFF; }
 .pcm_searching .pcm_searchOn { background-color: #1e581e; color: #a9fc79 !important; }
@@ -60,6 +61,7 @@ html, body { height: 100%; }
 #pcm_importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
 .pcm_pandaCard { margin: 2px 2px 0 0 !important; border: #023bd6 2px solid !important; max-width: 220px; min-width:220px; padding: 0 0; background-color: #48D1CC; }
 .pcm_pandaCard.pcm_searching { background-color: #04a3a3; }
+.pcm_pandaCard.pcm_mutedCard { border-style:dotted !important; }
 .pcm_pandaCard.pcm_oneLine { min-width:320px !important; max-width:320px !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_reqName1 { font-size:0.7em !important; font-weight:600 !important; }
 .pcm_pandaCard.pcm_oneLine .pcm_hitStats1 { font-size:0.7em !important; font-weight:600 !important; }
@@ -99,7 +101,7 @@ html, body { height: 100%; }
 .table-moreCondensed>thead>tr>td { font-size: 11px; padding:2px 1px 0 1px !important; }
 .table-xs { font-size: .575rem !important; line-height: .1 !important; }
 .text-xs { font-size: .575rem !important; color: #FFF5EE; }
-.text-pcmInfo { color: #edf5e6; padding-top:1px !important; padding-bottom:1px !important; font-size:11px; line-height:1.0; }
+.text-pcmInfo { color: #edf5e6; padding-top:4px !important; padding-bottom:1px !important; font-size:11px; line-height:1.5; }
 .pcm_triggeredHits .text-pcmInfo { padding-top:2px !important; }
 .pcm_searchModal .text-pcmInfo { font-size: 0.8em; }
 .btn-group-xs > .btn, .btn-xs { padding: .25rem .4rem; font-size: .875rem; line-height: .5; border-radius: .2rem; }

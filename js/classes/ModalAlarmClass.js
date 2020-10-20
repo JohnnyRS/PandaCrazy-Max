@@ -37,17 +37,20 @@ class ModalAlarmClass {
   }
   /** Shows the modal for the alrams so users can change alarm options.
    * @param  {function} [afterClose=null] - Function to call after modal is closed. */
-  async showAlarmsModal(afterClose=null) {
+  async showAlarmsModal(afterClose=null, onlySearch=false) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(this.alarms, "900px", "modal-header-info modal-lg", "Alarm Options", "", "text-right bg-dark text-light", "modal-footer-info");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     const divContainer = $(`<div class='text-left pcm_alarms'></div>`);
     let df = document.createDocumentFragment();
     $(`<div class='pcm_alarmEdit text-center my-2'>You can mute and change an individual alarm sound here. Click the change button and pick your own sound from your computer. It must be less than 6MB and less than 30 seconds. You can also load in the default alarm sounds if you need to. The TTS button will have the script use a text to speech process instead of the alarm sound.</div>`).appendTo(df);
-    this.addDivAlarms('less2').appendTo(df); this.addDivAlarms('less2Short').appendTo(df); this.addDivAlarms('less5').appendTo(df);
-    this.addDivAlarms('less5Short').appendTo(df); this.addDivAlarms('less15').appendTo(df); this.addDivAlarms('less15Short').appendTo(df);
-    this.addDivAlarms('more15').appendTo(df); this.addDivAlarms('queueFull').appendTo(df); this.addDivAlarms('queueAlert').appendTo(df);
-    this.addDivAlarms('loggedOut').appendTo(df); this.addDivAlarms('captchaAlarm').appendTo(df);
+    if (onlySearch) { this.addDivAlarms('triggeredAlarm').appendTo(df); }
+    else {
+      this.addDivAlarms('less2').appendTo(df); this.addDivAlarms('less2Short').appendTo(df); this.addDivAlarms('less5').appendTo(df);
+      this.addDivAlarms('less5Short').appendTo(df); this.addDivAlarms('less15').appendTo(df); this.addDivAlarms('less15Short').appendTo(df);
+      this.addDivAlarms('more15').appendTo(df); this.addDivAlarms('queueFull').appendTo(df); this.addDivAlarms('queueAlert').appendTo(df);
+      this.addDivAlarms('loggedOut').appendTo(df); this.addDivAlarms('captchaAlarm').appendTo(df);
+    }
     modal.showModal(_, () => {
       $(`<div class='mt-3 ml-5'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect'></select>`).append(alarms.voicesOption())).appendTo(df);
       divContainer.append(df).appendTo(modalBody);

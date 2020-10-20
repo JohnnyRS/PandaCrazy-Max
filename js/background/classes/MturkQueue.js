@@ -38,7 +38,7 @@ class MturkQueue extends MturkClass {
     if (!queueTimer.running) {
       if (this.dLog(1)) console.info('%cStarting Queue Monitor.', CONSOLE_INFO);
       setTimeout( () => {
-        this.queueUnique = queueTimer.addToQueue(-1, (unique) => { this.goFetch(this.queueUrl, unique); }, () => { this.stopQueueMonitor(); });
+        if (queueTimer) this.queueUnique = queueTimer.addToQueue(-1, (unique) => { this.goFetch(this.queueUrl, unique); }, () => { this.stopQueueMonitor(); });
       }, 2000); // Delay queue monitor for 2 seconds for all data to be loaded.
     }
   }

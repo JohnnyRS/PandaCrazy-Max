@@ -330,7 +330,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} [loaded=false] - Loaded  @param  {number} [sDur=0] - Duration    @param  {number} [sGD=0] 		 - Goham duration */
 	async addPanda(dbData, autoAdded, passInfo, rules={}, history={}, update=false, loaded=false, sDur=0, sGD=0) {
 		const myId = this.uniqueIndex++; // get the next unique ID for this new panda
-		if (update) await this.updateDbData(null, dbData); // Updates panda if it was added by default.
+		if (update) this.updateDbData(null, dbData); // Updates panda if it was added by default.
 		this.sortUniqueIds(myId, dbData.groupId, dbData.reqId, dbData.search);
 		if (!dbData.hasOwnProperty("id")) await this.addToDB(dbData); // Add to database if it has no database key.
 		this.dbIds[dbData.id] = myId;

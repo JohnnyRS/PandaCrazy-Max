@@ -81,8 +81,9 @@ async function prepareToOpen(panda=null, search=null, version=null) {
         myPanda = new MturkPanda(995, 950);
         await MYDB.openPCM().then( async () => {
           await MYDB.openStats(true).then( async () => {
-            mySearch = new MturkHitSearch(950);
             await MyOptions.prepare();
+            mySearch = new MturkHitSearch(950);
+            myPanda.timerChange(MyOptions.getCurrentTimer()); mySearch.timerChange(MyOptions.theSearchTimer()); myQueue.timerChange(MyOptions.getQueueTimer());
             MyAlarms.prepare();
           }, rejected => { dbError = rejected; });
         }, rejected => { dbError = rejected; });
