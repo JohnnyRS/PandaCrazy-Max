@@ -217,6 +217,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
     if (element.label !== '') { padding = ' pl-4'; }
+    if (element.minMax) { element.min = element.minMax.min; element.max = element.minMax.max; }
     if (table & !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
     const pre = (element.pre) ? element.pre : '';
     const addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
@@ -224,7 +225,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     const tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
     const tdStyle = ` style='padding-right:1px !important; ${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
-    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}'` : ``;
+    const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
+    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm_tooltipData`: '';
     if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm_eleLabel${toolTipClass}' id='pcm_tdLabel_${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
     else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));

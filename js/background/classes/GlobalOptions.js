@@ -40,7 +40,7 @@ class PandaGOptions {
       'searchDuration':12000
     };
     this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
-    this.timerDur = {min:1000, max:30000}     // The limits for the ham duration in milliseconds.
+    this.timerHamDur = {min:1000, max:30000}  // The limits for the ham duration in milliseconds.
     this.timerQueue = {min:1000, max:60000};  // The limits for the timer queue in milliseconds when editing.
     this.timerSearch = {min:800, max:30000};  // The limits for the timer queue in milliseconds when editing.
     this.timerChange = {min:5, max:2000};     // The limits for the timer change buttons in milliseconds when editing.
@@ -70,7 +70,12 @@ class PandaGOptions {
       'category':'search',
       'pageSize':45,
       'queueSize':30,
-      'defaultDuration':12000,
+      'defaultDur':18000,
+      'defaultFetches':0,
+      'defaultHamDur':6000,
+      'defaultCustDur':0,
+      'defaultCustFetches':120,
+      'defaultCustHamDur':10000,
       'customHistDays':10,
       'triggerHistDays':45,
     }
@@ -83,6 +88,7 @@ class PandaGOptions {
   doGeneral(changes=null, update=true) { if (changes) this.doChanges('general', changes, update); else return this.general; }
   doSearch(changes=null, update=true) { if (changes) this.doChanges('search', changes, update); else return this.search; }
   getTimerRange() { return this.timerRange; }
+  getTimerHamRange() { return this.timerHamDur; }
   getTimerSearch() { return this.timerSearch; }
   getTimerQueue() { return this.timerQueue; }
   getTimerChange() { return this.timerChange; }

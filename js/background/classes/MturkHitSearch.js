@@ -192,6 +192,7 @@ class MturkHitSearch extends MturkClass {
 	nowLoggedOff() { searchTimer.paused = true; this.loggedOff = true; if (extSearchUI) extSearchUI.nowLoggedOff(); }
 	/** We are logged on so unpause timer and tell the search UI that it's logged back in. */
 	nowLoggedOn() { this.unPauseTimer(); this.loggedOff = false; if (extSearchUI) extSearchUI.nowLoggedOn(); }
+	isLoggedOff() { return this.loggedOff; }
 	importing() { if (extSearchUI) { extSearchUI.importing(); } }
 	importingDone() { if (extSearchUI) extSearchUI.importingDone(); }
 	/** This method will start the searching of the mturk queue.
@@ -311,11 +312,11 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} item - Hit item @param  {object} info - Trigger info @param  {object} options - Trigger options @param  {object} type - Trigger type */
 	async sendToPanda(item, dbId, type='', useOnce=null, useDur=null, useFetches=null) {
 		let info = this.triggers[dbId], options = await this.theData(dbId, 'options');
-		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.duration) ? options.duration : MyOptions.doSearch().defaultDuration;
-		if (tempDur < 1000 || tempDur > 120000) { tempDur = options.duration = MyOptions.doSearch().defaultDuration; this.updateToDB('options', options, false); }
+		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.duration >= 0) ? options.duration : MyOptions.doSearch().defaultDur;
+		if (tempDur < 0 || tempDur > 3600000) { tempDur = options.duration = MyOptions.doSearch().defaultDur; this.updateToDB('options', options, false); }
 		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, useFetch = (useFetches !== null) ? useFetches : options.limitFetches;
 		let dO = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count);
-		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, useFetch, _, options.autoGoHam, options.goHamDuration);
+		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, useFetch,_, options.autoGoHam, options.goHamDuration);
 		if (extPandaUI) extPandaUI.addFromSearch(dO, oO, true, true, true, goDur, (options.autoGoHam) ? options.tempGoHam: 0, type, pandaId, info.setName);
 	}
 	/** Check all live triggers for this item.

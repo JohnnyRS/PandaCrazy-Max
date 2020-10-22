@@ -353,8 +353,8 @@ class EximClass {
       this.importOptions.helpers = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
       this.importOptions.search = Object.assign({}, globalOpt['searchDefault'], tempOptions['searchDefault']);
     }
-    let hamDelayTimer = this.importOptions.timers.hamDelayTimer;
-    if (hamDelayTimer < globalOpt.timerDur.min || hamDelayTimer > globalOpt.timerDur.max) this.importOptions.timers.hamDelayTimer = globalOpt.timersDefault.hamDelayTimer;
+    let hamDelayTimer = this.importOptions.timers.hamDelayTimer, hamRange = globalOpt.getTimerHamRange();
+    if (hamDelayTimer < hamRange.min || hamDelayTimer > hamRange.max) this.importOptions.timers.hamDelayTimer = globalOpt.timersDefault.hamDelayTimer;
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
@@ -370,8 +370,9 @@ class EximClass {
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
   theSoundOptions(rData) {
     if (rData.captchaAlarm) {
+      let defaultAlarms = alarms.theDefaultAlarms();
       for (const key of Object.keys(rData)) {
-        this.importAlarmsData[key] = rData[key];
+        this.importAlarmsData[key] = Object.assign(defaultAlarms[key], rData[key]);
         if (!rData[key].obj) {
           let audio = alarms.theAlarms(key).audio;
           if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;

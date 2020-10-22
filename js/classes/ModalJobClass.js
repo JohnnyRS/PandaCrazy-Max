@@ -3,7 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
 	constructor() {
-    this.pandaDur = {min:0, max:60} // Limits for the panda duration in minutes.
+    this.pandaDur = {min:0, max:120} // Limits for the panda duration in minutes.
     this.modalSearch = null;
   }
   pandaOptions(appendHere, changes) {
@@ -14,10 +14,10 @@ class ModalJobClass {
       {'label':'Limit # of total Hits in queue:', 'type':'range', 'key':'limitTotalQueue', 'min':0, 'max':24, 'ifNot':'search', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key':'once', 'ifNot':'search', 'tooltip':'Should only one hit be accepted and then stop collecting? Great for surveys.'},
       {'label':'Daily Accepted Hit Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'ifNot':'search', 'tooltip':'How many hits a day should be accepted for this job?'},
-      {'label':'Stop Collecting After (minutes):', 'type':'number', 'key':'duration', 'minutes':true, 'min':0, 'max':120, 'default':0, 'ifNot':'search', 'tooltip':'The number of minutes for this job to collect before stopping. Resets time if a hit gets collected.'},
+      {'label':'Stop Collecting After (minutes):', 'type':'number', 'key':'duration', 'minutes':true, 'default':0, 'ifNot':'search', 'tooltip':'The number of minutes for this job to collect before stopping. Resets time if a hit gets collected.', 'minMax':this.pandaDur},
       {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key':'limitFetches', 'default':0, 'ifNot':'search', 'tooltip':'Number of tries to catch a hit to do before stopping.'},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'ifNot':'search', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Force Delayed Ham Duration (seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'min':0, 'max':120, 'default':0, 'ifNot':'search', 'tooltip':'The duration in seconds to use to go in ham mode after collecting a hit and then go back to normal collecting mode.'},
+      {'label':'Force Delayed Ham Duration (seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':0, 'ifNot':'search', 'tooltip':'The duration in seconds to use to go in ham mode after collecting a hit and then go back to normal collecting mode.', 'minMax':this.pandaDur},
       {'label':'Friendly Requester Name:', 'type':'text', 'key':'friendlyReqName', 'tooltip':'A user created requester name to make the name shorter or easier to remember.'},
       {'label':'Friendly Hit Title:', 'type':'text', 'key':'friendlyTitle', 'tooltip':'A user created hit title to make the title shorter or easier to remember what it is.'},
     ], theTable, changes, true);
@@ -32,7 +32,7 @@ class ModalJobClass {
       {'label':'Group ID', 'type':'text', 'key':'groupId', 'disable':true, 'tooltip':'The group ID for this job. May have multiple group ID jobs if wanted. May not be changed by user.'},
       {'label':'Title', 'type':'text', 'key':'title', 'disable':true, 'tooltip':'The title for this job. May not be changed by user.'},
       {'label':'Description', 'type':'text', 'key':'description', 'disable':true, 'tooltip':'The description for this job. May not be changed by user.'},
-      {'label':'Price', 'type':'text', 'key':'price', 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
+      {'label':'Price', 'type':'text', 'key':'price', 'money':true, 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
       {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this hit will no longer be on mturk. May not be changed by user.'},
       {'label':'Date Added', 'type':'string', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this hit was added to PandaCrazy Max. May not be changed by user.'},

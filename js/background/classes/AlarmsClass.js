@@ -189,12 +189,12 @@ class AlarmsClass {
       speakThis = `Accepted hit from ${hitData.reqName}. Duration ${minutes} minutes. Paying ${dollarStr} ${centsStr}.`;
     }
     if (this.data.less2 && hitData.price < parseFloat(this.data.less2.pay)) {
-			if (minutes <= this.data.less2.lessThan) this.playSound("less2Short",_, speakThis); else this.playSound("less2",_, speakThis);
+			if (minutes <= this.data.less2.lessThan) this.playSound('less2Short',_, speakThis); else this.playSound('less2',_, speakThis);
 		} else if (this.data.less5 && hitData.price <= parseFloat(this.data.less5.pay)) {
-			if (minutes <= this.data.less5.lessThan) this.playSound("less5Short",_, speakThis); else this.playSound("less5",_, speakThis);
+			if (minutes <= this.data.less5.lessThan) this.playSound('less5Short',_, speakThis); else this.playSound('less5',_, speakThis);
 		} else if (this.data.less15 && hitData.price <= parseFloat(this.data.less15.pay)) {
-			if (minutes <= this.data.less15.lessThan) this.playSound("less15Short",_, speakThis); else this.playSound("less15",_, speakThis);
-		} else if (this.data.more15 && hitData.price < parseFloat(this.data.more15.pay)) { this.playSound("more15",_, speakThis); }
+			if (minutes <= this.data.less15.lessThan) this.playSound('less15Short',_, speakThis); else this.playSound('less15',_, speakThis);
+		} else if (this.data.more15 && hitData.price < parseFloat(this.data.more15.pay)) { this.playSound('more15',_, speakThis); }
   }
   /** Shows the alarms modal to change alarms and other options. */
   showAlarmsModal() {

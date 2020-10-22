@@ -3,14 +3,21 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalSearchClass {
 	constructor() {
-    this.pandaDur = {min:0, max:60} // Limits for the panda duration in minutes.
+    this.pandaDur = {'min':0, 'max':3600};
+    this.defaultPandaDur = {'min':5, 'max':3600};
+    this.hamDur = {'min':0, 'max':120};
+    this.fetchesDur = {'min':0, 'max':3600};
+    this.pageSize = {'min':20, 'max':100};
+    this.queueSize = {'min':20, 'max':200};
+    this.triggerHistDays = {'min':2, 'max':60};
+    this.customHistDays = {'min':2, 'max':30};
   }
   /** Shows a modal for adding panda or search jobs.
    * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
   showTriggerAddModal(afterClose=null, doCustom=false) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(null, '920px', 'modal-header-info modal-lg', 'Add new Search Trigger', '<h4>Enter New Search Trigger Information.</h4>', 'text-right bg-dark text-light pcm_searchModal', 'modal-footer-info', 'visible btn-sm', 'Add new Search Trigger', () => { checkTrigger(doCustom); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
-    let df = document.createDocumentFragment(), div = null, input1Text = '* Enter info for new Job: '
+    let df = document.createDocumentFragment(), div = null, input1Text = '* Enter info for new Job: ', searchOpt = globalOpt.doSearch();
     let example1Text = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', example2Text = 'example: Ibotta receipts';
     if (doCustom) {
       div = $(`<div><div class='pcm_inputError'></div><div style='color:aqua'>Enter a term or word to search for in titles and descriptions of a hit:</div></div>`).appendTo(df);
@@ -22,24 +29,24 @@ class ModalSearchClass {
     createCheckBox(df, 'Enabled: ', 'pcm_triggerEnabled', '', true);
     createCheckBox(df, 'Collect Only One Hit', 'pcm_onlyOnce', '');
     $(`<div class='pt-1 border-top border-info'></div>`).appendTo(df);
-    let data = {'reqName':'', 'hitTitle':'', 'price':0, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':(doCustom) ? 0 : 12, 'limitFetches':(doCustom) ? 1800 : 0, 'autoGoHam':true, 'hamDuration':(doCustom) ? 8000 : 4000, 'acceptLimit':0};
+    let data = {'reqName':'', 'hitTitle':'', 'price':0, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':(doCustom) ? searchOpt.defaultCustDur : searchOpt.defaultDur, 'limitFetches':(doCustom) ? searchOpt.defaultCustFetches : searchOpt.defaultFetches, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0};
     if (!doCustom) {
       let table1 = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered mb-0'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
       displayObjectData([
         {'label':'Requester Name:', 'type':'text', 'key':'reqName', 'tooltip':'The requester name for this job. May not be changed by user.'},
         {'label':'Hit Title:', 'type':'text', 'key':'hitTitle', 'tooltip':'The requester name for this job. May not be changed by user.'},
-        {'label':'Pay Amount:', 'type':'text', 'key':'price', 'tooltip':'The payment reward for this job. May not be changed by user.'},
+        {'label':'Pay Amount:', 'type':'text', 'key':'price', 'money':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       ], table1, data, true);
     }
     $(`<div class='text-left pl-5' style='color:aqua'>Panda hits auto collecting options (optional):</div>`).appendTo(df);
     let table2 = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
     displayObjectData([
-      {'label':'Limit # of GroupID in queue:', 'type':'range', 'key':'limitNumQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
-      {'label':'Limit # of total Hits in queue:', 'type':'range', 'key':'limitTotalQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
-      {'label':'Stop Collecting After (seconds):', 'type':'number', 'key':'duration', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The number of minutes for this job to collect before stopping. Resets time if a hit gets collected.'},
-      {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a hit to do before stopping.'},
+      {'label':'Limit # of GroupID in queue:', 'type':'range', 'key':'limitNumQueue', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
+      {'label':'Limit # of total Hits in queue:', 'type':'range', 'key':'limitTotalQueue', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.', 'minMax':{'min':0, 'max':24}},
+      {'label':'Stop Collecting After (seconds):', 'type':'number', 'key':'duration', 'seconds':true, 'default':data.duration, 'tooltip':'The number of seconds for this job to collect before stopping. Resets time if a hit gets collected.', 'minMax':this.pandaDur},
+      {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key':'limitFetches', 'default':data.limitFetches, 'tooltip':'Number of tries to catch a hit to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Force Delayed Ham Duration (seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'min':0, 'max':60, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after collecting a hit and then go back to normal collecting mode.'},
+      {'label':'Force Delayed Ham Duration (seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':data.hamDuration, 'tooltip':'The duration in seconds to use to go in ham mode after collecting a hit and then go back to normal collecting mode.', 'minMax':this.hamDur},
       {'label':'Daily Accepted Hit Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'tooltip':'How many hits a day should be accepted for this job?'},
     ], table2, data, true);
     modal.showModal(null, () => {
@@ -172,14 +179,14 @@ class ModalSearchClass {
           bGStr = this.rulesToStr(changes.rules.blockGid, $('#pcm_string_blockGid')); modal.closeModal();
         }, changes.details.type);
       }},
-      {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.'},
-      {'label':'Limit # of total Hits in queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'min':0, 'max':24, 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.'},
+      {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
+      {'label':'Limit # of total Hits in queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.', 'minMax':{'min':0, 'max':24}},
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key1':'options', 'key':'once', 'tooltip':'Should only one hit be accepted and then stop collecting? Great for surveys.'},
       {'label':'Daily Accepted Hit Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many hits a day should be accepted for this job?'},
-      {'label':'Stop Collecting After (seconds):', 'type':'number', 'key1':'options', 'key':'duration', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The number of seconds for hits found to collect before stopping. Resets time if a hit gets collected.'},
-      {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a hit to do before stopping.'},
+      {'label':'Stop Collecting After (seconds):', 'type':'number', 'key1':'options', 'key':'duration', 'seconds':true, 'default':0, 'tooltip':'The number of seconds for hits found to collect before stopping. Resets time if a hit gets collected.', 'minMax':this.pandaDur},
+      {'label':'Stop Collecting After # of fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a hit to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a hit and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'min':0, 'max':120, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.'},
+      {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.', 'minMax':this.hamDur},
     ], theTable, changes, true);
   }
   async showTriggerFound(unique) {
@@ -226,9 +233,14 @@ class ModalSearchClass {
     $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData( [
       {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
-      {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for hits to be searched and found in milliseconds. Minimum is ok.`},
-      {'label':'Default trigger duration in seconds:', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDuration', 'tooltip':`The default duration for new triggers to use on panda jobs.`},
-      {'label':'Page size for mturk search page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of hits used on mturk first search page. The higher the number can slow searching but also can give a better chance of finding hits you want.`},
+      {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for hits to be searched and found in milliseconds.`, 'minMax':globalOpt.getTimerSearch()},
+      {'label':'Default trigger duration (seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The default duration for new triggers to use on panda jobs.`, 'minMax':this.defaultPandaDur},
+      {'label':'Default trigger ham duration (seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultHamDur', 'tooltip':`The default ham duration for new triggers to use on panda jobs.`, 'minMax':this.hamDur},
+      {'label':'Default trigger limit fetches:', 'type':'number', 'key1':'options', 'key':'defaultFetches', 'tooltip':`The default number of fetches for new triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
+      {'label':'Default custom duration (seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The default duration for new custom triggers to use on panda jobs.`, 'minMax':this.pandaDur},
+      {'label':'Default custom ham duration (seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs.`, 'minMax':this.hamDur},
+      {'label':'Default custom limit fetches:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The default number of fetches for new custom triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
+      {'label':'Page size for mturk search page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of hits used on mturk first search page. The higher the number can slow searching but also can give a better chance of finding hits you want.`, 'minMax':this.pageSize},
     ], df, modal.tempObject[idName], true);
     modal.showModal(() => {}, async () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
@@ -242,9 +254,9 @@ class ModalSearchClass {
     let df = document.createDocumentFragment();
     $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData( [
-      {'label':'Number of trigger data to keep in memory:', 'type':'number', 'key':'queueSize', 'tooltip':`To save memory the script will only keep this number of most active trigger data in memory and the rest in the database. Loading from database can be slower.`},
-      {'label':'Trigger hits history days expiriration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`Hits found by trigger is saved in the database and this number represents the days to keep those hits saved.`},
-      {'label':'CUSTOM hits history days expiration:', 'type':'number', 'key':'customHistDays', 'tooltip':`Custom triggered hits can find a large amount of hits so this number represents how many days to save these found hits. Should be lower than regular triggers.`},
+      {'label':'Number of trigger data to keep in memory:', 'type':'number', 'key':'queueSize', 'tooltip':`To save memory the script will only keep this number of most active trigger data in memory and the rest in the database. Loading from database can be slower.`, 'minMax':this.queueSize},
+      {'label':'Trigger hits history days expiriration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`Hits found by trigger is saved in the database and this number represents the days to keep those hits saved.`, 'minMax':this.triggerHistDays},
+      {'label':'Custom hits history days expiration:', 'type':'number', 'key':'customHistDays', 'tooltip':`Custom triggered hits can find a large amount of hits so this number represents how many days to save these found hits. Should be lower than regular triggers.`, 'minMax':this.customHistDays},
     ], df, modal.tempObject[idName], true);
     modal.showModal(() => {}, async () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
