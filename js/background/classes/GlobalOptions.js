@@ -78,6 +78,7 @@ class PandaGOptions {
       'defaultCustHamDur':10000,
       'customHistDays':10,
       'triggerHistDays':45,
+      'blockedGids':[],
     }
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;

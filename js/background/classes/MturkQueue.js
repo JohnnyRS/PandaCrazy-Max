@@ -28,6 +28,7 @@ class MturkQueue extends MturkClass {
   sendQueueResults() {
     if (myPanda) myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
     if (mySearch) mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
+    chrome.storage.local.set({'PCM_queueData':this.queueResults});
   }
   /** Changes the time for the queue timer and returns the time saved.
    * @param  {number} timer - The time to change the queue timer to.

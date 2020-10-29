@@ -134,7 +134,7 @@ class PandaCards {
    * @param  {bool} [animate=true] - Should remove show an animation effect? */
   removeCard(myId, removeFunc, animate=true) {
     let doRemoval = (removeFunc) => {
-      $(`#pcm_pandaCard_${myId}`).stop(true, true).remove();
+      $(`#pcm_pandaCard_${myId}`).remove();
       this.cards[myId].removeCard();
       delete this.cards[myId];
       removeFunc();
@@ -173,7 +173,7 @@ class PandaCards {
    * @param  {number} myId - Unique ID @param  {string} [action] - Effect Action @param  {number} [duration] - Effect Duration */
   highlightEffect_card(myId, action='', duration=15000) {
     let theColor = (action==='stop') ? '#FFA691' : '#ffff99';
-    $(`#pcm_pandaCard_${myId}`).stop(true,true).effect( 'highlight', {color:theColor}, duration );
+    $(`#pcm_pandaCard_${myId}`).stop(true,true).effect('highlight', {color:theColor}, duration);
   }
   /** Show that this panda is not collecting anymore and show effect or a new background color.
    * @param  {number} myId - Unique ID  @param  {bool} [stopEffect] - Stop Effects? @param  {string} [whyStop] - Stop Reason @param  {string} [newBgColor] - Background color */
@@ -279,7 +279,7 @@ class PandaCards {
 		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click( async (e) => {
 			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
 			if (theButton.data('longClicked')) { theButton.removeData('longClicked'); theButton.css({'background-color': '', 'color': ''}); }
-			else { pandaUI.hamButtonClicked(myId, theButton,_, true); console.log('I was clicked',theButton.data('longClicked')); }
+			else { pandaUI.hamButtonClicked(myId, theButton,_, true); }
 			e.preventDefault(); theButton = null; return false;
 		}).unbind('long-press').on('long-press', async (e) => {
       e.preventDefault();

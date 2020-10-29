@@ -1,6 +1,7 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null;
+chrome.storage.local.set({'pcm_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
 function checkUIConnects() {
@@ -95,6 +96,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
 }
 function pandaUILoaded() { if (savedSearchUI) savedSearchUI.pandaUILoaded(); }
 async function wipeData() {
+  if (!MyOptions) MyOptions = new PandaGOptions();
   if (!myHistory && !mySearch && !myPanda) {
     if (!MYDB) MYDB = new DatabasesClass();
     pandaTimer = new TimerClass(995,970,'pandaTimer'); searchTimer = new TimerClass(950,920,'searchTimer');

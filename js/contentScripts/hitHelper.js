@@ -1,9 +1,9 @@
-const locationUrl = window.location.href, _ = undefined, isInIframe = (parent !== window);
-const parentUrl = document.referrer;
-let hitData = {}, hitsData = {}, originalSetItem = null, prevAssignedhit = null;
-let holdArray = ['pcm_holdGID', 'pcm_holdRID', 'pcm_holdRname', 'pcm_holdTitle', 'pcm_holdReward']
-let holdThis = {'pcm_running':false, 'pcm_holdGID':'', 'pcm_holdRID':'', 'pcm_holdRname':'', 'pcm_holdTitle':'', 'pcm_holdReward':''};
-let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper'));
+const locationUrl = window.location.href, isInIframe = (parent !== window);
+const parentUrl = document.referrer, docTitle = document.title, tabID = Math.floor(new Date().getTime() / 1000);
+let hitData = {}, hitsData = {}, originalSetItem = null, prevAssignedhit = null, assignedHit = null, gMyInterval = null, monitorOn = false;
+let holdArray = ['pcm_holdGID', 'pcm_holdRID', 'pcm_holdRname', 'pcm_holdTitle', 'pcm_holdReward'], gotoHit = 0, goLast = false;
+let holdThis = {'extensionLoad':true, 'pcm_running':false, 'pcm_holdGID':'', 'pcm_holdRID':'', 'pcm_holdRname':'', 'pcm_holdTitle':'', 'pcm_holdReward':''};
+let queueHelper = JSON.parse(sessionStorage.getItem('JR_PC_QueueHelper')), queueResults = [];
 
 /** Sends a message to the extension with given values.
  * @param  {string} com        - Command        @param {object} data          - Data Object  @param  {string} gId      - GroupID
@@ -50,19 +50,19 @@ function parseCommands(command, data) {
 }
 /** Sends message commands to PandaCrazy about a new panda or search job to add. Used for forums with older PC buttons.
  * Parses the url to grab the command and the relevant information for panda. */
-function addCommands() { console.log(locationUrl);
+function addCommands() {
   let regex = /\/PandaCrazy([^\/]*)\/.*JRGID=([^&]*)&JRRName=(.*)&JRRID=([^&]*)&JRTitle=(.*)&JRReward=(.*)/;
   if (!locationUrl.includes('JRGID')) regex = /\/.{0,2}PandaCrazy([^\/]*)\/.*groupID=([^&]*)&requesterName=(.*)&requesterID=([^&]*)&hitTitle=(.*)&hitReward=(.*)/;
   let [_, command, groupId, reqName, reqId, title, reward] = locationUrl.match(regex);
-  command = (command==="Add") ? "addJob" : ( (command==="Search") ? "addSearchOnceJob" : ( (command==="SearchOnce") ? "addSearchMultiJob" : "addOnceJob" ));
-  chrome.runtime.sendMessage({command:command, groupId:groupId, description:"", title:title, reqId:reqId, reqName:reqName, price:reward});
+  command = (command === 'Add') ? 'addJob' : ( (command === 'Search') ? 'ddSearchOnceJob' : ( (command === 'SearchOnce') ? 'addSearchMultiJob' : 'addOnceJob' ));
+  chrome.runtime.sendMessage({'command':command, 'groupId':groupId, 'description':'', 'title':title, 'reqId':reqId, 'reqName':reqName, 'price':reward});
 }
 /** To make older storage messages compatible to extension. */
 function pcMAX_listener() { console.log('pcMAX_listener page');
-  window.addEventListener("storage", (e) => { console.log('listen to: ', e.key, JSON.parse(e.newValue));
+  window.addEventListener('storage', (e) => { console.log('listen to: ', e.key, JSON.parse(e.newValue));
     if (e.url === parentUrl) {
       if (e.key === 'JR_message_ping_pandacrazy') {
-        localStorage.setItem("JR_message_pong_pandacrazy", JSON.stringify({"time":(new Date().getTime()),"command":'run',"url":e.url,"data":null,"theTarget":null, "version":"0.6.3","idNum":null}));
+        localStorage.setItem('JR_message_pong_pandacrazy', JSON.stringify({'time':(new Date().getTime()),'command':'run','url':e.url,'data':null,'theTarget':null, 'version':'0.6.3','idNum':null}));
       } else if (e.key === 'JR_message_pandacrazy') {
         let message = JSON.parse(e.newValue), command = message.command, data = message.data;
         parseCommands(command, data);
@@ -70,9 +70,34 @@ function pcMAX_listener() { console.log('pcMAX_listener page');
     }
   }, false);
 }
+function queue_listener(displayPosition=false) {
+  function listenChanged(changes, name) {
+    if (name === 'local') {
+      if (changes.hasOwnProperty('PCM_queueData')) {
+        let queueResults = changes.PCM_queueData.newValue; queueSize = queueResults.length, position = 0, positionFound = 0;
+        let count = arrayCount(queueResults, (item) => { position++; if (item.assignment_id === assignedHit) { positionFound = position; return true; } else return false; }, true);
+        if (holdThis.pcm_running && holdThis.extensionLoad && displayPosition) document.title = `(${positionFound}/${queueSize}) ${docTitle}`;
+        else document.title = docTitle;
+        if (gotoHit === 26) gotoHit = queueSize;
+        if (monitorOn && queueSize > 0) {
+          chrome.runtime.sendMessage({'command':'monitorSpeech'});
+          chrome.storage.onChanged.removeListener(listenChanged);
+          window.location.replace('https://worker.mturk.com' + queueResults[0].task_url.replace('&ref=w_pl_prvw','&from_queue=true'))
+        } else if (gotoHit > 0 && queueSize >= gotoHit) {
+          chrome.storage.onChanged.removeListener(listenChanged);
+          window.location.replace('https://worker.mturk.com' + queueResults[gotoHit-1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'))
+        }
+      }
+      if (changes.hasOwnProperty('pcm_running')) { holdThis.pcm_running = changes.pcm_running.newValue; document.title = docTitle; }
+    }
+  }
+  chrome.storage.local.get('PCM_queueData', (value) => { if (value.hasOwnProperty('PCM_queueData')) listenChanged({'PCM_queueData':{'newValue':value.PCM_queueData}}, 'local'); })
+  chrome.storage.onChanged.addListener(listenChanged);
+  gMyInterval = setInterval(() => { if (typeof chrome.app.isInstalled === 'undefined') { holdThis.extensionLoad = false; clearInterval(gMyInterval); }}, 700);
+  }
 /** Fixes a problem where old queue helper script changes a value because of the iframe trick I use. */
 function fixForQueueHelper() {
-  window.addEventListener("storage", (e) => {
+  window.addEventListener('storage', (e) => {
     if (e.key === 'JR_PC_QueueHelper' && e.url === 'https://worker.mturk.com/requesters/PandaCrazyMax/') {
       sessionStorage.setItem('JR_PC_QueueHelper',JSON.stringify(queueHelper));
     }
@@ -82,7 +107,7 @@ function fixForQueueHelper() {
 function addIframe() {
   fixForQueueHelper();
   let iframe = document.createElement('iframe');
-  iframe.style.display = 'none'; iframe.src = 'https://worker.mturk.com/requesters/PandaCrazyMax/';
+  iframe.style.display = 'none'; iframe.src = 'https://worker.mturk.com/tasks?PandaCrazyMax';
   document.body.appendChild(iframe);
 }
 /** Parses the properties on mturk page. */
@@ -107,9 +132,13 @@ function getProjectedEarnings() {
   } else return false;
 }
 function prevAssigned() {
-  prevAssignedhit = sessionStorage.getItem('pcm_hitDoing'); console.log('prevAssignedhit: ', prevAssignedhit);
+  prevAssignedhit = sessionStorage.getItem('pcm_hitDoing');
   prevAssignedhit = (prevAssignedhit) ? JSON.parse(prevAssignedhit) : null;
-  sessionStorage.removeItem('pcm_hitDoing');
+  if (prevAssignedhit) {
+    sessionStorage.removeItem('pcm_hitDoing');
+    let tabhit = `PCM_tHit_${prevAssignedhit}`;
+    chrome.storage.local.get(tabhit, (value) => { if (value[tabhit]) chrome.storage.local.remove(tabhit); });
+  }
 }
 function setSendData(sendData) {
   const regex = /\[hit_type_id\]=([^&]*)&.*\[requester_id\]=([^&]*)&/;
@@ -153,7 +182,7 @@ function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits'
   return returnThis;
 }
 function checkSubmitted() {
-  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) { console.log('Something submitter');
+  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) {
     sendToExt('submitted', prevAssignedhit, prevAssignedhit.groupId,_,_,_,_, prevAssignedhit.pay,_,_, prevAssignedhit.assignmentId, prevAssignedhit.taskId);
   }
 }
@@ -175,20 +204,31 @@ function oldPCRemoval() {
 }
 /** Parses a URL with no assignment ID attached so must be a preview. */
 function doPreview() { console.log('doPreview page');
-  addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits();
+  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits();
   let span = addButtons('pcm-buttonZonePreview no-wrap', 'pcm-buttonPreview');
   span.find('.pcm-button').css({"font-size":"9px","line-height":"8px","padding":"1px","color":"black"});
   $('.project-detail-bar:first .task-project-title:first').append(span);
 }
+function tabhitLocalRemove() {
+  window.addEventListener('beforeunload', async () => {
+    if (holdThis.extensionLoad) {
+      let hitId = (assignedHit) ? assignedHit : null, tabhit = `PCM_tHit_${hitId}`;
+      if (hitId) chrome.storage.local.get(tabhit, (value) => { if (value[tabhit]) chrome.storage.local.remove(tabhit); });
+    }
+  });
+}
 /** Parses a URL with an assignment ID attached. */
 function doAssignment() { console.log('doAssignment page');
-  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits();
+  if (holdThis.pcm_running) document.title = `(0 of 0) ${docTitle}`;
+  prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits(); queue_listener(true);
   const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/;
-  let [_, groupId, taskId, assignmentId] = locationUrl.match(regex);
+  let [_, groupId, taskId, assignmentId] = locationUrl.match(regex), tabhit = `PCM_tHit_${assignmentId}`; assignedHit = assignmentId;
   sessionStorage.setItem('pcm_hitDoing',JSON.stringify({'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId, 'pay':hitData.monetaryReward.amountInDollars}));
+  chrome.storage.local.set({[tabhit]:{'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId}});
   let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)'), buttons = addButtons();
   if (detailArea.find('div').length === 0) detailArea.append(buttons);
   else $('.navbar-content:first .navbar-nav:first').append($('<li class="nav-item" style="margin-left:0; margin-top:5px"></li>').append(buttons.css('margin-top', '5px')));
+  tabhitLocalRemove();
 }
 /** Adds buttons to the hits listed pages. Removes any old buttons too. */
 function hitList() {
@@ -208,9 +248,18 @@ function hitList() {
   });
   setHoldData();
 }
-function dashboard() { console.log('dashboard page'); addIframe(); getProjectedEarnings(); }
+function monitorNext() {
+  prevAssigned(); addIframe(); getProjectedEarnings(); console.log('parentUrl',parentUrl);
+  monitorOn = true; queue_listener();
+  $(`.no-result-row:first`).append(`<h2 class='text-success font-weight-bold'>Monitoring queue for a new hit to open.</h2>`);
+}
+function goHit(last=false) {
+  prevAssigned(); addIframe(); getProjectedEarnings();
+  gotoHit = (last) ? 26 : locationUrl.split('JRPC=gohit')[1]; queue_listener();
+}
+function dashboard() { console.log('dashboard page'); prevAssigned(); addIframe(); getProjectedEarnings(); }
 /** Adds an iframe for getting old messages and grabs any projected earnings. */
-function otherPage() { if ($('.projects-controls').length) hitList(); else { console.log('otherPage page'); addIframe(); getProjectedEarnings(); } }
+function otherPage() { if ($('.projects-controls').length) hitList(); else { console.log('otherPage page'); prevAssigned(); addIframe(); getProjectedEarnings(); } }
 /** Works on old panda crazy pages to future use of importing data. */
 function oldPandaCrazy() { console.log('old pandacrazy page'); }
 
@@ -234,8 +283,12 @@ chrome.storage.local.get(['pcm_running', ...holdArray], (result) => {
   else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
   else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) doAssignment();
   else if (/requesters\/PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
+  else if (/worker\.mturk\.com\/tasks\?PandaCrazyMax/.test(locationUrl)) pcMAX_listener();
   else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
   else if (/worker\.mturk\.com[\/]dashboard.*$/.test(locationUrl)) dashboard();
+  else if (/worker\.mturk\.com\/tasks\?JRPC=monitornext$/.test(locationUrl)) monitorNext();
+  else if (/worker\.mturk\.com\/tasks\?JRPC=gohit\d*$/.test(locationUrl)) goHit();
+  else if (/worker\.mturk\.com\/tasks\?JRPC=lasthit\d*$/.test(locationUrl)) goHit(true);
   else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();
   else { console.log('unknown page'); }
 });

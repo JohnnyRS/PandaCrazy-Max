@@ -7,8 +7,8 @@ class SearchUI {
 		this.ridColumn1 = null;
 		this.ridListGroup1 = null;
 		this.tabs = null;
-		this.reqIDTab = {};
-		this.groupIDTab = {};
+		this.ridTab = {};
+		this.gidTab = {};
 		this.customTab = {};
 		this.triggeredTab = {};
 		this.ridContent = {};
@@ -23,6 +23,7 @@ class SearchUI {
 		this.sorting = 0;
 		this.sortAscending = [true, true, true, true, true];
 		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
+		this.totals = {'rid':0, 'gid':0, 'custom':0};
 		this.clickTimer = null;
 		this.hitsTabInactive = true;
 		this.triggeredHits = [];
@@ -163,12 +164,12 @@ class SearchUI {
 		this.tabs = new TabbedClass($(`#pcm_searchTriggers`), `pcm_triggerTabs`, `pcm_tabbedTriggers`, `pcm_triggerContents`, false);
     let [_, err] = await this.tabs.prepare();
     if (!err) {
-			this.reqIDTab = await this.tabs.addTab('Requester ID', true);
-			this.groupIDTab = await this.tabs.addTab('Group ID');
+			this.ridTab = await this.tabs.addTab('Requester ID', true);
+			this.gidTab = await this.tabs.addTab('Group ID');
 			this.customTab = await this.tabs.addTab('Custom Search');
 			this.triggeredTab = await this.tabs.addTab('Custom Triggered Hits');
-			this.ridContent = $(`<div class='pcm_ridTriggers card-deck'></div>`).appendTo(`#${this.reqIDTab.tabContent}`);
-			this.gidContent = $(`<div class='pcm_gidTriggers card-deck'></div>`).appendTo(`#${this.groupIDTab.tabContent}`);
+			this.ridContent = $(`<div class='pcm_ridTriggers card-deck'></div>`).appendTo(`#${this.ridTab.tabContent}`);
+			this.gidContent = $(`<div class='pcm_gidTriggers card-deck'></div>`).appendTo(`#${this.gidTab.tabContent}`);
 			this.customContent = $(`<div class='pcm_customTriggers card-deck'></div>`).appendTo(`#${this.customTab.tabContent}`);
 			this.triggeredContent = $(`<div class='pcm_triggeredHits card-deck'></div>`).appendTo(`#${this.triggeredTab.tabContent}`);
 			this.triggeredContent.hover( (e) => { this.hitsTabInactive = false; }, (e) => { this.hitsTabInactive = true; this.displayTriggeredHits(); } );
@@ -251,7 +252,8 @@ class SearchUI {
 		this.multiple[data.type].push(card);
 	}
 	redoFilters(type, filter={}) {
-		$(this[`${type}Content`]).find('.card').each( (i, ele) => {
+		let allCards = $(this[`${type}Content`]).find('.card'); this.totals[type] = allCards.length;
+		$(allCards).each( (i, ele) => {
 			let filteredOut = false, disabledStr = (!this.filters.sDisabled) ? 'disabled' : '', enabledStr = (!this.filters.sEnabled) ? 'searching' : '';
 			if (disabledStr && disabledStr === $(ele).data('status')) filteredOut = true;
 			if (enabledStr && enabledStr === $(ele).data('status')) filteredOut = true;
@@ -260,13 +262,17 @@ class SearchUI {
 		});
 		this.sortCards(type);
 	}
+	redoTabTitle(type) {
+		let disabled = $(this[`${type}Content`]).find(`.pcm_disabled`).length;
+		$(`#` + this[`${type}Tab`].tabId).html(this[`${type}Tab`].tabTitle + ` (${this.totals[type] - disabled}/${this.totals[type]})`);
+}
 	/** Appends any cards created in the document fragment to the card deck to show cards faster. */
 	appendFragments() {
 		for (const type of Object.keys(this.multiple)) {
 			let df = $(document.createDocumentFragment());
 			for (const card of this.multiple[type]) { df.append(card); }
 			$(this[`${type}Content`]).append(df); df = null; this.multiple[type] = [];
-			this.redoFilters(type); this.sortCards(type);
+			this.redoFilters(type); this.redoTabTitle(type);
 		}
 		this.cardEvents();
 	}
@@ -288,11 +294,11 @@ class SearchUI {
 			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title;
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
 			let foundData = {'reqName':hitData.requester_name, 'title':markedTitle, 'price':`$${hitData.monetary_reward.amount_in_dollars.toFixed(2)}`};
-			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++;
+			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink', 'tooltip':`Turkerview Requester Link`},
-				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${foundData.reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
-				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title}`},
+				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
+				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
 				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount hit pays.`},
 				{'type':'button', 'btnLabel':'P', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customPanda_', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
 				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customOnce_', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
@@ -300,8 +306,10 @@ class SearchUI {
 				{'type':'button', 'btnLabel':'*', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch_', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
 			], df, foundData, true, true, '#0b716c');
 			$(df).find('.pcm_tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
+			$(df).find('td').dblclick(() => { console.log('wow double click'); });
 			this.triggeredContent.find(`tbody`).prepend(df);
 		}
+		$(`#` + this.triggeredTab.tabId).html(this.triggeredTab.tabTitle + ` (${this.triggeredContent.find('tbody tr').length})`);
 	}
 	triggeredHit(unique, triggerData, hitData=null, term=null, started=true) {
 		$(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );

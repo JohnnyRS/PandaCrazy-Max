@@ -194,22 +194,25 @@ class ModalSearchClass {
     const idName = modal.prepareModal(null, '860px', 'modal-header-info modal-lg', 'Edit Search Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     let df = document.createDocumentFragment();
     modal.showModal(null, async () => {
-      let groupHist = await bgSearch.getFromDB('history', dbId), rules = await bgSearch.theData(dbId, 'rules'), blocked = rules.blockGid;
-      let gidsHistory = await bgHistory.findValues(Object.keys(groupHist.gids));
+      let groupHist = await bgSearch.getFromDB('history', dbId, 'dbId', true, false, 80), rules = await bgSearch.theData(dbId, 'rules');
+      let gidsValues = [], gidsData = {}, blocked = rules.blockGid;
+      arrayCount(groupHist, (value) => { gidsValues.push(value.gid); gidsData[value.gid] = value; return true; }, true);
+      let gidsHistory = await bgHistory.findValues(gidsValues);
       let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-moreCondensed table-bordered m-0'></table>`)
-        .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:130px; max-width:130px;'>Title</td><td style='width:440px; max-width:440px'>Descriptions</td><td style='width:52px; max-width:52px;'>Pays</td><td style='width: 70px; max-width:70px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
-      for (const key of Object.keys(groupHist.gids)) {
+        .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:120px; max-width:120px;'>Title</td><td style='width:440px; max-width:440px'>Descriptions</td><td style='width:52px; max-width:52px;'>Pays</td><td style='width: 70px; max-width:70px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
+      for (const key of gidsValues) {
         let dateString = '----', title = '----', description = '----', pays = '----';
+        let theDate = new Date(gidsData[key].date); dateString = theDate.toLocaleDateString('en-US', {'month':'short', 'day':'2-digit'}).replace(' ','');
+        dateString += ' ' + theDate.toLocaleTimeString('en-GB', {'hour':'2-digit', 'minute':'2-digit'});
         if (gidsHistory[key]) {
-          let theDate = new Date(gidsHistory[key].date); dateString = theDate.toLocaleDateString('en-US', {'month':'short', 'day':'2-digit'}).replace(' ','');
-          dateString += ' ' + theDate.toLocaleTimeString('en-GB', {'hour':'2-digit', 'minute':'2-digit'});
+          if (checkString(gidsHistory[key].pay)) gidsHistory[key].pay = parseFloat(gidsHistory[key].pay);
           title = gidsHistory[key].title; description = gidsHistory[key].description; pays = gidsHistory[key].pay.toFixed(2);
         }
         let tempObj = {'date':dateString,'gid':shortenGroupId(key, 4, 4), 'title':title, 'desc':description, 'pays':'$' + pays};
         let btnLabel = (blocked.has(key)) ? 'Unblock' : 'Block Hit', btnColor = (blocked.has(key)) ? 'danger' : 'primary';
         displayObjectData([
           {'type':'keyValue', 'key':'date', 'maxWidth':'75px'}, {'type':'keyValue', 'key':'gid', 'maxWidth':'82px'},
-          {'type':'keyValue', 'key':'title', 'maxWidth':'130px'}, {'type':'keyValue', 'key':'desc', 'maxWidth':'440px'}, {'type':'keyValue', 'key':'pays', 'maxWidth':'52px'},
+          {'type':'keyValue', 'key':'title', 'maxWidth':'120px'}, {'type':'keyValue', 'key':'desc', 'maxWidth':'440px'}, {'type':'keyValue', 'key':'pays', 'maxWidth':'52px'},
           {'label':'block', 'type':'button', 'btnLabel':btnLabel, 'btnColor':btnColor, 'addClass':" btn-xxs", 'maxWidth':'70px', 'btnFunc': (e) => {
             if (blocked.has(key)) { blocked.delete(key); $(e.target).removeClass(`btn-danger`).addClass(`btn-primary`).html('Block Hit'); }
             else { blocked.add(key); $(e.target).removeClass(`btn-primary`).addClass(`btn-danger`).html('Unblock'); }
@@ -224,7 +227,7 @@ class ModalSearchClass {
   showSearchOptions() {
     if (!modal) modal = new ModalClass();
     let theData = {'toSearchUI':globalOpt.theToSearchUI(), 'searchTimer':globalOpt.theSearchTimer(), 'options':globalOpt.doSearch()}
-    const idName = modal.prepareModal(theData, '860px', 'modal-header-info modal-lg', 'Edit Search General Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', (changes) => { console.log(changes);
+    const idName = modal.prepareModal(theData, '860px', 'modal-header-info modal-lg', 'Edit Search General Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', (changes) => {
       globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false);
       globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer);
       modal.closeModal();

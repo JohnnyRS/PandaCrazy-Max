@@ -138,7 +138,7 @@ class EximClass {
         }
       }
       await bgPanda.addToDB(mInfo, true);
-      let newPositions = {}, triggers = [], options = [], rules = [], history = [], addedTime = new Date().getTime();
+      let newPositions = {}, triggers = [], options = [], rules = [], addedTime = new Date().getTime();
       for (let i = 0, len = mInfo.length; i < len; i++) {
         if (mInfo[i].search) {
           let value = (mInfo[i].search === 'rid') ? mInfo[i].reqId : mInfo[i].groupId;
@@ -147,7 +147,6 @@ class EximClass {
             options.push({'duration':0, 'once':mInfo[i].once, 'limitNumQueue':mInfo[i].limitNumQueue, 'limitTotalQueue':mInfo[i].limitTotalQueue, 'limitFetches':mInfo[i].limitFetches, 'autoGoHam':false, 'tempGoHam':0, 'acceptLimit':0});
             let ruleSet = Object.assign({}, bgSearch.ruleSet, mData[i].rules)
             rules.push({rules:[ruleSet], 'ruleSet':0});
-            history.push({'gids':{}});
           }
         }
         if (!newPositions[mInfo[i].tabUnique]) newPositions[mInfo[i].tabUnique] = [];
@@ -156,15 +155,21 @@ class EximClass {
           if (group.grouping && group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
         }
       }
-      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules, history, true);
+      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules,_, true);
       let triggerData = this.importTriggersData;
       let imTriggers = [], imOptions = [], imRules = [], imHistory = [], counter = 1;
       if (triggerData.length) {
         for (const data of this.importTriggersData) {
-          delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId; delete data.history.dbId;
-          let numHits = Object.keys(data.history.gids).length;
+          delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId;
+          let older = data.history.hasOwnProperty('gids'), gidsObject = (older) ? data.history.gids : data.history, numHits = -1, historyGids = {};
+          for (const key of Object.keys(gidsObject)) {
+            let value = gidsObject[key]; numHits++;
+            if (older) { historyGids[numHits] = {'gid':key, 'date':value.date, 'sent':value.sent}; }
+            else { for (const key of Object.keys(data.history)) { delete data.history[key].dbId; delete data.history[key].id; } }
+          }
+          if (older) data.history = historyGids;
           if (numHits > 0 && data.trigger.numFound === 0) data.trigger.numFound = numHits;
-          if (numHits > 0 && data.trigger.numHits === 0) data.trigger.numHits = numHits;
+          if (numHits > 0) data.trigger.numHits = numHits;
           imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history); counter++;
         }
         await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true);
@@ -375,7 +380,8 @@ class EximClass {
         this.importAlarmsData[key] = Object.assign(defaultAlarms[key], rData[key]);
         if (!rData[key].obj) {
           let audio = alarms.theAlarms(key).audio;
-          if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
+          if (audio === null) this.importAlarmsData[key].obj = null;
+          else if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
         } else if (rData[key].obj.substr(0,4) === 'data') this.importAlarmsData[key].obj = rData[key].obj;
         else this.importAlarmsData[key].obj = null;
       }

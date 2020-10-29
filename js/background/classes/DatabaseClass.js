@@ -36,14 +36,20 @@ class DatabasesClass {
   }
   openSearching(del=false) {
 		return new Promise( (resolve, reject) => {
-			this.searching.db = new DatabaseClass(this.searching.dbName, 1);
+			this.searching.db = new DatabaseClass(this.searching.dbName, 2);
     	this.searching.db.openDB( del, (e) => {
-				if (e.oldVersion === 0) {
-          let store1 = e.target.result.createObjectStore(this.searching.storeName, {keyPath:'id', autoIncrement:'true'});
-          store1.createIndex('type', 'type', {unique:false}); store1.createIndex('value', 'value', {unique:false}); store1.createIndex('unique', ['type', 'value'], {unique:false});
-					e.target.result.createObjectStore(this.searching.options, {keyPath:"dbId", autoIncrement:"false"});
-					e.target.result.createObjectStore(this.searching.rules, {keyPath:"dbId", autoIncrement:"false"});
-					e.target.result.createObjectStore(this.searching.history, {keyPath:"dbId", autoIncrement:"false"});
+				if (e.oldVersion < 2) {
+          let db = e.target.result;
+          if (!db.objectStoreNames.contains(this.searching.storeName)) {
+            let store1 = db.createObjectStore(this.searching.storeName, {keyPath:'id', autoIncrement:'true'});
+            store1.createIndex('type', 'type', {unique:false}); store1.createIndex('value', 'value', {unique:false}); store1.createIndex('unique', ['type', 'value'], {unique:false});
+          }
+          if (!db.objectStoreNames.contains(this.searching.options)) { db.createObjectStore(this.searching.options, {keyPath:"dbId", autoIncrement:"false"}); }
+          if (!db.objectStoreNames.contains(this.searching.rules)) { db.createObjectStore(this.searching.rules, {keyPath:"dbId", autoIncrement:"false"}); }
+          if (db.objectStoreNames.contains(this.searching.history)) db.deleteObjectStore(this.searching.history);
+          let store2 = db.createObjectStore(this.searching.history, {keyPath:"id", autoIncrement:"true"});
+          store2.createIndex('dbId', 'dbId', {unique:false}); store2.createIndex('gid', 'gid', {unique:false}); store2.createIndex('date', 'date', {unique:false});
+          store2.createIndex('dbIdDate', ['dbId', 'date'], {unique:false}); store2.createIndex('dbIdGid', ['dbId', 'gid'], {unique:false});
           this.searching.default = true;
         }
       }).then( response => { if (response === 'OPENED') resolve(this.searching.db); }, rejected => { console.error(rejected); reject(rejected); });
@@ -56,9 +62,7 @@ class DatabasesClass {
 				if (e.oldVersion === 0) { // Had no database so let's initialise it.
 					e.target.result.createObjectStore(this.stats.storeName, {keyPath:"id", autoIncrement:"true"}).createIndex("dbId", "dbId", {unique:false});
 					let objStore = e.target.result.createObjectStore(this.stats.accepted, {keyPath:"id", autoIncrement:"true"});
-					objStore.createIndex("dbId", "dbId", {unique:false}); // dbId is an index to search faster.
-					objStore.createIndex("gid", "gid", {unique:false}); // gid is an index to search faster on Group Ids.
-					objStore.createIndex("rid", "rid", {unique:false}); // rid is an index to search faster on Requester Ids.
+					objStore.createIndex("dbId", "dbId", {unique:false}); objStore.createIndex("gid", "gid", {unique:false}); objStore.createIndex("rid", "rid", {unique:false});
           this.stats.default = true;
 				}
       }).then( response => { if (response === 'OPENED') resolve(this.stats.db); }, rejected => { console.error(rejected); reject(rejected); });
@@ -67,8 +71,8 @@ class DatabasesClass {
   closeDB(target) { this[target].db.closeDB(); this[target].db = null; }
   async deleteDB(target) { if (this[target].db !== null) this[target].db.closeDB(); await this[target].db.deleteDB(); this[target].db = null; }
   useDefault(target) { return this[target].default; }
-  getFromDB(target, store='storeName', key=null, keys=null) {
-		return new Promise( (resolve, reject) => { this[target].db.getFromDB(this[target][store], key, keys).then( r => resolve(r), e => reject(e) ); });
+  getFromDB(target, store='storeName', key=null, keys=null, indexN=null, count=null, cursor=false, asc=true, limit=0, start=0) {
+		return new Promise( (resolve, reject) => { this[target].db.getFromDB(this[target][store], key, keys, indexN, count, cursor, asc, limit, start).then( r => resolve(r), e => reject(e) ); });
   }
   addToDB(target, store='storeName', mData=null, onlyNew=false, key=null, updateFunc=null) {
 		return new Promise( (resolve, reject) => { this[target].db.addToDB(this[target][store], mData, onlyNew, key, updateFunc).then( r => resolve(r), e => reject(e) ); });
@@ -148,30 +152,37 @@ class DatabaseClass {
     });
   }
   /** Get an array or object of items from database with a key.
-   * @param {string} storeName - Store name to be used for adding data to.
-   * @param {string} key       - Get the item with this key.
+   * @param {string} storeName - Store name  @param {string} key - Key
    * @return {promise}         - Array or object in resolve. Error object in reject. */
-  getFromDB(storeName, key=null, keys=null) {
+  getFromDB(storeName, key=null, keys=null, indexName=null, count=false, useCursor=false, ascending=true, limit=0, start=0) {
     return new Promise( (resolve, reject) => {
-      let tx = this.db.transaction( [storeName], "readonly" ), store = tx.objectStore( storeName ), filledData = {};
+      let tx = this.db.transaction( [storeName], "readonly" ), store = tx.objectStore(storeName), filledData = {}, direction = (ascending) ? 'next' : 'prev';
       if (keys === null) {
-        let request = (key !== null) ? store.get(key) : store.getAll(); // Open cursor or just get an item?
-        request.onsuccess = () => resolve(request.result);
-        request.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); }
-      } else {
-        for (const thisKey of keys) {
-          filledData[thisKey] = null;
-          store.get(thisKey).onsuccess = (e) => { filledData[thisKey] = e.target.result; }
+        let using = (indexName) ? store.index(indexName) : store, allKey = (indexName) ? key : _, cursorArray = [];
+        if (useCursor) {
+          let cursorRequest = using.openCursor(null, direction);
+          cursorRequest.onsuccess = (e) => {
+            let cursor = e.target.result;
+            if (cursor) {
+              cursorArray.push(cursor.value);
+              if (limit === 0 || (limit && cursorArray.length < limit)) cursor.continue(); else resolve(cursorArray);
+            } else resolve(cursorArray);
+          }
+          cursorRequest.onabort = e => { reject(new Error(`Get cursor from: ${storeName} error: ${cursorRequest.error.message}`)); }
+        } else {
+          let request = (key !== null && !allKey) ? using.get(key) : (count) ? using.count(allKey) : using.getAll(allKey);
+          request.onsuccess = () => { resolve(request.result); }
+          request.onabort = e => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); }
         }
+      } else {
+        for (const thisKey of keys) { filledData[thisKey] = null; store.get(thisKey).onsuccess = (e) => { filledData[thisKey] = e.target.result; } }
         tx.oncomplete = () => resolve(filledData);
       }
     });
   }
   /** Delete an item or items from a database with a key using an index if necessary.
-   * @param {string} storeName        - Store name to be used for adding data to.
-   * @param {string} key              - Delete the item with this key.
-   * @param {string} [indexName=null] - Use index name and delete all items with key.
-   * @return {promise}                - Key in resolve. Error object in reject. */
+   * @param {string} storeName - Store name  @param {string} key - Key  @param {string} [indexName] - Index name
+   * @return {promise}         - Key in resolve. Error object in reject. */
   deleteFromDB(storeName, key, indexName=null) {
     return new Promise( (resolve, reject) => {
       let completed = false, error = '';

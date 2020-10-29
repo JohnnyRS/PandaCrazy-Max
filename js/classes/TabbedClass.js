@@ -220,7 +220,7 @@ class TabbedClass {
     }
     if (this.onPandaUI) this.resizeTabContents();
     label = null; start = null;
-    return {tabId:`${this.tabIds}${unique}Tab`, tabContent:`${this.tabIds}${unique}Content`};
+    return {'tabId':`${this.tabIds}${unique}Tab`, 'tabTitle':this.#dataTabs[unique].title, 'tabContent':`${this.tabIds}${unique}Content`};
   }
   /** Hide the current tab contents when removing or adding a lot of cards.
    * @param  {object} [unique=null] - The unique number for this tab content area to hide. */

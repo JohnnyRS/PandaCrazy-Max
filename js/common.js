@@ -1,6 +1,7 @@
 let todayDay = new Date().getDate(), MYAUDIO = null;
 const _ = undefined;
 
+function checkString(val) { if (typeof val === 'string') return true; else return false; }
 /** Creates a Jquery input object and returns it and appends to element if appendHere is passed.
  * @param  {object} appendHere      - Jquery Element @param  {string} divAddClass - Div class     @param  {string} id                 - Input ID
  * @param  {string} label           - Label name     @param  {string} placeholder - Placeholder   @param  {function} [enterFunc=null] - Enter pressed
@@ -250,7 +251,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     } else if (element.type === 'button') {
       element.btnColor = (element.hasOwnProperty('btnColor')) ? element.btnColor : 'primary'
       const button = $(`<button class='btn btn-${element.btnColor}${element.addClass}' id='${element.idStart}_${element.unique}'>${element.btnLabel}</button>`);
-      if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
+      if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); e.stopPropagation(); });
       $(button).appendTo(valueCol);
     } else if (element.type === 'checkbox') {
       const theCheckBox = createCheckBox(valueCol, '', `pcm_selection_${element.unique}`, element.unique, '', ' m-0', element.inputClass);
