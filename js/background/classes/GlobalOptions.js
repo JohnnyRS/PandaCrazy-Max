@@ -78,7 +78,8 @@ class PandaGOptions {
       'defaultCustHamDur':10000,
       'customHistDays':10,
       'triggerHistDays':45,
-      'blockedGids':[],
+      'blockedGids':'',
+      'blockedRids':'',
     }
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
@@ -103,6 +104,7 @@ class PandaGOptions {
       if (result.length) { // Options were already saved in database so load and use them.
         for (const cat of ['general', 'timers', 'alarms', 'helpers', 'search']) {
           let count = arrayCount(result, (item) => { if (item.category === cat) { this[cat] = Object.assign({}, this[cat + 'Default'], item); return true; } else return false; }, true);
+          if (Array.isArray(this.search.blockedGids)) { this.search.blockedGids = ''; await MYDB.addToDB('panda', 'options', this.search); }
           if (count === 0) { await MYDB.addToDB('panda', 'options', this[cat + 'Default']).then( () => { this[cat] = Object.assign({}, this[cat + 'Default']); }); }
         }
         if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }

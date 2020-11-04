@@ -318,7 +318,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} run 	 - Run it now	 @param  {number} [sDur=0] - Duration    @param  {number} [sGD=0] - Goham duration */
 	async sendToSearch(myId, dbData, rules={}, history={}, run=false, sDur=0, sGD=0, sUI=false, fragments=false) {
 		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':(dbData.disabled) ? 'disabled' : 'searching', 'pandaId':myId, 'pDbId':dbData.id};
-		let tempOptions = {'duration':sDur, 'once':dbData.once, 'limitNumQueue':dbData.limitNumQueue, 'limitTotalQueue':dbData.limitTotalQueue, 'limitFetches':dbData.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0};
+		let tempOptions = {'duration':sDur, 'once':dbData.once, 'limitNumQueue':dbData.limitNumQueue, 'limitTotalQueue':dbData.limitTotalQueue, 'limitFetches':dbData.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0, 'auto': false, 'autoLimit': 2};
 		if (run) await mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
 		else mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
 		if (fragments) mySearch.appendFragments();

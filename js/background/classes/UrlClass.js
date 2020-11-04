@@ -38,7 +38,7 @@ class UrlClass {
 		}
 		catch (e) {
 			console.log("Got an error when trying to fetch the url.");
-			returnValue = { type: "caught.error", url: '', status: null, data: null };
+			returnValue = { type: "caught.error", url: '', status: e.message, data: null };
 		}
 		response = {}; theData = null;
 		return returnValue;

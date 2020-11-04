@@ -107,7 +107,7 @@ class PandaUI {
   }
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
-		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgPanda.unPauseTimer(); } );
+		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); } );
 		if (!bgPanda.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes the logged off modal if it's opened. */

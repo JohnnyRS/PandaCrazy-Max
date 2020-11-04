@@ -16,6 +16,7 @@ class SearchUI {
 		this.customContent = {};
 		this.triggeredContent = {};
 		this.modalSearch = null;
+		this.modalAlarms = null;
 		this.ctrlDelete = [];
 		this.wasImporting = false;
 		this.filters = {'sEnabled':true, 'sDisabled':true};
@@ -38,7 +39,7 @@ class SearchUI {
   startSearching() { if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm_top').css('background-color','#0b3e0b'); }}
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
-		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { modal = null; bgSearch.unPauseTimer(); });
+		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
 		if (!bgSearch.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */
@@ -123,14 +124,17 @@ class SearchUI {
 		let options = $(`<span id='pcm_searchOptionsDropDown'></span>`).appendTo(controls);
     this.addSubMenu(options, 'Options ', '', [
 				{'type':'item', 'label':`General`, 'menuFunc': () => {
-						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions();
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null);
 					}, class:'searchGeneral', 'tooltip':'Change search general options'},
 				{'type':'item', 'label':`Alarms`, 'menuFunc': () => {
-						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAlarms();
+						this.modalAlarms = new ModalAlarmClass(); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null, true );
 					}, class:'searchAlarms', 'tooltip':'Change alarms for search triggers'},
 				{'type':'item', 'label':`Advanced`, 'menuFunc': () => {
-						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced();
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
 					}, class:'searchAdvanced', 'tooltip':'Change search advanced options'},
+				{'type':'item', 'label':`Blocked Id's`, 'menuFunc': () => {
+						this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
+					}, class:'searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
 			]
 		);
 		controls.append(' | ');
@@ -192,7 +196,7 @@ class SearchUI {
 		let element = (card) ? $(card).find('.pcm_triggerCard') : $('.pcm_triggerCard');
 		element.find(`.pcm_foundHitsButton`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
-			this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerFound(unique);
+			this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerFound(unique, () => this.modalSearch = null);
 		});
 	}
 	sortCards(type) {
@@ -241,7 +245,7 @@ class SearchUI {
 		let buttonGroup = $(`<span class='pcm_tButtonGroup col col-auto text-right px-0' id='pcm_tButtons_${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm_optionsMenu'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
-			this.modalSearch = new ModalSearchClass(); this.modalSearch.showDetailsModal(unique);
+			this.modalSearch = new ModalSearchClass(); this.modalSearch.showDetailsModal(unique, () => this.modalSearch = null);
 		}).data('unique',unique).appendTo(buttonGroup);
 		$(`<i class='fas fa-times pcm_deleteButton'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
@@ -291,9 +295,9 @@ class SearchUI {
 		if (hit !== null) this.triggeredHits.push({'trigger':trigger, 'hit':hit});
 		while (this.triggeredHits.length && this.hitsTabInactive) {
 			let found = this.triggeredHits.pop(), hitData = found.hit, df = document.createDocumentFragment();
-			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title;
+			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title, priceFloat = hitData.monetary_reward.amount_in_dollars.toFixed(2);
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
-			let foundData = {'reqName':hitData.requester_name, 'title':markedTitle, 'price':`$${hitData.monetary_reward.amount_in_dollars.toFixed(2)}`};
+			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':hitData.title, 'price':`$${priceFloat}`};
 			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink', 'tooltip':`Turkerview Requester Link`},
@@ -306,7 +310,9 @@ class SearchUI {
 				{'type':'button', 'btnLabel':'*', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch_', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
 			], df, foundData, true, true, '#0b716c');
 			$(df).find('.pcm_tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
-			$(df).find('td').dblclick(() => { console.log('wow double click'); });
+			$(df).find('td').data('hitData',foundData).dblclick((e) => {
+				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).data('hitData'), () => this.modalSearch = null, e);
+			});
 			this.triggeredContent.find(`tbody`).prepend(df);
 		}
 		$(`#` + this.triggeredTab.tabId).html(this.triggeredTab.tabTitle + ` (${this.triggeredContent.find('tbody tr').length})`);

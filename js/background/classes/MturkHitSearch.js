@@ -31,7 +31,7 @@ class MturkHitSearch extends MturkClass {
 		this.fromSearch = new Set();
 		this.pausedPandaUI = false;
 		this.pausedSearchUI = false;
-		this.tempBlockGid = new Set(); this.blockedReqId = new Set(); this.blockedGroupId = new Set(); this.customGidSkip = [];
+		this.tempBlockGid = new Set(); this.blockedRids = null; this.blockedGids = null; this.customGidSkip = [];
     this.sort = "updated_desc";     					// Sort by updated_desc by default.
     this.pandaDur = {min:0, max:60} 					// Limits for the panda duration in minutes.
 		this.loaded = false;											// Has data been loaded from database?
@@ -42,6 +42,7 @@ class MturkHitSearch extends MturkClass {
 		this.temps = 1;
     this.sorting = ["updated_desc", "updated_asc", "reward_asc", "reward_desc", "hits_asc", "hits_desc"];
 		this.dbIds = {'pDbId':{}, 'values':{}, 'unique':{}};
+		this.optionDef = {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'tempGoHam':4000, 'acceptLimit':0, 'auto': false, 'autoLimit': 2};
 		this.ruleSet = {'blockGid': new Set(), 'blockRid': new Set(), 'onlyGid': new Set(), 'terms': false, 'exclude': new Set(), 'include': new Set(), 'payRange': false, 'minPay': 0.00, 'maxPay': 0.00};
 		if (timer) this.prepareSearch();						// Prepare all the search data.
 	}
@@ -83,7 +84,7 @@ class MturkHitSearch extends MturkClass {
 			for (const trigger of result) {
 				let dbId = trigger.id, status = (trigger.disabled) ? 'disabled' : 'searching';
 				await MYDB.getFromDB('searching', 'options', dbId).then( async options => {
-					await MYDB.getFromDB('searching', 'rules', dbId).then( async data => {
+					await MYDB.getFromDB('searching', 'rules', dbId).then( async ruleData => {
 						await MYDB.getFromDB('searching', 'history', dbId,_, 'dbId', true).then( async history => {
 							if (this.loaded && extSearchUI && trigger.searchUI) {
 								extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
@@ -92,7 +93,9 @@ class MturkHitSearch extends MturkClass {
 								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`;
 								if (!this.dbIds.values.hasOwnProperty(valueString)) {
 									let numHits = history, stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null},trigger); stats.numHits = numHits;
-									this.data[dbId] = {...trigger, ...stats}; this.options[dbId] = options; this.rules[dbId] = data.rules[data.ruleSet];
+									this.options[dbId] = Object.assign({}, this.optionDef, options);
+									this.data[dbId] = {...trigger, ...stats}; this.rules[dbId] = ruleData.rules[ruleData.ruleSet];
+									if (!options.hasOwnProperty('autoLimit')) this.updateToDB('options', this.options[dbId]);
 									if (!trigger.hasOwnProperty('numHits')) this.updateToDB(_, this.data[dbId]);
 									this.fillInObjects(this.triggersAdded++, dbId, this.data[dbId], status, valueString, this.data[dbId].searchUI); stats = {};
 								}
@@ -100,7 +103,7 @@ class MturkHitSearch extends MturkClass {
 							success[0] = "Loaded all search triggers from database";
 							history = null;
 						});
-						data = null;
+						ruleData = null;
 					});
 					options = null;
 				});
@@ -288,7 +291,33 @@ class MturkHitSearch extends MturkClass {
 	/** Find out if this group ID or requester ID is temporarily blocked.
 	 * @param  {object} trigger	- The trigger @param  {string} gId - The group ID
 	 * @return {bool}						- True if gId is blocked on this trigger. */
-	isIdsBlocked(gId, rId) { if (this.blockedGroupId.has(gId) || this.tempBlockGid.has(gId) || this.blockedReqId.has(rId)) return true; else return false; }
+	checkBlocked() { if (this.blockedGids === null) { let theOptions = MyOptions.doSearch(); this.blockedGids = theOptions.blockedGids; this.blockedRids = theOptions.blockedRids; } }
+	getBlocked(gid=true) {
+		this.checkBlocked(); let value = (gid) ? this.blockedGids : this.blockedRids;
+		if (value.length === 0) return [];
+		return value.replace(/\|\|/g,',').replace(/\|/g,'').split(',');
+	}
+	theBlocked(gId, rId, add=false, remove=false, toggle=false) {
+		this.checkBlocked();
+		let blockData = {'rid':{'found':false, 'srch':`|${rId}|`, 'block':'blockedRids', 'ret':true}, 'gid':{'found':false, 'srch':`|${gId}|`, 'block':'blockedGids', 'ret':true}};
+		for (const key of Object.keys(blockData)) {
+			if ( (key === 'rid' && rId) || (key === 'gid' && gId)) {
+				let thisBlock = blockData[key]; thisBlock.found = this[thisBlock.block].includes(thisBlock.srch);
+				if (!thisBlock.found && add) this[thisBlock.block] += thisBlock.srch;
+				else if (thisBlock.found && (remove || (toggle && add))) this[thisBlock.block] = this[thisBlock.block].replace(thisBlock.srch, '');
+				else if (add || remove) thisBlock.ret = false;
+				else thisBlock.ret = thisBlock.found;
+			} else blockData[key].ret = false;
+		}
+		if ((add || remove) && (blockData.gid.ret || blockData.rid.ret)) {
+			let opt = MyOptions.doSearch(); opt.blockedRids = this.blockedRids; opt.blockedGids = this.blockedGids; MyOptions.doSearch(opt);
+		}
+		return [blockData.gid.ret, blockData.rid.ret];
+	}
+	isIdsBlocked(gId, rId) {
+		this.checkBlocked();
+		if (this.tempBlockGid.has(gId) || this.blockedGids.includes(`|${gId}|`) || this.blockedRids.includes(`|${rId}|`)) return true; else return false;
+	}
 	/** Does this hit have a pay rate in the triggers pay range rules?
 	 * @param  {object} rules - The rules object from a trigger. @param  {number} pay   - The pay rate of the hit to check.
 	 * @return {bool}					- True if pay rate is good or not. */
@@ -454,7 +483,7 @@ class MturkHitSearch extends MturkClass {
 	async fillInObjects(count, dbId, data, status, valueString, sUI) {
 		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
-		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false};
+		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false, auto: 0};
 		if (data.pDbId !== -1) this.dbIds.pDbId[data.pDbId] = dbId; this.dbIds.values[valueString] = dbId; this.dbIds.unique[count] = dbId;
 		this.addToQueueMem(dbId);
 		if (extSearchUI && sUI) {
@@ -486,9 +515,10 @@ class MturkHitSearch extends MturkClass {
 		if (!info.pDbId) info.pDbId = -1; this.triggersAdded++;
 		if (type === 'custom' && !info.idNum) { key2 = this.triggersAdded; valueString = `${type}:${key2}:${sUI}`; }
 		let theObject = {'type':type, 'value':key2, 'pDbId':info.pDbId, 'searchUI':sUI, 'name':info.name, 'disabled':(info.status === 'disabled'), 'numFound':0, 'added':new Date().getTime(), 'lastFound':null, 'numHits':0};
+		let theOptions = Object.assign({}, this.optionDef, options);
 		let theRule = Object.assign({}, this.ruleSet, rules), theRules = {'rules':[theRule], 'ruleSet':0};
 		let theHistory = history; theObject.numHits = Object.keys(theHistory).length;
-		await this.saveToDatabase(theObject, options, theRules,_, false);
+		await this.saveToDatabase(theObject, theOptions, theRules,_, false);
 		let dbId = theObject.id; this.data[dbId] = theObject;
 		await this.theData(dbId, 'options'); await this.theData(dbId, 'rules');
 		await this.fillInObjects(this.triggersAdded, dbId, theObject, info.status, valueString, sUI);

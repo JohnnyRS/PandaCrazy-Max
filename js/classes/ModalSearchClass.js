@@ -69,7 +69,7 @@ class ModalSearchClass {
       if (doCustom && groupVal.length <= 3) wrongInput('All custom Triggers MUST have a term to search for with more than 3 characters!', $(`label[for='pcm_formAddGroupID']`));
       else if (doCustom && trigName.length <= 3) wrongInput('You must fill in the Unique Trigger Name!', $(`label[for='pcm_formTriggerName']`));
       else if (doCustom && (isNaN(minPay) || minPay === 0)) wrongInput('All custom Triggers need to have a minimum pay rate!', $(`label[for='pcm_formMinPay']`));
-      else if ((doCustom) || /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,20}|^[^\s]{10,50})/.test(groupVal)) {
+      else if ((doCustom) || /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,25}|^[^\s]{10,50})/.test(groupVal)) {
         let groupId = null, reqId = null;
         if (!doCustom) { if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal); else if (groupVal.match(/^[^Aa]/)) groupId = groupVal; else { reqId = groupVal;} }
         if (!doCustom && !reqId && !groupId) wrongInput(_, $(`label[for='pcm_formAddGroupID']`));
@@ -105,7 +105,7 @@ class ModalSearchClass {
     this.triggerOptions(df, dbId, null, modal.tempObject[idName]);
     modal.showModal(null, () => {
       $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df).appendTo(detailContents);
-    }, () => { if (afterClose) afterClose(); else modal = null; });
+    }, () => { modal = null; if (afterClose) afterClose(); });
   }
   rulesToStr(rules, placeHere=null) {
     let ruleStr = ''; for (const value of rules.values()) { ruleStr += `${value}, `; }
@@ -150,15 +150,21 @@ class ModalSearchClass {
   /** Shows the options for search jobs and allows users to change or add rules.
    * @param  {object} appendHere - Jquery object @param  {number} dbId - The dbId of the panda job to be shown. */
   async triggerOptions(appendHere, dbId, pDbId, changes) {
-    let bGStr = '', eTStr = '', iTStr = ''; changes.searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
+    let bGStr = '', eTStr = '', iTStr = '', prependOpt = []; changes.searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
     $(`<div class='pcm_inputError'></div><div class='pcm_optionsEdit text-center mb-2 w-100'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
     let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered w-100'></table>`).appendTo(appendHere);
+    if (!changes.details) changes.details = Object.assign({}, bgSearch.data[dbId]);
+    else {
+      prependOpt = [
+        {'label':'Group or Requester ID', 'type':'text', 'key1':'details', 'key':'value', 'keyCheck':'type', 'keyCheckNot':'custom', 'disable':true, 'default':0, 'tooltip':'Value of this trigger'},
+        {'label':'Unique Trigger Name:', 'type':'text', 'key1':'details', 'key':'name', 'tooltip':'The unique name for this trigger.'},
+        {'label':'Disabled?:', 'type':'trueFalse', 'key1':'details', 'key':'disabled', 'tooltip':'Should trigger be disabled?'}
+      ];
+    }
     changes.rules = await bgSearch.rulesCopy(changes.searchDbId); changes.options = await bgSearch.optionsCopy(changes.searchDbId);
     bGStr = this.rulesToStr(changes.rules.blockGid); eTStr = this.rulesToStr(changes.rules.exclude); iTStr = this.rulesToStr(changes.rules.include);
     displayObjectData([
-      {'label':'Group or Requester ID', 'type':'text', 'key1':'details', 'key':'value', 'keyCheck':'type', 'keyCheckNot':'custom', 'disable':true, 'default':0, 'tooltip':'Value of this trigger'},
-      {'label':'Unique Trigger Name:', 'type':'text', 'key1':'details', 'key':'name', 'tooltip':'The unique name for this trigger.'},
-      {'label':'Disabled?:', 'type':'trueFalse', 'key1':'details', 'key':'disabled', 'tooltip':'Should trigger be disabled?'},
+      ...prependOpt,
       {'label':'Minimum Pay:', 'type':'number', 'key':'minPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The minimum pay for hit to start collecting.'},
       {'label':'Maximum Pay:', 'type':'number', 'key':'maxPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The maximum pay for hit to start collecting.'},
       {'label':'Words or phrases Accepted only:', 'id':'pcm_string_include', 'type':'string', 'string':iTStr, 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases only will try to be collected.'},
@@ -189,7 +195,7 @@ class ModalSearchClass {
       {'label':'Temporary Start Ham Duration (seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':0, 'tooltip':'The duration in seconds to use to go in ham mode after starting to collect a hit and then go back to normal collecting mode.', 'minMax':this.hamDur},
     ], theTable, changes, true);
   }
-  async showTriggerFound(unique) {
+  async showTriggerFound(unique, afterClose=null) {
     if (!modal) modal = new ModalClass(); let dbId = bgSearch.uniqueToDbId(unique);
     const idName = modal.prepareModal(null, '860px', 'modal-header-info modal-lg', 'Edit Search Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     let df = document.createDocumentFragment();
@@ -221,10 +227,9 @@ class ModalSearchClass {
         ], theTable.find(`tbody`), tempObj, true, true, '#0b716c');
       }
       $(`#${idName} .${modal.classModalBody}`).append(df);
-    });
+    }, () => { modal = null; if (afterClose) afterClose(); });
   }
-  showSearchAlarms() { let modalAlarms = new ModalAlarmClass(); modalAlarms.showAlarmsModal( () => modalAlarms = null, true ); }
-  showSearchOptions() {
+  showSearchOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
     let theData = {'toSearchUI':globalOpt.theToSearchUI(), 'searchTimer':globalOpt.theSearchTimer(), 'options':globalOpt.doSearch()}
     const idName = modal.prepareModal(theData, '860px', 'modal-header-info modal-lg', 'Edit Search General Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', (changes) => {
@@ -247,9 +252,9 @@ class ModalSearchClass {
     ], df, modal.tempObject[idName], true);
     modal.showModal(() => {}, async () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
-    }, () => { modal = null; });
+    }, () => { modal = null; if (afterClose) afterClose(); });
   }
-  showSearchAdvanced() {
+  showSearchAdvanced(afterClose=null) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', 'Edit Search Advanced Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Save Options', () => {
       globalOpt.doSearch(changes); modal.closeModal();
@@ -263,6 +268,106 @@ class ModalSearchClass {
     ], df, modal.tempObject[idName], true);
     modal.showModal(() => {}, async () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
-    }, () => { modal = null; });
+    }, () => { modal = null; if (afterClose) afterClose(); });
+  }
+  showSearchBlocked(afterClose=null) {
+    if (!modal) modal = new ModalClass();
+    const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', `Edit Blocked Group and Requester ID's`, '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
+    modal.showModal(() => {}, async () => {
+      let df = document.createDocumentFragment(), df2 = document.createDocumentFragment(), modalBody = $(`#${idName} .${modal.classModalBody}`);
+      let blockingDiv = $(`<div id='pcm_blockDetails' class='bg-dark'></div>`).appendTo(modalBody), gidContents = null, ridContents = null;
+      let blockTabs = new TabbedClass(blockingDiv, `pcm_blockingTabs`, `pcm_gidBlock`, `pcm_ridBlock`, false, 'Block');
+      let [_, err] = await blockTabs.prepare(), gidvals = bgSearch.getBlocked(), ridvals = bgSearch.getBlocked(false);
+      if (!err) {
+        function statusInput(tab, resultStr=null, error=true) {
+          let theClass = (error) ? 'text-danger' : 'text-success';
+          modalBody.find(`.${tab} .pcm_inputResult:first`).removeClass('text-danger text-success').addClass(theClass).html(resultStr);
+        }
+        async function checkInput(e, remove, thisClass=null) {
+          let thisTab = $(e.target).data('tab'), gid = null, rid = null, theResult = null, groupId = $(e.target).data('gid');
+          let value = modalBody.find(`.${thisTab} input`).val();
+          if (!value) { statusInput(thisTab, 'Enter in an ID in the input below.'); return; }
+          else if (groupId && value.match(/^3[0-9a-zA-Z]{14,38}$/)) gid = value; else if (!groupId && value.match(/^[Aa][0-9a-zA-Z]{6,25}$/)) rid = value;
+          if (gid || rid) {
+            theResult = bgSearch.theBlocked(gid, rid, !remove, remove);
+            if (theResult[(groupId) ? 0 : 1]) {
+              statusInput(thisTab, `SUCCESS: ID ${(remove) ? 'Removed from' : 'added to'} blocked hits.`, false);
+              if (!remove) {
+                let valInfo = await bgHistory.findValues((groupId) ? [gid] : [rid]);
+                if (groupId) gidvals.push(gid + ((valInfo[gid]) ? ` - ${valInfo[gid].title}` : ` -`));
+                else ridvals.push(rid + ((valInfo[rid]) ? ` - ${valInfo[rid].reqName}` : ` -`));
+              }
+              else if (groupId) gidvals = gidvals.filter( (item) => !item.includes(gid) );
+              else ridvals = ridvals.filter((item) => !item.includes(rid));
+              thisClass.selectBoxAdd((groupId) ? gidvals : ridvals, modalBody.find(`.${thisTab} select`));
+              modalBody.find(`.${thisTab} input`).val('');
+            }
+            else statusInput(thisTab, `ERROR: ID ${(remove) ? 'not being blocked so removal failed' : 'is already being blocked'}.`);
+          } else statusInput(thisTab, `Not a valid ID. Please enter in the ${(groupId) ? 'Group ID' : 'Requester ID'} again.`);
+        }
+        let gidTab = await blockTabs.addTab(`Group ID Blocked`, true);
+        gidContents = $(`<div class='pcm_gidCont'></div>`).appendTo(`#${gidTab.tabContent}`);
+        let ridTab = await blockTabs.addTab(`Requester ID Blocked`);
+        ridContents = $(`<div class='pcm_ridCont'></div>`).appendTo(`#${ridTab.tabContent}`);
+        let exampleGid = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', exampleRid = 'example: AGVV5AWLJY7H2';
+        let typeGid = true, thisTab = 'pcm_gidCont', thisFrag = df, typeExample = exampleGid;
+        let gidsHistory = await bgHistory.findValues(gidvals), ridsHistory = await bgHistory.findValues(ridvals), values = gidvals; 
+        for (let j=0, len=gidvals.length; j < len; j++) { gidvals[j] += (gidsHistory[gidvals[j]]) ? ` - ${gidsHistory[gidvals[j]].title}` : ` -`; }
+        for (let j=0, len=ridvals.length; j < len; j++) { ridvals[j] += (ridsHistory[ridvals[j]]) ? ` - ${ridsHistory[ridvals[j]].reqName}` : ` -`; }
+        for (let i=0; i < 2; i++) {
+          $(`<div><div class='pcm_inputResult my-0 py-0'>&nbsp;</div><div style='color:aqua'>Enter an ID to add or remove from being blocked.</div></div>`).appendTo(thisFrag);
+          createInput(thisFrag, ' pcm_inputDiv-url ml-3', 'pcm_formAddTheID', `Enter in ${(typeGid) ? 'Group' : 'Requester'} ID:`, typeExample,_,_,'',90);
+          $(`<button class="btn btn-xs btn-primary ml-1 pcm_addBlocked">Add ID</button>`).data('tab',thisTab).data('gid',typeGid)
+            .on('click', (e) => { checkInput(e, false, this); }).appendTo(thisFrag);
+          $(`<button class="btn btn-xs btn-primary ml-1 pcm_removeBlocked">Remove ID</button>`).data('tab',thisTab).data('gid',typeGid)
+            .on('click', (e) => { checkInput(e, true, this); }).appendTo(thisFrag);
+          let form = $(`<div class='form-group mt-3 mb-1'></div>`).appendTo(thisFrag);
+          let selectBox = $(`<select class='form-control input-sm col-8 mx-auto' id='pcm_selectedBox' multiple size='12'></select>`).appendTo(form);
+          this.selectBoxAdd(values, $(selectBox));
+          $(`<button class="btn btn-xs btn-primary mt-0 my-3 pcm_removeFromSelect">Remove selected ID</button>`).data('tab',thisTab).data('gid',typeGid).on( 'click', (e) => {
+            let thisTab = $(e.target).data('tab'), selected = modalBody.find(`.${thisTab} option:selected`), isgid = $(e.target).data('gid');
+            let valArray = (isgid) ? gidvals : ridvals, gid = null, rid = null;
+            if (selected.length) {
+              for (const ele of selected) {
+                let text = $(ele).text(), value = text.split(' ')[0]; if (isgid) gid = value; else rid = value; let theResult = bgSearch.theBlocked(gid, rid, false, true);
+                if (theResult[(isgid) ? 0 : 1]) valArray = arrayRemove(valArray, text);
+              }
+              this.selectBoxAdd(valArray, modalBody.find(`.${thisTab} select`));
+            }
+            if (isgid) gidvals = valArray; else ridvals = valArray;
+          }).appendTo(thisFrag);
+          typeGid = false, thisTab = 'pcm_ridCont', thisFrag = df2, typeExample = exampleRid, values = ridvals;
+        }
+        gidContents.append(df); ridContents.append(df2);
+      }
+    }, () => { modal = null; if (afterClose) afterClose(); });
+  }
+  showTriggeredHit(theData, afterClose=null, ele=null) {
+    if (!modal) modal = new ModalClass();
+    const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', 'Edit Search Advanced Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => {
+      let check = bgSearch.theBlocked(theData.gid, theData.rid), tr = $(ele.target).closest('tr');
+      if (ele && (check[0] || check[1])) tr.addClass('pcm_blockedHit'); else tr.removeClass('pcm_blockedHit');
+      modal.closeModal();
+    }, 'invisible', 'No', null, 'invisible', 'Cancel');
+    modal.showModal(() => {}, async () => {
+      let df = document.createDocumentFragment(), blocked = bgSearch.theBlocked(theData.gid, theData.rid);
+      $(`<div class='pcm_detailsEdit text-center mb-2'>Details of this hit:</div>`).appendTo(df);
+      displayObjectData( [
+        {'label':'Requester Name:', 'type':'keyValue', 'key':'reqName', 'disable':true, 'tooltip':`Requester Name for this hit.`},
+        {'label':'Title:', 'type':'keyValue', 'key':'title', 'disable':true, 'tooltip':`Title of this hit.`},
+        {'label':'Description:', 'type':'keyValue', 'key':'desc', 'disable':true, 'tooltip':`Description of this hit.`},
+        {'label':'Price:', 'type':'keyValue', 'key':'price', 'disable':true, 'tooltip':`Price for this hit.`},
+        {'label':'Requester ID:', 'type':'keyValue', 'key':'rid', 'disable':true, 'tooltip':`Requester ID for this hit.`},
+        {'label':'Group ID:', 'type':'keyValue', 'key':'gid', 'disable':true, 'tooltip':`Group ID for this hit.`},
+      ], df, theData, true);
+      $(`<div class='pcm_buttonArea'></div>`).append($(`<button class="btn btn-xs btn-primary mx-2 pcm_blockGid">${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( (e) => {
+          bgSearch.theBlocked(theData.gid, null, true, false, true); let check = bgSearch.theBlocked(theData.gid, null);
+          $(e.target).text(`${(check[0]) ? 'UNBLOCK' : 'Block'} this Group ID`);
+        })).append($(`<button class="btn btn-xs btn-primary mx-2 pcm_blockRid">${(blocked[1]) ? 'UNBLOCK' : 'Block'} this Requester</button>`).click( (e) => {
+          bgSearch.theBlocked(null, theData.rid, true, false, true); let check = bgSearch.theBlocked(null, theData.rid);
+          $(e.target).text(`${(check[1]) ? 'UNBLOCK' : 'Block'} this Requester`);
+        })).appendTo(df);
+      $(`#${idName} .${modal.classModalBody}`).append(df);
+    }, () => { modal = null; if (afterClose) afterClose(); });
   }
 }

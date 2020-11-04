@@ -6,11 +6,13 @@
 class MturkQueue extends MturkClass {
 	/**
    * @param  {number} timer           - Time to use for the timer to get queue results.
-   * @param  {number} [OffTimer=5000] - Time to use for the timer when logged off to get queue results.
+   * @param  {number} [OffTimer=5000] - Time to use for the timer when logged off or disconnected to get queue results.
 	 */
-	constructor(timer, OffTimer=5000) {
+	constructor(timer, OffTimer=5000, disconnectedTimer=10000) {
     super();
     this.timer = timer;               // Sets the time to use for the queue Timer cycle.
+    this.disconnected = false;
+    this.disconnectTimer = disconnectedTimer;
     this.loggedOffTimer = OffTimer;   // Sets the timer to use for when it's logged off.
     this.queueUnique = null;          // The unique number set by the timer class for this class.
     this.queueResults = [];           // The results from mturk queue with all hits info.
@@ -75,7 +77,7 @@ class MturkQueue extends MturkClass {
   addAccepted(pandaInfo) { this.queueAdd.push(pandaInfo.data); }
   /** Changes the timer to a longer time and informs panda and search class when logged off. */
   nowLoggedOff() {
-    this.loggedOff = true; queueTimer.theTimer(this.loggedOffTimer);
+    this.loggedOff = true; if (queueTimer) queueTimer.theTimer(this.loggedOffTimer);
     if (this.dLog(1)) console.info('%cYou are logged off from mturk.com.',CONSOLE_WARN);
     myPanda.nowLoggedOff(); mySearch.nowLoggedOff(); // Show logged off warning on all running UI's.
   }
@@ -83,7 +85,7 @@ class MturkQueue extends MturkClass {
   nowLoggedOn() {
     this.loggedOff = false; queueTimer.theTimer(this.timer);
     if (this.dLog(1)) console.info('%cYou are logged back in to mturk.com.',CONSOLE_WARN);
-    myPanda.nowLoggedOn(); mySearch.nowLoggedOn(); // Remove logged off warning on all running UI's.
+    if (myPanda) myPanda.nowLoggedOn(); if (mySearch) mySearch.nowLoggedOn(); // Remove logged off warning on all running UI's.
   }
   /** Fetches the url for the queue after timer class tells it to do so and handles mturk results.
    * Can detect logged off, PRE's and good queue results.
@@ -97,6 +99,7 @@ class MturkQueue extends MturkClass {
       } else {
         if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
         else if (result.type === 'ok.text') {
+          if (this.disconnected) { this.disconnected = false; queueTimer.theTimer(this.timer); }
           if (this.loggedOff) this.nowLoggedOn(); // Must be logged in if mturk sent relevant data.
           let errorPage = $(result.data).find('.error-page');
           if (errorPage.length>0) {
@@ -116,7 +119,8 @@ class MturkQueue extends MturkClass {
           }
           errorPage = null;
         } else if (result.type === 'caught.error') {
-          console.log('Mturk might be slow right now. Received a service unavailable error.')
+          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.log('disconnected'); this.disconnected = true; queueTimer.theTimer(this.disconnectTimer); }
+          console.log(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
         }
       }
       result = null;

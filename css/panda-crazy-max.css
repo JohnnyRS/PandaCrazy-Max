@@ -112,6 +112,7 @@ html, body { height: 100%; }
 .dModalBtns { width:15%; padding:5px 0 !important; }
 .radio-xxs { height: 12px; }
 .pcm_foundHitsButton { margin-top:-2px; line-height:0.3; border:0; }
+.pcm_blockedHit { background-color: #7d7578 !important; }
 .pcm_triggerItem { font-size: .875rem; line-height: 1.0; background-color: #1A3E5E; color: #F0E68C; }
 .pcm_triggerItem:hover .text-xs { color: #000080; }
 .pcm_triggerItem.pcm_disabled { color: #C0C0C0; }
