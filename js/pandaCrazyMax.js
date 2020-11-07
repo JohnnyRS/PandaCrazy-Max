@@ -5,7 +5,7 @@ let localVersion = localStorage.getItem('PCM_version');
 let gManifestData = chrome.runtime.getManifest();
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
-$('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1000}, trigger:'hover'});
+$('body').tooltip({'selector': `.pcm_tooltipData:not(.pcm_tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {

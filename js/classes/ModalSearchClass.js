@@ -11,6 +11,7 @@ class ModalSearchClass {
     this.queueSize = {'min':20, 'max':200};
     this.triggerHistDays = {'min':2, 'max':60};
     this.customHistDays = {'min':2, 'max':30};
+    this.autoRange = {'min':1, 'max':5};
   }
   /** Shows a modal for adding panda or search jobs.
    * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
@@ -150,15 +151,20 @@ class ModalSearchClass {
   /** Shows the options for search jobs and allows users to change or add rules.
    * @param  {object} appendHere - Jquery object @param  {number} dbId - The dbId of the panda job to be shown. */
   async triggerOptions(appendHere, dbId, pDbId, changes) {
-    let bGStr = '', eTStr = '', iTStr = '', prependOpt = []; changes.searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
+    let bGStr = '', eTStr = '', iTStr = '', prependOpt = [], customOpt = []; changes.searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
     $(`<div class='pcm_inputError'></div><div class='pcm_optionsEdit text-center mb-2 w-100'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
     let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered w-100'></table>`).appendTo(appendHere);
-    if (!changes.details) changes.details = Object.assign({}, bgSearch.data[dbId]);
-    else {
+    if (!changes.details) {
+      changes.details = Object.assign({}, bgSearch.data[dbId]);
+    } else {
       prependOpt = [
         {'label':'Group or Requester ID', 'type':'text', 'key1':'details', 'key':'value', 'keyCheck':'type', 'keyCheckNot':'custom', 'disable':true, 'default':0, 'tooltip':'Value of this trigger'},
         {'label':'Unique Trigger Name:', 'type':'text', 'key1':'details', 'key':'name', 'tooltip':'The unique name for this trigger.'},
         {'label':'Disabled?:', 'type':'trueFalse', 'key1':'details', 'key':'disabled', 'tooltip':'Should trigger be disabled?'}
+      ];
+      if (changes.details.type === 'custom') customOpt = [
+        {'label':'Automatic Collect Hits:', 'type':'trueFalse', 'key1':'options', 'key':'auto', 'tooltip':'Start collecting hits automatically up to limit.'},
+        {'label':'Auto Collect Hits Limit:', 'type':'number', 'key1':'options', 'key':'autoLimit', 'tooltip':'Number of hits to collect at once automatically.', 'minMax':this.autoRange},
       ];
     }
     changes.rules = await bgSearch.rulesCopy(changes.searchDbId); changes.options = await bgSearch.optionsCopy(changes.searchDbId);
@@ -187,6 +193,7 @@ class ModalSearchClass {
       }},
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
       {'label':'Limit # of total Hits in queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.', 'minMax':{'min':0, 'max':24}},
+      ...customOpt,
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key1':'options', 'key':'once', 'tooltip':'Should only one hit be accepted and then stop collecting? Great for surveys.'},
       {'label':'Daily Accepted Hit Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many hits a day should be accepted for this job?'},
       {'label':'Stop Collecting After (seconds):', 'type':'number', 'key1':'options', 'key':'duration', 'seconds':true, 'default':0, 'tooltip':'The number of seconds for hits found to collect before stopping. Resets time if a hit gets collected.', 'minMax':this.pandaDur},
@@ -224,7 +231,7 @@ class ModalSearchClass {
             else { blocked.add(key); $(e.target).removeClass(`btn-primary`).addClass(`btn-danger`).html('Unblock'); }
             rules.blockGid = blocked; bgSearch.theData(dbId, 'rules', rules)
           }}
-        ], theTable.find(`tbody`), tempObj, true, true, '#0b716c');
+        ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm_triggeredhit');
       }
       $(`#${idName} .${modal.classModalBody}`).append(df);
     }, () => { modal = null; if (afterClose) afterClose(); });

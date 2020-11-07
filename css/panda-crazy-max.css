@@ -32,6 +32,8 @@ html, body { height: 100%; }
 .fas.pcm_deleteButton { margin-left:5px !important; color:black; background-color:white; border: 1px solid cornflowerblue; }
 .fas.pcm_optionsMenu { color: aliceblue; height:1.2em; margin-left:3px; }
 #pcm_searching.pcm_searchOn { color: #a9fc79 !important; }
+#pcm_autoAllow.pcm_autoOff { background-color: crimson; }
+#pcm_autoAllow.pcm_autoOn { background-color: forestgreen; }
 .pcm_buttonOn { background-color: #008000; color: #FFFFFF !important; }
 .pcm_buttonOn.pcm_delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm_buttonOff { background-color: #D3D3D3; color: #000000; }
@@ -101,6 +103,7 @@ html, body { height: 100%; }
 .table-moreCondensed>thead>tr>td { font-size: 11px; padding:2px 1px 0 1px !important; }
 .table-xs { font-size: .575rem !important; line-height: .1 !important; }
 .text-xs { font-size: .575rem !important; color: #FFF5EE; }
+.btnNegTop { margin-top: -4px; }
 .text-pcmInfo { color: #edf5e6; padding-top:4px !important; padding-bottom:1px !important; font-size:11px; line-height:1.5; }
 .pcm_triggeredHits .text-pcmInfo { padding-top:2px !important; }
 .pcm_searchModal .text-pcmInfo { font-size: 0.8em; }
@@ -112,7 +115,12 @@ html, body { height: 100%; }
 .dModalBtns { width:15%; padding:5px 0 !important; }
 .radio-xxs { height: 12px; }
 .pcm_foundHitsButton { margin-top:-2px; line-height:0.3; border:0; }
+.pcm_triggeredhit { background-color: #0b716c; }
 .pcm_blockedHit { background-color: #7d7578 !important; }
+.pcm_autoHit { background-color: #054604 !important; }
+.pcm_grouping { background-color: #000080; }
+.pcm_groupCollect { background-color: #066306 !important; }
+.pcm_groupEmpty { background-color: #800517 !important; }
 .pcm_triggerItem { font-size: .875rem; line-height: 1.0; background-color: #1A3E5E; color: #F0E68C; }
 .pcm_triggerItem:hover .text-xs { color: #000080; }
 .pcm_triggerItem.pcm_disabled { color: #C0C0C0; }

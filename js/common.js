@@ -198,11 +198,11 @@ function markInPlace(findThis, fromHere) {
 /** Displays an array of objects line by line in different ways and allows for toggling an edit input
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
- * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? @param  {string} [trBgColor=''] - TR background color */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, trBgColor='', append=true) {
+ * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? */
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, append=true, addClass=null) {
   let row=null, tdCol = '';
-  const trStyle = (trBgColor!=='') ? ` style='background-color:${trBgColor}'` : '';
-  if (horizontal) row = $(`<tr${trStyle}></tr>`).hide();
+  const trClass = (addClass) ? ` class=${addClass}` : '';
+  if (horizontal) row = $(`<tr${trClass}></tr>`).hide();
   for (const element of thisArrayObject) { 
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (!useObject || (element.ifNot && useObject[element.ifNot])) continue;

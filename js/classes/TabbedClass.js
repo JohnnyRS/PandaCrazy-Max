@@ -246,7 +246,7 @@ class TabbedClass {
    * @param  {object} ui     - The ui jquery element from a sortable or droppable area.
    * @param  {string} action - Which action is the card being dragged for? */
   async cardDragged(e, ui, action) {
-    let theItem = (action === "sortable") ? ui.item : ui.draggable;
+    let theItem = (action === "sortable") ? ui.item : ui.draggable; $(theItem).find('.pcm_tooltipData').removeClass('pcm_tooltipDisable');
     let myId = $(theItem).data("myId"), activeTab = $(`#pcm_tabbedPandas a.active:first`).closest("li");
     const unique = $(activeTab).data("unique");
     const hitData = await bgPanda.dataObj(myId), tabUnique = hitData.tabUnique;

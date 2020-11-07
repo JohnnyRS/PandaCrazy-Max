@@ -154,6 +154,8 @@ class SearchUI {
 			]
 		);
 		$(`#pcm_sortingDropDown .dropdown-item`).eq(this.sorting).addClass('selectedItem');
+		controls.append(' | ');
+		controls.append(`<button class='btn btn-primary btn-xxs pcm_autoOff' id='pcm_autoAllow'>Allow Auto</button>`);
 		$(`#pcm_searchNow`).click( (e) => {
 			if (bgSearch.searchGStats.isSearchOn()) this.stopSearching();
 			else if (bgSearch.isPandaUI()) this.startSearching();
@@ -162,6 +164,10 @@ class SearchUI {
 				null , false, false, '', '', null );
 			}
 			$(e.target).blur();
+		});
+		$(`#pcm_autoAllow`).click( (e) => {
+			let autoAllow = bgSearch.autoHitsAllow(!bgSearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
+			$(e.target).html(buttonText).removeClass('pcm_autoOn pcm_autoOff').addClass((autoAllow) ? 'pcm_autoOn' : 'pcm_autoOff');
 		});
 		$('#pcm_addTriggers').click( () => { this.showSearchAddModal(); } );
 		$('#pcm_addCustomTriggers').click( () => { this.showSearchAddModal(true); } );
@@ -291,14 +297,15 @@ class SearchUI {
 			});
 		}
 	}
-	displayTriggeredHits(trigger=null, hit=null, term=null) {
+	displayTriggeredHits(trigger=null, hit=null, term=null, auto=false) {
 		if (hit !== null) this.triggeredHits.push({'trigger':trigger, 'hit':hit});
 		while (this.triggeredHits.length && this.hitsTabInactive) {
 			let found = this.triggeredHits.pop(), hitData = found.hit, df = document.createDocumentFragment();
 			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title, priceFloat = hitData.monetary_reward.amount_in_dollars.toFixed(2);
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
-			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':hitData.title, 'price':`$${priceFloat}`};
+			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':markedTitle, 'price':`$${priceFloat}`};
 			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
+			let trClass = (auto) ? 'pcm_autoHit' : 'pcm_triggeredhit';
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm_tvLink', 'tooltip':`Turkerview Requester Link`},
 				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
@@ -308,7 +315,7 @@ class SearchUI {
 				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customOnce_', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
 				{'type':'button', 'btnLabel':'S', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch1_', 'unique':unique, 'tooltip':`Create search trigger to collect once for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData); }},
 				{'type':'button', 'btnLabel':'*', 'btnColor':'primary', 'addClass':" btn-xxs", 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm_customSearch_', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
-			], df, foundData, true, true, '#0b716c');
+			], df, foundData, true, true, true, trClass);
 			$(df).find('.pcm_tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
 			$(df).find('td').data('hitData',foundData).dblclick((e) => {
 				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).data('hitData'), () => this.modalSearch = null, e);
@@ -317,10 +324,10 @@ class SearchUI {
 		}
 		$(`#` + this.triggeredTab.tabId).html(this.triggeredTab.tabTitle + ` (${this.triggeredContent.find('tbody tr').length})`);
 	}
-	triggeredHit(unique, triggerData, hitData=null, term=null, started=true) {
+	triggeredHit(unique, triggerData, hitData=null, term=null, started=true, auto=false) {
 		$(`#pcm_triggerCard_${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm_triggerStats_${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
-		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term);
+		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term, auto);
 		if (term && started) alarms.playSound('triggeredAlarm');
 	}
 	/** Shows the add search trigger modal. */

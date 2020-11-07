@@ -160,7 +160,7 @@ class DatabaseClass {
       if (keys === null) {
         let using = (indexName) ? store.index(indexName) : store, allKey = (indexName) ? key : _, cursorArray = [];
         if (useCursor) {
-          let cursorRequest = using.openCursor(null, direction);
+          let cursorRequest = using.openCursor(allKey, direction);
           cursorRequest.onsuccess = (e) => {
             let cursor = e.target.result;
             if (cursor) {

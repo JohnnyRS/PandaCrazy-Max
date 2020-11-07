@@ -129,12 +129,12 @@ class PandaGroupings {
    * @param  {number} grouping - The unique number for the grouping to be deleted. */
   toggle(grouping, noCheck=false) {
     const keys = Object.keys(this.groups[grouping].pandas);
-    if (keys.length>0) {
+    if (keys.length > 0) {
       this.groupStatus[grouping].collecting = !this.groupStatus[grouping].collecting;
       if (this.groupStatus[grouping].collecting)
-        $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", "green");
+        $(`#pcm_nameDesc_${grouping}`).closest("tr").removeClass().addClass('pcm_groupCollect');
       else { 
-        $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", (keys.length===0) ? "#800517" : "");
+        $(`#pcm_nameDesc_${grouping}`).closest("tr").removeClass().addClass((keys.length === 0) ? 'pcm_groupEmpty' : 'pcm_grouping');
         delete this.startTimes[grouping]; delete this.endTimes[grouping];
       }
       if (!noCheck) Object.keys(this.groups).forEach( unique => { this.goCheckGroup(unique); });
@@ -171,18 +171,18 @@ class PandaGroupings {
     let df = document.createDocumentFragment();
     Object.keys(this.groups).forEach(grouping => {
       this.goCheckGroup(grouping, true);
-      const bgColor = (this.groupStatus[grouping].collecting) ? '#066306' : ((Object.keys(this.groups[grouping].pandas).length===0) ? '#800517' : '');
+      const bgClass = (this.groupStatus[grouping].collecting) ? 'pcm_groupCollect' : ((Object.keys(this.groups[grouping].pandas).length===0) ? 'pcm_groupEmpty' : 'pcm_grouping');
       displayObjectData([
         {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm_nameDesc_${grouping}`, 'andKey':'description', 'andString':`<span class="small">{${Object.keys(this.groups[grouping].pandas).length} Jobs}</span>`, 'unique':grouping, 'clickFunc': (e) => { this.toggle(e.data.unique); }
         },
-        {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs', 'idStart':'pcm_editButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
+        {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs btnNegTop', 'idStart':'pcm_editButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
           this.showgroupingEditModal(grouping,_,_, () => { });
         }},
-        {'btnLabel':'Del', 'type':'button', 'addClass':' btn-xxs', 'idStart':'pcm_deleteButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
+        {'btnLabel':'Del', 'type':'button', 'addClass':' btn-xxs btnNegTop', 'idStart':'pcm_deleteButton1_', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
           this.delete(grouping);
           $(e.target).closest('tr').remove();
         }}
-      ], df, this.groups[grouping], true, true, bgColor); }
+      ], df, this.groups[grouping], true, true, true, bgClass); }
     );
     modal.showModal(null, () => {
       divContainer.append(df);
@@ -195,39 +195,40 @@ class PandaGroupings {
    * @param  {function} [cancelFunc=null] - The function to call when cancel button is clicked.
    * @param  {function} [afterClose=null] - The function to call when modal is closed. */
   showgroupingEditModal(grouping, afterFunc=null, cancelFunc=null, afterClose=null) {
-    pandaUI.showJobsModal("groupingEdit", grouping, this.groups[grouping], (savedResults) => {
-      const name = $(`#pcm_groupingNameI`).val(), description = $(`#pcm_groupingDescI`).val();;
-      savedResults.name = (name==="") ? `Grouping #${grouping}` : name;
-      savedResults.description = (description==="") ? `no description` : description;
+    pandaUI.showJobsModal('groupingEdit', grouping, this.groups[grouping], (savedResults) => {
+      const name = $(`#pcm_groupingNameI`).val(), description = $(`#pcm_groupingDescI`).val();
+      savedResults.name = (name === '') ? `Grouping #${grouping}` : name;
+      savedResults.description = (description === '') ? `no description` : description;
       savedResults.startTime = $(`#datetimepicker1`).val();
       savedResults.endHours = $(`#pcm_endHours`).val();
       savedResults.endMinutes = $(`#pcm_endMinutes`).val();
       this.groups[grouping] = Object.assign(this.groups[grouping], savedResults);
       modal.closeModal();
-      if (savedResults.startTime!=="") this.setStartEndTimes(grouping);
+      if (savedResults.startTime !== '') this.setStartEndTimes(grouping);
       else if (this.startTimes.hasOwnProperty(grouping)) { delete this.startTimes[grouping]; delete this.endTimes[grouping]; }
       const jobNumbers = Object.keys(this.groups[grouping].pandas).length;
-      const bgColor = (jobNumbers>0) ? "" : "#800517";
-      $(`#pcm_nameDesc_${grouping}`).html(`${this.groups[grouping].name} - ${this.groups[grouping].description} - <span class="small">{${jobNumbers} Jobs}</span>`)
-      $(`#pcm_nameDesc_${grouping}`).closest("tr").css("background-color", bgColor).effect( "highlight", {color:"#3CB371"}, 1500);
+      const bgColor = (jobNumbers > 0) ? 'pcm_grouping' : 'pcm_groupEmpty';
+      $(`#pcm_nameDesc_${grouping}`).html(`${this.groups[grouping].name} - ${this.groups[grouping].description} - <span class='small'>{${jobNumbers} Jobs}</span>`)
+      $(`#pcm_nameDesc_${grouping}`).closest('tr').removeClass().addClass(bgColor).effect( 'highlight', {color:'#3CB371'}, 1500);
       MYDB.addToDB('panda', 'grouping', this.groups[grouping]);
       if (afterFunc!==null) setTimeout( () => { afterFunc(); }, 300 );
     }, async (e) => {
       let info = bgPanda.options(e.data.unique);
       if ($(e.target).prop('checked')) {
-        $(e.target).closest("tr").effect( "highlight", {color:"#3CB371"}, 800, () => {
+        $(e.target).closest('tr').effect( 'highlight', {color:'#3CB371'}, 800, () => {
           this.groups[grouping].pandas[info.dbId] = {hamMode:false};
-          $(e.target).closest(".modal-content").find(".pcm_jobsInGroup:first").removeClass("text-info").addClass("text-success").text(`Jobs in Groups: ${Object.keys(this.groups[grouping].pandas).length}`);
+          $(e.target).closest('.modal-content').find('.pcm_jobsInGroup:first')
+            .removeClass('text-info').addClass('text-success').text(`Jobs in Groups: ${Object.keys(this.groups[grouping].pandas).length}`);
         } );
       } else {
-        $(e.target).closest("tr").effect( "highlight", {color:"#F08080"}, 800, () => {
+        $(e.target).closest('tr').effect( 'highlight', {color:'#F08080'}, 800, () => {
           delete this.groups[grouping].pandas[info.dbId];
-          $(e.target).closest(".modal-content").find(".pcm_jobsInGroup:first").removeClass("text-info").addClass("text-success").text(`Jobs in Groups: ${Object.keys(this.groups[grouping].pandas).length}`);
+          $(e.target).closest('.modal-content').find('.pcm_jobsInGroup:first')
+            .removeClass('text-info').addClass('text-success').text(`Jobs in Groups: ${Object.keys(this.groups[grouping].pandas).length}`);
         } );
       }
     }, cancelFunc, () => {
-      Object.keys(this.groups[grouping].pandas).forEach( 
-        (key) => { $(`#pcm_selection_${bgPanda.dbIds[key]}`).prop('checked', true); });
+      Object.keys(this.groups[grouping].pandas).forEach( (key) => { $(`#pcm_selection_${bgPanda.dbIds[key]}`).prop('checked', true); });
     }, () => { if (afterClose) afterClose(); });
   }
 }

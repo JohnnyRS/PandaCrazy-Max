@@ -217,7 +217,7 @@ class MturkPanda extends MturkClass {
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - The object data for job to send status of to search class.
 	 * @param  {bool} status - The collection status of this panda. */
-	sendStatusToSearch(data, status, collected=false) { mySearch.pandaStatus(data.groupId, status, collected); }
+	sendStatusToSearch(data, status, collected=false, url) { mySearch.pandaStatus(data.groupId, status, collected, url); }
 	/** Will add fetched to search jobs when seach class fetches a hit list. */
 	searchFetched() {
 		for (const unique of this.searchesUniques) { if (extPandaUI.pandaStats[unique].doSearching()) extPandaUI.pandaStats[unique].addFetched(); }
@@ -511,7 +511,7 @@ class MturkPanda extends MturkClass {
 				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 				extPandaUI.cards.highlightEffect_gid(myId);
 				if (result.type === "ok.text" && result.url.includes("assignment_id=")) {
-					this.sendStatusToSearch(info.data, true, true); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
+					this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
 				} else {
 					let stopped = this.checkIfLimited(myId, false, info.data);
 					if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }

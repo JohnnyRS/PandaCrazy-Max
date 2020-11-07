@@ -77,10 +77,10 @@ class PandaCards {
   createCardButtonGroup(myId, info) {
     const textCollect = (info.search) ? '-Collecting-' : 'Collect';
     let group = `<div class='card-text' id='pcm_buttonGroup_${myId}'>`;
-    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_collectButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_collectButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
     if (!info.search) group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_hamButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_hamButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>GoHam</span></button>`;
-    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_detailsButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.details}'><span>Details</span></button>`;
-    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_deleteButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title='${this.values.delete}'><span>X</span></button>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_detailsButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_detailsButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.details}'><span>Details</span></button>`;
+    group += `<button class='btn btn-light btn-xs btn-outline-dark toggle-text pcm_hitButton pcm_deleteButton pcm_tooltipData pcm_buttonOff shadow-none' id='pcm_deleteButton_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.delete}'><span>X</span></button>`;
     group += `</div>`;
     return group;
   }
@@ -106,7 +106,7 @@ class PandaCards {
     let card = $(`<div class='card text-light border pcm_pandaCard${searchCard}${mutedCard}' id='pcm_pandaCard_${myId}'></div>`).data('myId',myId);
     let cardBody = $(`<div class='card-body'></div>`).appendTo(card);
     let cardText = $(`<div class='card-text' id='output_${myId}'>`).appendTo(cardBody);
-    $(`<div class='pcm_nameGroup row w-100 px-0'></div>`).append($(`<span class='pcm_reqName pcm_tooltipData col mr-auto px-0 text-truncate' id='pcm_hitReqName_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></span>`).css('cursor', 'default')).append($(`<span class='pcm_groupId col col-auto text-right px-0' id='pcm_groupId_${myId}'></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
+    $(`<div class='pcm_nameGroup row w-100 px-0'></div>`).append($(`<span class='pcm_reqName pcm_tooltipData col mr-auto px-0 text-truncate' id='pcm_hitReqName_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></span>`).css('cursor', 'default')).append($(`<span class='pcm_groupId pcm_tooltipData col col-auto text-right px-0' id='pcm_groupId_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='Click to copy preview page URL or double click to open preview page.'></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
     this.oneLineCard(myId, info).appendTo(cardText);
     $(`<div class='pcm_priceGroup'></div>`).append($(`<span class='pcm_price text-truncate' id='pcm_hitPrice_${myId}'></span>`).css('cursor', 'default')).append($(`<span class='pcm_numbers text-truncate pl-1' id='pcm_numbers_${myId}'></span>`)).appendTo(cardText);
     $(`<div class='pcm_title pcm_tooltipData text-truncate' id='pcm_hitTitle_${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></div>`).css('cursor', 'default').appendTo(cardText);
@@ -232,7 +232,7 @@ class PandaCards {
   }
 	/** Binds events to all cards on page. Will unbind any events too so won't double events. */
 	cardButtons() {
-		$(`.pcm_pandaCard`).unbind('click').click( e => {
+		$(`.pcm_pandaCard`).unbind('click').click(e => {
 			let card = $(e.target).closest('.card'), theButton = card.find('.pcm_deleteButton'), myId = card.data('myId');
 			if (e.ctrlKey) {
 				if (this.ctrlDelete.includes(myId)) { theButton.css('background-color', ''); this.ctrlDelete = arrayRemove(this.ctrlDelete,myId); }
@@ -244,8 +244,9 @@ class PandaCards {
       let card = $(e.target).closest('.card'), myId = card.data('myId'), data = await bgPanda.dataObj(myId);
       data.mute = !data.mute; bgPanda.updateDbData(myId, data); this.pandaMute(myId, data.mute);
       return false;
-    } );
-		$(`.pcm_collectButton, .pcm_collectButton1`).unbind('click').click( async (e) => {
+    }).mousedown( e => { $(`.pcm_tooltipData`).tooltip('dispose'); $(e.target).closest('.pcm_pandaCard').find('.pcm_tooltipData').addClass('pcm_tooltipDisable');
+    }).mouseup( e => { $(e.target).closest('.pcm_pandaCard').find('.pcm_tooltipData').removeClass('pcm_tooltipDisable'); } );
+		$(`.pcm_collectButton, .pcm_collectButton1`).unbind('click').click(async e => {
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
       if (theButton.data('longClicked')) theButton.removeData('longClicked');
       else {
@@ -266,7 +267,7 @@ class PandaCards {
         else pandaUI.stopCollecting(myId, 'manual');
         theButton = card = null;
       }
-		}).unbind('long-press').on('long-press', async (e) => {
+		}).unbind('long-press').on('long-press', async e => {
       e.preventDefault();
       let theButton = $(e.target).closest('.btn'), card = $(e.target).closest('.card');
       if (!card.is('.pcm_searching')) {
@@ -276,12 +277,12 @@ class PandaCards {
         theButton = null; card = null;
       }
     });
-		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click( async (e) => {
+		$(`.pcm_hamButton , .pcm_hamButton1`).unbind('click').click(async e => {
 			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
 			if (theButton.data('longClicked')) { theButton.removeData('longClicked'); theButton.css({'background-color': '', 'color': ''}); }
 			else { pandaUI.hamButtonClicked(myId, theButton,_, true); }
 			e.preventDefault(); theButton = null; return false;
-		}).unbind('long-press').on('long-press', async (e) => {
+		}).unbind('long-press').on('long-press', async e => {
       e.preventDefault();
 			let theButton = $(e.target).closest('.btn'), myId = $(e.target).closest('.card').data('myId');
 			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
@@ -296,7 +297,7 @@ class PandaCards {
 			}
 			theButton = null; return false;
 		});
-		$(`.pcm_deleteButton, .pcm_deleteButton1`).unbind('click').click((e) => {
+		$(`.pcm_deleteButton, .pcm_deleteButton1`).unbind('click').click(e => {
       let card = $(e.target).closest('.card'), theButton = card.find('.pcm_deleteButton'), myId = card.data('myId'); e.stopPropagation();
       if (this.ctrlDelete.length > 0) theButton.css('background-color', 'red');
       if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
@@ -304,12 +305,12 @@ class PandaCards {
         if (response === 'NO' && this.ctrlDelete.length === 1) { this.ctrlDelete = []; $('.pcm_deleteButton').css('background-color', ''); }
       }, 'manual');
 		});
-		$(`.pcm_detailsButton , .pcm_detailsButton1`).unbind('click').click( async (e) => {
+		$(`.pcm_detailsButton , .pcm_detailsButton1`).unbind('click').click(async e => {
 			let myId = $(e.target).closest('.card').data('myId');
 			pandaUI.modalJob = new ModalJobClass();
 			pandaUI.modalJob.showDetailsModal(myId,_, () => { pandaUI.modalJob = null; modal = null; });
 		});
-		$(`.pcm_groupId`).unbind('click').click( (e) => {
+		$(`.pcm_groupId`).unbind('click').click(e => {
 			const double = parseInt( $(e.target).data('double'), 10 );
 			if (double === 2) $(e.target).data('double', 0);
 			setTimeout( () => {
@@ -320,11 +321,11 @@ class PandaCards {
 				}
 			}, 250);
 		});
-    $(`.pcm_groupId`).unbind('dblclick').on('dblclick', (e) => {
+    $(`.pcm_groupId`).unbind('dblclick').on('dblclick', e => {
 			let myId = $(e.target).closest('.card').data('myId');
 			$(e.target).data('double', 2);
 		});
-		$(`.pcm_nameGroup1`).unbind('click').click( (e) => {
+		$(`.pcm_nameGroup1`).unbind('click').click(e => {
       let myId = $(e.target).closest('.card').data('myId'), reqName = $(`#pcm_hitReqName1_${myId}`), stats = $(`#pcm_hitStats1_${myId}`);
       if (reqName.is(':visible')) { reqName.hide(); stats.show(); } else { stats.hide(); reqName.show(); }
     });

@@ -234,7 +234,7 @@ class ModalJobClass {
       {'string':'', 'type':'checkbox', 'btnFunc': (e) => { $(`.modal-body input[type='checkbox']`).prop('checked', $(e.target).is(':checked')); }},
       {'string':'Requester Name', 'type':'string', 'noBorder':true}, {'string':'Title', 'type':'string', 'noBorder':true}, {'string':'Pay', 'type':'string', 'noBorder':true},
       {'string':' ', 'type':'string'}, {'string':' ', 'type':'string'}
-    ], divContainer, bgPanda.info, true, true, '#0b716c');
+    ], divContainer, bgPanda.info, true, true, true, 'pcm_triggeredhit');
     for (const myId of jobs) {
       let status = (pandaUI.pandaStats[myId].collecting) ? 'On' : 'Off', data = await bgPanda.dataObj(myId);
       displayObjectData([
@@ -309,8 +309,8 @@ class ModalJobClass {
     $('<button class="btn btn-xxs btn-primary ml-1 pcm_searchingJobs">Search</button>').on( 'click', async (e) => {
       $(modalBody).find('.pcm_jobTable').remove();
       let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
-      this.showJobsTable(modalBody, filtered, checkFunc, () => {});
-      if (type==='groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm_selection_${bgPanda.dbIds[value]}`).prop('checked', true); });
+      await this.showJobsTable(modalBody, filtered, checkFunc, () => {});
+      if (type === 'groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm_selection_${bgPanda.dbIds[value]}`).prop('checked', true); });
     }).appendTo(inputControl);
     if (type === 'jobs') $('<button class="btn btn-xxs btn-danger ml-1">Delete Selected</button>').click( (e) => {
       const selected = $(modalBody).find('.pcm_checkbox:checked').map((_,element) => Number($(element).val()) ).get();
@@ -318,7 +318,7 @@ class ModalJobClass {
           if (result !== 'NO') {
             $(modalBody).find('.pcm_jobTable').remove();
             let filtered = await this.jobsFilter($('#pcm_searchJobs').val().toLowerCase(), modalControl);
-            this.showJobsTable(modalBody, filtered,_, () => {});
+            await this.showJobsTable(modalBody, filtered,_, () => {});
           }
         }, 'manual', () => {});
     }).appendTo(inputControl);
@@ -329,7 +329,7 @@ class ModalJobClass {
       $('<div class="pcm_modalControl w-100"></div>').append(df).insertBefore(modalBody);
       let df2 = document.createDocumentFragment();
       let filtered = await this.jobsFilter('', modalControl);
-      this.showJobsTable(df2, filtered, checkFunc, () => {});
+      await this.showJobsTable(df2, filtered, checkFunc, () => {});
       $(df2).appendTo(modalBody);
       if (afterShow) afterShow(this);
     }, () => { if (afterClose) afterClose(); else modal = null; });
