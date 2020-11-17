@@ -59,6 +59,11 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} type  - Trigger type @param  {string} value - Trigger value
 	 * @return {number}	      - The dbID for this trigger to use for all other data. */
 	theDbId(type, value) { return (this.dbIds.values[`${type}:${value}:true`] || this.dbIds.values[`${type}:${value}:false`]) }
+	getFrom(type='Panda') { return Array.from(this[`from${type}`]); }
+	isEnabled(dbId) { return this.triggers[dbId].status !== 'disabled'; }
+	getTrigger(dbId) { return this.triggers[dbId]; }
+	getData(dbId) { return this.data[dbId]; }
+	isLiveSearches() { return this.liveCounter || this.termCounter; }
 	/** Passes the database id from the unique id for trigger given.
 	 * @param  {number} unique - The unique id number for the trigger.
 	 * @return {number}	       - The dbID for this trigger to use for all other data. */
@@ -90,7 +95,7 @@ class MturkHitSearch extends MturkClass {
 						await MYDB.getFromDB('searching', 'history', dbId,_, 'dbId', true).then( async history => {
 							if (this.loaded && extSearchUI && trigger.searchUI) {
 								extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
-								if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI);
+								if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI, false);
 							} else if (!this.loaded) {
 								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`;
 								if (!this.dbIds.values.hasOwnProperty(valueString)) {
@@ -179,10 +184,11 @@ class MturkHitSearch extends MturkClass {
 				ruleSet.include = Array.from(ruleSet.include); ruleSet.onlyGid = Array.from(ruleSet.onlyGid);
 			}
 			theHistory = Object.assign({}, (theData.type === 'custom') ? {} : theHistory);
-			exportThis[dbId] = {trigger:theData, options:theOptions, rules:fullRules, history:theHistory};
+			exportThis[dbId] = {'trigger':theData, 'options':theOptions, 'rules':fullRules, 'history':theHistory};
 		}
 		return exportThis;
 	}
+	async exportSearchGroupings() { let groupings = await this.getFromDB('grouping'); return groupings; }
 	/** Find out if panda UI has been opened.
 	 * @return {bool} - True if the panda UI has been opened. */
 	isPandaUI() { return (extPandaUI!==null); }
@@ -212,8 +218,8 @@ class MturkHitSearch extends MturkClass {
 	startSearching() {
 		this.termCounter = Object.keys(this.liveTermData).length;
 		let liveLength = this.livePandaUIStr.length + this.liveSearchUIStr.length;
-		if (!this.timerUnique && (liveLength || this.termCounter)) { // Make sure it's not already searching.
-			this.liveCounter = liveLength;
+		this.liveCounter = liveLength;
+		if (!this.timerUnique && (this.liveCounter || this.termCounter)) { // Make sure it's not already searching.
 			this.timerUnique = searchTimer.addToQueue(-1, (timerUnique, elapsed, theId) => {
 				if (this.liveCounter || this.termCounter) this.goFetch(this.searchUrl, timerUnique, elapsed, theId);
 				else { if (this.searchGStats && this.searchGStats.isSearchOn()) extSearchUI.stopSearching(); else this.stopSearching(); }
@@ -414,10 +420,10 @@ class MturkHitSearch extends MturkClass {
 	/**	Creates the live trigger string which holds all trigger info for faster searching.
 	 * @param  {string} type	   - Type of trigger@param  {string} value - Group ID or requester ID @param  {bool} enable - Enabled or disabled?
 	 * @param  {bool} [sUI=true] - Search UI or panda UI. */
-	liveString(type, value, enable, sUI=true) {
+	liveString(type, value, enable, sUI=true, remove=true) {
 		let liveStr = (sUI) ? 'liveSearchUIStr' : 'livePandaUIStr', triggerString = `[[${type}:${value}]]`;
 		if (enable && !this[liveStr].includes(triggerString)) this[liveStr] += triggerString;
-		else this[liveStr] = this[liveStr].replace(triggerString, '');
+		else if (remove) this[liveStr] = this[liveStr].replace(triggerString, '');
 		this.termCounter = Object.keys(this.liveTermData).length;
 		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
 	}
@@ -433,10 +439,10 @@ class MturkHitSearch extends MturkClass {
 	/** Sets the disabled status of trigger and redoes the live string if needed.
 	 * @param  {string} type	   - Type of trigger@param  {string} value - Group ID or requester ID @param  {bool} enable - Enabled or disabled?
 	 * @param  {bool} [sUI=true] - Search UI or panda UI. */
-	async setDisabled(type, value, disabled, sUI=true) {
+	async setDisabled(type, value, disabled, sUI=true, remove=true) {
 		let dbId = this.theDbId(type, value), rules = await this.theData(dbId, 'rules');
 		if (type === 'custom') this.termData(!disabled, rules, dbId);
-		else this.liveString(type, value, !disabled, sUI);
+		else this.liveString(type, value, !disabled, sUI, remove);
 		if (this.searchGStats && this.searchGStats.isSearchOn()) { if (this.liveCounter === 0 && this.termCounter === 0) this.stopSearching(); }
 		else if (this.liveCounter > 0) this.startSearching();
 		else this.stopSearching();
@@ -444,10 +450,10 @@ class MturkHitSearch extends MturkClass {
 	/** Toggles the status of the trigger.
 	 * @param  {string} type  - Type of trigger @param  {string} value - Group ID or requester ID
 	 * @return {bool}         - Status of the trigger. */
-	toggleTrigger(unique) {
-		let dbId = this.dbIds.unique[unique];
+	toggleTrigger(unique, passdbId=null, forceEnabled=null) {
+		let dbId = (passdbId) ? passdbId : this.dbIds.unique[unique];
 		if (dbId) {
-			let oldStatus = this.triggers[dbId].status, disabled = (oldStatus === 'disabled') ? true : false;
+			let oldStatus = this.triggers[dbId].status, disabled = (forceEnabled !== null) ? forceEnabled : (oldStatus === 'disabled') ? true : false;
 			this.setDisabled(this.data[dbId].type, this.data[dbId].value, !disabled);
 			this.triggers[dbId].status = (disabled) ? 'searching' : 'disabled'; this.data[dbId].disabled = !disabled;
 			this.updateToDB(_, this.data[dbId]);

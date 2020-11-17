@@ -1,6 +1,6 @@
 let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
-let localVersion = localStorage.getItem('PCM_version');
-$('body').tooltip({selector: `.pcm_tooltipData`, delay: {show:1100}, trigger:'hover'});
+let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null;
+$('body').tooltip({selector: `.pcm-tooltipData`, delay: {show:1100}, trigger:'hover'});
 
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
@@ -14,16 +14,17 @@ async function getBgPage() {
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion).then( () => {
     search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB();
-    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search');
+    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
 /** Starts the search crazy UI and prepares all the search triggers. */
 async function startSearchCrazy() {
-  window.addEventListener('beforeunload', () => { bgPage.gSetSearchUI(null); });
+  window.addEventListener('beforeunload', () => { bgPage.gSetSearchUI(null); sGroupings.removeAll(); });
   await search.prepareSearch();
   await bgSearch.loadFromDB();
   search.appendFragments();
+  sGroupings.prepare(showMessages); // Wait for groupings to load and show message or error.
   modal.closeModal('Loading Data');
 }
 /**  Shows good messages in loading modal and console. Shows error message on page and console before halting script.
@@ -32,7 +33,7 @@ async function startSearchCrazy() {
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
   if (good.length > 0) { // Does it have good messages?
-    good.forEach( value => { $('#pcm_modal_0 .modal-body').append($(`<div>${value}</div>`)); console.log(value); });
+    good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); console.log(value); });
   }
 }
 /** ================ First lines executed when page is loaded. ============================ **/

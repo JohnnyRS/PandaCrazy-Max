@@ -127,20 +127,23 @@ class AlarmsClass {
   /** Play the sound with the name provided or text to speech if not muted. Also changes the volume.
    * @param  {string} alarmSound - Alarm name @param  {bool} [testing=false] - Test alarm @param  {string} [speakThis=''] - TTS text @param  {string} [endFunc=null] - End function */
   playSound(alarmSound, testing=false, speakThis='', endFunc=null) {
-    if (!this.data[alarmSound].mute || testing) {
-      if (this.data[alarmSound].tts) {
-        speakThis = (speakThis !== '') ? speakThis : this.data[alarmSound].desc;
-        this.speakThisNow(speakThis, endFunc);
-      } else {
-        const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
-        if (isPlaying) { this.myAudio.load(); this.myAudio = null; }
-        this.myAudio = this.data[alarmSound].audio;
-        if (this.myAudio) {
-          this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100;
-          this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { endFunc(); }
+    if (this.data[alarmSound]) {
+      if (!this.data[alarmSound].mute || testing) {
+        if (this.data[alarmSound].tts) {
+          speakThis = (speakThis !== '') ? speakThis : this.data[alarmSound].desc;
+          this.speakThisNow(speakThis, endFunc);
+        } else {
+          const isPlaying = this.myAudio && this.myAudio.currentTime > 0 && !this.myAudio.paused && !this.myAudio.ended && this.myAudio.readyState > 2;
+          if (isPlaying) { this.myAudio.load(); this.myAudio = null; }
+          this.myAudio = this.data[alarmSound].audio;
+          if (this.myAudio) {
+            this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100;
+            this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { endFunc(); }
+          }
         }
       }
-    }
+    } else if (speakThis !== '') this.speakThisNow(speakThis, endFunc);
+    else console.log('Alarms not fully loaded yet.');
   }
   /** Stop any sound currently playing from the myAudio variable. */
   stopSound() { if (this.myAudio) this.myAudio.load(); }
@@ -175,7 +178,7 @@ class AlarmsClass {
   /** This plays the captcha alert alarm. */
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
   /** This plays the logged out alarm. */
-  doLoggedOutAlarm() { this.playSound('loggedOut'); }
+  doLoggedOutAlarm() { this.playSound('loggedOut',_, 'You are logged out.'); }
   /** This plays the queue full alarm. */
   doFullAlarm() { this.playSound('queueFull'); }
 	/** Method to decide which alarm to play according to the hit minutes and price.

@@ -3,7 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class LogTabsClass {
   constructor() {
-    this.tabs = new TabbedClass($(`#pcm_logSection`), `pcm_logTabs`, `pcm_tabbedlogs`, `pcm_logTabContents`);
+    this.tabs = new TabbedClass($(`#pcm-logSection`), `pcm-logTabs`, `pcm-tabbedlogs`, `pcm-logTabContents`);
     this.ids = [];                      // Array of the id names of the log tabs on the bottom.
     this.taskIds = [];                  // Array of the task id's of the hits in the queue for queue watch.
     this.groupIds = [];                 // Array of the group id's of the hits in the queue for queue watch.
@@ -48,12 +48,12 @@ class LogTabsClass {
       this.ids.push(await this.tabs.addTab("Status log")); // ids[1]
       this.ids.push(await this.tabs.addTab("Queue Watch", true)); // ids[2]
       this.queueTab = $(`#${this.ids[2].tabId}`);
-      this.acceptContent = $(`<div class="pcm_acceptedHits"></div>`).appendTo(`#${this.ids[0].tabContent}`)
-      this.statusContent = $(`<div class="pcm_hitStatus"></div>`).appendTo(`#${this.ids[1].tabContent}`)
-      this.queueContent = $(`<div class="pcm_queueResults"></div>`).appendTo(`#${this.ids[2].tabContent}`);
+      this.acceptContent = $(`<div class="pcm-acceptedHits"></div>`).appendTo(`#${this.ids[0].tabContent}`)
+      this.statusContent = $(`<div class="pcm-hitStatus"></div>`).appendTo(`#${this.ids[1].tabContent}`)
+      this.queueContent = $(`<div class="pcm-queueResults"></div>`).appendTo(`#${this.ids[2].tabContent}`);
     }
-    this.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
-    this.tabNavHeight = $('#pcm_tabbedlogs').height();
+    this.tabContentsHeight = $('#pcm-logTabContents .pcm-tabs:first').height();
+    this.tabNavHeight = $('#pcm-tabbedlogs').height();
     return [success, err];
   }
   /** Removes all data from class when shutting down to make sure memory is not used anymore. */
@@ -65,11 +65,11 @@ class LogTabsClass {
   addToWatch(hitInfo, element, appendTo=true) {
     if (!this.taskIds.includes(hitInfo.task_id)) {
       const timeLeft = getTimeLeft(hitInfo.secondsLeft);
-      let toAdd = $(`<div class='pcm_queue' id='pcm_TI_${hitInfo.task_id}'>(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm_timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',hitInfo.task_id);
+      let toAdd = $(`<div class='pcm-queue' id='pcm-TI-${hitInfo.task_id}'>(${hitInfo.project.requester_name}) [$${hitInfo.project.monetary_reward.amount_in_dollars.toFixed(2)}] - <span class="pcm-timeLeft" style="color:cyan;">${timeLeft}</span> - ${hitInfo.project.title}</div>`).data('taskId',hitInfo.task_id);
       if (appendTo) toAdd.appendTo(element);
       else toAdd.insertBefore(element);
       toAdd.append(" :: ");
-      createLink(toAdd, "pcm_returnLink", "#", "Return", "_blank", (e) => {
+      createLink(toAdd, "pcm-returnLink", "#", "Return", "_blank", (e) => {
         modal = new ModalClass();
         modal.showDialogModal("700px", "Return this hit?", `Do you really want to return this hit:<br> ${hitInfo.project.requester_name} - ${hitInfo.project.title}`, () => {
           let returnLink = "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "ref=w_wp_rtrn_top");
@@ -84,7 +84,7 @@ class LogTabsClass {
         e.preventDefault();
       });
       toAdd.append(" :: ");
-      createLink(toAdd, "pcm_continueLink", "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "from_queue=true"), "Continue Work", "_blank", (e) => {
+      createLink(toAdd, "pcm-continueLink", "https://worker.mturk.com" + hitInfo.task_url.replace("ref=w_pl_prvw", "from_queue=true"), "Continue Work", "_blank", (e) => {
           let theHeight = window.outerHeight-80, theWidth = window.outerWidth-10;
           window.open($(e.target).attr("href"),"_blank","width=" + theWidth + ",height=" +  theHeight + ",scrollbars=yes,toolbar=yes,menubar=yes,location=yes");
           e.preventDefault();
@@ -99,7 +99,7 @@ class LogTabsClass {
       this.queueUpdating = true; delete this.taskInfo[taskId]; this.taskIds.splice(theIndex, 1); this.groupIds.splice(theIndex, 1); this.payRate.splice(theIndex, 1);
       this.queueTotal = Math.max(this.queueTotal - 1, 0);
       this.queueTab.find("span").html(`Queue Watch - ${this.queueTotal} - $${this.totalResults()}`);
-      $(`#pcm_TI_${taskId}`).remove(); this.queueUpdating = false;
+      $(`#pcm-TI-${taskId}`).remove(); this.queueUpdating = false;
     }
   }
   /** Add a new hit accepted into the queue in the correct position according to seconds left.
@@ -183,7 +183,7 @@ class LogTabsClass {
         for (const hit of queueWatch) {
           const taskId = $(hit).data('taskId');
           const timeLeft = getTimeLeft(newInfo[taskId].secondsLeft);
-          $(hit).find('.pcm_timeLeft').html(timeLeft);
+          $(hit).find('.pcm-timeLeft').html(timeLeft);
           if (newInfo[taskId].secondsLeft < 0) $(hit).css('text-decoration', 'line-through');
           else if (firstOne) {
             if (globalOpt.checkQueueAlert(newInfo[taskId].secondsLeft)) {
@@ -213,7 +213,7 @@ class LogTabsClass {
     let now = moment().format('ddd hh:mma');
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
     const title = (data.friendlyTitle) ? data.friendlyTitle : data.title;
-    this.acceptContent.prepend(`<div class='pcm_log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
+    this.acceptContent.prepend(`<div class='pcm-log'>${requester} - <span>${data.groupId}</span> [<span class='time'>${now}</span>] - ${title}</div>`);
     divHits = []; now = null;
   }
   /** Adds the status for this panda job with the unique ID to the status log tab.
@@ -222,7 +222,7 @@ class LogTabsClass {
    * @param  {number} myId  - The unique ID for a panda job. */
   addToStatus(data, stats, myId) {
     const requester = (data.friendlyReqName !== "") ? data.friendlyReqName : data.reqName;
-    this.statusContent.append(`<div class='pcm_${myId}'><span class='pcm_emp'>Requester:</span> <span class='requester'>${requester}</span> | <span class='pcm_emp'>Pay:</span> $<span class='pay'>${Number(data.price).toFixed(2)}</span> | <span class='pcm_emp'>Mode:</span> panda | <span class='pcm_emp'>Accepted:</span> <span class='accepted'>${stats.accepted.value}</span> | <span class='pcm_emp'>Fetched:</span> <span class='fetched'>${stats.fetched.value}</span> | <span class='pcm_emp'>Elapsed:</span> <span class='elapsed'>0.0s</span></div>`);
+    this.statusContent.append(`<div class='pcm-${myId}'><span class='pcm-emp'>Requester:</span> <span class='requester'>${requester}</span> | <span class='pcm-emp'>Pay:</span> $<span class='pay'>${Number(data.price).toFixed(2)}</span> | <span class='pcm-emp'>Mode:</span> panda | <span class='pcm-emp'>Accepted:</span> <span class='accepted'>${stats.accepted.value}</span> | <span class='pcm-emp'>Fetched:</span> <span class='fetched'>${stats.fetched.value}</span> | <span class='pcm-emp'>Elapsed:</span> <span class='elapsed'>0.0s</span></div>`);
   }
   /** Display the stats from panda job with the unique ID on the status tab or the changes to requester name and pay.
    * @param  {object} stats          - The stats for this panda job with the unique ID.
@@ -231,23 +231,23 @@ class LogTabsClass {
    * @param  {object} [changes=null] - The changes to data that needs to be shown in status tab. */
   updateLogStatus(stats, myId, mSeconds, changes=null) {
     if (stats) {
-      this.statusContent.find(`.pcm_${myId} .fetched:first`).html(stats.fetched.value);
-      this.statusContent.find(`.pcm_${myId} .accepted:first`).html(stats.accepted.value);
+      this.statusContent.find(`.pcm-${myId} .fetched:first`).html(stats.fetched.value);
+      this.statusContent.find(`.pcm-${myId} .accepted:first`).html(stats.accepted.value);
       if (mSeconds>0) {
         let elapsedSeconds = (Math.round( (mSeconds / 1000) * 10 ) / 10).toFixed(1);
-        this.statusContent.find(`.pcm_${myId} .elapsed:first`).html(elapsedSeconds + 's');
+        this.statusContent.find(`.pcm-${myId} .elapsed:first`).html(elapsedSeconds + 's');
       }
     } else if (changes) {
       const requester = (changes.friendlyReqName !== "") ? changes.friendlyReqName : changes.reqName;
-      this.statusContent.find(`.pcm_${myId} .requester:first`).html(requester);
-      this.statusContent.find(`.pcm_${myId} .pay:first`).html(Number(changes.price).toFixed(2));
+      this.statusContent.find(`.pcm-${myId} .requester:first`).html(requester);
+      this.statusContent.find(`.pcm-${myId} .pay:first`).html(Number(changes.price).toFixed(2));
     }
   }
   /** Remove a status line from the status tab giving it 12 seconds before removal.
    * @param  {number} myId - The unique ID for a panda job. */
   removeFromStatus(myId) {
-    this.statusContent.find(`.pcm_${myId}`).removeClass(`pcm_${myId}`).addClass(`pcm_${myId}-stop`).css('background-color', '#260000');
-    setTimeout( () => { this.statusContent.find(`.pcm_${myId}-stop`).remove(); }, 12000);
+    this.statusContent.find(`.pcm-${myId}`).removeClass(`pcm-${myId}`).addClass(`pcm-${myId}-stop`).css('background-color', '#260000');
+    setTimeout( () => { this.statusContent.find(`.pcm-${myId}-stop`).remove(); }, 12000);
   }
 	/** Returns the total number recorded of hits in queue.
 	 * @param  {string} gId='' - Group ID to search for and count the hits in queue.

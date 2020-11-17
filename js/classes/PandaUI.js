@@ -31,7 +31,7 @@ class PandaUI {
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object. */
 	async prepare(afterFunc) {
 		let success = [], err = null;
-		this.tabs = new TabbedClass($(`#pcm_pandaSection`), `pcm_pandaTabs`, `pcm_tabbedPandas`, `pcm_pandaTabContents`);
+		this.tabs = new TabbedClass($(`#pcm-pandaSection`), `pcm-pandaTabs`, `pcm-tabbedPandas`, `pcm-pandaTabContents`);
 		this.cards.prepare(this.tabs); this.logTabs = new LogTabsClass(); this.logTabs.updateCaptcha(globalOpt.getCaptchaCount()); this.pandaGStats = new PandaGStats();
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
@@ -62,46 +62,46 @@ class PandaUI {
 					this.cards.cardButtons();
 					if (bgPanda.pandaUniques > 0) {
 						let firstPanda = bgPanda.pandaUniques[0];
-						this.hamBtnBgColor = $(`#pcm_hamButton_${firstPanda}`).css("background-color"); this.hamBtnColor = $(`#pcm_hamButton_${firstPanda}`).css("color");
+						this.hamBtnBgColor = $(`#pcm-hamButton-${firstPanda}`).css("background-color"); this.hamBtnColor = $(`#pcm-hamButton-${firstPanda}`).css("color");
 					}
 					bgPanda.nullData();
 				}
 			}
-			this.tabPandaHeight = $(`#pcm_pandaPanel`).height(); this.tabLogHeight = $(`#pcm_logPanel`).height(); this.windowHeight = window.innerHeight;
+			this.tabPandaHeight = $(`#pcm-pandaPanel`).height(); this.tabLogHeight = $(`#pcm-logPanel`).height(); this.windowHeight = window.innerHeight;
 			this.pandaGStats.setPandaTimer(bgPanda.timerChange()); pandaUI.pandaGStats.setHamTimer(bgPanda.hamTimerChange());
 			pandaUI.pandaGStats.setSearchTimer(bgSearch.timerChange()); pandaUI.pandaGStats.setQueueTimer(bgQueue.timerChange());
 		}
 		window.onresize = async (e) => { this.resizeTabContents(); }
 		this.resizeObserver = new ResizeObserver((entries) => this.panelResized(entries));
-		$('#pcm_pandaPanel').mousedown( () => { this.resizeObserver.observe($('#pcm_pandaPanel')[0]); } )
-		$('#pcm_pandaPanel').mouseup( () => { this.resizeObserver.disconnect(); } )
+		$('#pcm-pandaPanel').mousedown( () => { this.resizeObserver.observe($('#pcm-pandaPanel')[0]); } )
+		$('#pcm-pandaPanel').mouseup( () => { this.resizeObserver.disconnect(); } )
 		afterFunc(success, err);
 	}
 	/** Removes all panda jobs from UI and stats. */
 	async removeAll() {
-		this.cards.removeAll(); this.tabs.wipeTabs(); this.logTabs.removeAll();
+		if (this.cards) this.cards.removeAll(); if (this.tabs) this.tabs.wipeTabs(); if (this.logTabs) this.logTabs.removeAll();
 		this.cards = null; this.pandaStats = {}; this.listener = null; this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
 		this.pandaGStats = null; this.delayedTimeout = null; this.resizeObserver = null; this.modalJob = null;
 	}
   /** Resizes the tab contents according to window size changes. */
   resizeTabContents() {
     let windowChange = this.innerHeight - window.innerHeight;
-    $('#pcm_pandaTabContents .pcm_tabs').height(`${this.tabs.tabContentsHeight - windowChange}px`);
-		$('#pcm_pandaPanel').height(`${this.tabPandaHeight - windowChange}px`);
-		this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height(); this.innerHeight = window.innerHeight;
-    this.tabPandaHeight = $('#pcm_pandaPanel').height();
+    $('#pcm-pandaTabContents .pcm-tabs').height(`${this.tabs.tabContentsHeight - windowChange}px`);
+		$('#pcm-pandaPanel').height(`${this.tabPandaHeight - windowChange}px`);
+		this.tabs.tabContentsHeight = $('#pcm-pandaTabContents .pcm-tabs:first').height(); this.innerHeight = window.innerHeight;
+    this.tabPandaHeight = $('#pcm-pandaPanel').height();
 	}
 	/** Resizes the panda and log panels when user is resizing them.
 	 * @param  {array} entries - Number of entries resizeObserver finds that got resized. */
   panelResized(entries) {
 		window.requestAnimationFrame(() => { // Stops loop limit exceeded for ResizeObserver.
 			if (!Array.isArray(entries) || !entries.length) { return; }
-			let changed = $('#pcm_pandaPanel').height() - this.tabPandaHeight;
+			let changed = $('#pcm-pandaPanel').height() - this.tabPandaHeight;
 			if (changed !== 0) {
-				$('#pcm_pandaTabContents .pcm_tabs').height(this.tabs.tabContentsHeight + changed); $('#pcm_logTabContents .pcm_tabs').height(this.logTabs.tabContentsHeight - changed);
-				this.tabs.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
-				this.logTabs.tabContentsHeight = $('#pcm_logTabContents .pcm_tabs:first').height();
-				this.tabPandaHeight = $('#pcm_pandaPanel').height(); this.tabLogHeight = $(`#pcm_logPanel`).height();
+				$('#pcm-pandaTabContents .pcm-tabs').height(this.tabs.tabContentsHeight + changed); $('#pcm-logTabContents .pcm-tabs').height(this.logTabs.tabContentsHeight - changed);
+				this.tabs.tabContentsHeight = $('#pcm-pandaTabContents .pcm-tabs:first').height();
+				this.logTabs.tabContentsHeight = $('#pcm-logTabContents .pcm-tabs:first').height();
+				this.tabPandaHeight = $('#pcm-pandaPanel').height(); this.tabLogHeight = $(`#pcm-logPanel`).height();
 			}
 		});
   }
@@ -109,9 +109,10 @@ class PandaUI {
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); } );
 		if (!bgPanda.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		dashboard.nowLoggedOff();
 	}
   /** Closes the logged off modal if it's opened. */
-	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
+	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); dashboard.nowLoggedOn(); }
 	pandaMute(myId, value) { this.cards.pandaMute(myId, value); }
 	searchUIConnect(status=true) { if (this.modalJob) this.modalJob.searchUIConnect(status); }
   /** Gets the status from the timer and shows the status on the page.
@@ -153,8 +154,8 @@ class PandaUI {
 				this.logTabs.addToStatus(data, pandaStat, myId);
 				if (!pandaStat.collecting && !alreadySearching) this.pandaGStats.addCollecting();
 				this.pandaGStats.collectingOn(); pandaStat.startCollecting();
-				$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
-				$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOff").removeClass("pcm_searchDisable").addClass("pcm_buttonOn");
+				$(`#pcm-collectButton-${myId}`).removeClass('pcm-buttonOff').removeClass('pcm-searchDisable').addClass('pcm-buttonOn');
+				$(`#pcm-collectButton1-${myId}`).removeClass('pcm-buttonOff').removeClass('pcm-searchDisable').addClass('pcm-buttonOn');
 			}
 		}
 	}
@@ -170,15 +171,15 @@ class PandaUI {
 		info.data.totalSeconds += theStats.seconds; info.data.totalAccepted += theStats.accepted;
 		let hitData = Object.assign({}, info.data); // Make a copy of data.
 		bgPanda.stopCollecting(myId, hitData, whyStop);
-		if ($(`#pcm_collectButton_${myId}`).is('.pcm_searchCollect')) classToo = ' pcm_searchDisable';
-		$(`#pcm_collectButton_${myId}`).removeClass("pcm_buttonOn pcm_searchCollect").addClass(`pcm_buttonOff${classToo}`);
-		$(`#pcm_collectButton1_${myId}`).removeClass("pcm_buttonOn pcm_searchCollect").addClass(`pcm_buttonOff${classToo}`);
-		$(`#pcm_hamButton_${myId}`).removeClass("pcm_delayedHam");
-		const previousColor = $(`#pcm_pandaCard_${myId}`).data("previousColor");
-		if (previousColor && !info.skipped) $(`#pcm_pandaCard_${myId}`).stop(true,true).removeData("previousColor").animate({"backgroundColor":previousColor},{duration:1000});
+		if ($(`#pcm-collectButton-${myId}`).is('.pcm-btnCollecting')) classToo = ' pcm-searchDisable';
+		$(`#pcm-collectButton-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
+		$(`#pcm-collectButton1-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
+		$(`#pcm-hamButton-${myId}`).removeClass('pcm-delayedHam');
+		const previousColor = $(`#pcm-pandaCard-${myId}`).data('previousColor');
+		if (previousColor && !info.skipped) $(`#pcm-pandaCard-${myId}`).stop(true,true).removeData('previousColor').animate({'backgroundColor':previousColor},{'duration':1000});
 		await bgPanda.updateDbData(myId, hitData); this.logTabs.removeFromStatus(myId);
 		if (deleteData && !info.skipped) info.data = null;
-		info.queueUnique = null; info.autoTGoHam = "off";
+		info.queueUnique = null; info.autoTGoHam = 'off';
 	}
 	/** Removes a job from the UI.
 	 * @param  {Number} myId							 - The unique ID for a panda job.
@@ -198,20 +199,18 @@ class PandaUI {
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
-	async removeJobs(jobsArr, afterFunc=null, whyStop=null, afterClose=null) {
-		let bodyText = '';
-		jobsArr.forEach( (thisId) => { bodyText += '( ' + $(`#pcm_hitReqName_${thisId}`).html()+' '+[$(`#pcm_hitPrice_${thisId}`).html()]+' )<BR>'; });
+	async removeJobs(jobsArr, afterFunc=null, whyStop=null, afterClose=null, cancelText='cancel') {
+		let hitsList = '';
+		jobsArr.forEach( (thisId) => { hitsList += '( ' + $(`#pcm-hitReqName-${thisId}`).html()+' '+[$(`#pcm-hitPrice-${thisId}`).html()]+' )<BR>'; });
 		if (!modal) modal = new ModalClass();
-		modal.showDeleteModal(bodyText, () => {
+		modal.showDeleteModal(hitsList, () => {
 			jobsArr.forEach( async (myId) => {
 				let options = bgPanda.options(myId);
 				MYDB.getFromDB('panda',_, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc,_,_, whyStop); },
 					rejected => console.error(rejected));
 			});
 			modal.closeModal(); jobsArr.length = 0;
-		}, () => { if (afterFunc) afterFunc('NO'); },
-			 () => { jobsArr.length = 0; $('.pcm_deleteButton').css('background-color', ''); },
-			 () => { if (afterClose) afterClose(); else modal = null; });
+		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}
 	/** Show that this ham button was clicked or went into go ham mode automatically.
 	 * @async														- So it waits to get the queueUnique before using it.
@@ -219,8 +218,8 @@ class PandaUI {
 	hamButtonClicked(myId, targetBtn, autoGoHam=false, manual=false) {
 		let options = bgPanda.options(myId);
 		if (!this.pandaStats[myId].collecting) { this.startCollecting(myId, !autoGoHam); }
-		else if (targetBtn.hasClass('pcm_buttonOff') && targetBtn.hasClass('pcm_delayedHam') && !manual) bgPanda.timerGoHam(options.queueUnique);
-		else if (targetBtn.hasClass('pcm_buttonOff') && manual)  bgPanda.timerGoHam(options.queueUnique);
+		else if (targetBtn.hasClass('pcm-buttonOff') && targetBtn.hasClass('pcm-delayedHam') && !manual) bgPanda.timerGoHam(options.queueUnique);
+		else if (targetBtn.hasClass('pcm-buttonOff') && manual) bgPanda.timerGoHam(options.queueUnique);
 		else bgPanda.timerHamOff();
 	}
 	/** Show that this panda search job is collecting in panda mode.
@@ -365,7 +364,7 @@ class PandaUI {
 		if (pandaInfo.disabled) this.cards.pandaDisabled(myId);
 		if (!multiple) {
 			this.cards.appendDoc(pandaInfo.data.tabUnique); this.pandaStats[myId].updateAllStats(this.cards.get(myId));
-			if (bgPanda.isTimerGoingHam()) $(`#pcm_hamButton_${myId}`).addClass("disabled");
+			if (bgPanda.isTimerGoingHam()) $(`#pcm-hamButton-${myId}`).addClass("disabled");
 			if (newAddInfo) {
 				if ((pandaInfo.search === 'gid' || pandaInfo.search === null) && newAddInfo.run) this.runThisPanda(myId, newAddInfo.tempDuration, newAddInfo.tempGoHam);
 				else if (pandaInfo.search === 'rid' && newAddInfo.run) {
@@ -431,10 +430,11 @@ class PandaUI {
 	}
 	/** A hit was submitted.
 	 * @param  {string} taskId - The task ID of hit submitted. */
-	submittedHit(taskId) { this.logTabs.removeFromQueue(taskId); this.pandaGStats.addSubmitted(); }
+	submittedHit(request) { this.logTabs.removeFromQueue(request.taskId); this.pandaGStats.addSubmitted(); this.pandaGStats.thePotentialEarnings(null, request.price); }
 	/** Set the value of the potential earnings from mturk.
 	 * @param  {string} earnings - Earnings value from mturk. */
 	setEarnings(earnings) { this.pandaGStats.thePotentialEarnings(earnings); }
+	waitEarningsPage(page=1) { this.pandaGStats.waitEarningsPage(page); }
 	/** Halt this script with an error message.
 	 * @param  {object} error - Error Object @param  {string} alertMessage - Alert Message @param  {string} title - Title. */
 	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }

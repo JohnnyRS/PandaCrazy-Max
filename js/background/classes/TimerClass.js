@@ -8,13 +8,13 @@
 class TimerClass {
 	/**
 	 * @param  {number} [timer=900]        - Do jobs after this time in milliseconds has elapsed.
-	 * @param  {number} [hamTimer=700]	 - Do jobs a bit faster than normal for a specified amount of time.
+	 * @param  {number} [hamTimer=750]	 - Do jobs a bit faster than normal for a specified amount of time.
 	 * @param  {string} [timerName='none'] - The name of this timer.
 	 */
-	constructor(timer=900, hamTimer=700, timerName='none') {
+	constructor(timer=900, hamTimer=750, timerName='none') {
 		this.timeout = timer;						// The timer for the timeout cycle.
 		this.hamTimer = hamTimer;		// Timer used when going ham.
-		this.min = 600;									// The minimum time that the timer can be.
+		this.min = 750;									// The minimum time that the timer can be.
 		this.timeoutID = null;					// A timeout ID for the current timeout.
 		this.timeoutDoing = null;				// A timeout ID saved so the timeout ID can be nulled.
 		this.queue = [];								// The main queue holding all jobs to cycle through.

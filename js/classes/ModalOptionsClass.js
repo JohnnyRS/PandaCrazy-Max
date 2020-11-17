@@ -11,7 +11,7 @@ class ModalOptionsClass {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes)); modal.closeModal();
     });
     let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
       {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
       {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
@@ -20,12 +20,13 @@ class ModalOptionsClass {
       {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
       {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for hits nearing the expiration time.'}, 
       {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting hits or warnings.'}, 
+      {'label':'Show fetch highlighter on group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
       {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
       {'label':'Disable Unfocused window warning:', 'type':'trueFalse', 'key':'unfocusWarning', 'reverse':true, 'tooltip':'Stop notifying me about the unfocussed window because I know what I am doing.'}
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
+      $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
   /** Shows the timer options in a modal for changes. */
@@ -45,7 +46,7 @@ class ModalOptionsClass {
     });
     let df = document.createDocumentFragment(), timerRange = globalOpt.getTimerRange(), timerChange = globalOpt.getTimerChange();
     let searchRange = globalOpt.getTimerSearch(), queueRange = globalOpt.getTimerQueue();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:<br><span class='small text-info'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:<br><span class='small text-info'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
     displayObjectData([
       {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds.`, 'minMax':timerRange}, 
       {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds.`, 'minMax':timerRange}, 
@@ -62,7 +63,7 @@ class ModalOptionsClass {
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);
-      $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
+      $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(modalBody);
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
 }

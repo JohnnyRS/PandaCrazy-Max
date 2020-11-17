@@ -93,7 +93,7 @@ function queue_listener(displayPosition=false) {
   }
   chrome.storage.local.get('PCM_queueData', (value) => { if (value.hasOwnProperty('PCM_queueData')) listenChanged({'PCM_queueData':{'newValue':value.PCM_queueData}}, 'local'); })
   chrome.storage.onChanged.addListener(listenChanged);
-  gMyInterval = setInterval(() => { if (typeof chrome.app.isInstalled === 'undefined') { holdThis.extensionLoad = false; clearInterval(gMyInterval); }}, 700);
+  gMyInterval = setInterval(() => { if (!chrome.app || typeof chrome.app.isInstalled === 'undefined') { holdThis.extensionLoad = false; clearInterval(gMyInterval); }}, 700);
   }
 /** Fixes a problem where old queue helper script changes a value because of the iframe trick I use. */
 function fixForQueueHelper() {
@@ -124,12 +124,12 @@ function getReactProps() {
 }
 /** Gets the projected earnings that is placed on page my MTS to pass on to extension. */
 function getProjectedEarnings() {
-  let earnings = $('#mts-ht-earnings');
-  if (earnings.length) {
-    let totalPay = earnings.html().replace('$','');
-    chrome.runtime.sendMessage({time:new Date().getTime(), command:'projectedEarnings', data:{"projectedEarnings":totalPay}});
-    return true;
-  } else return false;
+  // let earnings = $('#mts-ht-earnings');
+  // if (earnings.length) {
+  //   let totalPay = earnings.html().replace('$','');
+  //   chrome.runtime.sendMessage({time:new Date().getTime(), command:'projectedEarnings', data:{"projectedEarnings":totalPay}});
+  //   return true;
+  // } else return false;
 }
 function prevAssigned() {
   prevAssignedhit = sessionStorage.getItem('pcm_hitDoing');

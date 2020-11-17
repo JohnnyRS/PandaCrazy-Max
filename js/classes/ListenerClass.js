@@ -11,7 +11,7 @@ class ListenerClass {
         let command = request.command;
         if (command.substring(0, 3) === "add" || command.slice(-7) === 'collect') { pandaUI.addFromExternal(request); }
         else if (request.command === 'projectedEarnings') { pandaUI.setEarnings(request.data.projectedEarnings); }
-        else if (request.command === 'submitted') { pandaUI.submittedHit(request.taskId); }
+        else if (request.command === 'submitted') { pandaUI.submittedHit(request); }
         else if (request.command === 'monitorSpeech') { alarms.speakThisNow('Hits in Queue. Going to first.'); }
       }
     });

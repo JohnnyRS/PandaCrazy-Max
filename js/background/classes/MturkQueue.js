@@ -42,7 +42,7 @@ class MturkQueue extends MturkClass {
       if (this.dLog(1)) console.info('%cStarting Queue Monitor.', CONSOLE_INFO);
       setTimeout( () => {
         if (queueTimer) this.queueUnique = queueTimer.addToQueue(-1, (unique) => { this.goFetch(this.queueUrl, unique); }, () => { this.stopQueueMonitor(); });
-      }, 2000); // Delay queue monitor for 2 seconds for all data to be loaded.
+      }, 1);
     }
   }
 	/** Stop the queue monitor by removing job from timer queue. */
@@ -79,7 +79,7 @@ class MturkQueue extends MturkClass {
   nowLoggedOff() {
     this.loggedOff = true; if (queueTimer) queueTimer.theTimer(this.loggedOffTimer);
     if (this.dLog(1)) console.info('%cYou are logged off from mturk.com.',CONSOLE_WARN);
-    myPanda.nowLoggedOff(); mySearch.nowLoggedOff(); // Show logged off warning on all running UI's.
+    if (myPanda) myPanda.nowLoggedOff(); if (mySearch) mySearch.nowLoggedOff(); // Show logged off warning on all running UI's.
   }
   /** Changes the timer to the normal time and informs panda and search class when logged back in. */
   nowLoggedOn() {

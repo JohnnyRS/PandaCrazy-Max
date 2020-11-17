@@ -27,9 +27,9 @@ class ModalAlarmClass {
   /** Add the save button when a user is changing the alarm sound.
    * @param  {string} name - The name of the alarm being changed. */
   addSaveButton(name) {
-    $('.pcm_fileStatus').html('').css('color', '#1ee81e').append(this.btnStr('Save Audio', 'saveAudio', 'success', 'xs'));
+    $('.pcm-fileStatus').html('').css('color', '#1ee81e').append(this.btnStr('Save Audio', 'saveAudio', 'success', 'xs'));
     $('.saveAudio').click( (e) => {
-      $('.pcm_changeMe').remove();
+      $('.pcm-changeMe').remove();
       if (this.audio) this.audio.load();
       alarms.getData(name).audio = this.audio;
       alarms.saveAlarm(name); this.audio = null;
@@ -41,9 +41,9 @@ class ModalAlarmClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(this.alarms, "900px", "modal-header-info modal-lg", "Alarm Options", "", "text-right bg-dark text-light", "modal-footer-info");
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
-    const divContainer = $(`<div class='text-left pcm_alarms'></div>`);
+    const divContainer = $(`<div class='text-left pcm-alarms'></div>`);
     let df = document.createDocumentFragment();
-    $(`<div class='pcm_alarmEdit text-center my-2'>You can mute and change an individual alarm sound here. Click the change button and pick your own sound from your computer. It must be less than 6MB and less than 30 seconds. You can also load in the default alarm sounds if you need to. The TTS button will have the script use a text to speech process instead of the alarm sound.</div>`).appendTo(df);
+    $(`<div class='pcm-alarmEdit text-center my-2'>You can mute and change an individual alarm sound here. Click the change button and pick your own sound from your computer. It must be less than 6MB and less than 30 seconds. You can also load in the default alarm sounds if you need to. The TTS button will have the script use a text to speech process instead of the alarm sound.</div>`).appendTo(df);
     if (onlySearch) { this.addDivAlarms('triggeredAlarm').appendTo(df); }
     else {
       this.addDivAlarms('less2').appendTo(df); this.addDivAlarms('less2Short').appendTo(df); this.addDivAlarms('less5').appendTo(df);
@@ -87,11 +87,11 @@ class ModalAlarmClass {
       modalBody.find('.newSnd').click( (e) => {
         modalBody.find('.playme').removeClass('btn-primary').addClass('btn-light').blur();
         alarms.stopSound(); if (this.audio) this.audio.load();
-        let prevSnd = $('.pcm_changeMe').data('snd'), btn = $(e.target);
+        let prevSnd = $('.pcm-changeMe').data('snd'), btn = $(e.target);
         let soundName = btn.closest('div').data('snd');
-        $('.pcm_changeMe').remove();
+        $('.pcm-changeMe').remove();
         if (prevSnd !== soundName) {
-          btn.closest('div').after($(`<div class='ml-4 my-2 pcm_changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm_fileInput'></span>`).append(createFileInput(_,'audio/*')).append($(`<span class='ml-2 pcm_fileStatus'></span>`).append(this.btnStr('Default Audio', 'defaultAudio', 'light', 'xs'))));
+          btn.closest('div').after($(`<div class='ml-4 my-2 pcm-changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm-fileInput'></span>`).append(createFileInput(_,'audio/*')).append($(`<span class='ml-2 pcm-fileStatus'></span>`).append(this.btnStr('Default Audio', 'defaultAudio', 'light', 'xs'))));
           $('.custom-file-input').on('change', (e) => {
             const fileName = $(e.target).val().replace('C:\\fakepath\\', ''), theFile = $(e.target).prop("files")[0];
             if (theFile) {
@@ -103,8 +103,8 @@ class ModalAlarmClass {
                 $(e.target).next('.custom-file-label').addClass("selected").html(fileName);
                 this.reader.onload = () => this.readData(soundName, theFile.type);
                 this.reader.readAsBinaryString(theFile);
-                this.reader.onerror = () => { $('.pcm_fileStatus').html('can not read the file').css('color', '#f17979'); }
-              } else $('.pcm_fileStatus').html(error).css('color', '#f17979');
+                this.reader.onerror = () => { $('.pcm-fileStatus').html('can not read the file').css('color', '#f17979'); }
+              } else $('.pcm-fileStatus').html(error).css('color', '#f17979');
             }
           });
           $('.defaultAudio').click( (e) => {
@@ -118,13 +118,13 @@ class ModalAlarmClass {
       modalBody.find('.pay').click( (e) => {
         let soundName = $(e.target).closest('div').data('snd');
         modal.showDialogModal("700px", "Change New Less Than Pay Rate.", "Enter the pay rate this alarm will sound when the pay rate is less than this:", () => {
-          let newValue = $('#pcm_formQuestion').val();
+          let newValue = $('#pcm-formQuestion').val();
           if (!isNaN(newValue)) {
             newValue = Number(newValue).toFixed(2);
             if (newValue < 20) {
               alarms.setPayRate(soundName, newValue); $(e.target).html('$' + newValue); modal.closeModal();
-            } else $('.pcm_inputDiv-question:first .inputError').html('Must be a decimal less than 20!');
-          } else $('.pcm_inputDiv-question:first .inputError').html('Must be a number!');
+            } else $('.pcm-inputDiv-question:first .inputError').html('Must be a decimal less than 20!');
+          } else $('.pcm-inputDiv-question:first .inputError').html('Must be a number!');
         }, true, true, "Pay rate: ", $(e.target).text().replace('$',''), 10,_, () => {}, 'Change', 'Default Value' ,() => {
           $(e.target).html('$' + alarms.setPayDef(soundName));
         });
@@ -132,10 +132,10 @@ class ModalAlarmClass {
       modalBody.find('.minutes').click( (e) => {
         let soundName = $(e.target).closest('div').data('snd');
         modal.showDialogModal("700px", "Change New Less Than Minutes.", "Enter the minutes that this alarm will sound if the duration is less than this:", () => {
-          let newValue = $('#pcm_formQuestion').val();
+          let newValue = $('#pcm-formQuestion').val();
           if (!isNaN(newValue)) {
             alarms.setLessThan(soundName, newValue); $(e.target).html(newValue); modal.closeModal();
-          } else $('.pcm_inputDiv-question:first .inputError').html('Must be a number!');
+          } else $('.pcm-inputDiv-question:first .inputError').html('Must be a number!');
         }, true, true, "Minutes: ", $(e.target).text(), 10,_, () => {}, 'Change', 'Default Value' ,() => {
           $(e.target).html(alarms.setLessThanDef(soundName));
         });

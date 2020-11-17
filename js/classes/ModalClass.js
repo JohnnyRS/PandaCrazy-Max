@@ -4,16 +4,16 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalClass {
 	constructor() {
-    this.idName = "pcm_modal";                    // Id name of the main modal element.
+    this.idName = "pcm-modal";                    // Id name of the main modal element.
     this.modals = [];                             // Array of all modals being shown.
     this.classModalDialog = "modal-dialog";       // The class name for the dialog section of modal.
     this.classModalHeader = "modal-header";       // The class name for the header section of modal.
     this.classModalTitle = "modal-title";         // The class name for the title in header section of modal.
     this.classModalBody = "modal-body";           // The class name for the body section of modal.
     this.classModalFooter = "modal-footer";       // The class name for the footer section of modal.
-    this.classSaveButton = "pcm_modalSave";       // The class name for the save button of modal.
-    this.classNoButton = "pcm_modalNo";           // The class name for the no button of modal.
-    this.classCancelButton = "pcm_modalCancel";   // The class name for the cancel button of modal.
+    this.classSaveButton = "pcm-modalSave";       // The class name for the save button of modal.
+    this.classNoButton = "pcm-modalNo";           // The class name for the no button of modal.
+    this.classCancelButton = "pcm-modalCancel";   // The class name for the cancel button of modal.
     this.modalLoggedOff = 0;                      // A counter for hoe many logged off modals are opened.
     this.popup = null;                            // A window object of the popup window opened from a modal.
     this.tempObject =  [];                        // A place to keep data changes before the save button clicked.
@@ -23,23 +23,23 @@ class ModalClass {
   createModal() {
     const count = this.modals.length, backdrop = (count>0) ? ` data-backdrop="static"` : ``;
     const style = ` style="z-index:${1051+(count*2)}"`;
-    const idName = `${this.idName}_${count}`;
+    const idName = `${this.idName}-${count}`;
     this.modals.push(idName); // Push the id name of the modal on to the modals array for multiple modals.
     let modalHeader = $(`<div class="modal-header"><h4 class="modal-title"></h4><button type="button" class="close" data-dismiss="modal">&times;</button></div>`);
-    let modalFooter = $(`<div class="modal-footer"><button type="button" class="btn btn-success pcm_modalSave">Save</button><button type="button" class="btn btn-info pcm_modalNo" data-dismiss="modal">No</button><button type="button" class="btn btn-danger pcm_modalCancel" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-default pcm_modalClose" data-dismiss="modal">Close</button></div>`);
+    let modalFooter = $(`<div class="modal-footer"><button type="button" class="btn btn-success pcm-modalSave">Save</button><button type="button" class="btn btn-info pcm-modalNo" data-dismiss="modal">No</button><button type="button" class="btn btn-danger pcm-modalCancel" data-dismiss="modal">Cancel</button><button type="button" class="btn btn-default pcm-modalClose" data-dismiss="modal">Close</button></div>`);
     let modalContent = $(`<div class="modal-content"></div>`).append(modalHeader, `<div class="modal-body text-center py-2"></div>`, modalFooter);
-    $(`<div id=${idName} class="modal pcm_modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog modal-dialog-scrollable my-3"></div>`).append(modalContent)).appendTo("body");
+    $(`<div id=${idName} class="modal pcm-modal fade" tabindex="-1" role="dialog"${backdrop}${style}></div>`).append($(`<div class="modal-dialog modal-dialog-scrollable my-3"></div>`).append(modalContent)).appendTo("body");
     modalHeader = modalFooter = modalContent = null;
     return idName;
   }
   /** Show this modal dialog to user allowing multiple modals to be shown with zIndex.
    * @param {function} [cancelFunc=null] - Cancel Function @param {function} [afterShow=null]  - After Show Function @param {function} [afterClose=null] - After Close Function */
-  showModal(cancelFunc=null, afterShow=null, afterClose=null) {
+  showModal(cancelFunc=null, afterShow=null, afterClose=null, cancelText='Cancel') {
     const idName = this.modals.slice(-1)[0]; // Get the last modal id name opened.
     $(`#${idName}`).modal({backdrop:"static", keyboard:false}); // Move last modal to background.
     $(`.modal-backdrop`).each( (index, element) => { $(element).css("zIndex",1050+(index*2)).css("opacity",0.8); } );
     $(`#${idName}`).on('hide.bs.modal', (e) => { // hide.bs.modal used when modal is about to be hidden or closed.
-      if ( (document.activeElement.innerText==="Cancel" || document.activeElement.innerText==="Close") && cancelFunc!==null ) cancelFunc();
+      if (document.activeElement.innerText === cancelText && cancelFunc) cancelFunc();
       if (afterClose !== null) afterClose();
       $(e.target).remove(); this.modals.pop();
       $(e.target).data('bs.modal', null).remove();
@@ -94,9 +94,9 @@ class ModalClass {
   showLoggedOffModal(afterClose=null) {
     if (this.modalLoggedOff === 0) {
       this.modalLoggedOff++;
-      const idName = this.prepareModal(null, '600px', 'modal-header-warning', `Program Paused!`, '<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href="https://worker.mturk.com/" target="_blank" title="https://worker.mturk.com/" class="pcm_mturkLink">https://worker.mturk.com/</a></h5>', 'text-center');
+      const idName = this.prepareModal(null, '600px', 'modal-header-warning', `Program Paused!`, '<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href="https://worker.mturk.com/" target="_blank" title="https://worker.mturk.com/" class="pcm-mturkLink">https://worker.mturk.com/</a></h5>', 'text-center');
       this.showModal(null, null, () => { this.modalLoggedOff=0; if (afterClose) afterClose(); else if (this.modals.length < 2) modal = null; });
-      $(`#${idName} .pcm_mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
+      $(`#${idName} .pcm-mturkLink`).click( {popup:this.popup, idName:idName}, (e) => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
         setTimeout(this.isPopup.bind(this), 500); // check if popup is null continously
@@ -104,14 +104,13 @@ class ModalClass {
     }
   }
   /** Shows a modal to verify the jobs user wants to be deleted.
-   * @param  {string} hitDetails - Hit Details @param  {function} deleteFunc - Detail Function @param  {function} noFunc - No Function @param  {function} cancelFunc - Cancel Function */
-  showDeleteModal(hitDetails, deleteFunc, noFunc, cancelFunc, afterClose=null) {
-    const idName = this.prepareModal(null, '600px', 'modal-header-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='text-primary'>${hitDetails}</h5>`, 'text-center bg-white text-dark', '', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', 'Cancel');
+   * @param  {string} hitsList - Hit Details @param  {function} deleteFunc - Detail Function @param  {function} noFunc - No Function @param  {function} cancelFunc - Cancel Function */
+  showDeleteModal(hitsList, deleteFunc, noFunc, cancelFunc, afterClose=null, cancelText='Cancel') {
+    const idName = this.prepareModal(null, '600px', 'modal-header-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='text-primary'>${hitsList}</h5>`, 'text-center bg-white text-dark', '', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', cancelText);
     this.showModal(cancelFunc, () => {
-        $(`#${idName}`).find(`.pcm_modalSave`).focus();
-        $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { if (deleteFunc) deleteFunc(); this.closeModal(); } });
-      }, () => { if (afterClose) afterClose(); else modal = null; }
-    );
+      $(`#${idName}`).find(`.pcm-modalSave`).focus();
+      $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { if (deleteFunc) deleteFunc(); this.closeModal(); } });
+    }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.
    * @param {number} width              - Width               @param {string} title       - Title @param {string} body                - Body Html
@@ -124,13 +123,13 @@ class ModalClass {
     this.showModal(null, () => {
       let docKeys = '';
       if (question!=='') { // Should an input field be shown with a question?
-        createInput($(`#${idName} .${this.classModalBody}`), ' pcm_inputDiv-question', 'pcm_formQuestion', question, placeHolder, null, '', defAns, 95, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
-        docKeys = '#pcm_formQuestion,';
+        createInput($(`#${idName} .${this.classModalBody}`), ' pcm-inputDiv-question', 'pcm-formQuestion', question, placeHolder, null, '', defAns, 95, false, max).append(`<span class='inputError ml-1 text-danger small'></span>`);
+        docKeys = '#pcm-formQuestion,';
       }
-      $(`${docKeys}#pcm_modal_0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
+      $(`${docKeys}#pcm-modal-0`).keypress( (e) => { // If enter key pressed then run the addFunc function.
         if ( (e.keyCode ? e.keyCode : e.which) == '13' ) yesFunc(); // Return key pressed.
       });
-        $('#pcm_formQuestion').focus().select();
+        $('#pcm-formQuestion').focus().select();
       if (afterShow) afterShow(idName);
     }, () => { if (afterClose) afterClose(); else modal = null; } );
   }

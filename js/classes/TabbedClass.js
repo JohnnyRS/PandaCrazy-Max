@@ -53,7 +53,7 @@ class TabbedClass {
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections. */
   async prepare() {
     let success = "", err = null;
-    if (this.ulId === 'pcm_tabbedPandas') { // Is this tab row for the panda's?
+    if (this.ulId === 'pcm-tabbedPandas') { // Is this tab row for the panda's?
       this.addAddButton($(`#${this.ulId}`).addClass('unSelectable')); // Shows the add tab button on the tabbed panda row
       this.renameTab = true; this.deleteTab = true; this.draggable = true; // Allows renaming, deleting and dragging
       await MYDB.getFromDB('panda', 'tabs').then( async result => {
@@ -73,28 +73,28 @@ class TabbedClass {
         let unique = $(e.target).closest('li').data('unique');
         $(`#${this.tabIds}${unique}Content`).find('.card-deck').show();
       });
-    } else if (this.ulId === 'pcm_tabbedTriggers') {
-      $(`<li class='pcm_endTab'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
+    } else if (this.ulId === 'pcm-tabbedTriggers') {
+      $(`<li class='pcm-endTab'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       success = 'Added all log tabs.';
     } else {
-      $(`<li class='pcm_endTab'></li><li class='pcm_captchaText ml-2'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
+      $(`<li class='pcm-endTab'></li><li class='pcm-captchaText ml-2'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       success = 'Added all log tabs.';
     }
-    this.tabNavHeight = $(`#pcm_tabbedPandas`).height();
-    this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
+    this.tabNavHeight = $(`#pcm-tabbedPandas`).height();
+    this.tabContentsHeight = $('#pcm-pandaTabContents .pcm-tabs:first').height();
     return [success, err];
   }
   /** Remove all data from memory when closing. */
   removeAll() { this.#tabsArr = []; this.#dataTabs = {}; }
   /** Resizes the tab contents according to the tab nav height and bottom status tab area. */
   async resizeTabContents() {
-    let change = $(`#pcm_tabbedPandas`).height() - this.tabNavHeight;
+    let change = $(`#pcm-tabbedPandas`).height() - this.tabNavHeight;
     if (change !== 0 && this.tabContentsHeight > 0) {
-      $('#pcm_pandaTabContents .pcm_tabs').height(`${this.tabContentsHeight - change}px`);
+      $('#pcm-pandaTabContents .pcm-tabs').height(`${this.tabContentsHeight - change}px`);
     }
     pandaUI.innerHeight = window.innerHeight;
-    this.tabContentsHeight = $('#pcm_pandaTabContents .pcm_tabs:first').height();
-    this.tabNavHeight = $(`#pcm_tabbedPandas`).height();
+    this.tabContentsHeight = $('#pcm-pandaTabContents .pcm-tabs:first').height();
+    this.tabNavHeight = $(`#pcm-tabbedPandas`).height();
   }
   /** Creates the tab structure with the supplied id names and element appended to it.
    * @param  {object} element   - The jquery element to append to the tab structure.
@@ -114,12 +114,12 @@ class TabbedClass {
    * @param  {object} tabElement - The jquery element to append the add button. */
   addAddButton(tabElement) {
     this.addButton = true;
-    $(`<li class="nav-item pcm_addTab"></li>`).append($(`<a class="nav-link small py-0 px-1" href="#tabadd">+</a>`).click( (e) => {
+    $(`<li class="nav-item pcm-addTab"></li>`).append($(`<a class="nav-link small py-0 px-1" href="#tabadd">+</a>`).click( (e) => {
       e.preventDefault();
       modal = new ModalClass();
       modal.showDialogModal("700px", "Add New Tab", "Type in the title of the new tab you want.", () => {
         e.preventDefault(); e.stopPropagation();
-        const label = $('#pcm_formQuestion').val();
+        const label = $('#pcm-formQuestion').val();
         if (label) { this.addTab(label, false, true); }
         modal.closeModal();
       }, true, false, "Title: ", `Added-${this.unique}`, 10,_,_, 'Add Tab');
@@ -164,18 +164,18 @@ class TabbedClass {
   async addTab2(unique, active) {
     const activeText = (active) ? " active" : "";
     let start = $(`<li class="nav-item"></li>`).data("unique", unique);
-    if (this.addButton) $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_addTab`))
+    if (this.addButton) $(start).insertBefore($(`#${this.ulId}`).find(`.pcm-addTab`))
       .droppable( {tolerance:'pointer', over: (e, ui) => { $(e.target).find("a").click(); },
         drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
       );
-    else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm_endTab`));
+    else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm-endTab`));
     let label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).addClass('unSelectable').appendTo(start);
     if (this.renameTab) $(label).bind('contextmenu', (e) => {
         if ($(e.target).closest("li").data("unique")!==0) { // First tab can not be renamed ever.
           modal = new ModalClass();
           modal.showDialogModal("700px", "Rename Tab Title", "Type in the title of this tab you want renamed.", async () => {
             e.preventDefault(); e.stopPropagation();
-            const title = $('#pcm_formQuestion').val();
+            const title = $('#pcm-formQuestion').val();
             if (title && title !== "") {
               this.#dataTabs[unique].title = title; $(e.target).html(title);
               await MYDB.addToDB('panda', 'tabs', this.#dataTabs[unique]);
@@ -211,7 +211,7 @@ class TabbedClass {
         modal.closeModal();
       }, true, true);
     }));
-    const tabPane = $(`<div class="tab-pane pcm_tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.#dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
+    const tabPane = $(`<div class="tab-pane pcm-tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.#dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
     if (this.draggable) {
       $(tabPane).append($(`<div class="card-deck p-0 px-1"></div>`).data("unique",unique).sortable({ opacity:0.5, cursor:"move", appendTo: document.body, helper: "clone",
         stop: async (e, ui) => { await this.cardDragged(e, ui, "sortable"); }}
@@ -246,8 +246,8 @@ class TabbedClass {
    * @param  {object} ui     - The ui jquery element from a sortable or droppable area.
    * @param  {string} action - Which action is the card being dragged for? */
   async cardDragged(e, ui, action) {
-    let theItem = (action === "sortable") ? ui.item : ui.draggable; $(theItem).find('.pcm_tooltipData').removeClass('pcm_tooltipDisable');
-    let myId = $(theItem).data("myId"), activeTab = $(`#pcm_tabbedPandas a.active:first`).closest("li");
+    let theItem = (action === "sortable") ? ui.item : ui.draggable; $(theItem).find('.pcm-tooltipData').removeClass('pcm-tooltipDisable');
+    let myId = $(theItem).data("myId"), activeTab = $(`#pcm-tabbedPandas a.active:first`).closest("li");
     const unique = $(activeTab).data("unique");
     const hitData = await bgPanda.dataObj(myId), tabUnique = hitData.tabUnique;
     const tabsInfo = this.#dataTabs[tabUnique];
@@ -268,8 +268,8 @@ class TabbedClass {
    * @param  {number} captchaCount - The captcha counter that needs to be updated on page. */
   updateCaptcha(captchaCount) {
     if (globalOpt.general.captchaCountText)
-      $(`#${this.ulId} .pcm_captchaText:first`).html(`Captcha Count: ${captchaCount}`);
-    else $(`#${this.ulId} .pcm_captchaText:first`).html('');
+      $(`#${this.ulId} .pcm-captchaText:first`).html(`Captcha Count: ${captchaCount}`);
+    else $(`#${this.ulId} .pcm-captchaText:first`).html('');
   }
   /** Sets the panda with the unique ID to the tab unique ID and then saves to database.
    * @param  {number} tabUnique - The tab unique ID that the panda should be positioned in.

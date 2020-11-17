@@ -17,9 +17,9 @@ class PandaStats {
     this.collectAccepted = 0;                 // The number of hits accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
     this.dailyAccepted = 0;                   // The number of accepted hits today.
-    this.fetched = { value:0, session:0, id:'#pcm_hitFetched', class:'.pcm_hitFetched', label:'Fetched', id2:'#pcm_hitFetched1' };
-    this.accepted = { value:0, id:'#pcm_hitAccepted', class:'.pcm_hitAccepted', label:"Acc", id2:'#pcm_hitAccepted1' };
-    this.noMore = { value:0, id:'#pcm_hitNoMore', class:'.pcm_hitNoMore', label:'NM', id2:'#pcm_hitNoMore1' };
+    this.fetched = { value:0, session:0, id:'#pcm-hitFetched', class:'.pcm-hitFetched', label:'Fetched', id2:'#pcm-hitFetched1' };
+    this.accepted = { value:0, id:'#pcm-hitAccepted', class:'.pcm-hitAccepted', label:"Acc", id2:'#pcm-hitAccepted1' };
+    this.noMore = { value:0, id:'#pcm-hitNoMore', class:'.pcm-hitNoMore', label:'NM', id2:'#pcm-hitNoMore1' };
     this.updateAllStats();
   }
   /** Will return the number of accepted hits from this panda job for this day.
@@ -45,21 +45,21 @@ class PandaStats {
   /** Updates all the stats in the panda card. */
   updateAllStats(card=null) {
     if (card) {
-      card.document.find(`.pcm_hitStats`).css('cursor', 'default');
+      card.document.find(`.pcm-hitStats`).css('cursor', 'default');
       card.document.find(`${this.accepted.class}`).html(`${this.accepted.label}: ${this.accepted.value}`);
       card.document.find(`${this.fetched.class}`).html(`${this.fetched.label}: ${this.fetched.value}`);
     } else {
-      $(`${this.accepted.id}_${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
-      $(`${this.fetched.id}_${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
-      $(`${this.accepted.id2}_${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
-      $(`${this.fetched.id2}_${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
+      $(`${this.accepted.id}-${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
+      $(`${this.fetched.id}-${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
+      $(`${this.accepted.id2}-${this.myId}`).html(`${this.accepted.label}: ${this.accepted.value}`);
+      $(`${this.fetched.id2}-${this.myId}`).html(`${this.fetched.label}: ${this.fetched.value}`);
     }
   }
   /** Update a specific stat on the panda card.
    * @param  {object} statObj - Object of the stat to update on the panda card. */
   updateHitStat(statObj) {
-		$(`${statObj.id}_${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
-		$(`${statObj.id2}_${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
+		$(`${statObj.id}-${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
+		$(`${statObj.id2}-${this.myId}`).html(`${statObj.label}: ${statObj.value}`);
   }
   /** Adds the time it was collecting to the total seconds collecting for session.
    * @param  {dateTime} end - the Date that collecting has stopped. */

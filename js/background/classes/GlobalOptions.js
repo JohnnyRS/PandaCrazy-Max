@@ -18,6 +18,7 @@ class PandaGOptions {
       'cardDisplay':2,              // 2 = Normal look, 1 = Minimal Info, 0 = One Liner card display.
       'logPanelHeight':0,           // The height of the bottom log panel if user resizes it.
       'toSearchUI':false,           // Should search jobs go directly to search UI?
+      'fetchHighlight':true,        // Highlight the groupID when script tries to fetch it.
       'debugger':0                  // Main debugger level.
     };
     this.timers = {};               // The timers object used in script from database or default values.
@@ -39,7 +40,7 @@ class PandaGOptions {
       'timerUsed':'mainTimer',
       'searchDuration':12000
     };
-    this.timerRange = {min:600, max:15000};   // The limits for the timer in milliseconds when editing.
+    this.timerRange = {min:750, max:15000};   // The limits for the timer in milliseconds when editing.
     this.timerHamDur = {min:1000, max:30000}  // The limits for the ham duration in milliseconds.
     this.timerQueue = {min:1000, max:60000};  // The limits for the timer queue in milliseconds when editing.
     this.timerSearch = {min:800, max:30000};  // The limits for the timer queue in milliseconds when editing.
@@ -157,10 +158,10 @@ class PandaGOptions {
   timerConfirm(v) {
     let foundError = false;
     for (const key of Object.keys(this.timers)) {
-      let element = $(`#pcm_tdLabel_${key}`);
+      let element = $(`#pcm-tdLabel-${key}`);
       if (element.length) {
         let range = element.data('range');
-        if (v[key] < range.min || v[key] > range.max) { $(`#pcm_tdLabel_${key}`).css('color', 'red'); foundError = true; }
+        if (v[key] < range.min || v[key] > range.max) { $(`#pcm-tdLabel-${key}`).css('color', 'red'); foundError = true; }
       }
     }
     return foundError;

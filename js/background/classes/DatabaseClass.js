@@ -3,7 +3,7 @@ class DatabasesClass {
     this.history = {'dbName':'Pcm_History', 'storeName':'theHistory', 'db':null, 'default':false};
     this.stats = {'dbName':'Pcm_PandaStats', 'storeName':'collectionStore', 'accepted':'acceptedStore', 'db':null, 'default':false};
     this.panda = {'dbName':'PandaCrazyMax', 'storeName':'pandaStore', 'tabs':'tabsStore', 'options':'optionsStore', 'alarms':'alarmsStore', 'grouping':'groupingStore', 'db':null, 'default':false};
-    this.searching = {'dbName':'Pcm_Searching', 'storeName':'searchTriggers', 'options':'searchOptions', 'rules':'searchRules', 'history':'searchHistory', 'db':null, 'default':false};
+    this.searching = {'dbName':'Pcm_Searching', 'storeName':'searchTriggers', 'options':'searchOptions', 'rules':'searchRules', 'grouping':'searchGroups', 'history':'searchHistory', 'db':null, 'default':false};
   }
   openPCM(del=false) {
     return new Promise( (resolve, reject) => {
@@ -36,9 +36,9 @@ class DatabasesClass {
   }
   openSearching(del=false) {
 		return new Promise( (resolve, reject) => {
-			this.searching.db = new DatabaseClass(this.searching.dbName, 2);
+			this.searching.db = new DatabaseClass(this.searching.dbName, 3);
     	this.searching.db.openDB( del, (e) => {
-				if (e.oldVersion < 2) {
+				if (e.oldVersion < 3) {
           let db = e.target.result;
           if (!db.objectStoreNames.contains(this.searching.storeName)) {
             let store1 = db.createObjectStore(this.searching.storeName, {keyPath:'id', autoIncrement:'true'});
@@ -46,6 +46,7 @@ class DatabasesClass {
           }
           if (!db.objectStoreNames.contains(this.searching.options)) { db.createObjectStore(this.searching.options, {keyPath:"dbId", autoIncrement:"false"}); }
           if (!db.objectStoreNames.contains(this.searching.rules)) { db.createObjectStore(this.searching.rules, {keyPath:"dbId", autoIncrement:"false"}); }
+          if (!db.objectStoreNames.contains(this.searching.grouping)) { db.createObjectStore(this.searching.grouping, {keyPath:"id", autoIncrement:"true"}); }
           if (db.objectStoreNames.contains(this.searching.history)) db.deleteObjectStore(this.searching.history);
           let store2 = db.createObjectStore(this.searching.history, {keyPath:"id", autoIncrement:"true"});
           store2.createIndex('dbId', 'dbId', {unique:false}); store2.createIndex('gid', 'gid', {unique:false}); store2.createIndex('date', 'date', {unique:false});

@@ -3,9 +3,9 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MturkClass {
 	constructor() {
-		this.totalFetched = { value:0, id:"#pcm_totalFetched", disabled:null, type:"integer" };
-		this.totalPREs = { value:0, id:"#pcm_totalPres", disabled:null, type:"integer" };
-		this.timerValue = { value:0, id:"#pcm_timerValue", disabled:null, type:"integer" };
+		this.totalFetched = { value:0, id:"#pcm-totalFetched", disabled:null, type:"integer" };
+		this.totalPREs = { value:0, id:"#pcm-totalPres", disabled:null, type:"integer" };
+		this.timerValue = { value:0, id:"#pcm-timerValue", disabled:null, type:"integer" };
 		this.resultUrl = "";			// Just a place to keep results from fetch for future use.
 	}
 	/** This method updates the status bar with relevant information from fetching mturk urls.

@@ -1,65 +1,59 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <link rel="stylesheet" href="css/jquery-ui.min.css">
-  <link rel="stylesheet" href="css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/all.min.css">
-  <link rel="stylesheet" href="css/tempusdominus-bootstrap-4.min.css">
-  <link rel="stylesheet" href="css/panda-crazy-max.css">
-  <script src="js/jquery-3.4.1.min.js"></script>
-  <script src="js/jquery-ui.min.js"></script>
-  <script src="js/bootstrap.bundle.min.js"></script>
-  <script src="js/jquery.longclick-min.js"></script>
-  <script src="js/long-press-event.min.js"></script>
-  <script src="js/moment.js"></script>
-  <script src="js/tempusdominus-bootstrap-4.min.js"></script>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <meta http-equiv='X-UA-Compatible' content='ie=edge'>
+  <link rel='stylesheet' href='css/jquery-ui.min.css'>
+  <link rel='stylesheet' href='css/bootstrap.min.css'>
+  <link rel='stylesheet' href='css/all.min.css'>
+  <link rel='stylesheet' href='css/tempusdominus-bootstrap-4.min.css'>
+  <link rel='stylesheet' href='css/panda-crazy-max.css'>
+  <script src='js/jquery-3.4.1.min.js'></script>
+  <script src='js/jquery-ui.min.js'></script>
+  <script src='js/bootstrap.bundle.min.js'></script>
+  <script src='js/jquery.longclick-min.js'></script>
+  <script src='js/long-press-event.min.js'></script>
+  <script src='js/moment.js'></script>
+  <script src='js/tempusdominus-bootstrap-4.min.js'></script>
   <title>Panda Crazy Max</title>
 </head>
 <body>
-  <div class='container-fluid text-light border-light rounded bg-dark h-100 p-0'>
-    <div class='pane pcm_top border'>
-      <div class='container-fluid px-1 py-0 my-0' id='pcm_topMenu'><!-- Top Menu is dynamically created here --></div>
-      <div class='navbar navbar-text navbar-fixed-top py-0 pcm_status w-100 text-left'>
-        <small>
-          <span class='text-danger' id='pcm_collecting'>Off</span> -
-          <span id='pcm_collectingTotal'>0</span>
-          <span id='pcm_statArea'>[ <span id='pcm_timerStats' class='toggle'></span> | <span id='pcm_jobFetchStats' class='toggle'></span> | 
-          <span id='pcm_preStats' class='toggle'></span> | <span id='pcm_jobStats' class='toggle'></span> | <span id='pcm_earningsStats' class='toggle'></span> ]</span>
-        </small>
-      </div>
+  <div class='container-fluid h-100 pcm-theUI' id ='pcm-pandaUI'>
+    <div class='pane pcm-top pcm-pandaTop'>
+      <div class='container-fluid pcm-menuRow1'><!-- Top Menu is dynamically created here --></div>
+      <div class='navbar navbar-text navbar-fixed-top w-100 pcm-menuRow2'><!-- Top Stat Area is dynamically created here --></div>
     </div>
     <div class='panel py-0'>
-      <div class='panel-body py-0' id='pcm_quickMenu'><!-- Quick Menu is dynamically created here --></div>
+      <div class='panel-body pcm-quickMenu'><!-- Quick Menu is dynamically created here --></div>
     </div>
-    <div class='panel panel-resizable p-0' id='pcm_pandaPanel'>
-      <div class="panel-body" id="pcm_pandaSection"><!-- Tab secion is dynamically created here --></div>
+    <div class='panel panel-resizable p-0' id='pcm-pandaPanel'>
+      <div class='panel-body' id='pcm-pandaSection'><!-- Tab secion is dynamically created here --></div>
     </div>
-    <div class='panel p-0' id='pcm_logPanel'>
-      <div class='panel-body border-top' id='pcm_logSection'><!-- Log Tab secion is dynamically created here --></div>
+    <div class='panel p-0' id='pcm-logPanel'>
+      <div class='panel-body border-top' id='pcm-logSection'><!-- Log Tab secion is dynamically created here --></div>
     </div>
   </div>
-  <script src="js/common.js"></script>
-  <script src="js/classes/DebuggerClass.js"></script>
-  <script src="js/classes/ListenerClass.js"></script>
-  <script src="js/classes/myAudioClass.js"></script>
-  <script src="js/classes/PandaUI.js"></script>
-  <script src="js/classes/PandaGroupings.js"></script>
-  <script src="js/classes/ModalClass.js"></script>
-  <script src="js/classes/ModalAlarmClass.js"></script>
-  <script src="js/classes/ModalSearchClass.js"></script>
-  <script src="js/classes/ModalJobClass.js"></script>
-  <script src="js/classes/ModalOptionsClass.js"></script>
-  <script src="js/classes/PandaGStats.js"></script>
-  <script src="js/classes/PandaStats.js"></script>
-  <script src="js/classes/PandaCard.js"></script>
-  <script src="js/classes/TabbedClass.js"></script>
-  <script src="js/classes/LogTabsClass.js"></script>
-  <script src="js/classes/MenuClass.js"></script>
-  <script src="js/classes/NotificationsClass.js"></script>
-  <script src="js/classes/EximClass.js"></script>
-  <script src="js/pandaCrazyMax.js"></script>
+  <script src='js/common.js'></script>
+  <script src='js/classes/DebuggerClass.js'></script>
+  <script src='js/classes/ListenerClass.js'></script>
+  <script src='js/classes/MyAudioClass.js'></script>
+  <script src='js/classes/PandaUI.js'></script>
+  <script src='js/classes/TheGroupings.js'></script>
+  <script src='js/classes/ModalClass.js'></script>
+  <script src='js/classes/ModalAlarmClass.js'></script>
+  <script src='js/classes/ModalSearchClass.js'></script>
+  <script src='js/classes/ModalJobClass.js'></script>
+  <script src='js/classes/ModalOptionsClass.js'></script>
+  <script src='js/classes/PandaGStats.js'></script>
+  <script src='js/classes/PandaStats.js'></script>
+  <script src='js/classes/PandaCard.js'></script>
+  <script src='js/classes/TabbedClass.js'></script>
+  <script src='js/classes/LogTabsClass.js'></script>
+  <script src='js/classes/MenuClass.js'></script>
+  <script src='js/classes/NotificationsClass.js'></script>
+  <script src='js/classes/EximClass.js'></script>
+  <script src='js/classes/ThemesClass.js'></script>
+  <script src='js/pandaCrazyMax.js'></script>
 </body>
 </html>

@@ -17,22 +17,22 @@ class ModalSearchClass {
    * @param  {function} [afterClose=null]  - Function to call after the modal is closed. */
   showTriggerAddModal(afterClose=null, doCustom=false) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(null, '920px', 'modal-header-info modal-lg', 'Add new Search Trigger', '<h4>Enter New Search Trigger Information.</h4>', 'text-right bg-dark text-light pcm_searchModal', 'modal-footer-info', 'visible btn-sm', 'Add new Search Trigger', () => { checkTrigger(doCustom); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
+    const idName = modal.prepareModal(null, '920px', 'modal-header-info modal-lg', 'Add new Search Trigger', '<h4>Enter New Search Trigger Information.</h4>', 'text-right bg-dark text-light pcm-searchModal', 'modal-footer-info', 'visible btn-sm', 'Add new Search Trigger', () => { checkTrigger(doCustom); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     let df = document.createDocumentFragment(), div = null, input1Text = '* Enter info for new Job: ', searchOpt = globalOpt.doSearch();
     let example1Text = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', example2Text = 'example: Ibotta receipts';
     if (doCustom) {
-      div = $(`<div><div class='pcm_inputError'></div><div style='color:aqua'>Enter a term or word to search for in titles and descriptions of a hit:</div></div>`).appendTo(df);
+      div = $(`<div><div class='pcm-inputError'></div><div style='color:aqua'>Enter a term or word to search for in titles and descriptions of a hit:</div></div>`).appendTo(df);
       input1Text = '* Enter custom search term: '; example1Text = 'example: survey'; example2Text = 'example: Surveys paying over $1.00';
-    } else div = $(`<div><div class='pcm_inputError'></div><div style='color:aqua'>Enter a Group ID, Requester ID, Preview URL or accept URL.</div></div>`).appendTo(df);
-    createInput(df, ' pcm_inputDiv-url', 'pcm_formAddGroupID', input1Text, example1Text);
-    createInput(df, '', 'pcm_formTriggerName', '* Name of the Trigger: ', example2Text);
-    if (doCustom) createInput(df, '', 'pcm_formMinPay', '* Pay Min Amount: ', 'example: 1.00');
-    createCheckBox(df, 'Enabled: ', 'pcm_triggerEnabled', '', true);
-    createCheckBox(df, 'Collect Only One Hit', 'pcm_onlyOnce', '');
+    } else div = $(`<div><div class='pcm-inputError'></div><div style='color:aqua'>Enter a Group ID, Requester ID, Preview URL or accept URL.</div></div>`).appendTo(df);
+    createInput(df, ' pcm-inputDiv-url', 'pcm-formAddGroupID', input1Text, example1Text);
+    createInput(df, '', 'pcm-formTriggerName', '* Name of the Trigger: ', example2Text);
+    if (doCustom) createInput(df, '', 'pcm-formMinPay', '* Pay Min Amount: ', 'example: 1.00');
+    createCheckBox(df, 'Enabled: ', 'pcm-triggerEnabled', '', true);
+    createCheckBox(df, 'Collect Only One Hit', 'pcm-onlyOnce', '');
     $(`<div class='pt-1 border-top border-info'></div>`).appendTo(df);
     let data = {'reqName':'', 'hitTitle':'', 'price':0, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':(doCustom) ? searchOpt.defaultCustDur : searchOpt.defaultDur, 'limitFetches':(doCustom) ? searchOpt.defaultCustFetches : searchOpt.defaultFetches, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0};
     if (!doCustom) {
-      let table1 = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered mb-0'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
+      let table1 = $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered mb-0'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
       displayObjectData([
         {'label':'Requester Name:', 'type':'text', 'key':'reqName', 'tooltip':'The requester name for this job. May not be changed by user.'},
         {'label':'Hit Title:', 'type':'text', 'key':'hitTitle', 'tooltip':'The requester name for this job. May not be changed by user.'},
@@ -40,7 +40,7 @@ class ModalSearchClass {
       ], table1, data, true);
     }
     $(`<div class='text-left pl-5' style='color:aqua'>Panda hits auto collecting options (optional):</div>`).appendTo(df);
-    let table2 = $(`<table class='table table-dark table-hover table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
+    let table2 = $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(df);
     displayObjectData([
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key':'limitNumQueue', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
       {'label':'Limit # of total Hits in queue:', 'type':'range', 'key':'limitTotalQueue', 'tooltip':'Limit number of hits allowed in queue. Good when you want to leave room in queue for better hits.', 'minMax':{'min':0, 'max':24}},
@@ -52,60 +52,60 @@ class ModalSearchClass {
     ], table2, data, true);
     modal.showModal(null, () => {
       $(`#${idName} .${modal.classModalBody}`).append(df);
-      $('#pcm_formAddGroupID').keypress( (e) => {
+      $('#pcm-formAddGroupID').keypress( (e) => {
         if((e.keyCode ? e.keyCode : e.which) == '13') checkTrigger.call(this);
       });
-      $('#pcm_triggerEnabled').click( e => $('#pcm_formAddGroupID').focus() );
-      $('#pcm_onlyOnce').click( e => $('#pcm_formAddGroupID').focus() );
-      $('#pcm_formAddGroupID').focus();
+      $('#pcm-triggerEnabled').click( e => $('#pcm-formAddGroupID').focus() );
+      $('#pcm-onlyOnce').click( e => $('#pcm-formAddGroupID').focus() );
+      $('#pcm-formAddGroupID').focus();
     }, () => { modal = null; if (afterClose) afterClose(); });
     function wrongInput(errorStr=null, theProblem=null) {
       $(`#${idName} .modal-content`).css('background-color', 'white'); $(`#${idName} .${modal.classModalBody}`).css('opacity', '1.0');
       if (theProblem) { $(`label`).css('color', ''); theProblem.css('color', '#f78976'); }
-      $(div).find('.pcm_inputError:first').html((errorStr) ? errorStr : 'Must fill in GroupID, Requester ID or URL!').data('gIdEmpty',true);
+      $(div).find('.pcm-inputError:first').html((errorStr) ? errorStr : 'Must fill in GroupID, Requester ID or URL!').data('gIdEmpty',true);
     }
     /** Verifies that the groupID inputted is correct. */
     async function checkTrigger(doCustom) {
-      let groupVal = $('#pcm_formAddGroupID').val(), trigName = $('#pcm_formTriggerName').val(), minPay = parseFloat($('#pcm_formMinPay').val());
-      if (doCustom && groupVal.length <= 3) wrongInput('All custom Triggers MUST have a term to search for with more than 3 characters!', $(`label[for='pcm_formAddGroupID']`));
-      else if (doCustom && trigName.length <= 3) wrongInput('You must fill in the Unique Trigger Name!', $(`label[for='pcm_formTriggerName']`));
-      else if (doCustom && (isNaN(minPay) || minPay === 0)) wrongInput('All custom Triggers need to have a minimum pay rate!', $(`label[for='pcm_formMinPay']`));
+      let groupVal = $('#pcm-formAddGroupID').val(), trigName = $('#pcm-formTriggerName').val(), minPay = parseFloat($('#pcm-formMinPay').val());
+      if (doCustom && groupVal.length <= 3) wrongInput('All custom Triggers MUST have a term to search for with more than 3 characters!', $(`label[for='pcm-formAddGroupID']`));
+      else if (doCustom && trigName.length <= 3) wrongInput('You must fill in the Unique Trigger Name!', $(`label[for='pcm-formTriggerName']`));
+      else if (doCustom && (isNaN(minPay) || minPay === 0)) wrongInput('All custom Triggers need to have a minimum pay rate!', $(`label[for='pcm-formMinPay']`));
       else if ((doCustom) || /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,25}|^[^\s]{10,50})/.test(groupVal)) {
         let groupId = null, reqId = null;
         if (!doCustom) { if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal); else if (groupVal.match(/^[^Aa]/)) groupId = groupVal; else { reqId = groupVal;} }
-        if (!doCustom && !reqId && !groupId) wrongInput(_, $(`label[for='pcm_formAddGroupID']`));
+        if (!doCustom && !reqId && !groupId) wrongInput(_, $(`label[for='pcm-formAddGroupID']`));
         else {
           $(`#${idName} .modal-content`).css('background-color', 'black'); $(`#${idName} .${modal.classModalBody}`).css('opacity', '0.1');
-          let type = (reqId) ? 'rid' : (groupId) ? 'gid' : 'custom', enabled = ($('#pcm_triggerEnabled').is(':checked') ? 'searching' : 'disabled');
+          let type = (reqId) ? 'rid' : (groupId) ? 'gid' : 'custom', enabled = ($('#pcm-triggerEnabled').is(':checked') ? 'searching' : 'disabled');
           let theName = (trigName) ? trigName : (reqId) ? reqId : groupId;
           let theRules = (doCustom) ? {'terms':true, 'include':new Set([groupVal]), 'payRange': true, 'minPay':minPay} : {};
-          let addSuccess = await bgSearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'duration': data.duration, 'once':$('#pcm_onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'limitFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit}, theRules);
+          let addSuccess = await bgSearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'duration': data.duration, 'once':$('#pcm-onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'limitFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit}, theRules);
           if (addSuccess) { search.appendFragments(); modal.closeModal(); }
-          else wrongInput('There is already a trigger with this value. Sorry. Please try again.', $(`label[for='pcm_formAddGroupID']`));
+          else wrongInput('There is already a trigger with this value. Sorry. Please try again.', $(`label[for='pcm-formAddGroupID']`));
         }
-      } else wrongInput(_, $(`label[for='pcm_formAddGroupID']`));
+      } else wrongInput(_, $(`label[for='pcm-formAddGroupID']`));
     }
   }
   async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass(); let dbId = bgSearch.uniqueToDbId(unique);
     let searchChanges = {'details':Object.assign({}, bgSearch.data[dbId]), 'rules':null, 'options':null, 'searchDbId':null};
     const idName = modal.prepareModal(searchChanges, "700px", "modal-header-info modal-lg", "Details for a Trigger", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save New Details", async (changes) => {
-      $(`.pcm_eleLabel`).css('color', '');
+      $(`.pcm-eleLabel`).css('color', '');
       if (changes.details.type === 'custom' && changes.rules.include.size === 0) {
-        $(`#${idName} .pcm_inputError`).html('Custom searches MUST have 1 Accepted term or word!');
-        $(`#pcm_tdLabel_acceptWords1, #pcm_tdLabel_acceptWords2`).css('color', 'red');
+        $(`#${idName} .pcm-inputError`).html('Custom searches MUST have 1 Accepted term or word!');
+        $(`#pcm-tdLabel-acceptWords1, #pcm-tdLabel-acceptWords2`).css('color', 'red');
       } else {
         await bgSearch.optionsChanged(changes, changes.searchDbId);
-        $(`#pcm_triggerName_${unique}`).html(changes.details.name);
+        $(`#pcm-triggerName-${unique}`).html(changes.details.name);
         modal.closeModal();
       }
     }, "invisible", "No", null, "visible btn-sm", "Cancel");
     const modalBody = $(`#${idName} .${modal.classModalBody}`); modalBody.css({'padding':'1rem 0.3rem'});
     let df = document.createDocumentFragment(), detailContents = null;
-    detailContents = $(`<div class='pcm_detailCont card-deck'></div>`).appendTo(modalBody);
+    detailContents = $(`<div class='pcm-detailCont card-deck'></div>`).appendTo(modalBody);
     this.triggerOptions(df, dbId, null, modal.tempObject[idName]);
     modal.showModal(null, () => {
-      $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df).appendTo(detailContents);
+      $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).append(df).appendTo(detailContents);
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
   rulesToStr(rules, placeHere=null) {
@@ -123,18 +123,18 @@ class ModalSearchClass {
     let values = Array.from(editSet);
     const idName = modal.prepareModal(null, '640px', 'modal-header-info modal-lg', 'Edit Search Options', '', 'text-right bg-dark text-light', 'modal-footer-info', 'visible btn-sm', 'Done', saveFunc, 'invisible', 'No', null, 'invisible', 'Cancel');
     let df = document.createDocumentFragment();
-    $(`<div><div class='pcm_inputError'></div><div style='color:aqua'>Add a ${text} or remove others.</div></div>`).appendTo(df);
+    $(`<div><div class='pcm-inputError'></div><div style='color:aqua'>Add a ${text} or remove others.</div></div>`).appendTo(df);
     if (type === 'custom') $(`<div style='color:khaki' class='small'>All Custom Searches must have one 3 character Accepted term or word.<br>Adding more include or exclude words may cause script to find hits slower.</div>`).appendTo(df);
     let form = $(`<div class='form-group row'></div>`).appendTo(df);
-    let selectBox = $(`<select class='form-control input-sm col-5 mx-auto' id='pcm_selectedBox' multiple size='10'></select>`).appendTo(form);
+    let selectBox = $(`<select class='form-control input-sm col-5 mx-auto' id='pcm-selectedBox' multiple size='10'></select>`).appendTo(form);
     this.selectBoxAdd(values, $(selectBox));
-    $(`<button class="btn btn-xs btn-primary ml-1 pcm_addToSelect">Add ${text2}</button>`).on( 'click', (e) => {
+    $(`<button class="btn btn-xs btn-primary ml-1 pcm-addToSelect">Add ${text2}</button>`).on( 'click', (e) => {
       modal.showDialogModal('750px', `Add New ${text}`, `Type in a ${text2}.`, () => {
-        const newValue = $('#pcm_formQuestion').val();
+        const newValue = $('#pcm-formQuestion').val();
         if (newValue && validFunc(newValue)) { editSet.add(newValue); values = Array.from(editSet); this.selectBoxAdd(values, $(selectBox)); modal.closeModal(); }
       }, true, false, `${text2}: `, ``, 35,_, () => {}, `Add ${text2}`,_,_,(text2 === 'Group ID') ? 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY' : 'example: survey');
     }).appendTo(df);
-    $('<button class="btn btn-xs btn-primary ml-1 pcm_addToSelect">Remove Selected</button>').on( 'click', (e) => {
+    $('<button class="btn btn-xs btn-primary ml-1 pcm-addToSelect">Remove Selected</button>').on( 'click', (e) => {
       let removeList = $(selectBox).val();
       if (type !== 'custom' || !notEmpty || (type === 'custom' && values.length > 1)) {
         for (const index of removeList) { editSet.delete(values[index]); }
@@ -152,10 +152,12 @@ class ModalSearchClass {
    * @param  {object} appendHere - Jquery object @param  {number} dbId - The dbId of the panda job to be shown. */
   async triggerOptions(appendHere, dbId, pDbId, changes) {
     let bGStr = '', eTStr = '', iTStr = '', prependOpt = [], customOpt = []; changes.searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
-    $(`<div class='pcm_inputError'></div><div class='pcm_optionsEdit text-center mb-2 w-100'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
-    let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-bordered w-100'></table>`).appendTo(appendHere);
+    $(`<div class='pcm-inputError'></div><div class='pcm-optionsEdit text-center mb-2 w-100'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
+    let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered w-100'></table>`).appendTo(appendHere);
     if (!changes.details) {
-      changes.details = Object.assign({}, bgSearch.data[dbId]);
+      changes.details = Object.assign({}, bgSearch.getData(changes.searchDbId));
+      if (typeof changes.details.disabled === 'undefined') changes.details.disabled = true;
+      if (typeof changes.details.name === 'undefined') changes.details.name = changes.details.value;
     } else {
       prependOpt = [
         {'label':'Group or Requester ID', 'type':'text', 'key1':'details', 'key':'value', 'keyCheck':'type', 'keyCheckNot':'custom', 'disable':true, 'default':0, 'tooltip':'Value of this trigger'},
@@ -173,22 +175,22 @@ class ModalSearchClass {
       ...prependOpt,
       {'label':'Minimum Pay:', 'type':'number', 'key':'minPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The minimum pay for hit to start collecting.'},
       {'label':'Maximum Pay:', 'type':'number', 'key':'maxPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The maximum pay for hit to start collecting.'},
-      {'label':'Words or phrases Accepted only:', 'id':'pcm_string_include', 'type':'string', 'string':iTStr, 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases only will try to be collected.'},
+      {'label':'Words or phrases Accepted only:', 'id':'pcm-string-include', 'type':'string', 'string':iTStr, 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases only will try to be collected.'},
       {'label':'Edit', 'type':'button', 'btnLabel':'Accepted Words or Phrases', 'addClass':' btn-xxs', 'key':'acceptWords2', 'width':'165px', 'unique':1, 'btnFunc': (e) => {
         this.editTriggerOptions(changes.rules.include, 'Word or phrase to watch for', 'Word or phrase', () => { return true; }, () => {
-          iTStr = this.rulesToStr(changes.rules.include, $('#pcm_string_include')); modal.closeModal();
+          iTStr = this.rulesToStr(changes.rules.include, $('#pcm-string-include')); modal.closeModal();
         }, changes.details.type, true);
       }},
-      {'label':'Excluded words or phrases:', 'id':'pcm_string_exclude', 'type':'string', 'string':eTStr, 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases will be ignored.'},
-      {'label':'Edit', 'type':'button', 'btnLabel':'Excluded Words or Phrases', 'addClass':' btn-xxs', 'idStart':'pcm_excludeWord_', 'width':'175px', 'unique':1, 'btnFunc': (e) => {
+      {'label':'Excluded words or phrases:', 'id':'pcm-string-exclude', 'type':'string', 'string':eTStr, 'disable':true, 'default':0, 'tooltip':'Hits with these words or phrases will be ignored.'},
+      {'label':'Edit', 'type':'button', 'btnLabel':'Excluded Words or Phrases', 'addClass':' btn-xxs', 'idStart':'pcm-excludeWord-', 'width':'175px', 'unique':1, 'btnFunc': (e) => {
         this.editTriggerOptions(changes.rules.exclude, 'Word or phrase to exclude', 'Word or phrase', () => { return true; }, () => {
-          eTStr = this.rulesToStr(changes.rules.exclude, $('#pcm_string_exclude')); modal.closeModal();
+          eTStr = this.rulesToStr(changes.rules.exclude, $('#pcm-string-exclude')); modal.closeModal();
         }, changes.details.type);
       }},
-      {'label':'Excluded Group IDs', 'id':'pcm_string_blockGid', 'type':'string', 'string':bGStr, 'disable':true, 'default':0, 'tooltip':'Hits with these group IDs will try to be collected only.'},
-      {'label':'Edit', 'type':'button', 'btnLabel':'Excluded Group IDs', 'addClass':' btn-xxs', 'idStart':'pcm_excludeGid_', 'width':'175px', 'unique':1, 'btnFunc': (e) => {
+      {'label':'Excluded Group IDs', 'id':'pcm-string-blockGid', 'type':'string', 'string':bGStr, 'disable':true, 'default':0, 'tooltip':'Hits with these group IDs will try to be collected only.'},
+      {'label':'Edit', 'type':'button', 'btnLabel':'Excluded Group IDs', 'addClass':' btn-xxs', 'idStart':'pcm-excludeGid-', 'width':'175px', 'unique':1, 'btnFunc': (e) => {
         this.editTriggerOptions(changes.rules.blockGid, 'Group ID to block', 'Group ID', (value) => { return value.match(/^[^Aa][0-9a-zA-Z]{15,35}$/); }, () => {
-          bGStr = this.rulesToStr(changes.rules.blockGid, $('#pcm_string_blockGid')); modal.closeModal();
+          bGStr = this.rulesToStr(changes.rules.blockGid, $('#pcm-string-blockGid')); modal.closeModal();
         }, changes.details.type);
       }},
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'tooltip':'Limit number of hits in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
@@ -211,7 +213,7 @@ class ModalSearchClass {
       let gidsValues = [], gidsData = {}, blocked = rules.blockGid;
       arrayCount(groupHist, (value) => { gidsValues.push(value.gid); gidsData[value.gid] = value; return true; }, true);
       let gidsHistory = await bgHistory.findValues(gidsValues);
-      let theTable = $(`<table class='table table-dark table-sm pcm_detailsTable table-moreCondensed table-bordered m-0'></table>`)
+      let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-moreCondensed table-bordered m-0'></table>`)
         .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:120px; max-width:120px;'>Title</td><td style='width:440px; max-width:440px'>Descriptions</td><td style='width:52px; max-width:52px;'>Pays</td><td style='width: 70px; max-width:70px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
       for (const key of gidsValues) {
         let dateString = '----', title = '----', description = '----', pays = '----';
@@ -231,7 +233,7 @@ class ModalSearchClass {
             else { blocked.add(key); $(e.target).removeClass(`btn-primary`).addClass(`btn-danger`).html('Unblock'); }
             rules.blockGid = blocked; bgSearch.theData(dbId, 'rules', rules)
           }}
-        ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm_triggeredhit');
+        ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm-triggeredhit');
       }
       $(`#${idName} .${modal.classModalBody}`).append(df);
     }, () => { modal = null; if (afterClose) afterClose(); });
@@ -245,7 +247,7 @@ class ModalSearchClass {
       modal.closeModal();
     }, 'invisible', 'No', null, 'invisible', 'Cancel');
     let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData( [
       {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
       {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for hits to be searched and found in milliseconds.`, 'minMax':globalOpt.getTimerSearch()},
@@ -267,7 +269,7 @@ class ModalSearchClass {
       globalOpt.doSearch(changes); modal.closeModal();
     }, 'invisible', 'No', null, 'invisible', 'Cancel');
     let df = document.createDocumentFragment();
-    $(`<div class='pcm_detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData( [
       {'label':'Number of trigger data to keep in memory:', 'type':'number', 'key':'queueSize', 'tooltip':`To save memory the script will only keep this number of most active trigger data in memory and the rest in the database. Loading from database can be slower.`, 'minMax':this.queueSize},
       {'label':'Trigger hits history days expiriration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`Hits found by trigger is saved in the database and this number represents the days to keep those hits saved.`, 'minMax':this.triggerHistDays},
@@ -282,13 +284,13 @@ class ModalSearchClass {
     const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', `Edit Blocked Group and Requester ID's`, '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(() => {}, async () => {
       let df = document.createDocumentFragment(), df2 = document.createDocumentFragment(), modalBody = $(`#${idName} .${modal.classModalBody}`);
-      let blockingDiv = $(`<div id='pcm_blockDetails' class='bg-dark'></div>`).appendTo(modalBody), gidContents = null, ridContents = null;
-      let blockTabs = new TabbedClass(blockingDiv, `pcm_blockingTabs`, `pcm_gidBlock`, `pcm_ridBlock`, false, 'Block');
+      let blockingDiv = $(`<div id='pcm-blockDetails' class='bg-dark'></div>`).appendTo(modalBody), gidContents = null, ridContents = null;
+      let blockTabs = new TabbedClass(blockingDiv, `pcm-blockingTabs`, `pcm-gidBlock`, `pcm-ridBlock`, false, 'Block');
       let [_, err] = await blockTabs.prepare(), gidvals = bgSearch.getBlocked(), ridvals = bgSearch.getBlocked(false);
       if (!err) {
         function statusInput(tab, resultStr=null, error=true) {
           let theClass = (error) ? 'text-danger' : 'text-success';
-          modalBody.find(`.${tab} .pcm_inputResult:first`).removeClass('text-danger text-success').addClass(theClass).html(resultStr);
+          modalBody.find(`.${tab} .pcm-inputResult:first`).removeClass('text-danger text-success').addClass(theClass).html(resultStr);
         }
         async function checkInput(e, remove, thisClass=null) {
           let thisTab = $(e.target).data('tab'), gid = null, rid = null, theResult = null, groupId = $(e.target).data('gid');
@@ -313,25 +315,25 @@ class ModalSearchClass {
           } else statusInput(thisTab, `Not a valid ID. Please enter in the ${(groupId) ? 'Group ID' : 'Requester ID'} again.`);
         }
         let gidTab = await blockTabs.addTab(`Group ID Blocked`, true);
-        gidContents = $(`<div class='pcm_gidCont'></div>`).appendTo(`#${gidTab.tabContent}`);
+        gidContents = $(`<div class='pcm-gidCont'></div>`).appendTo(`#${gidTab.tabContent}`);
         let ridTab = await blockTabs.addTab(`Requester ID Blocked`);
-        ridContents = $(`<div class='pcm_ridCont'></div>`).appendTo(`#${ridTab.tabContent}`);
+        ridContents = $(`<div class='pcm-ridCont'></div>`).appendTo(`#${ridTab.tabContent}`);
         let exampleGid = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', exampleRid = 'example: AGVV5AWLJY7H2';
-        let typeGid = true, thisTab = 'pcm_gidCont', thisFrag = df, typeExample = exampleGid;
+        let typeGid = true, thisTab = 'pcm-gidCont', thisFrag = df, typeExample = exampleGid;
         let gidsHistory = await bgHistory.findValues(gidvals), ridsHistory = await bgHistory.findValues(ridvals), values = gidvals; 
         for (let j=0, len=gidvals.length; j < len; j++) { gidvals[j] += (gidsHistory[gidvals[j]]) ? ` - ${gidsHistory[gidvals[j]].title}` : ` -`; }
         for (let j=0, len=ridvals.length; j < len; j++) { ridvals[j] += (ridsHistory[ridvals[j]]) ? ` - ${ridsHistory[ridvals[j]].reqName}` : ` -`; }
         for (let i=0; i < 2; i++) {
-          $(`<div><div class='pcm_inputResult my-0 py-0'>&nbsp;</div><div style='color:aqua'>Enter an ID to add or remove from being blocked.</div></div>`).appendTo(thisFrag);
-          createInput(thisFrag, ' pcm_inputDiv-url ml-3', 'pcm_formAddTheID', `Enter in ${(typeGid) ? 'Group' : 'Requester'} ID:`, typeExample,_,_,'',90);
-          $(`<button class="btn btn-xs btn-primary ml-1 pcm_addBlocked">Add ID</button>`).data('tab',thisTab).data('gid',typeGid)
+          $(`<div><div class='pcm-inputResult my-0 py-0'>&nbsp;</div><div style='color:aqua'>Enter an ID to add or remove from being blocked.</div></div>`).appendTo(thisFrag);
+          createInput(thisFrag, ' pcm-inputDiv-url ml-3', 'pcm-formAddTheID', `Enter in ${(typeGid) ? 'Group' : 'Requester'} ID:`, typeExample,_,_,'',90);
+          $(`<button class="btn btn-xs btn-primary ml-1 pcm-addBlocked">Add ID</button>`).data('tab',thisTab).data('gid',typeGid)
             .on('click', (e) => { checkInput(e, false, this); }).appendTo(thisFrag);
-          $(`<button class="btn btn-xs btn-primary ml-1 pcm_removeBlocked">Remove ID</button>`).data('tab',thisTab).data('gid',typeGid)
+          $(`<button class="btn btn-xs btn-primary ml-1 pcm-removeBlocked">Remove ID</button>`).data('tab',thisTab).data('gid',typeGid)
             .on('click', (e) => { checkInput(e, true, this); }).appendTo(thisFrag);
           let form = $(`<div class='form-group mt-3 mb-1'></div>`).appendTo(thisFrag);
-          let selectBox = $(`<select class='form-control input-sm col-8 mx-auto' id='pcm_selectedBox' multiple size='12'></select>`).appendTo(form);
+          let selectBox = $(`<select class='form-control input-sm col-8 mx-auto' id='pcm-selectedBox' multiple size='12'></select>`).appendTo(form);
           this.selectBoxAdd(values, $(selectBox));
-          $(`<button class="btn btn-xs btn-primary mt-0 my-3 pcm_removeFromSelect">Remove selected ID</button>`).data('tab',thisTab).data('gid',typeGid).on( 'click', (e) => {
+          $(`<button class="btn btn-xs btn-primary mt-0 my-3 pcm-removeFromSelect">Remove selected ID</button>`).data('tab',thisTab).data('gid',typeGid).on( 'click', (e) => {
             let thisTab = $(e.target).data('tab'), selected = modalBody.find(`.${thisTab} option:selected`), isgid = $(e.target).data('gid');
             let valArray = (isgid) ? gidvals : ridvals, gid = null, rid = null;
             if (selected.length) {
@@ -343,7 +345,7 @@ class ModalSearchClass {
             }
             if (isgid) gidvals = valArray; else ridvals = valArray;
           }).appendTo(thisFrag);
-          typeGid = false, thisTab = 'pcm_ridCont', thisFrag = df2, typeExample = exampleRid, values = ridvals;
+          typeGid = false, thisTab = 'pcm-ridCont', thisFrag = df2, typeExample = exampleRid, values = ridvals;
         }
         gidContents.append(df); ridContents.append(df2);
       }
@@ -353,12 +355,12 @@ class ModalSearchClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'modal-header-info modal-lg', 'Edit Search Advanced Options', '', 'text-right bg-dark text-light m-0 p-1', 'modal-footer-info', 'visible btn-sm', 'Done', () => {
       let check = bgSearch.theBlocked(theData.gid, theData.rid), tr = $(ele.target).closest('tr');
-      if (ele && (check[0] || check[1])) tr.addClass('pcm_blockedHit'); else tr.removeClass('pcm_blockedHit');
+      if (ele && (check[0] || check[1])) tr.addClass('pcm-blockedHit'); else tr.removeClass('pcm-blockedHit');
       modal.closeModal();
     }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(() => {}, async () => {
       let df = document.createDocumentFragment(), blocked = bgSearch.theBlocked(theData.gid, theData.rid);
-      $(`<div class='pcm_detailsEdit text-center mb-2'>Details of this hit:</div>`).appendTo(df);
+      $(`<div class='pcm-detailsEdit text-center mb-2'>Details of this hit:</div>`).appendTo(df);
       displayObjectData( [
         {'label':'Requester Name:', 'type':'keyValue', 'key':'reqName', 'disable':true, 'tooltip':`Requester Name for this hit.`},
         {'label':'Title:', 'type':'keyValue', 'key':'title', 'disable':true, 'tooltip':`Title of this hit.`},
@@ -367,14 +369,96 @@ class ModalSearchClass {
         {'label':'Requester ID:', 'type':'keyValue', 'key':'rid', 'disable':true, 'tooltip':`Requester ID for this hit.`},
         {'label':'Group ID:', 'type':'keyValue', 'key':'gid', 'disable':true, 'tooltip':`Group ID for this hit.`},
       ], df, theData, true);
-      $(`<div class='pcm_buttonArea'></div>`).append($(`<button class="btn btn-xs btn-primary mx-2 pcm_blockGid">${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( (e) => {
+      $(`<div class='pcm-buttonArea'></div>`).append($(`<button class="btn btn-xs btn-primary mx-2 pcm-blockGid">${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( (e) => {
           bgSearch.theBlocked(theData.gid, null, true, false, true); let check = bgSearch.theBlocked(theData.gid, null);
           $(e.target).text(`${(check[0]) ? 'UNBLOCK' : 'Block'} this Group ID`);
-        })).append($(`<button class="btn btn-xs btn-primary mx-2 pcm_blockRid">${(blocked[1]) ? 'UNBLOCK' : 'Block'} this Requester</button>`).click( (e) => {
+        })).append($(`<button class="btn btn-xs btn-primary mx-2 pcm-blockRid">${(blocked[1]) ? 'UNBLOCK' : 'Block'} this Requester</button>`).click( (e) => {
           bgSearch.theBlocked(null, theData.rid, true, false, true); let check = bgSearch.theBlocked(null, theData.rid);
           $(e.target).text(`${(check[1]) ? 'UNBLOCK' : 'Block'} this Requester`);
         })).appendTo(df);
       $(`#${idName} .${modal.classModalBody}`).append(df);
     }, () => { modal = null; if (afterClose) afterClose(); });
+  }
+  async showTriggersTable(modalBody, triggers, checkboxFunc=null, afterClose=null) {
+    const divContainer = $(`<table class='table table-dark table-sm table-moreCondensed pcm-jobTable table-bordered w-auto'></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
+    displayObjectData([
+      {'string':'', 'type':'checkbox', 'btnFunc': (e) => { $(`.modal-body input[type='checkbox']`).prop('checked', $(e.target).is(':checked')); }},
+      {'string':'Type', 'type':'string', 'noBorder':true}, {'string':'Trigger Name', 'type':'string', 'noBorder':true}, {'string':'Trigger ID or Term', 'type':'string', 'noBorder':true},
+      {'string':'Status', 'type':'string'}
+    ], divContainer, {}, true, true, true, 'pcm-triggeredhit');
+    for (const dbId of triggers) {
+      let data = bgSearch.getData(dbId), rules = await bgSearch.theData(dbId, 'rules');
+      if (rules.terms) { data.value = ''; data.term = rules.include.values().next().value; }
+      data.status = (data.disabled) ? 'Disabled' : 'Enabled';
+      displayObjectData([
+        {'string':'', 'type':'checkbox', 'width':'25px', 'maxWidth':'25px', 'unique':dbId, 'inputClass':' pcm-checkbox', 'btnFunc':checkboxFunc},
+        {'string':'Trigger Type', 'type':'keyValue', 'key':'type', 'width':'50px', 'maxWidth':'50px', id:`pcm-TRT-${dbId}`},
+        {'string':'Trigger Name', 'type':'keyValue', 'key':'name', 'width':'420px', 'maxWidth':'420px', id:`pcm-TRN-${dbId}`},
+        {'string':'Trigger ID or Term', 'type':'keyValue', 'key':'term', 'orKey': 'value', 'width':'350px', 'maxWidth':'350px', 'id':`pcm-TRID-${dbId}`},
+        {'string':'Status', 'type':'keyValue', 'key':'status', 'width':'65px', 'maxWidth':'65px', 'id':`pcm-TRS-${dbId}`},
+      ], divContainer, data, true, true);
+    }
+  }
+  /** Filters out jobs with the search term, collecting radio, search mode and once options.
+   * @param  {string} search       - Search term to find in title or requester name.
+   * @param  {object} modalControl - Jquery element of modalControl to use for these jobs.
+   * @return {bool}                - True if job should be shown. */
+  async triggersFilter(search, modalControl) {
+    let newArray = [];
+    for (const dbId of bgSearch.getFrom('Search')) {
+      let trigger = bgSearch.getTrigger(dbId), good = false;
+      const radioChecked = $(modalControl).find(`input[name='theTriggers']:checked`).val();
+      if (radioChecked === '0') good = true;
+      else if (radioChecked === '2' && trigger.type === 'rid') good = true;
+      else if (radioChecked === '3' && trigger.type === 'gid') good = true;
+      else if (radioChecked === '4' && trigger.type === 'custom') good = true;
+      // if (good && search !== '' && (data.title.toLowerCase().includes(search) || data.reqName.toLowerCase().includes(search))) good = true;
+      // else if (good && search !== '') good = false;
+      if (good) newArray.push(dbId);
+    }
+    return newArray;
+  }
+  showTriggersModal(type='triggers', groupUnique=-1, thisObj=null, saveFunc=null, checkFunc=null, cancelFunc=null, afterShow=null, afterClose=null) {
+    if (!modal) modal = new ModalClass();
+    const theTitle = (type==='groupingEdit') ? 'Edit Groupings' : 'List Triggers';
+    const saveBtnStatus = (type==='groupingEdit') ? 'visible btn-sm' : 'invisible';
+    const idName = modal.prepareModal(thisObj, '1000px', 'modal-header-info modal-lg', theTitle, '', 'text-right bg-dark text-light', 'modal-footer-info', saveBtnStatus, 'Save Groupings', saveFunc, 'invisible', 'No', null, 'invisible', 'Close');
+    const modalBody = $(`#${idName} .${modal.classModalBody}`);
+    let df = document.createDocumentFragment();
+    let modalControl = $('<div class="pcm-modalControl w-100"></div>').appendTo(df);
+    if (type==='groupingEdit') {
+      $('<div class="small text-warning font-weight-bold pl-1"></div>').append('Select the triggers you want in this grouping below:').append(`<span class="ml-2 text-info pcm-triggersInGroup">Triggers in Group: ${Object.keys(thisObj.triggers).length}</span>`).appendTo(modalControl);
+      createInput(modalControl, '', 'pcm-groupingNameI', 'Grouping Name: ', `default: Grouping #${groupUnique}`, null, ' pl-5 text-warning', modal.tempObject[idName].name).append(createTimeInput('Start Time', 'datetimepicker1'));
+      createInput(modalControl, ' border-bottom', 'pcm-groupingDescI', 'Description: ', 'default: no description', null, ' pl-5 text-warning', modal.tempObject[idName].description).append(createTimeElapse(thisObj.endHours, thisObj.endMinutes));
+      if (thisObj.startTime) $('#datetimepicker1').datetimepicker({defaultDate: moment(thisObj.startTime,'hh:mm A'), format: 'LT'});
+      else $('#datetimepicker1').datetimepicker({format: 'LT'});
+      $('#pcm-clearTInput').on('click', e => { $('#datetimepicker1').datetimepicker('clear'); });
+    }
+    const radioGroup = $('<div class="text-center"></div>').appendTo(modalControl);
+    radioButtons(radioGroup, 'theTriggers', '0', 'All Triggers', true); 
+    if (type === 'jobs') radioButtons(radioGroup, 'theTriggers', '1', 'Collecting');
+    radioButtons(radioGroup, 'theTriggers', '2', 'Requester ID Triggers');
+    radioButtons(radioGroup, 'theTriggers', '3', 'Group Id Triggers');
+    radioButtons(radioGroup, 'theTriggers', '4', 'Custom triggers');
+    const inputControl = createInput(modalControl, '', 'pcm-searchTriggers', 'Search phrase: ', 'example: receipts', (e) => {
+      $(e.target).closest('.pcm-modalControl').find('.pcm-searchingTriggers').click();
+    }, ' pl-5');
+    $('<button class="btn btn-xxs btn-primary ml-1 pcm-searchingTriggers">Search</button>').on( 'click', async (e) => {
+      $(modalBody).find('.pcm-jobTable').remove();
+      let filtered = await this.triggersFilter($('#pcm-searchJobs').val().toLowerCase(), modalControl);
+      // await this.showTriggersTable(modalBody, filtered, checkFunc, () => {});
+      // if (type === 'groupingEdit') Object.keys(groupings.groups[groupUnique].pandas).forEach( (value) => { $(`#pcm-selection-${bgPanda.dbIds[value]}`).prop('checked', true); });
+    }).appendTo(inputControl);
+    $(df).find('input:radio[name="theJobs"]').click( (e) => {
+      $(e.target).closest('.pcm-modalControl').find('.pcm-searchingTriggers').click();
+    });
+    modal.showModal(cancelFunc, async () => {
+      $('<div class="pcm-modalControl w-100"></div>').append(df).insertBefore(modalBody);
+      let df2 = document.createDocumentFragment();
+      let filtered = await this.triggersFilter('', modalControl);
+      await this.showTriggersTable(df2, filtered, checkFunc, () => {});
+      $(df2).appendTo(modalBody);
+      if (afterShow) afterShow(this);
+    });
   }
 }

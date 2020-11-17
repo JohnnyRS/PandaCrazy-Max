@@ -12,11 +12,12 @@ class EximClass {
     this.importJobsTabs = {};
     this.importOptions = {};
     this.importGroupings = [];
+    this.importSGroupings = [];
     this.importSearchData = {};
     this.importAlarmsData = {};
     this.importTriggersData = [];
     this.importCompleted = false;
-    this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}, 'Triggers':{'func':'theTriggers', 'prop':'SearchTriggers'}};
+    this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}, 'SearchGroupings':{'func':'searchGroupings', 'prop':'SearchGroupings'}, 'Triggers':{'func':'theTriggers', 'prop':'SearchTriggers'}};
     this.soundConvert = {'more15':'less99', 'queueFull':'fullQueue', 'loggedOut':'hasToPause', 'captchaAlarm':'captchaAlarm'};
     this.reader = new FileReader();
     this.options = {'HamCycleNumber':'hamTimer', 'cycleNumber':'mainTimer', 'cycleNumber2':'secondTimer', 'cycleNumber3':'thirdTimer', 'cycleAdding':'timerAddMore', 'cycleAutoIncrease':'timerAutoIncrease', 'cycleDecrease':'timerDecrease', 'cycleIncrease':'timerIncrease', 'savedCycleNum':'timerUsed', 'alarmVolume':'volume'};
@@ -35,21 +36,23 @@ class EximClass {
   resetData() {
     this.tabPosition = 0;
     this.importJobData = {}; this.importTabsData = {}; this.importOptions = {}; this.importSearchData = {}; this.importJobsTabs = {};
-    this.importJobIds = []; this.importTabsIds = []; this.importGroupings = [];
+    this.importJobIds = []; this.importTabsIds = []; this.importGroupings = []; this.importSGroupings = [];
   }
   /** Export all the data to a file with alarms or not.
    * @param  {bool} [withAlarms=false]  - Should alarm sounds be included or just the alarm options?
    * @param  {function} [doneFunc=null] - The function to call after saving file to computer. */
   async exportData(withAlarms=false, doneFunc=null) {
-    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [], exportTriggers = [];
+    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [], exportTriggers = [], exportSearchGroups = [];
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo());
     exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups(); exportAlarms = alarms.exportAlarms(withAlarms);
     exportTriggers = await bgSearch.exportTriggers();
+    exportSearchGroups = await bgSearch.exportSearchGroupings();
     this.exportPre.jobs = exportJobs.length;
-    saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers, 'SoundOptions':exportAlarms}, withAlarms, () => {
+    saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
+      'SearchGroupings':exportSearchGroups, 'SoundOptions':exportAlarms}, withAlarms, () => {
       bgPanda.nullData(false);
       if (doneFunc) doneFunc();
     });
@@ -59,15 +62,15 @@ class EximClass {
   statusFile(status) {
     let statusText = (status) ? 'Data from file ready to be imported.' : 'Not a valid import file.';
     let colorText = (status) ? '#dbfd23' : '#ff7a7a';
-    $('.pcm_importStatus').html(statusText).css('color',colorText);
-    if (status) $('.pcm_importButton').removeClass('disabled').prop('disabled',false);
-    else $('.pcm_importButton').addClass('disabled').prop('disabled',true);
+    $('.pcm-importStatus').html(statusText).css('color',colorText);
+    if (status) $('.pcm-importButton').removeClass('disabled').prop('disabled',false);
+    else $('.pcm-importButton').addClass('disabled').prop('disabled',true);
   }
   /** Reads the data from the file to be imported and then verifies it. */
   async readData() {
     let textData = this.reader.result;
-    $('.pcm_importStatus').html('');
-    $('#pcm_importCheck').html(`<div class='tabs'></div><div class='jobs'></div><div class='options'></div><div class='groupings'></div><div class='alarms'></div><div class='triggers'></div></div>`);
+    $('.pcm-importStatus').html('');
+    $('#pcm-importCheck').html(`<div class='tabs'></div><div class='jobs'></div><div class='options'></div><div class='groupings'></div><div class='alarms'></div><div class='searchGroupings'></div><div class='triggers'></div></div>`);
     this.resetData();
     try {
       if (textData) {
@@ -81,6 +84,7 @@ class EximClass {
           await this.checkProps(data, version, 'Options', 'options', 'Options');
           await this.checkProps(data, version, 'Grouping', 'groupings', 'Groupings');
           await this.checkProps(data, version, 'Alarms', 'alarms', 'Alarms');
+          await this.checkProps(data, version, 'SearchGroupings', 'searchGroupings', 'Search Groupings');
           await this.checkProps(data, version, 'Triggers', 'triggers', 'Search Triggers');
           this.statusFile(true);
         } else { this.statusFile(false); }
@@ -99,8 +103,8 @@ class EximClass {
       if (!Object.keys(this.importTabsData).length) this.importTabsData = Object.assign({}, this.importJobsTabs);
       let counters = 0, tabDbId = 1, mInfo = [], mData = []; this.tabPosition = 0;
       if (Object.keys(this.importTabsData).length > 0) {
-        $('#pcm_tabbedPandas').hide();
-        $('.pcm_importButton:first').append('.');
+        $('#pcm-tabbedPandas').hide();
+        $('.pcm-importButton:first').append('.');
         await bgPanda.removeAll(false);
         await bgSearch.removeAll();
         bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
@@ -108,10 +112,10 @@ class EximClass {
         await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
         await alarms.prepareAlarms(Object.values(this.importAlarmsData), false);
         await groupings.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
-        $('.pcm_importButton:first').append('.');
+        $('.pcm-importButton:first').append('.');
         globalOpt.importOptions(this.importOptions);
         for (const key of Object.keys(this.importTabsData)) {
-          $('.pcm_importButton:first').append('.');
+          $('.pcm-importButton:first').append('.');
           let active = (counters++ === 0) ? true : false;
           let theTitle = (this.importTabsData[key].title !== '') ? this.importTabsData[key].title : ((this.tabPosition === 0) ? 'Main' : `tab #${this.tabPosition}`);
           tabDbId = await pandaUI.tabs.addFromDB({'title':theTitle, 'list':this.importTabsData[key].list, 'position':this.tabPosition++}, active);
@@ -176,6 +180,7 @@ class EximClass {
       }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
       groupings.importToDB(this.importGroupings);
+      sGroupings.importToDB(this.importSGroupings);
       let tabUniques = pandaUI.tabs.getUniques();
       for (const unique of tabUniques) { if (newPositions[unique]) pandaUI.tabs.setpositions(unique, newPositions[unique]); }
     }
@@ -187,12 +192,12 @@ class EximClass {
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       if (window.File && window.FileReader && window.FileList && window.Blob) {
-        createCheckBox(df, 'Import only alarm sounds: ', 'pcm_importAlarms', 'alarmsYes', false, ' importAlarms mt-3');
-        let inputContainer = $(`<div class='col-xs-12 pcm_fileInput'></div>`).appendTo(df);
+        createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' importAlarms mt-3');
+        let inputContainer = $(`<div class='col-xs-12 pcm-fileInput'></div>`).appendTo(df);
         createFileInput(inputContainer);
-        $(`<div id='pcm_importCheck'></div>`).appendTo(df);
-        $(`<div class='pcm_importStatus'>&nbsp;</div>`).appendTo(df);
-        $('<div></div>').append($(`<button class='pcm_importButton disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
+        $(`<div id='pcm-importCheck'></div>`).appendTo(df);
+        $(`<div class='pcm-importStatus'>&nbsp;</div>`).appendTo(df);
+        $('<div></div>').append($(`<button class='pcm-importButton disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
         $(`#${idName} .${modal.classModalBody}`).append(df);
         $('.custom-file-input').on('change', (e) => {
           const fileName = $(e.target).val().replace('C:\\fakepath\\', '');
@@ -201,10 +206,10 @@ class EximClass {
           this.reader.readAsBinaryString($(e.target).prop("files")[0]);
           this.reader.onerror = () => { console.log('can not read the file'); }
         });
-        $('.pcm_importButton:first').on('click', async (e) => {
+        $('.pcm-importButton:first').on('click', async (e) => {
           if (!this.importCompleted) {
             $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); bgSearch.importing();
-            await this.startImporting($('#pcm_importAlarms').prop('checked'));
+            await this.startImporting($('#pcm-importAlarms').prop('checked'));
             await delay(100);
             $('.custom-file-input').off('change');
             $(e.target).html('Importing completed. Click to restart!').css({'backgroundColor':'#00FF7F','color':'#000c9c', 'fontWeight':'bold'}).prop('disabled',false);
@@ -224,12 +229,12 @@ class EximClass {
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       $(`<h4 class='small mt-3'>Any added jobs, tabs, groupings and all options will be exported.<br />Only the alarm options will be saved unless you click the checkbox to save alarm sounds.<br />Saving alarm sounds will create a larger exported file so only do it when you add new sounds.</div>`).css('color','cyan').appendTo(df);
-      createCheckBox(df, 'Export alarm sounds too: ', 'pcm_exportAlarmsToo', 'alarmsYes', false, ' mt-3');
-      $(`<div class='mt-4'></div>`).append($(`<button class='pcm_exportButton'>Export Your Data To A File</button>`)).appendTo(df);
+      createCheckBox(df, 'Export alarm sounds too: ', 'pcm-exportAlarmsToo', 'alarmsYes', false, ' mt-3');
+      $(`<div class='mt-4'></div>`).append($(`<button class='pcm-exportButton'>Export Your Data To A File</button>`)).appendTo(df);
       $(`#${idName} .${modal.classModalBody}`).append(df);
-      $('.pcm_exportButton:first').on('click', (e) => {
+      $('.pcm-exportButton:first').on('click', (e) => {
         $(e.target).html('Please Wait: Exporting').css('color','white').prop('disabled',true);
-        this.exportData($('#pcm_exportAlarmsToo').prop('checked'), async () => {
+        this.exportData($('#pcm-exportAlarmsToo').prop('checked'), async () => {
           await delay(500);
           modal.closeModal();
         });
@@ -241,7 +246,7 @@ class EximClass {
    * @param  {string} type - The version of the import file. */
   async checkJobs(data, type) {
     let jobData = null;
-    $('#pcm_importCheck .jobs').html('Job Data - Checking').css('color','#e4aeae');
+    $('#pcm-importCheck .jobs').html('Job Data - Checking').css('color','#e4aeae');
     if (type === 'PCM' && data.hasOwnProperty('jobs')) jobData = data.jobs;
     else if (type === 'PCOLD') jobData = Object.keys(data.Requesters);
     else if (type === 'PCOLDER') jobData = data;
@@ -253,7 +258,7 @@ class EximClass {
         else if (type === 'PCOLDER') this.olderImportsJobs(rData, rData.id, type);
       }
       await delay(400);
-      $('#pcm_importCheck .jobs').html('Job Data - Verified').css('color','#00fb00');
+      $('#pcm-importCheck .jobs').html('Job Data - Verified').css('color','#00fb00');
       return true;
     } else return false;
   }
@@ -261,13 +266,13 @@ class EximClass {
    * @param  {object} data           - Import data @param  {string} version       - Import version @param  {string} type - Property Id
    * @param  {string} [typeClass=''] - Class name  @param  {string} [typeText=''] - Import name */
   async checkProps(data, version, type, typeClass='', typeText='') {
-    $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Checking`).css('color','#e4aeae');
+    $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - Checking`).css('color','#e4aeae');
     await delay(300);
     let prop = this.propData[type].prop;
     if (type === 'Tabs' && data.hasOwnProperty(prop)) { for (const tab of data.Tabsdata) { this.theTabs(tab, version); } }
     else if (type !== 'Tabs') this[this.propData[type].func]((data[prop]) ? data[prop] : {}, version);
-    if (data.hasOwnProperty(prop)) $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - Verified`).css('color','#00fb00');
-    else $(`#pcm_importCheck .${typeClass}`).html(`${typeText} Data - None`).css('color','#FFA07A');
+    if (data.hasOwnProperty(prop)) $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - Verified`).css('color','#00fb00');
+    else $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - None`).css('color','#FFA07A');
   }
   /** Parse job data read from a newer import file to the data object needed.
    * @param  {object} rData - The job data read from the import file to be parsed to the newer data object. */
@@ -363,13 +368,15 @@ class EximClass {
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
-  theGroupings(rData) {
+  theGroupings(rData) { console.log(rData);
     for (const key of Object.keys(rData)) {
       let importGroup = {};
+      if (!rData[key].hasOwnProperty('delayed')) { rData[key].delayed = []; }
       if (rData[key].hasOwnProperty('pandas')) { importGroup = rData[key]; }
       else { importGroup = {'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:"", endHours:0, endMinutes:0}; }
       this.importGroupings.push(importGroup);
     }
+    console.log(this.importGroupings);
   }
   /** Parse the alarms data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
@@ -398,4 +405,5 @@ class EximClass {
       this.importTriggersData.push(value);
     }
   }
+  searchGroupings(rData) { for (const key of Object.keys(rData)) this.importSGroupings.push(rData[key]); }
 }

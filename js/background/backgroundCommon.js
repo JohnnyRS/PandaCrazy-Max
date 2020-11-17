@@ -1,6 +1,6 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null;
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null;
 chrome.storage.local.set({'pcm_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
@@ -11,7 +11,7 @@ function checkUIConnects() {
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
   mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB();
-  myPanda = null; mySearch = null; myHistory = null; myQueue = null;
+  myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null;
   pandaTimer = null; queueTimer = null; searchTimer = null;
   if (chrome.storage) chrome.storage.local.set({'pcm_running':false});
 }
@@ -38,6 +38,7 @@ function gGetPanda() { return myPanda; }
 /** Sends back the queue class object so pages can use it easily.
  * @return - Returns the queue class object from the external page. */
 function gGetQueue() { return myQueue; }
+function gGetDash() { return myDash; }
 /** Sends back the search class object so pages can use it easily.
  * @return - Returns the search class object from the external page. */
 function gGetSearch() { return mySearch; }
@@ -78,8 +79,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
         pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
         queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
         searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default
-        myQueue = new MturkQueue(2000);
-        myPanda = new MturkPanda(995, 950);
+        myQueue = new MturkQueue(2000); myDash = new MturkDashboard(); myPanda = new MturkPanda(995, 950);
         await MYDB.openPCM().then( async () => {
           await MYDB.openStats(true).then( async () => {
             await MyOptions.prepare();
