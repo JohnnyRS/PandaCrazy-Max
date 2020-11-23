@@ -63,8 +63,8 @@ class EximClass {
     let statusText = (status) ? 'Data from file ready to be imported.' : 'Not a valid import file.';
     let colorText = (status) ? '#dbfd23' : '#ff7a7a';
     $('.pcm-importStatus').html(statusText).css('color',colorText);
-    if (status) $('.pcm-importButton').removeClass('disabled').prop('disabled',false);
-    else $('.pcm-importButton').addClass('disabled').prop('disabled',true);
+    if (status) $('.pcm-importButton').removeClass('pcm-disabled').prop('disabled',false);
+    else $('.pcm-importButton').addClass('pcm-disabled').prop('disabled',true);
   }
   /** Reads the data from the file to be imported and then verifies it. */
   async readData() {
@@ -188,22 +188,22 @@ class EximClass {
   /** Shows the import modal for user to select a file to import. */
   importModal() {
     modal = new ModalClass();
-    const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "Import Data", "<h4>Import saved data from an exported file.</h4>", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
+    const idName = modal.prepareModal(null, '800px', 'pcm-importModal', 'modal-lg', 'Import Data', '<h4>Import saved data from an exported file.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       if (window.File && window.FileReader && window.FileList && window.Blob) {
-        createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' importAlarms mt-3');
+        createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' pcm-importCheckbox mt-3');
         let inputContainer = $(`<div class='col-xs-12 pcm-fileInput'></div>`).appendTo(df);
         createFileInput(inputContainer);
         $(`<div id='pcm-importCheck'></div>`).appendTo(df);
         $(`<div class='pcm-importStatus'>&nbsp;</div>`).appendTo(df);
-        $('<div></div>').append($(`<button class='pcm-importButton disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
+        $('<div></div>').append($(`<button class='pcm-importButton pcm-disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
         $(`#${idName} .${modal.classModalBody}`).append(df);
         $('.custom-file-input').on('change', (e) => {
           const fileName = $(e.target).val().replace('C:\\fakepath\\', '');
-          $(e.target).next('.custom-file-label').addClass("selected").html(fileName);
+          $(e.target).next('.custom-file-label').addClass('selected').html(fileName);
           this.reader.onload = () => this.readData();
-          this.reader.readAsBinaryString($(e.target).prop("files")[0]);
+          this.reader.readAsBinaryString($(e.target).prop('files')[0]);
           this.reader.onerror = () => { console.log('can not read the file'); }
         });
         $('.pcm-importButton:first').on('click', async (e) => {
@@ -225,7 +225,7 @@ class EximClass {
   /** Shows the export modal for user to choose to export alarm sounds or not. */
   exportModal() {
     modal = new ModalClass();
-    const idName = modal.prepareModal(null, "800px", "modal-header-info modal-lg", "Export Data", "<h4>Export data to a file for importing later.</h4>", "text-right bg-dark text-light", "modal-footer-info", "invisible", "No", null, "invisible", "No", null, "invisible", "Close");
+    const idName = modal.prepareModal(null, '800px', 'pcm-exportModal', 'modal-lg', 'Export Data', '<h4>Export data to a file for importing later.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       $(`<h4 class='small mt-3'>Any added jobs, tabs, groupings and all options will be exported.<br />Only the alarm options will be saved unless you click the checkbox to save alarm sounds.<br />Saving alarm sounds will create a larger exported file so only do it when you add new sounds.</div>`).css('color','cyan').appendTo(df);
@@ -373,7 +373,7 @@ class EximClass {
       let importGroup = {};
       if (!rData[key].hasOwnProperty('delayed')) { rData[key].delayed = []; }
       if (rData[key].hasOwnProperty('pandas')) { importGroup = rData[key]; }
-      else { importGroup = {'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:"", endHours:0, endMinutes:0}; }
+      else { importGroup = {'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:'', endHours:0, endMinutes:0}; }
       this.importGroupings.push(importGroup);
     }
     console.log(this.importGroupings);

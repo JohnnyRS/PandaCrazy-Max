@@ -77,7 +77,7 @@ class TabbedClass {
       $(`<li class='pcm-endTab'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       success = 'Added all log tabs.';
     } else {
-      $(`<li class='pcm-endTab'></li><li class='pcm-captchaText ml-2'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
+      $(`<li class='pcm-endTab'></li><li class='pcm-captchaText'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       success = 'Added all log tabs.';
     }
     this.tabNavHeight = $(`#pcm-tabbedPandas`).height();
@@ -102,7 +102,7 @@ class TabbedClass {
    * @param  {string} ulId      - The ul id name for the ul of the tab structure.
    * @param  {string} contentId - The content id name for the content area. */
   tabStructure(element, divId, ulId, contentId) {
-    $(`<div id="${divId}" class="p-0"></div>`).append($(`<ul class="nav nav-tabs" id="${ulId}" role="tablist"></ul>`)).append($(`<div id="${contentId}" class="tab-content"></div>`)).appendTo($(element));
+    $(`<div id="${divId}"></div>`).append($(`<ul class="nav nav-tabs" id="${ulId}" role="tablist"></ul>`)).append($(`<div id="${contentId}" class="tab-content"></div>`)).appendTo($(element));
   }
   /** Append the jquery element to the tab content with this unique number.
    * @param  {object} doc       - The jquery element to append to the tab content.
@@ -114,7 +114,7 @@ class TabbedClass {
    * @param  {object} tabElement - The jquery element to append the add button. */
   addAddButton(tabElement) {
     this.addButton = true;
-    $(`<li class="nav-item pcm-addTab"></li>`).append($(`<a class="nav-link small py-0 px-1" href="#tabadd">+</a>`).click( (e) => {
+    $(`<li class="nav-item pcm-addTab"></li>`).append($(`<a class="nav-link small" href="#tabadd">+</a>`).click( (e) => {
       e.preventDefault();
       modal = new ModalClass();
       modal.showDialogModal("700px", "Add New Tab", "Type in the title of the new tab you want.", () => {
@@ -169,7 +169,7 @@ class TabbedClass {
         drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }}
       );
     else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm-endTab`));
-    let label = $(`<a class="nav-link${activeText} small py-0 px-2" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).addClass('unSelectable').appendTo(start);
+    let label = $(`<a class="pcm-tabTitle nav-link${activeText} small" id="${this.tabIds}${unique}Tab" data-toggle="tab" href="#${this.tabIds}${unique}Content" role="tab" aria-controls="${this.tabIds}${unique}Content" aria-selected="${(active) ? "true" : "false"}"></a>`).addClass('unSelectable').appendTo(start);
     if (this.renameTab) $(label).bind('contextmenu', (e) => {
         if ($(e.target).closest("li").data("unique")!==0) { // First tab can not be renamed ever.
           modal = new ModalClass();
@@ -188,7 +188,7 @@ class TabbedClass {
       }
     );
     $(label).append($(`<span>${this.#dataTabs[unique].title}</span>`).addClass('unSelectable'));
-    if (unique!==0 && this.deleteTab) $(label).append($(`<span class="float-right pl-3 font-weight-bold pcm-tabDelete">x</span>`).click( (e) => {
+    if (unique!==0 && this.deleteTab) $(label).append($(`<span class="pcm-tabDelete">x</span>`).click( (e) => {
       modal = new ModalClass();
       modal.showDialogModal("700px", "Delete tab", "Do you really want to delete this tab?", async () => {
         e.preventDefault(); e.stopPropagation();
@@ -211,9 +211,9 @@ class TabbedClass {
         modal.closeModal();
       }, true, true);
     }));
-    const tabPane = $(`<div class="tab-pane pcm-tabs p-0 show${activeText}" id="${this.tabIds}${unique}Content" name="${this.#dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
+    const tabPane = $(`<div class="tab-pane pcm-tabs show${activeText}" id="${this.tabIds}${unique}Content" name="${this.#dataTabs[unique].title}" role="tabpanel"></div>`).appendTo(`#${this.contentId}`);
     if (this.draggable) {
-      $(tabPane).append($(`<div class="card-deck p-0 px-1"></div>`).data("unique",unique).sortable({ opacity:0.5, cursor:"move", appendTo: document.body, helper: "clone",
+      $(tabPane).append($(`<div class="card-deck"></div>`).data("unique",unique).sortable({ opacity:0.5, cursor:"move", appendTo: document.body, helper: "clone",
         stop: async (e, ui) => { await this.cardDragged(e, ui, "sortable"); }}
       ));
       $(tabPane).droppable({tolerance:'pointer', drop: async (e, ui) => { await this.cardDragged(e, ui, "droppable"); }});

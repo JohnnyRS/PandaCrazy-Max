@@ -2,7 +2,7 @@ let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null; history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, GvFocus = true;
 let localVersion = localStorage.getItem('PCM_version'), dashboard = null;
-let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getComputedStyle(document.documentElement).getPropertyValue('--pcm-bgHighlighter').trim();
+let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});

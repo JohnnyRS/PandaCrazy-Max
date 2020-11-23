@@ -283,7 +283,7 @@ class MturkPanda extends MturkClass {
 					else this.info[myId].data = null;
 				}
 			}, goHamStart, data.duration, tempDuration, goHamDuration, this.info[myId].skipped);
-			if (this.info[myId].search!==null) extPandaUI.searchCollecting(myId);
+			if (this.info[myId].search !== null) extPandaUI.searchCollecting(myId);
 			this.sendStatusToSearch(data,true);
 			if (data.autoGoHam) extPandaUI.cards.startAutoGoHam(myId);
 			if (this.dLog(3)) console.info(`%cStarting to collect ${myId}.`,CONSOLE_INFO);
@@ -300,7 +300,7 @@ class MturkPanda extends MturkClass {
 		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
 		if (search) {
-			if (["once","Daily Accept Limit","Fetched Limit","manual","noQual","blocked"].includes(whyStop)) { this.disableSearching(myId, hitData); }
+			if (['once','Daily Accept Limit','Fetched Limit','manual','noQual','blocked'].includes(whyStop)) { this.disableSearching(myId, hitData); }
 		}
 		this.sendStatusToSearch(hitData, false); // Tell search page that this panda is not collecting.
 	}
@@ -332,12 +332,12 @@ class MturkPanda extends MturkClass {
 		const myId = this.uniqueIndex++; // get the next unique ID for this new panda
 		if (update) this.updateDbData(null, dbData); // Updates panda if it was added by default.
 		this.sortUniqueIds(myId, dbData.groupId, dbData.reqId, dbData.search);
-		if (!dbData.hasOwnProperty("id")) await this.addToDB(dbData); // Add to database if it has no database key.
+		if (!dbData.hasOwnProperty('id')) await this.addToDB(dbData); // Add to database if it has no database key.
 		this.dbIds[dbData.id] = myId;
 		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbData.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbData, 'lastTime':null, 'lastElapsed':0, 'search':dbData.search, 'disabled':dbData.disabled};
 		const pandaUrl = this.createPandaUrl(dbData.groupId), reqUrl = this.createRequesterUrl(dbData.reqId);
 		if (dbData.search) await this.sendToSearch(myId, dbData, rules, history, passInfo.run, sDur, sGD);
-		this.pandaUrls[myId] = {'preview': this.createPreviewUrl(dbData.groupId), 'accept': pandaUrl, 'reqUrl': reqUrl, 'urlObj': new UrlClass(pandaUrl + "?format=json")};
+		this.pandaUrls[myId] = {'preview': this.createPreviewUrl(dbData.groupId), 'accept': pandaUrl, 'reqUrl': reqUrl, 'urlObj': new UrlClass(pandaUrl + '?format=json')};
 		myHistory.fillInHistory({[dbData.groupId]:dbData}, 'pandas', loaded);
 		if (extPandaUI && !loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
 	}
@@ -361,9 +361,9 @@ class MturkPanda extends MturkClass {
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId); this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
 		if (data.search) {
-			if (data.search === "gid") flattenSortObject(this.searchesGroupIds, data.groupId, myId);
-			if (data.search === "rid") flattenSortObject(this.searchesReqIds, data.reqId, myId);
-			const value = (data.search === "gid") ? data.groupId : data.reqId;
+			if (data.search === 'gid') flattenSortObject(this.searchesGroupIds, data.groupId, myId);
+			if (data.search === 'rid') flattenSortObject(this.searchesReqIds, data.reqId, myId);
+			const value = (data.search === 'gid') ? data.groupId : data.reqId;
 			mySearch.removeTrigger(_, data.id,_, false, true);
 		}
 		if (deleteDB) this.deleteDbData(myId, data);
@@ -379,10 +379,10 @@ class MturkPanda extends MturkClass {
 	 * @param  {object} data		- The data object for the hit with the unique ID.
 	 * @return {string}					- Returns the assignment ID for hit. */
 	parseHitDetails(details, myId, data) {
-		let assignment_id="";
+		let assignment_id = '';
 		if (data.limitNumQueue>0) 
 			this.queueAdds[myId] = (this.queueAdds.hasOwnProperty(myId)) ? this.queueAdds[myId]+1 : 1;
-		if (details.contactRequesterUrl!=="") {
+		if (details.contactRequesterUrl !== '') {
 			const regex = /assignment_id=([^&]*)&.*requester_id\%5D=([^&]*)&.*Type%29\+(.*)$/;
 			let [all, assignId, reqId, groupId] = details.contactRequesterUrl.match(regex);
 			data.reqId = reqId; data.groupId = groupId; assignment_id = assignId;
@@ -413,7 +413,7 @@ class MturkPanda extends MturkClass {
 			if (data.limitNumQueue > 0 && data.limitNumQueue <= hits) skipIt='hit queue limit.';
 			if (data.limitTotalQueue > 0 && data.limitTotalQueue <= extPandaUI.getQueueTotal() ) skipIt='queue total limit.';
 			if (skipIt !== '') {
-				extPandaUI.cards.cardEffectPreviousColor(myId, true, "#ffa691");
+				extPandaUI.cards.cardEffectPreviousColor(myId, true, '#ffa691');
 				pandaTimer.hamOff(info.queueUnique); // Make sure go ham is off if this panda was going ham.
 				this.pandaSkipped.push(myId); info.skipped = true; this.pandaSkippedData[myId] = Object.assign({}, data);
 				pandaTimer.skipThis(info.queueUnique);
@@ -448,10 +448,10 @@ class MturkPanda extends MturkClass {
 	 * @return {string}				 - Reason for stopping as a string or null if not stopped. */
 	checkIfLimited(myId, accepted, data) {
 		let stopIt=null, stats = extPandaUI.pandaStats[myId];
-		if (accepted && data.once) stopIt = "once"; // Panda is limited to collecting only once so stop it.
-		else if (accepted && this.info[myId].autoAdded && data.hitsAvailable === 1) stopIt = "One Hit Available";
-		else if (data.acceptLimit>0 && data.acceptLimit<=stats.getDailyAccepted()) stopIt = "Daily Accept Limit";
-		else if (data.limitFetches>0 && data.limitFetches<=stats.getFetchedSession()) stopIt = "Fetched Limit";
+		if (accepted && data.once) stopIt = 'once'; // Panda is limited to collecting only once so stop it.
+		else if (accepted && this.info[myId].autoAdded && data.hitsAvailable === 1) stopIt = 'One Hit Available';
+		else if (data.acceptLimit>0 && data.acceptLimit<=stats.getDailyAccepted()) stopIt = 'Daily Accept Limit';
+		else if (data.limitFetches>0 && data.limitFetches<=stats.getFetchedSession()) stopIt = 'Fetched Limit';
 		else { if (this.info[myId].skipped) this.checkSkipped(myId); else this.checkQueueLimit(myId, this.info[myId], data); }
 		if (stopIt!==null) {
 			extPandaUI.cards.stopItNow(myId, false, stopIt);
@@ -510,35 +510,35 @@ class MturkPanda extends MturkClass {
 				info.lastTime = dateNow;
 				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 				extPandaUI.cards.highlightEffect_gid(myId);
-				if (result.type === "ok.text" && result.url.includes("assignment_id=")) {
+				if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
 					this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
 				} else {
 					let stopped = this.checkIfLimited(myId, false, info.data);
-					if (result.mode === "logged out" && queueUnique !== null) { this.nowLoggedOff(); }
-					else if (result.mode === "pre") {
+					if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
+					else if (result.mode === 'pre') {
 						extPandaUI.pandaGStats.addPandaPRE();
-					} else if (result.mode === "mturkLimit") {
+					} else if (result.mode === 'mturkLimit') {
 						this.tempPaused = true; pandaTimer.paused = true;
 						extPandaUI.mturkLimit();
-					} else if (result.mode === "maxxedOut") {
+					} else if (result.mode === 'maxxedOut') {
 						this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full');
-					} else if (result.mode === "noMoreHits") {
+					} else if (result.mode === 'noMoreHits') {
 						extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore();
-					} else if (result.mode === "noQual" && stopped===null) {
-						console.log("Not qualified"); extPandaUI.cards.stopItNow(myId, true, "noQual", "#DDA0DD");
-					} else if (result.mode === "blocked") {
-						console.log("You are blocked"); extPandaUI.cards.stopItNow(myId, true, "blocked", "#575b6f");
-					} else if (result.mode === "notValid") {
-						console.log("Group ID not found"); extPandaUI.cards.stopItNow(myId, true, "notValid", "#575b6f");
+					} else if (result.mode === 'noQual' && stopped===null) {
+						console.log('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', '#DDA0DD');
+					} else if (result.mode === 'blocked') {
+						console.log('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', '#575b6f');
+					} else if (result.mode === 'notValid') {
+						console.log('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', '#575b6f');
 						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.mode === "unknown") {
-						console.log("unknown message: ",result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.mode === "cookies.large") {
-						console.log("cookie large problem"); this.tempPaused = true; pandaTimer.paused = true;
+					} else if (result.mode === 'unknown') {
+						console.log('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors();
+					} else if (result.mode === 'cookies.large') {
+						console.log('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
 						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.type === "ok.text") {
+					} else if (result.type === 'ok.text') {
 						extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert();
-						console.log("captcha found"); globalOpt.resetCaptcha();
+						console.log('captcha found'); globalOpt.resetCaptcha();
 					}
 				}
 				extPandaUI.updateLogStatus(myId, this.info.lastElapsed); dateNow = null;

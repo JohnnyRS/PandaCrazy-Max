@@ -7,11 +7,11 @@ class ModalOptionsClass {
   /** Shows the general options in a modal for changes. */
   showGeneralOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(globalOpt.doGeneral(), "700px", "modal-header-info modal-lg", "General Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save General Options", (changes) => {
+    const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', (changes) => {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes)); modal.closeModal();
     });
     let df = document.createDocumentFragment();
-    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:</div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
       {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
       {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
@@ -32,7 +32,7 @@ class ModalOptionsClass {
   /** Shows the timer options in a modal for changes. */
   showTimerOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(globalOpt.doTimers(), "850px", "modal-header-info modal-lg", "Timer Options", "", "text-right bg-dark text-light", "modal-footer-info", "visible btn-sm", "Save Timer Options", (changes) => {
+    const idName = modal.prepareModal(globalOpt.doTimers(), '850px', 'pcm-timerOptModal', 'modal-lg', 'Timer Options', '', '', '', 'visible btn-sm', 'Save Timer Options', (changes) => {
       let errorFound = globalOpt.timerConfirm(changes);
       if (!errorFound) {
         globalOpt.doTimers(changes);
@@ -46,7 +46,7 @@ class ModalOptionsClass {
     });
     let df = document.createDocumentFragment(), timerRange = globalOpt.getTimerRange(), timerChange = globalOpt.getTimerChange();
     let searchRange = globalOpt.getTimerSearch(), queueRange = globalOpt.getTimerQueue();
-    $(`<div class='pcm-detailsEdit text-center mb-2'>Click on the options you would like to change below:<br><span class='small text-info'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
+    $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:<br><span class='small pcm-myInfo'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
     displayObjectData([
       {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds.`, 'minMax':timerRange}, 
       {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds.`, 'minMax':timerRange}, 

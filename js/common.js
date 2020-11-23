@@ -10,7 +10,7 @@ function checkString(val) { if (typeof val === 'string') return true; else retur
  * @return {object}                 - The Jquery object of the input element. */
 function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=null, labelClass='', value='', width='100', noTab=false, max=null) {
   const noIndex = (noTab) ? ` tabindex='-1'` : '', maxlength = (max) ? ` maxlength=${max}` : '';
-  let theInput = $(`<div class='form-inline w-${width}${divAddClass}'></div>`).append(`<label for='${id}' class='px-2 text-right${labelClass}'>${label}</label>`).append(`<input type='text' class='form-control pcm-inputText-md ml-2 text-left' id='${id}'${noIndex}${maxlength} placeholder='${placeholder}' value='${value}'>`);
+  let theInput = $(`<div class='form-inline w-${width}${divAddClass}'></div>`).append(`<label for='${id}' class='pcm-inputLabel-md${labelClass}'>${label}</label>`).append(`<input type='text' class='form-control pcm-inputText-md' id='${id}'${noIndex}${maxlength} placeholder='${placeholder}' value='${value}'>`);
   if (appendHere) $(theInput).appendTo(appendHere); // Append to the element if defined.
   if (enterFunc!==null) $(theInput).keypress( (e) => { if (e.which===13) enterFunc.call(this, e); } )
   return theInput;
@@ -53,14 +53,14 @@ function createCheckBox(appendHere, label, id, value, checked, divClass='', inpu
  * @return {object}            - The Jquery object for the radio button. */
 function radioButtons(appendHere, nameGroup, value, label, checked, classAdd='') {
   const checkedText = (checked) ? ' checked' : '';
-  let radioButton = $(`<label class='radio-inline my-0 mx-3 small ${classAdd}'><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
+  let radioButton = $(`<label class='radio-inline small ${classAdd}'><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
   return radioButton;
 }
 /** Creates a time input using a datetimepicker from tempus dominus plugin.
  * @param  {string} label - The label for the time input to use. @param  {string} id    - The id name for the time input.
  * @return {object}       - The Jquery object for the time input. */
-function createTimeInput(label, id) {
-  let input = $(`<div class='input-group'><label for='${id}' class='px-2 text-right pcm-timeLabel'>${label}</label><input type='text' class='form-control datetimepicker-input pcm-inputDate-md' id='${id}' data-toggle='datetimepicker' data-target='#${id}' tabindex='-1' placeholder='None'/></div>`);
+function createTimeInput(label, id, value='') {
+  let input = $(`<div class='input-group pcm-inputGroup'><label for='${id}' class='pcm-timeLabel'>${label}</label><input type='text' class='form-control pcm-inputDate-md' id='${id}' tabindex='-1' placeholder='None' value='${value}'/></div>`);
   $(input).append(`<div class='pcm-inputClearIcon' id='pcm-clearTInput'><i class='fas fa-times fa-sm'></i></div>`);
   return input;
 }
@@ -78,15 +78,16 @@ function limitRange(val, low, high) { return val < low ? low : (val > high ? hig
  * @param  {string} hourValue   - The hour value to use for hour input.
  * @param  {string} minuteValue - The minute value to use for minute input. */
 function createTimeElapse(hourValue, minuteValue) {
-  let input = createInput(null, ' hour', 'pcm-endHours', `Ends after hours: `, '0', null, ' pcm-hoursLabel', hourValue, '10', true);
-  $(input).find('input').addClass('pcm-inputEndHours')
-    .on('input', e => { let val = $(e.target).val(); $(e.target).val(limitRange(val, 0, 60)); })
+  let inputGroup = $(`<span class='form-inline pcm-timeToStop'></span>`)
+  let input1 = createInput(null, ' pcm-hoursRow', 'pcm-endHours', `Ends after hours: `, '0', null, ' pcm-hoursLabel', hourValue, '10', true);
+  $(input1).find('input').addClass('pcm-inputEndHours')
+    .on('input', e => { let val = $(e.target).val(); $(e.target).val(limitRange(val, 0, 24)); })
     .on('focus', e => { $(e.target).select(); });
-  let input2 = createInput(null, ' hour', 'pcm-endMinutes', `minutes: `, '0', null, ' pcm-minutesLabel', minuteValue, '10', true);
+  let input2 = createInput(null, ' pcm-minutesRow', 'pcm-endMinutes', `minutes: `, '0', null, ' pcm-minutesLabel', minuteValue, '10', true);
   $(input2).find('input').addClass('pcm-inputEndMinutes')
     .on('input', e => { let val = $(e.target).val(); $(e.target).val(limitRange(val, 0, 60)); })
     .on('focus', e => { $(e.target).select(); });
-  return $(input).append(input2);
+  return $(inputGroup).append(input1).append(input2);
 }
 /** Returns the date in a readable format according to the provided format and timezone.
  * @param  {string} theFormat   - The format @param  {object} theDate - The date @param  {string} theTimeZone - The timezone
@@ -170,21 +171,22 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
   let parent = $(target).parent(), pre = (obj.money) ? '$' : '';
   if (editMe) {
     let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); }
-    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( (e) => doTextToggle(e) ).focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
+    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( (e) => doTextToggle(e) )
+      .focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
     $(`#pcm-${obj.key}DetailI`).focus();
   } else {
-    $(`#pcm-tdLabel-${obj.key}`).css('color', '');
+    $(`#pcm-tdLabel-${obj.key}`).removeClass('pcm-optionLimited pcm-optionEmpty');
     if (editMe !== null) theValue = $(target).val(); // Null is on first call of function.
-    if (theValue === '' || theValue === '{Empty}') { theValue = '{Empty}'; textColor = ' text-danger'; }
+    if (theValue === '' || theValue === '{Empty}') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if ( (obj.min === undefined && obj.max === undefined) || ((theValue >= obj.min) && (theValue <= obj.max)) ) {
       if (obj.type === 'number') thisObject[obj.key] = Number((obj.minutes) ? theValue * 60000 : (obj.seconds) ? theValue * 1000 : theValue);
       else if (theValue !== '{Empty}') thisObject[obj.key] = theValue; else thisObject[obj.key] = ''
-      let theSpan = $(`<span id='pcm-${obj.key}DetailS' class='${textBorder} font-weight-bold${textColor}'>${pre}${theValue}</span>`);
+      let theSpan = $(`<span id='pcm-${obj.key}DetailS' class='${textBorder} pcm-toggleDetails ${textColor}'>${pre}${theValue}</span>`);
       $(parent).empty().append(theSpan);
       if (!obj.disable) $(theSpan).on('click', (e) => {
         textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
       });
-    } else $(`#pcm-tdLabel-${obj.key}`).css('color', 'red');
+    } else $(`#pcm-tdLabel-${obj.key}`).addClass('pcm-optionLimited');
   }
 }
 function markInPlace(findThis, fromHere) {
@@ -199,25 +201,23 @@ function markInPlace(findThis, fromHere) {
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
  * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=false, horizontal=false, append=true, addClass=null) {
-  let row=null, tdCol = '';
-  const trClass = (addClass) ? ` class=${addClass}` : '';
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null) {
+  let row=null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '';
   if (horizontal) row = $(`<tr${trClass}></tr>`).hide();
   for (const element of thisArrayObject) { 
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
-    if (!useObject || (element.ifNot && useObject[element.ifNot])) continue;
+    if (element.skip === true || !useObject || (element.ifNot && useObject[element.ifNot])) continue;
     if (element.keyCheckNot && useObject[element.keyCheck] === element.keyCheckNot) continue;
-    let textColor = '', padding='pl-0', valueCol=null, textBorder = 'bottom-dotted';
-    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key) ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
+    let textColor = '', valueCol=null, textBorder = 'pcm-bottomDotted';
+    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key && element.type !== 'string') ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
-    if (theValue === '') { theValue = '{Empty}'; textColor = ' text-danger'; }
+    if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
     if (theValue === undefined) { theValue = element.default; }
     if (element.money) theValue = Number(theValue).toFixed(2);
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
-    if (element.disable) { textColor = ' text-warning'; textBorder = ''; }
-    if (element.label !== '') { padding = ' pl-4'; }
+    if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
     if (element.minMax) { element.min = element.minMax.min; element.max = element.minMax.max; }
     if (table & !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
     const pre = (element.pre) ? element.pre : '';
@@ -225,16 +225,14 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '';
     const tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
-    const tdStyle = ` style='padding-right:1px !important; ${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
+    const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData`: '';
-    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 text-right unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
-    else if (!horizontal) row = $('<div>').append($(`<span class='${padding}'>${element.label}</span>`));
-    if (table) valueCol = $(`<td class='${tdCol}font-weight-bold text-left px-1 py-1 text-pcmInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
-    else valueCol = $(`<span class='font-weight-bold pl-2 text-left text-info'>${addSpan}</span>`).data('edit','off');
+    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
+    valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
     valueCol.appendTo(row);
-    if (element.type==='range') {
+    if (element.type === 'range') {
       inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
     } else if (element.type === 'text' || element.type === 'number') {
       theValue = (element.seconds) ? theValue / 1000 : (element.minutes) ? theValue / 60000 : theValue;
@@ -242,15 +240,14 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       textToggle(useObject, $(valueCol).find('span'), element, theValue, null, textBorder, textColor);
     } else if (element.type === 'trueFalse') {
       if (element.reverse) theValue = !theValue;
-      $(`<span id='pcm-${element.key}Detail' class='${textBorder} font-weight-bold${textColor}'>${theValue}</span>`)
+      $(`<span id='pcm-${element.key}Detail' class='${textBorder} pcm-toggleDetails${textColor}'>${theValue}</span>`)
       .on('click', (e) => {
         $(e.target).html( ($(e.target).html() === 'true') ? 'false' : 'true' );
         useObject[element.key] = ($(e.target).html() === 'true');
         if (element.reverse) useObject[element.key] = !useObject[element.key];
       }).appendTo(valueCol);
     } else if (element.type === 'button') {
-      element.btnColor = (element.hasOwnProperty('btnColor')) ? element.btnColor : 'primary'
-      const button = $(`<button class='btn btn-${element.btnColor}${element.addClass}' id='${element.idStart}-${element.unique}'>${element.btnLabel}</button>`);
+      const button = $(`<button class='btn ${element.addClass}' id='${element.idStart}-${element.unique}'>${element.btnLabel}</button>`);
       if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); e.stopPropagation(); });
       $(button).appendTo(valueCol);
     } else if (element.type === 'checkbox') {
@@ -262,7 +259,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=fals
       if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
     } else if (element.type === 'string') {
       const id = (element.id) ? ` id=${element.id}` : ``;
-      const border = (element.noBorder) ? '' : ` border-light`;
+      const border = (element.noBorder) ? '' : ` `;
       $(`<span class='${textColor}${border}'${id}>${theValue}</span>`).appendTo(valueCol);
     }
     if (append) row.appendTo(divContainer); else row.prependTo(divContainer);
@@ -313,7 +310,7 @@ function parsePandaUrl(url) {
  * @param  {string} [title] - Title         @param  {bool} [warn]         - True if just a warning and don't stop the script yet! */
 function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false) {
   $('.pcm-top:first').html(''); $('#pcm-pandaUI .pcm-quickMenu').html(''); $('.panel').html('');
-  $('.panel:first').append(`<H1 style='text-align:center;'>${title}</H1><H5 style='color:#FF3333; text-align:center; margin:0 100px;'>${alertMessage}</H5>`);
+  $('.panel:first').append(`<H1 class='pcm-myCenter'>${title}</H1><H5 class='pcm-haltMessage'>${alertMessage}</H5>`);
   if (!warn && error) { // Only show message on console as an error if it's not a warning.
     console.error( (consoleMessage) ? consoleMessage : alertMessage , error );
     if (modal) modal.closeModal('Loading Data'); // Close modal before stopping script.
@@ -399,6 +396,12 @@ function compareversion(version1, version2) {
       if (version1[i] != version2[i]) { break; }
   }
   return(result);
+}
+function getCSSVar(varName=null, defaultText='') {
+  if (varName === null) return;
+  let varContent = getComputedStyle(document.documentElement).getPropertyValue(`--pcm-${varName}`).trim();
+  varContent = varContent.replace(/^['"](.*)['"]$/g, '$1');
+  if (varContent === '___') return '&nbsp;'; else return (varContent) ? varContent : defaultText;
 }
 
 /** Constant values for console coloring. */

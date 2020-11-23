@@ -3,33 +3,161 @@ html, body { height: 100%; }
 /* Variables */
 :root {
   --pcm-bgHighlighter: #E6E6FA; /* Used for the fetch highlighter background color on the group id in panda card. */
+  --pcm-collectButton: 'Collect'; --pcm-searchingOn: 'Stop Search'; --pcm-searchingOff: 'Search Now'; --pcm-spanS-on: 'ON'; --pcm-spanS-off: 'Off'; --pcm-text-addTriggers: 'Add: ';
+  --pcm-span-paused: 'Paused'; --pcm-bListJobs: 'Jobs'; --pcm-spanP-on: 'ON'; --pcm-spanP-off: 'Off'; --pcm-totalEarned: 'Total Earnings: ';
 }
 
 /* General Styles. */
-.pcm-theUI { color: white; padding: 0; border: 1px solid #f8f9fa; border-radius: .25rem; background-color: #343a40; }
+::-webkit-input-placeholder { color: #0d161d; opacity: 0.5 !important; }
+.selectable { -ms-user-select: auto; -moz-user-select: auto; -khtml-user-select: auto; -webkit-user-select: auto; user-select: auto; }
+.unSelectable { -moz-user-select: -moz-none; -khtml-user-select: none; -webkit-user-select: none; user-select: none; }
+.fade { transition: opacity 5ms; }
+.form-inline label { display: block; }
+.form-check { line-height: 0.6; vertical-align: top; }
+.card-deck { margin: 0; padding: 0 4px; }
+.tooltip.show { opacity: 1 !important; filter: alpha(opacity=100) !important;}
+.tooltip-inner { border: 1px red solid; max-width: 300px; }
+.tab-pane { border: solid 1px rgb(5, 43, 41); border-top: 0;  width: 100%; background-color: #000000; padding: 5px; }
+.panel-resizable { resize: vertical; overflow: hidden; }
+.tab-content .pcm-tabs { padding: 1px 0 0 0; }
+.card-body { padding: 0 1px; }
+.card-text { line-height: 1.0; display: block; padding: 0 1px; }
+.nav-tabs { border-color: #1A3E5E; width: 100%; margin-top: 2px; }
+.nav-tabs > li a {  border: 1px solid #1A3E5E; background-color: #2F71AB;  color: #fff; margin-left: 3px; }
+.nav-tabs > li.active > a, .nav-tabs > li.active > a:focus,
+.nav-tabs > li.active > a:hover { background-color: #D6E6F3; color: #000; border: 1px solid #1A3E5E; border-bottom-color: transparent; }
+.nav-tabs > li > a:hover { background-color: #D6E6F3; border-radius: 5px; color: #000; } 
+.nav-link { padding: 0.2rem 0.5rem; }
+.table-moreCondensed>tbody>tr>td { padding-right: 1px; font-size: 11px; }
+.table-moreCondensed>thead { border-bottom: 3px ridge darkslategrey; border-top: 3px ridge darkslategrey; }
+.table-moreCondensed>thead>tr>td { font-size: 11px; padding: 2px 1px 0 1px; }
+.table-xs { font-size: 0.575rem; line-height: 0.1; }
+.radio-xxs { height: 12px; }
+.custom-file { width: 320px; }
+.custom-file-label { text-align: left; }
+.btn-group-xs > .btn, .btn-xs { padding: .15rem .4rem; font-size: .775rem; line-height: .7; border-radius: .2rem; }
+.btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
+#pcm-importCheck { width: 300px; margin: 5px auto; color: #a1e6dc; }
+#pcm-resetMyData { background-color: crimson; color: white; }
+#pcm-selectedBox { margin-left: auto; margin-right: auto; }
+.pcm-theUI { color: white; padding: 0; border: 1px solid #f8f9fa; border-radius: 0.25rem; background-color: #343a40; }
 .pcm-top { height: 45px; line-height: 1.1rem; background-color: #03043a; border: 1px solid #dee2e6; border-bottom-width: 4px; }
-.pcm-quickMenu { line-height: 1.0; border:1px solid #f8f9fa; border-bottom: 3px solid; border-top:0px; background-color: #03043a; padding: 2px 0 3px 4px; }
-.pcm-btn-menu { padding: .15rem .4rem; font-size: .775rem; line-height: .7; border-radius: .2rem; }
+.pcm-quickMenu { line-height: 1.0; border: 1px solid #f8f9fa; border-bottom: 3px solid; border-top: 0px; background-color: #03043a; padding: 2px 0 3px 4px; }
+.pcm-btn-menu { padding: .15rem .4rem; font-size: 0.775rem; line-height: 0.7; border-radius: 0.2rem; }
 .pcm-btn-menu:focus { outline: none; }
 .pcm-btn-dropDown { color: #fff; }
 .pcm-btn-dropDown:focus { outline: none; }
-.pcm-dropdownMenu { line-height:1.5; background-color: #cdd9f3; }
-.pcm-dropdownMenu .selectedItem { text-decoration:underline; color:darkgreen; font-style:italic; font-weight:800; }
+.pcm-dropdownMenu { line-height: 1.5; background-color: #cdd9f3; }
+.pcm-dropdownMenu .pcm-selectedItem { text-decoration: underline; color: darkgreen; font-style: italic; font-weight: 800; }
 .pcm-btn-toggle { background-color: #007bff; border-color: #007bff; color: #fff; padding-bottom: 4px; }
-.pcm-menuRow1 { margin: 0; padding: 0 0 0 .25rem; }
+.pcm-menuRow1 { margin: 0; padding: 0 0 0 0.25rem; }
 .pcm-menuRow2 { text-align: left; }
-.pcm-hitButton { margin-top: 2px; margin-bottom: 3px; line-height:0.7; font-size:.775rem; padding: 0.175rem 0.4rem; border-radius: .25rem; border: 1px solid #343a40; }
+.pcm-hitButton { margin-top: 2px; margin-bottom: 3px; line-height: 0.7; font-size: 0.775rem; padding: 0.175rem 0.4rem; border-radius: 0.25rem; border: 1px solid #343a40; }
 .pcm-hitButton:focus { outline: none; }
 .pcm-buttonOn { background-color: #008000; color: #FFFFFF; }
-.pcm-buttonOn.pcm-delayedHam { background-color: #4b8b26; color: #FFFFFF; }
 .pcm-buttonOff { background-color: #D3D3D3; color: #000000; }
-.pcm-buttonOff.pcm-delayedHam { background-color: #097e9b; color: #FFFFFF; }
 .pcm-btn-selected { background-color: red; }
-.selectable { -ms-user-select: auto; -moz-user-select: auto; -khtml-user-select: auto; -webkit-user-select: auto; user-select: auto; }
-.unSelectable { -moz-user-select: -moz-none; -khtml-user-select: none; -webkit-user-select: none; user-select: none; }
+.pcm-bottomDotted { border-bottom: 2px dotted #c46f74; }
+.pcm-tabTitle.nav-link { padding: 0 8px 0 8px; }
+.pcm-tabDelete { line-height: 1.2; color: #eb892d; padding-left: 16px; float: right; font-weight: 700; }
+.pcm-addTab a { padding: 0 4px 0 4px; }
+.pcm-deleteButton { font-size: 0.675rem; padding-left: 3px; padding-right: 3px; margin-left: 5px; }
+.pcm-groupingItem { background-color: darkslategrey; }
+.pcm-groupCollect { background-color: #066306; }
+.pcm-groupEmpty { background-color: #1b1717; }
+.pcm-inputError { color: #f78976; }
+.pcm-btnNegTop { margin-top: -4px; }
+.pcm-optionEmpty, .pcm-optionLimited { color: #dc3545; }
+.pcm-optionDisabled { color: gold; }
+.pcm-optionLabel { padding-left: 8px; }
+.pcm-detailsHeading { color: #84f79e; margin-bottom: 0.5rem; text-align: center; width: 100%; }
+.pcm-detailsEdit { color: #84f79e; text-align: center; margin-bottom: 8px; }
+.pcm-detailsTable { margin: 0; width: 100%; }
+.pcm-detailsTable td { text-align: right; }
+.pcm-detailsTable tr { line-height: 0.8; font-size: 0.7em; }
+.pcm-detailsTable tr select { font-size: 1.0em; height: 20px; color: #D3D3D3; padding: 0; }
+.pcm-detailsTable .pcm-textInfo { text-align: left; padding: 3px; padding-left:4px; }
+.pcm-jobTable { margin-bottom: 5px; }
+.pcm-jobTable .pcm-textInfo { text-align: left; font-weight: 700; vertical-align: middle; padding: 1px; padding-left:4px; }
+.pcm-toggleDetails { font-weight: 700; }
+.pcm-inputText { height: 17px; margin-left: 2px; font-size: 0.9em; width: 300px; padding-left: 4px; }
+.pcm-inputLabel-md { padding: 0 8px; text-align: right; }
+.modal-body .pcm-inputText-md, .pcm-modalControl .pcm-inputText-md { height: 19px; margin-left: 8px; padding-top: 2px; font-size: 0.9em; width: 330px; text-align: left; }
+.pcm-jobsListHeader { background-color: #13576b; }
+.pcm-timeLabel { font-size: 0.8em; margin-left: 15px; text-align: right; padding-right: 8px; padding-left: 8px; }
+.pcm-hoursLabel { font-size: 0.8em; margin-left: 30px; }
+.pcm-minutesLabel { font-size: 0.8em; margin-left: 2px; }
+.pcm-inputGroup .pcm-inputDate-md { height: 18px; margin-left: 2px; padding-top: 6px; font-size: 0.7em; width: 150px; }
+.pcm-timeToStop .pcm-inputEndHours, .pcm-timeToStop .pcm-inputEndMinutes { height: 18px; margin-left: 0; padding-left: 2px; padding-right: 0; font-size: 0.7em; width: 25px; }
+.pcm-inputClearIcon { display: flex; padding: 0.12rem 0.30rem; color: #495057; background-color: white; border: 1px solid white; border-radius: 0.25rem; margin-left: 2px; height: 18px; }
+.pcm-inputDiv-name, .pcm-inputDiv-pay, .pcm-inputDiv-url { padding-bottom: 5px; }
+.pcm-inputDiv-url .pcm-inputText-md { width: 550px; margin-left: 1rem; }
+.pcm-inputRange { height: 7px; }
+.pcm-inputRangeText { height: 13px; margin-left: 2px; font-size: 0.7em; width: 30px; }
+.pcm-inputDiv-question { margin-left: 20px; }
+.pcm-checkbox { height: 11px; }
+.pcm-alarms { font-size: 15px; margin: 5px 10px; text-align: left; }
+.pcm-alarms .btn { background-color: #f8f9fa; border-color: #f8f9fa; color: #212529; margin-right: 0.25rem; }
+.pcm-alarms .pcm-alarmDesc { margin-left: 0.5rem; }
+.pcm-alarms .pcm-alarmsPay, .pcm-alarms .pcm-alarmsMinutes { background-color: #17a2b8; padding-right: 0.25rem; padding-left: 0.25rem; }
+.pcm-alarms .custom-file { width: 280px; height: 15px; }
+.pcm-alarms .custom-file-input { height: 10px; line-height: 1.0; }
+.pcm-alarms .custom-file-label { height: 25px; line-height: 0.8; white-space: nowrap; font-size: 10px; }
+.pcm-alarms .custom-file-label::after { line-height: 1.0; height: 23px; }
+.pcm-alarms .pcm-changeMe { font-size: 15px; margin-left: 1.5rem; margin-bottom: 0.5rem; margin-top: 0.5rem; }
+.pcm-alarms .pcm-fileStatus { margin-left: 0.5rem; }
+.pcm-alarms .pcm-defaultAudio { margin-right: 0.25rem; }
+.pcm-alarms .btn.pcm-saveAudio { color: #fff; background-color: #28a745; border-color: #28a745; margin-right: 0.25rem; }
+.pcm-alarms .btn { color: #212529; background-color: #f8f9fa; border-color: #f8f9fa; margin-right: 0.25rem; }
+.pcm-alarms .pcm-playing { color: #fff; background-color: #007bff; border-color: #007bff; }
+.pcm-alarms .btn-mutted, .pcm-alarms .btn-doTTS { color: #fff; background-color: #28a745; border-color: #28a745; }
+.pcm-importCheckbox { font-size: 12px; margin-top: 16px; }
+.pcm-importCheckbox input { height: 0.9em; }
+.pcm-fileInput { width: 100%; font-size: 10px; margin-top: 15px; }
+.btn.pcm-disabled { text-decoration: line-through; }
+.pcm-uiGroup .radio-inline { padding-left: 6px; }
+.pcm-uiGroup input { margin-right: 6px; }
+.radio-inline.pcm-disabled { text-decoration: line-through; }
+.pcm-importButton { width: 330px; }
+.pcm-importButton.pcm-disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
+.pcm-exportButton { width: 280px; }
+.pcm-importStatus { margin: 10px 0 10px 0; }
+.pcm-alarmEdit { color: #e6ebac; font-size: 15px; text-align: center; margin: 8px 0; }
+.pcm-horizontalRow { padding-top: 4px; border-top: 1px solid #17a2b8; }
+.pcm-topDetails { margin-bottom: 0; }
+.pcm-optionLabelError { color: red; }
+.pcm-statusSuccess { color: #28a745; margin-top: 1rem; margin-bottom: 1rem; }
+.pcm-addToSelect, .pcm-removeFromSelect { background-color: #007bff; border-color: #007bff; color: white; margin-left: 0.25rem; }
+.pcm-autoCollectOptions { text-align: left; padding-left: 3rem; color: aqua; }
+.pcm-myPrimary { color: #007bff; text-align: center; }
+.pcm-myPrimary.btn { background-color: #007bff; border-color: #007bff; color: white; }
+.pcm-myInfo { color: aqua; text-align: center; padding-top: 3px; }
+.pcm-myWarning { color: #ffc107; text-align: center; }
+.pcm-helpPage { background-color: black; }
+.pcm-myCenter { text-align: center; }
+.pcm-popupPage { width: 200px; background-color: midnightblue; height: initial; }
+.pcm-popupPage .pcm-horizontalRow { border-top: 2px solid #17a2b8; margin: 2px 0 4px 0; }
+.pcm-startPCM { margin-top: 8px; text-align: center; }
+.pcm-muteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-deleteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-createGidJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-createRidJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-toSearchUI.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-textToSpeechSelect { margin-top: 1rem; margin-left: 3rem; }
+.pcm-haltMessage { color: #FF3333; text-align: center; margin: 0 100px; }
+.pcm-jobsInGroup, .pcm-triggersInGroup { color: springgreen; margin-left: 0.5rem; }
+.pcm-selectTriggers, .pcm-selectJobs { color: #ffc107; font-weight: 700; padding-left: 0.50rem; }
+.pcm-monitoringQueue { color: #29873B; font-weight: 700; }
+.pcm-deleteSelected { color: #fff; background-color: #dc3545; border-color: #dc3545; margin-left: 4px; }
+.pcm-inputResult { margin: 0; padding: 0; }
+.pcm-inputBoxForm { margin-top: 1rem; margin-bottom: 0.25rem }
+.pcm-topBorder { padding-top: 1rem; border-top: 1px solid #17a2b8; }
+.pcm-separator { margin-left: 8px; margin-right: 8px; }
+.pcm-groupingEdit { background-color: #007bff; border-color: #007bff; color: white; }
+.pcm-groupingDelete { background-color: #007bff; border-color: #007bff; color: white; }
 
 /* PandaUI Targeted Styles. */
-#pcm-pandaUI .pcm-menuRow1 { line-height:0px; }
+#pcm-pandaUI .pcm-menuRow1 { line-height: 0px; }
 #pcm-pandaUI .pcm-menuRow2 { padding: 0 0 0 10px; }
 #pcm-pandaUI .pcm-btn-dropDown { background-color: #063e4d; border: 1px solid transparent; line-height: 0.4rem; font-size: 0.8rem; padding: 0 4px; }
 #pcm-pandaUI .pcm-btn-menu { padding: 0.25rem 0.4rem; border-width: 1px; border-radius: 0rem; line-height: 0.4rem; font-size: 0.8rem; }
@@ -38,190 +166,146 @@ html, body { height: 100%; }
 #pcm-collecting.pcm-span-off { color: red; }
 #pcm-collecting.pcm-span-on { color: mediumspringgreen; }
 #pcm-collecting.pcm-span-paused { color: orange; }
-.card-deck .pcm-pandaCard { margin: 2px 2px 0 0; border: #023bd6 2px solid; max-width: 220px; min-width:220px; padding: 0 0; background-color: #48D1CC; }
-.pcm-pandaCard.pcm-cardMuted { border-style:dotted; }
-.pcm-pandaCard.pcm-oneLine { min-width:320px; max-width:320px; }
-.pcm-pandaCard.pcm-oneLine .pcm-reqName1 { font-size: 0.7em; font-weight: 600; }
+#pcm-pandaTabs { padding: 0; }
+#pcm-pandaTabs .pcm-tabs { overflow-y: auto; height: calc(100vh - 260px); }
+#pcm-logTabs .pcm-tabs { overflow-y: auto; height: 140px; padding-left: 2px; }
+#pcm-collecting.pcm-span-on::after { content: var(--pcm-spanP-on); }
+#pcm-collecting.pcm-span-off::after { content: var(--pcm-spanP-off); }
+#pcm-collecting.pcm-span-paused::after { content: var(--pcm-span-paused); }
+#pcm-logTabContents .pcm-timeAccepted { color: #18e656; }
+#pcm-logTabContents .pcm-emp { color: #47cdcd; }
+#pcm-detailTabs .pcm-tabs { overflow-y: auto; height: calc(100% - 68px); }
+#pcm-detailContents { height: 100%; }
+#pcm-volumeVertical { height: 200px; margin-left: 15px; }
+#pcm-volumeVertical .ui-slider-range { background-color: #cecfcf; }
+.pcm-jobDetailsModal .tab-pane { background-color: inherit; }
+.pcm-dropdownVolumne { min-width: 45px; width: 45px; }
+.pcm-dropdownVolumne label { display: block; text-align: center; }
+.card-deck .pcm-pandaCard { margin: 2px 2px 0 0; border: #023bd6 2px solid; max-width: 220px; min-width: 220px; padding: 0 0; background-color: #48D1CC; }
+.pcm-pandaCard.pcm-cardMuted { border-style: dashed; border-color: brown; }
+.pcm-pandaCard.pcm-oneLine { min-width: 320px; max-width: 320px; }
+.pcm-pandaCard.pcm-oneLine .pcm-reqName1 { font-size: 0.7em; font-weight: 600; margin-right: auto; margin-left: auto; }
 .pcm-pandaCard.pcm-oneLine .pcm-hitStats1 { font-size: 0.7em; font-weight: 600; color: black; line-height: 1.25em; }
 .pcm-pandaCard.pcm-oneLine .pcm-hitButton { margin: 0 1.5px 0 0; padding: 0 0.4px 0.5px 0.4px; }
-.pcm-pandaCard.pcm-oneLine .pcm-deleteButton { margin-left:4px; padding: 0 2px 0.5px 2px; }
+.pcm-pandaCard.pcm-oneLine .pcm-deleteButton { margin-left: 4px; padding: 0 2px 0.5px 2px; }
 .pcm-pandaCard.pcm-jobSearch { background-color: #04a3a3; }
 .pcm-pandaCard.pcm-jobSearch .pcm-btnCollecting { background-color: #1ab71a; color: #FFFFFF; }
 .pcm-pandaCard.pcm-jobSearch .pcm-btnSearching { background-color: #1e581e; color: #a9fc79; }
 .pcm-pandaCard.pcm-jobSearch .pcm-searchDisable { background-color: #680e0e; color: #d7e0d1; }
 .pcm-pandaCard.pcm-jobSearch .ridsearch { color: mediumblue; }
 .pcm-pandaCard.pcm-jobSearch .gidsearch { color: indigo; }
-.pcm-pandaStats { color: #f3fd7d; line-height: 1.0; height:20px; }
-#pcm-collecting.pcm-span-off::after { content: 'Off'; }
-#pcm-collecting.pcm-span-on::after { content: 'ON'; }
-#pcm-collecting.pcm-span-paused::after { content: 'Paused'; }
+.pcm-pandaStats { color: #f3fd7d; line-height: 1.0; height: 20px; }
+.pcm-buttonOn.pcm-delayedHam { background-color: #4b8b26; color: #FFFFFF; }
+.pcm-buttonOff.pcm-delayedHam { background-color: #097e9b; color: #FFFFFF; }
+.pcm-priceGroup .pcm-numbers { padding-left: 4px; }
+.pcm-reqName, .pcm-reqName1 { color: #000080; font-weight: 700; line-height: 1.25em; font-size: 0.8em; padding: 0; margin-right: auto; margin-left: auto; }
+.pcm-groupId { color: #000000; font-weight: 700; line-height: 1.0; font-size: 0.530em; padding: 3px 0 0 0; text-align: right; }
+.pcm-price, .pcm-numbers, .pcm-title { font-weight: 600; line-height: 1.2; font-size: 0.7em; color: black; padding: 0; }
+.pcm-queueResults, .pcm-acceptedHits, .pcm-hitStatus { font-size: 11px; line-height: 1.2; padding-top: 1px; padding-bottom: 2px; font-weight: 600; color: #dbdbd2; }
+.pcm-queueResults span, .pcm-acceptedHits span { color: cyan; }
+.pcm-nameGroup, .pcm-nameGroup1, .pcm-priceGroup { font-weight: 600; line-height: 0.8; padding: 0; margin: 0; }
+.pcm-hamButton.pcm-disabled, .pcm-hamButton1.pcm-disabled { background-color: #A9A9A9; border-color: #808080; }
+.pcm-collectButton.pcm-collectDisable { background-color: #680e0e; color: #d7e0d1; }
+.pcm-hitStats { color: #000000; font-weight: 700; line-height: 1.2em; font-size: 0.7em; margin-right: auto; margin-left: auto; }
+.pcm-status-stop { background-color: darkmagenta; }
+.pcm-captchaText { font-size: 10px; margin-top: 2px; margin-left: 8px; }
+.pcm-detailsBtnArea1 { margin-top: 4px; text-align: center; }
+.pcm-detailsBtnArea2 { margin-bottom: 8px; text-align: center; }
+.pcm-buttonGroup1 { padding-left: 4px; }
 
 /* SearchUI Targeted Styles. */
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }
-#pcm-searchUI .pcm-top.pcm-searchingOff { background-color:#400a0a; }
-#pcm-searchUI .pcm-top.pcm-searchingOn { background-color:#0b3e0b; }
+#pcm-searchUI .pcm-top.pcm-searchingOff { background-color: #400a0a; }
+#pcm-searchUI .pcm-top.pcm-searchingOn { background-color: #0b3e0b; }
 #pcm-searchUI .pcm-btn-dropDown { background-color: #007bff; border-color: #007bff; padding-bottom: 4px; }
-#pcm-searchUI .pcm-btn-addTo { background-color: #007bff; border-color: #007bff; color:#fff; padding-bottom: 4px; }
-#pcm-searchUI .pcm-span-toggle { font-size: .765rem; }
+#pcm-searchUI .pcm-btn-addTo { background-color: #007bff; border-color: #007bff; color: #fff; padding-bottom: 4px; }
+#pcm-searchUI .pcm-span-toggle { font-size: 0.765rem; }
 #pcm-searchUI .pcm-span-toggle.pcm-span-off { color: yellow; }
 #pcm-searchUI .pcm-span-toggle.pcm-span-on { color: mediumspringgreen; }
 #pcm-bAutoAllow.pcm-autoOff { background-color: midnightblue; color: white; border-color: whitesmoke; }
 #pcm-bAutoAllow.pcm-autoOn { background-color: forestgreen; color: white; border-color: whitesmoke; }
+#pcm-triggerTabs .pcm-tabs { overflow-y: auto; height: calc(100vh - 70px); padding: 2px 0 0 0; }
+#pcm-sortingDropDown { padding-left: 8px; }
+#pcm-string-blockGid { font-size: 7px; line-height: 1.9; font-weight: 400; }
+#pcm-selectedBox { font-size: 10px; }
+.card-deck .pcm-triggerCard { margin: 0 0 0 3px; max-width: 250px; min-width: 250px; color : #7FFFD4; background-color: #000080; font-size: 0.9em; padding: 1px 2px 0 2px; }
+.pcm-triggerCard.pcm-disabled { color: #adb5bd; background-color: black }
+.pcm-triggerCard.pcm-tempDisabled { color: white; background-color: dimgray;}
+.pcm-triggerCard .pcm-tButtonGroup { border-left: 1px solid burlywood; border-bottom: 1px solid burlywood; padding: 3px 0 0 0; margin-top: -3px; text-align: right;}
+.pcm-triggerCard .card-body { padding: 0; }
+.pcm-triggerGroup { padding: 3px 0 0 0; margin: 0; line-height: 1.0; font-weight: 400; font-size: 0.8em; }
+.pcm-triggerName, .pcm-triggerStats { padding: 2px 0 4px 0; cursor: default; margin-right: auto; margin-left: auto; }
 .pcm-text-addTriggers { font-size: 0.75rem; padding-left: 3px; }
+.pcm-foundHitsButton { margin-top: -2px; line-height: 0.3; border: 0; background-color: #f8f9fa; padding: 0.25rem 0.3rem; font-size: 0.775rem;}
+.pcm-foundHitsTable { background-color: darkslategray; color: white; }
+.pcm-foundHitsTable small { background-color: darkgreen; color: yellow; font-size: 90%; }
+.pcm-foundHitsTable .btn-xxs { padding: .25rem .2rem; font-size: .55rem; line-height: .4; border-radius: .2rem; }
+.pcm-triggeredhit, .pcm-modalTriggeredhit { background-color: #0b716c; }
+.pcm-triggeredhit .pcm-textInfo, .pcm-modalTriggeredhit .pcm-textInfo { color: #edf5e6; padding: 2px 1px 1px 1px; font-size: 11px; line-height: 1.5; text-align: left; }
+.pcm-triggeredhit .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
+.pcm-modalTriggeredhit .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
+.pcm-tvLink { color: gold; text-decoration: underline; }
+.pcm-autoHit { background-color: #054604; }
+.pcm-blockedHit { background-color: #7d7578; }
+.btn-pcmUsed { background-color: darkslategray; color: burlywood; }
+.fas.pcm-deleteButton { margin-left: 5px; color: black; background-color : white; border: 1px solid cornflowerblue; }
+.fas.pcm-optionsMenu { color: aliceblue; height: 1.2em; margin-left: 3px; }
+.pcm-searchingTriggers, .pcm-searchingJobs { background-color: #007bff; border-color: #007bff; color: white; margin-left:4px; }
+.pcm-selectTriggers .pcm-triggersInGroup { color: #17a2b8; margin-left: .5rem; }
+.pcm-groupingsControl { border-top: 1px solid #dee2e6; text-align: center; }
+.pcm-autoSearchUI { color: darkturquoise; margin-top: 8px; margin-bottom: 8px; }
+.pcm-addBlocked, .pcm-removeBlocked, .pcm-blockGid, .pcm-blockRid { color: #fff; background-color: #007bff; border-color: #007bff; margin-left: 0.25rem; }
+.pcm-modalTriggeredhit .btn.pcm-hitBlocked { background-color: #680e0e; border-color: #680e0e; color: #d7e0d1; }
 
 /* Content styles to change text for buttons and stats. */
-#pcm-searchNow.pcm-searchingOn::before { content: 'Stop Search'; }
-#pcm-searchNow.pcm-searchingOff::before { content: 'Search Now'; }
-#pcm-searching.pcm-span-on::before { content: 'ON'; }
-#pcm-searching.pcm-span-off::before { content: 'Off'; }
-.pcm-text-addTriggers::before { content: 'Add: '; }
+#pcm-searchNow.pcm-searchingOn::before { content: var(--pcm-searchingOn); }
+#pcm-searchNow.pcm-searchingOff::before { content: var(--pcm-searchingOff); }
+#pcm-searching.pcm-span-on::before { content: var(--pcm-spanS-on); }
+#pcm-searching.pcm-span-off::before { content: var(--pcm-spanS-off); }
+.pcm-text-addTriggers::before { content: var(--pcm-text-addTriggers); }
 
-/* Unorganized Older Styles */ 
-.panel-resizable { resize: vertical; overflow: hidden; }
-.bottom-dotted { border-bottom:2px dotted #c46f74; }
-.tooltip.show { opacity: 1 !important; filter: alpha(opacity=100) !important;}
-.tooltip-inner { border: 1px red solid; max-width: 300px; }
-#pcm-volumeVertical { height:200px; margin-left:15px; }
-#pcm-volumeVertical .ui-slider-range { background-color: #cecfcf; }
-.fill { min-height: 100%; height: 100%; }
-.pcm-tvLink { color:gold; text-decoration:underline; }
-.pcm-dMenuButton { background-color:#063e4d; vertical-align: bottom; width:17px; line-height:1.2; font-size: 13px; padding: 7px 4px 0 4px; }
-#pcm-pandaTabs .pcm-tabs { overflow-y:auto; height: calc(100vh - 260px); }
-#pcm-logTabs .pcm-tabs { overflow-y:auto; height: 140px; }
-#pcm-triggerTabs .pcm-tabs { overflow-y:auto; height: calc(100vh - 70px); }
-#pcm-detailTabs .pcm-tabs { overflow-y:auto; height: calc(100% - 68px); }
-#pcm-detailContents { height:100%; }
-.pcm-tabDelete { line-height:1.2; color: #eb892d; }
-.pcm-detailsEdit { color: #84f79e; }
-.pcm-optionsEdit { color: #84f79e; }
-.pcm-hamButton { display: inline-block; }
-.pcm-hamButton.disabled, .pcm-hamButton1.disabled { background-color: #A9A9A9; border-color: #808080; }
-.pcm-deleteButton { font-size:.675rem !important; padding-left:3px !important; padding-right:3px !important; margin-left:5px; }
-.fas.pcm-deleteButton { margin-left:5px !important; color:black; background-color:white; border: 1px solid cornflowerblue; }
-.fas.pcm-optionsMenu { color: aliceblue; height:1.2em; margin-left:3px; }
-.pcm-btnSmall { font-size: .675rem !important; }
-.pcm-collectButton.pcm-collectDisable { background-color: #680e0e; color: #d7e0d1 !important; }
-.pcm-importButton { width:330px; }
-.pcm-importButton.disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
-.pcm-exportButton { width: 280px; }
-.importAlarms { font-size:12px; }
-.importAlarms input { height:0.9em; }
-.pcm-importStatus { margin:10px 0 10px 0; }
-.pcm-fileInput { width:100%; font-size:10px; margin-top:15px; }
-.custom-file { width:320px; }
-.custom-file-label { text-align: left; }
-.pcm-alarms { font-size: 15px; margin: 5px 10px; }
-.pcm-alarms .custom-file { width:280px; height:15px; }
-.pcm-alarms .custom-file-input { height:10px; line-height:1.0; }
-.pcm-alarms .custom-file-label { height:25px; line-height:0.8; white-space: nowrap; font-size:10px; }
-.pcm-alarms .custom-file-label::after { line-height: 1.0; height:23px; }
-.pcm-alarms .pcm-changeMe { font-size: 15px; }
-.pcm-alarmEdit { color:#e6ebac; font-size:15px; }
-#pcm-importCheck { width:300px; margin: 5px auto; color: #a1e6dc; }
-.pcm-triggerCard { margin:0 0 0 3px !important; max-width:250px; min-width:250px; color:#7FFFD4; background-color:#000080; font-size:0.9em; padding: 1px 2px 0 2px !important; }
-.pcm-triggerCard.pcm-disabled { color:#adb5bd; background-color:black }
-.pcm-triggerCard.pcm-tempDisabled { color:white; background-color:dimgray;}
-.pcm-triggerCard .pcm-tButtonGroup { border-left: 1px solid burlywood; border-bottom: 1px solid burlywood; padding: 3px 0 0 2px; margin-top: -3px; }
-.pcm-triggerGroup { padding: 3px 0 0 0; }
-.card-body { padding: 0 1px; }
-.card-text { line-height: 1.0 !important; display:block; padding: 0 1px; }
-.pcm-checkbox { height:11px; }
-#pcm-string-blockGid { font-size: 7px; line-height:1.9; font-weight:400 !important; }
-#pcm-selectedBox { font-size: 10px; }
-.pcm-nameGroup, .pcm-nameGroup1, .pcm-priceGroup { font-weight: 600 !important; line-height: 0.8; padding: 0 !important; margin: 0 !important; }
-.pcm-triggerGroup { margin:0 !important; line-height: 1.0 !important; font-weight:400 !important; font-size: 0.8em !important; }
-.pcm-triggerName, .pcm-triggerStats { padding: 2px 0 4px 0; }
-.pcm-foundHitsTable { background-color: darkslategray; }
-.pcm-foundHitsTable small { background-color: darkgreen; color: yellow; font-size:90%; }
-.pcm-reqName, .pcm-reqName1 { color: #000080; font-weight: 700; line-height: 1.25em; font-size: 0.8em; padding-left: 1px; }
-.pcm-groupId { color: #000000; font-weight: 700 !important; line-height: 1.0 !important; font-size: 0.530em !important; padding-top:3px !important; }
-.pcm-price, .pcm-numbers, .pcm-title { font-weight: 600 !important; line-height: 1.2 !important; font-size: 0.7em !important; }
-.pcm-price { color: #000000; }
-.pcm-numbers { color: #006400; }
-.pcm-title { color: #000000; }
-.pcm-captchaText { font-size: 10px; margin-top:2px; }
-.pcm-hitStats { color: #000000; font-weight: 700; line-height: 1.2em; font-size:0.7em; }
-.pcm-queueResults, .pcm-acceptedHits, .pcm-hitStatus { font-size:11px; line-height: 1.2; padding-top:2px; padding-bottom:2px; font-weight: 600; color:#dbdbd2; }
-.pcm-queueResults span, .pcm-acceptedHits span { color:#47cdcd; }
-#pcm-logTabContents .time { color:#18e656; }
-#pcm-logTabContents .pcm-emp { color:#47cdcd; }
-.table-moreCondensed>tbody>tr>td { padding-right:1px !important; font-size: 11px; }
-.table-moreCondensed>thead { border-bottom: 3px ridge darkslategrey; border-top: 3px ridge darkslategrey; }
-.table-moreCondensed>thead>tr>td { font-size: 11px; padding:2px 1px 0 1px !important; }
-.table-xs { font-size: .575rem !important; line-height: .1 !important; }
-.text-xs { font-size: .575rem !important; color: #FFF5EE; }
-.btnNegTop { margin-top: -4px; }
-.text-pcmInfo { color: #edf5e6; padding-top:4px !important; padding-bottom:1px !important; font-size:11px; line-height:1.5; }
-.pcm-triggeredHits .text-pcmInfo { padding-top:2px !important; }
-.pcm-searchModal .text-pcmInfo { font-size: 0.8em; }
-.btn-group-xs > .btn, .btn-xs { padding: .15rem .4rem; font-size: .775rem; line-height: .7; border-radius: .2rem; }
-.btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
-.pcm-foundHitsTable .btn-xxs { padding: .25rem .2rem; font-size: .55rem; line-height: .4; border-radius: .2rem; }
-.dModalBtns > .btn-xxs { line-height: 1.0; margin:5px 0; width:90%; }
-.btn-pcmUsed { background-color: darkslategray; color: burlywood; }
-.dModalBtns { width:15%; padding:5px 0 !important; }
-.radio-xxs { height: 12px; }
-.pcm-foundHitsButton { margin-top:-2px; line-height:0.3; border:0; }
-.pcm-triggeredhit { background-color: #0b716c; }
-.pcm-blockedHit { background-color: #7d7578 !important; }
-.pcm-autoHit { background-color: #054604 !important; }
-.pcm-grouping { background-color: #000080; }
-.pcm-groupCollect { background-color: #066306 !important; }
-.pcm-groupEmpty { background-color: #800517 !important; }
-.pcm-triggerItem { font-size: .875rem; line-height: 1.0; background-color: #1A3E5E; color: #F0E68C; }
-.pcm-triggerItem:hover .text-xs { color: #000080; }
-.pcm-triggerItem.pcm-disabled { color: #C0C0C0; }
-.pcm-triggerItem.pcm-disabled .text-xs { color: #BCC6CC; }
-.pcm-triggerItem.pcm-disabled:hover .text-xs { color: #000080; }
-.pcm-triggerItem.pcm-disabled.active { color: #FAEBD7; }
-.pcm-triggerItem.pcm-disabled:hover { background-color: #E0FFFF; color: #000000; }
-.pcm-jobsModalBody { max-height:calc(100vh - 165px); overflow-y:auto; }
-.pcm-groupingsEditModalBody { max-height:calc(100vh - 235px); overflow-y:auto; }
-.pcm-modalControl { background-color: #0c0a1f; color: #FFFFFF; }
-.modal-header-success { color:#fff; padding:9px 15px; border-bottom:1px solid #eee; background-color: #5cb85c; }
-.modal-header-warning { color: rgb(5, 7, 138); padding:9px 15px; border-bottom:1px solid rgb(192, 15, 44); background-color: #f0ad4e; }
-.modal-header-danger { color:#fff; padding:9px 15px; border-bottom:1px solid #eee; background-color: #d9534f; }
-.modal-header-info { color: #e6ebac; padding:1px 15px; border-bottom:1px solid #441007; background-color: #13576b; }
-.modal-footer-info { color: #e6ebac; padding:1px 15px; border-top:1px solid #441007; background-color: #13576b; }
-.modal-footer-info .btn-default { color: #8fc2f0 !important; }
-.modal-header-info .close { color: #ffffff !important; }
-.modal-header-info .modal-title { font-size: 1.4em !important; }
-.modal-header-info .modal-body { font-size: 0.7em !important; text-align:left !important; }
-.modal-content { background-color: white; border:1px solid darkcyan !important; }
+/* Dialog and modal styles */
+.pcm-modal .pcm-warning, .pcm-modal .pcm-danger { background-color: white; color: black; }
+.pcm-warning .close:hover { color: darkred; }
+.pcm-danger .close { color: blue; }
+.pcm-danger .pcm-modalClose, .pcm-warning .pcm-modalClose { color: midnightblue; }
+.modal-header.pcm-warning { color: #05078a; padding: 9px 15px; border-bottom: 1px solid #c00f2c; background-color: #f0ad4e; }
+.modal-header.pcm-warning .close { color: black; }
+.modal-header.pcm-danger { color: white; padding: 9px 15px; border-bottom: 1px solid #eee; background-color: #d9534f; }
+.modal-header { color: #e6ebac; padding: 1px 15px; border-bottom: 1px solid #441007; background-color: #13576b; }
+.modal-header .modal-title { font-size: 1.4em; }
+.modal-header .close { color: #ffffff; }
+.modal-header .close:hover { color: orangered; }
+.modal-content { background-color: white; border: 1px solid darkcyan; }
 .modal-content .modal-body h4 { margin-bottom: 0; }
-.modal-header-primary { color:#fff; padding:9px 15px; border-bottom:1px solid #eee; background-color: #428bca; }
-.fade { transition: opacity 5ms; }
-.pcm-inputDiv-question { margin-left:20px; }
-.pcm-jobTable { margin-bottom:5px !important; }
-.pcm-detailsTable tr { line-height: 0.8; font-size: 0.7em; }
+.modal-footer { color: #e6ebac; border-top: 1px solid #441007; padding: 4px 16px; background-color: #13576b; }
+.modal-footer.pcm-danger, .modal-footer.pcm-warning { border-top: 1px solid #dee2e6; padding: 10px 16px; }
+.pcm-modalControl { background-color: #0c0a1f; color: #FFFFFF; width: 100%; }
+.modal-dialog { margin-top: 16px; margin-bottom: 16px; }
+.modal-body { padding-top: 8px; padding-bottom: 8px; background-color: #343a40; color: #f8f9fa; text-align: center; }
+.pcm-searchModal .pcm-textInfo { font-size: 0.8em; }
+.pcm-jobDetailsModal .modal-body, .pcm-triggerDetailsModal .modal-body { padding: 1rem 0.3rem; }
+.pcm-jobsModalBody { max-height: calc(100vh - 165px); overflow-y: auto; }
+.pcm-jobsModalBody .btn { background-color: #D3D3D3; color: #000000; }
+.pcm-jobsModalBody .btn.pcm-buttonOn { background-color: #008000; color: #FFFFFF; }
+.pcm-groupingsEditModalBody { max-height: calc(100vh - 235px); overflow-y: auto; }
+.pcm-groupingsEditModalBody .btn { background-color: #D3D3D3; color: #000000; }
 .pcm-searchModal .pcm-detailsTable tr { font-size: 1.0em; }
-.pcm-detailsTable tr output { width:30px !important; font-size: 0.7rem !important; height:20px; padding:0 6px; }
-.pcm-detailsTable tr .editable-submit { font-size: 0.3em !important; height:20px; }
-.pcm-detailsTable tr .editable-cancel { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
-.pcm-detailsTable tr select { font-size: 1.0em !important; height:20px; color: #D3D3D3; padding:0; }
-.pcm-inputText { height:17px !important; margin-left:2px; font-size:0.9em !important; width:300px; padding-left:4px; }
-.pcm-inputText-md { height:19px !important; margin-left:2px; padding-top:2px; font-size:0.9em !important; width:330px !important; }
-.pcm-inputDate-md { height:18px !important; margin-left:2px; padding-top:6px; font-size:0.7em !important; width:80px !important; }
-.pcm-inputEndHours,
-.pcm-inputEndMinutes { height:18px !important; margin-left:0 !important; padding-left:2px !important; padding-right:0 !important; font-size:0.7em !important; width:25px !important; }
-.pcm-inputClearIcon { display: flex; padding: .15rem .30rem; color: #495057; background-color: #e9ecef; border: 1px solid #ced4da; border-radius: .25rem; margin-top: 0; margin-left:2px; }
-.pcm-timeLabel { font-size:0.8em; margin-left:15px; }
-.pcm-hoursLabel { font-size:0.8em; margin-left:30px; }
-.pcm-minutesLabel { font-size:0.8em; margin-left:2px; }
-.pcm-inputDiv-url input { width: 600px !important; }
-.pcm-inputRange { height:7px !important; }
-.pcm-inputRangeText { height:13px !important; margin-left:2px; font-size:0.7em !important; width:30px; }
-.form-inline label { display:block; }
-.form-check { line-height: 0.6 !important; vertical-align: top; }
-.pcm-inputError { padding-bottom: 5px; color: #f78976; }
-::-webkit-input-placeholder { color: #0d161d; opacity: 0.5 !important; }
-.nav-tabs { border-color:#1A3E5E; width:100%; margin-top:2px; }
-.nav-tabs > li a {  border: 1px solid #1A3E5E; background-color:#2F71AB;  color:#fff; margin-left:3px; }
-.nav-link { padding: .2rem .5rem; }
-.nav-tabs > li.active > a,
-.nav-tabs > li.active > a:focus,
-.nav-tabs > li.active > a:hover { background-color:#D6E6F3; color:#000; border: 1px solid #1A3E5E; border-bottom-color: transparent; }
-.nav-tabs > li > a:hover { background-color: #D6E6F3 !important; border-radius: 5px; color:#000; } 
-.tab-pane { border: solid 1px rgb(5, 43, 41); border-top: 0;  width: 100%; background-color: #000000; padding: 5px; }
-#pcm-jobDetails .tab-pane, #pcm-triggerDetails .tab-pane { background-color: inherit; }
-.card-deck { margin-right: 0; margin-left: 0; }
+.modal-open .ui-datepicker { z-index: 2000 !important; }
+.pcm-modalInfo { color: cyan; }
+.pcm-customRules { color: khaki; }
+.pcm-modalHitsFound { margin: 0; padding: 4px; }
+.pcm-modalSave { background-color: #28a745; border-color: #28a745; color: white; }
+.pcm-modalSave:hover { color: gold; }
+.pcm-modalCancel { background-color: #dc3545; border-color: #dc3545; color: white; }
+.pcm-modalCancel:hover { color: yellow; }
+.pcm-modalNo { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+.pcm-modalNo:hover { color: yellow; }
+.pcm-noDeleteBtn:hover { color: yellow; }
+.pcm-modalClose { color: #8fc2f0; }
+.pcm-modalClose:hover, .pcm-danger .pcm-modalClose:hover { color: orangered; }
+.pcm-modalDelete .pcm-modalClose:hover { color: yellow; }
+.pcm-modalJobControl div { text-align: center; }
+.pcm-modalTriggerControl label, .pcm-modalJobControl label { color: #ffc107; padding-left: 1rem; }
+.pcm-modalTriggerControl .radio-inline, .pcm-modalJobControl .radio-inline { color: whitesmoke; margin: 0 8px 0 8px; }
+.pcm-modalTriggerControl .radio-inline input, .pcm-modalJobControl .radio-inline input { margin-right: 8px; }

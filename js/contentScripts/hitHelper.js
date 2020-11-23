@@ -182,7 +182,8 @@ function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits'
   return returnThis;
 }
 function checkSubmitted() {
-  if (prevAssignedhit && $(`.mturk-alert-content:contains('The HIT has been successfully submitted')`).length) {
+  let submitText1 = `The HIT has been successfully submitted`, submitText2 = `HIT Submitted`, alertContent = $(`.mturk-alert-content`).text();
+  if (prevAssignedhit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) { console.log('Detected Submitted Hit!');
     hitSubmitted = true;
     sendToExt('submitted', prevAssignedhit, prevAssignedhit.groupId,_,_,_,_, prevAssignedhit.pay,_,_, prevAssignedhit.assignmentId, prevAssignedhit.taskId);
   }
@@ -220,7 +221,6 @@ function tabhitLocalRemove() {
 }
 /** Parses a URL with an assignment ID attached. */
 function doAssignment() { console.log('doAssignment page');
-  if (holdThis.pcm_running) document.title = `(0 of 0) ${docTitle}`;
   prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits(); queue_listener(true);
   const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/;
   let [_, groupId, taskId, assignmentId] = locationUrl.match(regex), tabhit = `PCM_tHit_${assignmentId}`; assignedHit = assignmentId;
@@ -260,7 +260,7 @@ function hitList() {
 function monitorNext() {
   prevAssigned(); addIframe(); getProjectedEarnings(); console.log('parentUrl',parentUrl);
   monitorOn = true; queue_listener();
-  $(`.no-result-row:first`).append(`<h2 class='text-success font-weight-bold'>Monitoring queue for a new hit to open.</h2>`);
+  $(`.no-result-row:first`).append(`<h2 class='pcm-monitoringQueue'>Monitoring queue for a new hit to open.</h2>`);
 }
 function goHit(last=false) {
   prevAssigned(); addIframe(); getProjectedEarnings();

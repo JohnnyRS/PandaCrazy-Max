@@ -88,7 +88,7 @@ class SearchUI {
 		else this.sortAscending[sorting] = true;
 		html = (this.sortAscending[sorting]) ? html.replace('sort-up', 'sort-down') : html.replace('sort-down', 'sort-up');
 		this.sorting = sorting; $(e.target).html(html);
-		$('#pcm-sortingDropDown .dropdown-item').removeClass('selectedItem'); $(e.target).addClass('selectedItem');
+		$('#pcm-sortingDropDown .dropdown-item').removeClass('pcm-selectedItem'); $(e.target).closest('.dropdown-item').addClass('pcm-selectedItem');
 		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments();
 	}
   /** Prepare the search page with button events and set up the columns for triggers to use.
@@ -151,12 +151,11 @@ class SearchUI {
 				}
 				theButton = null; theCard = null;
 			});
-		let body = $(`<div class='card-body p-0'></div>`).css('cursor', 'default').appendTo(card);
-		let text = $(`<div class='card-text' id='output-${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
-		let nameGroup = $(`<div class='pcm-triggerGroup row w-100 px-0 pcm-tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
-		nameGroup.append($(`<span class='pcm-triggerName col mr-auto px-0 text-truncate unSelectable' id='pcm-triggerName-${unique}'>${name}</span>`).css('cursor', 'default'));
-		nameGroup.append($(`<span class='pcm-triggerStats col mr-auto px-0 text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn btn-light btn-xxs'>Found Hits</button>: <span>${data.numHits} | Total: ${data.numFound}</span></span>`).hide());
-		let buttonGroup = $(`<span class='pcm-tButtonGroup col col-auto text-right px-0' id='pcm-tButtons-${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
+		let body = $(`<div class='card-body'></div>`).appendTo(card), text = $(`<div class='card-text' id='pcm-cardText-${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
+		let nameGroup = $(`<div class='pcm-triggerGroup row w-100 pcm-tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
+		nameGroup.append($(`<span class='pcm-triggerName col text-truncate unSelectable' id='pcm-triggerName-${unique}'>${name}</span>`));
+		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn'>Found Hits</button>: <span>${data.numHits} | Total: ${data.numFound}</span></span>`).hide());
+		let buttonGroup = $(`<span class='pcm-tButtonGroup col col-auto' id='pcm-tButtons-${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm-optionsMenu'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			this.modalSearch = new ModalSearchClass(); this.modalSearch.showDetailsModal(unique, () => this.modalSearch = null);
@@ -220,14 +219,14 @@ class SearchUI {
 				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
 				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
 				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount hit pays.`},
-				{'type':'button', 'btnLabel':'P', 'btnColor':'primary', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda-', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
-				{'type':'button', 'btnLabel':'O', 'btnColor':'primary', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customOnce-', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
-				{'type':'button', 'btnLabel':'S', 'btnColor':'primary', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch1-', 'unique':unique, 'tooltip':`Create search trigger to collect once for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData); }},
-				{'type':'button', 'btnLabel':'*', 'btnColor':'primary', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch-', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).removeClass('btn-primary').addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
+				{'type':'button', 'btnLabel':'P', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
+				{'type':'button', 'btnLabel':'O', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customOnce', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
+				{'type':'button', 'btnLabel':'S', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch1', 'unique':unique, 'tooltip':`Create search trigger to collect once for this hit.`, 'btnFunc': async (e) => { $(e.target).addClass('btn-pcmUsed'); this.addTrigger(hitData); }},
+				{'type':'button', 'btnLabel':'*', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch', 'unique':unique, 'tooltip':`Create search trigger for this hit.`, 'btnFunc': async (e) => { $(e.target).addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
 			], df, foundData, true, true, true, trClass);
 			$(df).find('.pcm-tvLink').click( (e) => { e.preventDefault(); e.stopPropagation(); window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); });
-			$(df).find('td').data('hitData',foundData).dblclick((e) => {
-				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).data('hitData'), () => this.modalSearch = null, e);
+			$(df).find('td').data('hitData',hitData).dblclick((e) => {
+				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).closest('td').data('hitData'), () => this.modalSearch = null, e);
 			});
 			this.triggeredContent.find(`tbody`).prepend(df);
 		}

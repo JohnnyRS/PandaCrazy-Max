@@ -154,8 +154,7 @@ class PandaUI {
 				this.logTabs.addToStatus(data, pandaStat, myId);
 				if (!pandaStat.collecting && !alreadySearching) this.pandaGStats.addCollecting();
 				this.pandaGStats.collectingOn(); pandaStat.startCollecting();
-				$(`#pcm-collectButton-${myId}`).removeClass('pcm-buttonOff').removeClass('pcm-searchDisable').addClass('pcm-buttonOn');
-				$(`#pcm-collectButton1-${myId}`).removeClass('pcm-buttonOff').removeClass('pcm-searchDisable').addClass('pcm-buttonOn');
+				$(`#pcm-collectButton-${myId}, #pcm-collectButton1-${myId}, #pcm-collectButton2-${myId}`).removeClass('pcm-buttonOff pcm-searchDisable').addClass('pcm-buttonOn');
 			}
 		}
 	}
@@ -172,8 +171,7 @@ class PandaUI {
 		let hitData = Object.assign({}, info.data); // Make a copy of data.
 		bgPanda.stopCollecting(myId, hitData, whyStop);
 		if ($(`#pcm-collectButton-${myId}`).is('.pcm-btnCollecting')) classToo = ' pcm-searchDisable';
-		$(`#pcm-collectButton-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
-		$(`#pcm-collectButton1-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
+		$(`#pcm-collectButton-${myId}, #pcm-collectButton1-${myId}, #pcm-collectButton2-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
 		$(`#pcm-hamButton-${myId}`).removeClass('pcm-delayedHam');
 		const previousColor = $(`#pcm-pandaCard-${myId}`).data('previousColor');
 		if (previousColor && !info.skipped) $(`#pcm-pandaCard-${myId}`).stop(true,true).removeData('previousColor').animate({'backgroundColor':previousColor},{'duration':1000});

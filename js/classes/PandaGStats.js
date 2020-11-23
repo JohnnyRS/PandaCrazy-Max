@@ -38,8 +38,7 @@ class PandaGStats {
 		if (text === '') {
 			if (statObj.disabled === true) $(statObj.id).hide();
 			else {
-				let content = getComputedStyle(document.querySelector(statObj.id), ':before').getPropertyValue('content');
-				let newValue = `${(content === 'none') ? statObj.string : ' '}${statObj.value}${statObj.post}`;
+				let cssVar = getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string), newValue = `${cssVar}${statObj.value}${statObj.post}`;
 				if (className) $(statObj.id).removeClass().addClass(className);
 				else if ($(statObj.id).html() !== newValue) {
 					$(statObj.id).show().html(newValue);

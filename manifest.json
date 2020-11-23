@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "PandaCrazy Max",
-  "version": "0.9.5.0",
+  "version": "0.9.6.0",
   "description": "Extension for Mturk.com to Collect panda's for you at a certain cycle instead of timers. Lot of organizing of panda's and grouping them together to start and stop them at once.",
 
   "browser_action": {

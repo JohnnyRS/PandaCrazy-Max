@@ -18,7 +18,7 @@ class MenuClass {
   /** This will add a separator span with a character to the provided element.
    * @param  {object} appendHere - The element to add the separator to.
    * @param  {string} text       - The character used for the separator. */
-  addSeparator(appendHere, text) { $(`<span class='mx-2'>${text}</span>`).appendTo(appendHere); }
+  addSeparator(appendHere, text) { $(`<span class='pcm-separator'>${text}</span>`).appendTo(appendHere); }
   /** Change the panda timer and turn all other timer buttons off. */
   changeTheTimer(e, timer) {
     $('.pcm-timerButton').removeClass('pcm-buttonOn');
@@ -42,20 +42,18 @@ class MenuClass {
     const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' title='${tooltip}'` : ``;
     let idAdd = (idName !== '') ? `id='${idName}' ` : '', classAdd = (tooltip !== '') ? 'pcm-tooltipData ' : '';
     let theButton = $(`<button type='button' ${idAdd}class='${classAdd} ${className}'${addtip}></button>`).click( e => btnFunc.apply(this, [e]) ).appendTo(appendHere);
-    let content = getComputedStyle(theButton[0], ':before').getPropertyValue('content');
-    theButton.html((content === 'none') ? label : '');
+    let cssVar = getCSSVar(idName.replace('pcm-', ''), label); theButton.html(cssVar);
   }
   /** Adds a sub menu to a menu with dropdownstyle allowing for 3 submenus under the main menu.
    * @param  {object} appendHere    - Append submenu to an added menu element.
    * @param  {string} dropdownStyle - The css style of the dropdown when submenu arrow clicked.
    * @param  {array} dropdownInfo   - The dropdown information for the rest of the submenus. */
-  addSubMenu(appendHere, label, theClass, dropdownStyle, dropdownInfo, theId='', noClick=false, onClosed=null) {
-    let btnGroup = $(`<div class='btn-group py-0'></div>`).appendTo(appendHere), idAdd = (theId !== '') ? `id='${theId}' ` : '';
+  addSubMenu(appendHere, label, theClass, btnGroupID, dropdownInfo, buttonId='', dropdownClass='', noClick=false, onClosed=null) {
+    let btnGroup = $(`<div class='btn-group' id=${btnGroupID}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';
     let theButton = $(`<button type='button' ${idAdd}class='${theClass} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'></button>`)
       .append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
-    let content = getComputedStyle(theButton[0], ':before').getPropertyValue('content');
-    theButton.html((content === 'none') ? label : '');
-    let dropdownMenu = $(`<div class='dropdown-menu pcm-dropdownMenu' style='${dropdownStyle}'></div>`).appendTo(btnGroup);
+    let cssVar = getCSSVar(buttonId.replace('pcm-', ''), label); theButton.html(cssVar); theButton.html(cssVar);
+    let dropdownMenu = $(`<div class='dropdown-menu pcm-dropdownMenu ${dropdownClass}'></div>`).appendTo(btnGroup);
     if (noClick) dropdownMenu.click( (e) => { e.stopPropagation(); } );
     if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', (e) => { onClosed(); });
     dropdownInfo.forEach( (info) => {
@@ -66,7 +64,7 @@ class MenuClass {
         if (info.menuFunc) $(item).click( (e) => { info.menuFunc.apply(this, [e]) });
       } else if (info.type === 'rangeMax') $(`<label for='max'>${info.label}</label>`).appendTo(dropdownMenu);
       else if (info.type === 'rangeMin') $(`<label for='min'>${info.label}</label>`).appendTo(dropdownMenu);
-      else if (info.type === 'slider') $(`<div id='${info.id}' class='text-center'></div>`).slider({orientation:'vertical', range:'min', min:info.min, max:info.max, value:info.value, step:info.step, create: (e, ui) => { info.createFunc.apply(this, [e, ui]); }, slide: (e, ui) => { info.slideFunc.apply(this, [e, ui]); }}).appendTo(dropdownMenu);
+      else if (info.type === 'slider') $(`<div id='${info.id}' class='pcm-myCenter'></div>`).slider({orientation:'vertical', range:'min', min:info.min, max:info.max, value:info.value, step:info.step, create: (e, ui) => { info.createFunc.apply(this, [e, ui]); }, slide: (e, ui) => { info.slideFunc.apply(this, [e, ui]); }}).appendTo(dropdownMenu);
       else if (info.type === 'divider') $(`<div class='dropdown-divider'></div>`).appendTo(dropdownMenu);
     });
     btnGroup = null; dropdownMenu = null;
@@ -80,7 +78,7 @@ class MenuClass {
       {'type':'rangeMax', 'label':'100'},
       {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (e, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value) }, 'createFunc': (e, ui) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
       {'type':'rangeMin', 'label':'0'}
-    ], '', true, () => {});
+    ], '', 'pcm-dropdownVolumne', true, () => {});
     this.addMenu(topMenu, 'Jobs', () => { pandaUI.showJobsModal(); }, 'List all Panda Jobs Added', 'pcm-btn-menu', 'pcm-bListJobs');
     this.addSubMenu(topMenu, '', 'pcm-btn-dropDown', '', [
       {'type':'item', 'label':'Add', 'menuFunc': () => { pandaUI.showJobAddModal(); }, 'tooltip':'Add a new Panda or Search Job'},
@@ -108,7 +106,7 @@ class MenuClass {
     this.addMenu(topMenu, '2', e => { this.changeTheTimer(e, globalOpt.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-btn-menu pcm-timerButton secondTimer');
     this.addMenu(topMenu, '3', e => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-btn-menu pcm-timerButton thirdTimer');
     this.addSubMenu(topMenu, '', 'pcm-btn-dropDown', '', [
-      {'type':'item', 'label':'Edit Timers', 'menuFunc': () => { globalOpt.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
+      {'type':'item', 'label':'Edit Timers', 'menuFunc': () => { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
       {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase timer by ${globalOpt.getTimerIncrease()}ms`, class:'pcm-timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
       {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm-timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
       {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm-timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
@@ -132,8 +130,8 @@ class MenuClass {
   }
   /** Create the quick menu buttons under the stats area. */
   createPandaQuickMenu() {
-    let quickMenu = $(`<div class='btn-group text-left w-100' role='group'></div>`).appendTo($(`.${this.quickMenu}:first`));
-    let group = $(`<div class='btn-group py-0 my-0'></div>`).appendTo(quickMenu);
+    let quickMenu = $(`<div class='btn-group w-100' role='group'></div>`).appendTo($(`.${this.quickMenu}:first`));
+    let group = $(`<div class='btn-group'></div>`).appendTo(quickMenu);
     this.addMenu(group, 'Pause', (e) => { if (bgPanda.pauseToggle()) $(e.target).html('Unpause'); else $(e.target).html('Pause'); }, 'Pause Timer.', 'pcm-btn-menu', 'pcm-bqPandaPause');
     this.addMenu(group, 'Start Group', () => { groupings.showGroupingsModal(pandaUI); }, 'Start groupings', 'pcm-btn-menu', 'pcm-bqPandaGroupings');
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.', 'pcm-btn-menu', 'pcm-bqPandaStopAll');
@@ -162,16 +160,16 @@ class MenuClass {
     this.addSubMenu(options, 'Options ', 'pcm-btn-dropDown pcm-btn-menu', '', [
 			{'type':'item', 'label':`General`, 'menuFunc': () => {
 					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null);
-				}, class:'searchGeneral', 'tooltip':'Change search general options'},
+				}, class:'pcm-searchGeneral', 'tooltip':'Change search general options'},
 			{'type':'item', 'label':`Alarms`, 'menuFunc': () => {
 					this.modalAlarms = new ModalAlarmClass(); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null, true );
-				}, class:'searchAlarms', 'tooltip':'Change alarms for search triggers'},
+				}, class:'pcm-searchAlarms', 'tooltip':'Change alarms for search triggers'},
 			{'type':'item', 'label':`Advanced`, 'menuFunc': () => {
 					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
-				}, class:'searchAdvanced', 'tooltip':'Change search advanced options'},
+				}, class:'pcm-searchAdvanced', 'tooltip':'Change search advanced options'},
 			{'type':'item', 'label':`Blocked Id's`, 'menuFunc': () => {
 					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
-				}, class:'searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
+				}, class:'pcm-searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
 		], 'pcm-bSearchOptions');
 		let stats = $(`<span id='pcm-searchStats'></span>`).appendTo(topBar);
 		stats.append(` - [ <small class='pcm-elapsedStat'><span id='pcm-searchElapsed'></span></small> | `);
@@ -185,26 +183,26 @@ class MenuClass {
 		controls.append(' | ');
 		let groupDrop = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
     this.addSubMenu(groupDrop, 'Groupings ', 'pcm-btn-dropDown pcm-btn-menu', '', [
-			{'type':'item', 'label':`Start/Stop`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'groupStart', 'tooltip':'Start, stop or edit groups you created.'},
-			{'type':'item', 'label':`Create by Selection`, 'menuFunc': () => { sGroupings.createInstant(true); }, 'class':'groupCreate', 'tooltip':'Create a group by selecting triggers.'},
-			{'type':'item', 'label':`Create Instantly`, 'menuFunc': () => { sGroupings.createInstant(); }, 'class':'groupInstant', 'tooltip':'Create a group of all enabled or disabled triggers.'},
-			{'type':'item', 'label':`Edit`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'groupEdit', 'tooltip':'Edit the groups you created.'},
+			{'type':'item', 'label':`Start/Stop`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'pcm-groupStart', 'tooltip':'Start, stop or edit groups you created.'},
+			{'type':'item', 'label':`Create by Selection`, 'menuFunc': () => { sGroupings.createInstant(true); }, 'class':'pcm-groupCreate', 'tooltip':'Create a group by selecting triggers.'},
+			{'type':'item', 'label':`Create Instantly`, 'menuFunc': () => { sGroupings.createInstant(); }, 'class':'pcm-groupInstant', 'tooltip':'Create a group of all enabled or disabled triggers.'},
+			{'type':'item', 'label':`Edit`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'pcm-groupEdit', 'tooltip':'Edit the groups you created.'},
 		], 'pcm-bSearchGroupings');
 		controls.append(' | ');
 		let filters = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
-    this.addSubMenu(filters, 'Filters ', 'pcm-btn-dropDown pcm-btn-menu', '', [
+    this.addSubMenu(filters, 'Filters ', 'pcm-btn-dropDown pcm-btn-menu', 'pcm-filterDropDown', [
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': e => { search.filterMe(e, '', true); }, 'class':'pcm-subShowAll', 'tooltip':'Add a new Panda or Search Job'},
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': e => { search.filterMe(e, 'sEnabled'); }, 'class':'pcm-subShowEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': e => { search.filterMe(e, 'sDisabled'); }, 'class':'pcm-subShowDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
 		], 'pcm-bSearchFilters');
-		let sorting = $(`<span class='pcm-dropDown-section pl-2'></span>`).appendTo(controls);
-    this.addSubMenu(sorting, 'Sorting ', 'pcm-btn-dropDown pcm-btn-menu', '', [
+		let sorting = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
+    this.addSubMenu(sorting, 'Sorting ', 'pcm-btn-dropDown pcm-btn-menu', 'pcm-sortingDropDown', [
 			{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': e => { search.sortMe(e, 0); }, 'class':'pcm-subSortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': e => { search.sortMe(e, 1); }, 'class':'pcm-subSortAdded', 'tooltip':'Sort by trigger was added.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found Hits`, 'menuFunc': e => { search.sortMe(e, 2); }, 'class':'pcm-subSortFound', 'tooltip':'Sort by Number of Found Hits.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': e => { search.sortMe(e, 3); }, 'class':'pcm-subSortLast', 'tooltip':'Sort by Last Time Hits Found.'},
 		], 'pcm-bSearchSorting');
-		$(`#pcm-bSearchSorting .dropdown-item`).eq(search.sorting).addClass('selectedItem');
+		$(`#pcm-sortingDropDown .dropdown-item`).eq(search.sorting).addClass('pcm-selectedItem');
 		controls.append(' | ');
     this.addMenu(controls, 'Allow Auto', e => {
 			let autoAllow = bgSearch.autoHitsAllow(!bgSearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
