@@ -52,7 +52,7 @@ class SearchUI {
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
 	importing() {
-		this.stopSearching(); modal = new ModalClass(); showModalMessage('Importing Data', 'Please Wait. Loading up all data for you.');
+		this.stopSearching(); modal = new ModalClass(); this.showModalMessage('Importing Data', 'Please Wait. Loading up all data for you.');
 	}
 	importingDone() { this.wasImporting = true; bgPage.searchUIImporting(); }
 	pandaUILoaded() { if (this.wasImporting) window.location.reload(); }
@@ -69,15 +69,15 @@ class SearchUI {
 		else if (statObj.onClass && statObj.offClass) $(statObj.id).removeClass(statObj.onClass).addClass(statObj.offClass);
 	}
 	enableShowAll() {
-		$('#pcm-filterDropDown .dropdown-item').each( (i, ele) => { $(ele).html($(ele).html().replace('fa-square','fa-check-square')); } );
+		$('#pcm-filterDropDown .dropdown-item i').each( (i, ele) => { $(ele).removeClass('fa-square'); $(ele).addClass('fa-check-square'); });
 		for (const key of Object.keys(this.filters)) this.filters[key] = true;
 	}
-	disableShowAll() { let allElem = $('#pcm-filterDropDown .pcm-subShowAll:first'); allElem.html(allElem.html().replace('fa-check-square','fa-square')); }
+	disableShowAll() { let allElem = $('#pcm-filterDropDown .pcm-subShowAll:first i'); allElem.removeClass('fa-check-square'); allElem.addClass('fa-square'); }
 	async filterMe(e, prop, all=false) {
 		if (all) this.enableShowAll();
 		else {
-			let html = $(e.target).html(), disabled = html.includes('fa-square'); if (prop) this.filters[prop] = disabled;
-			$(e.target).html( (disabled) ? html.replace('fa-square','fa-check-square') : html.replace('fa-check-square','fa-square') );
+			let icon = $(e.target).closest('a').find('i'), disabled = icon.hasClass('fa-square'); if (prop) this.filters[prop] = disabled;
+			icon.removeClass('fa-check-square fa-square'); if (disabled) icon.addClass('fa-check-square'); else icon.addClass('fa-square');
 			if (this.filters.sEnabled && this.filters.sDisabled) this.enableShowAll(); else this.disableShowAll();
 		}
 		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments();
@@ -136,11 +136,10 @@ class SearchUI {
 		let card = $(`<div class='card border pcm-triggerCard${disabledClass}' id='pcm-triggerCard-${unique}'></div>`)
 			.data('unique',unique).data('status', status).data('clicks',0).click( async e => {
 				let theCard = $(e.target).closest('.card'), theButton = theCard.find('.pcm-deleteButton'), unique = theCard.data('unique');
-				theButton.css({'backgroundColor':'', 'color':'', 'borderColor':''});
 				if (e.ctrlKey) {
-					if (this.ctrlDelete.includes(unique)) { this.ctrlDelete = arrayRemove(this.ctrlDelete, unique); }
-					else { theButton.css({'backgroundColor':'darkred', 'color':'yellow', 'borderColor':'yellow'}); this.ctrlDelete.push(unique); }
-				} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm-deleteButton').css({'backgroundColor':'', 'color':'', 'borderColor':''}); }
+					if (this.ctrlDelete.includes(unique)) { theButton.removeClass('pcm-btn-selected'); this.ctrlDelete = arrayRemove(this.ctrlDelete, unique); }
+					else { theButton.addClass('pcm-btn-selected'); this.ctrlDelete.push(unique); }
+				} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
 				else {
 					if (++clicks === 1) {
 						this.clickTimer = setTimeout( async (theCard) => {
@@ -154,7 +153,7 @@ class SearchUI {
 		let body = $(`<div class='card-body'></div>`).appendTo(card), text = $(`<div class='card-text' id='pcm-cardText-${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
 		let nameGroup = $(`<div class='pcm-triggerGroup row w-100 pcm-tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
 		nameGroup.append($(`<span class='pcm-triggerName col text-truncate unSelectable' id='pcm-triggerName-${unique}'>${name}</span>`));
-		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn'>Found Hits</button>: <span>${data.numHits} | Total: ${data.numFound}</span></span>`).hide());
+		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn'>Found Hits</button>: <span class='pcm-stats-numHits'>${data.numHits}</span> | Total: <span class='pcm-stats-totalFound'>${data.numFound}</span></span>`).hide());
 		let buttonGroup = $(`<span class='pcm-tButtonGroup col col-auto' id='pcm-tButtons-${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm-optionsMenu'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
@@ -163,10 +162,15 @@ class SearchUI {
 		$(`<i class='fas fa-times pcm-deleteButton'></i>`).click( (e) => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			if (!this.ctrlDelete.includes(unique)) this.ctrlDelete.push(unique);
-			this.removeJobs(this.ctrlDelete);
+			this.removeJobs(this.ctrlDelete, (response) => {
+				if ((response === 'NO' && this.ctrlDelete.length === 1) || response === 'CANCEL' ) { this.ctrlDelete = []; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
+			}, () => {}, 'Unselect All');
 		} ).data('unique',unique).appendTo(buttonGroup);
-		// if (data.type === 'custom') { text.append(`<div>Status</div>`); }
 		this.multiple[data.type].push(card);
+	}
+	updateStats(unique, data) {
+		$(`#pcm-triggerStats-${unique}`).find('.pcm-stats-numHits').html(data.numHits);
+		$(`#pcm-triggerStats-${unique}`).find('.pcm-stats-totalFound').html(data.numFound);
 	}
 	redoFilters(type, filter={}) {
 		let allCards = $(this[`${type}Content`]).find('.card'); this.totals[type] = allCards.length;
@@ -246,13 +250,13 @@ class SearchUI {
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
-	removeJobs(jobsArr, afterFunc=null) {
+	removeJobs(jobsArr, afterFunc=null, afterClose=null, cancelText='cancel') {
 		let bodyText = '';
 		jobsArr.forEach( (thisId) => { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; });
 		if (!modal) modal = new ModalClass();
 		modal.showDeleteModal(bodyText, () => {
 			jobsArr.forEach( async (unique) => { if (unique) bgSearch.removeTrigger(_,_, unique, true, true); });
 			modal.closeModal(); jobsArr.length = 0;
-		}, null, () => { jobsArr.length = 0; $('.pcm-deleteButton').css({'backgroundColor':'', 'color':'', 'borderColor':''}); });
+		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}
 }

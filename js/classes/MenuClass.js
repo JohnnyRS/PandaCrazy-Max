@@ -48,11 +48,13 @@ class MenuClass {
    * @param  {object} appendHere    - Append submenu to an added menu element.
    * @param  {string} dropdownStyle - The css style of the dropdown when submenu arrow clicked.
    * @param  {array} dropdownInfo   - The dropdown information for the rest of the submenus. */
-  addSubMenu(appendHere, label, theClass, btnGroupID, dropdownInfo, buttonId='', dropdownClass='', noClick=false, onClosed=null) {
+  addSubMenu(appendHere, label, theClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
+    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' title='${tooltip}'` : ``;
     let btnGroup = $(`<div class='btn-group' id=${btnGroupID}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';
-    let theButton = $(`<button type='button' ${idAdd}class='${theClass} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'></button>`)
+    let classAdd = (tooltip !== '') ? 'pcm-tooltipData' : '';
+    let theButton = $(`<button type='button' ${idAdd}class='${theClass} ${classAdd} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown'${addtip} aria-haspopup='true' aria-expanded='false'></button>`)
       .append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
-    let cssVar = getCSSVar(buttonId.replace('pcm-', ''), label); theButton.html(cssVar); theButton.html(cssVar);
+    let cssVar = getCSSVar(buttonId.replace('pcm-', ''), label); theButton.html(cssVar);
     let dropdownMenu = $(`<div class='dropdown-menu pcm-dropdownMenu ${dropdownClass}'></div>`).appendTo(btnGroup);
     if (noClick) dropdownMenu.click( (e) => { e.stopPropagation(); } );
     if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', (e) => { onClosed(); });
@@ -72,13 +74,12 @@ class MenuClass {
   /** Create the top menu using addMenu and addSubMenu Methods. */
   createPandaTopMenu() {
     let topMenu = $(`<div class='btn-group pcm-btnGroup' role='group'></div>`).appendTo($(`.${this.topMenuRow1}:first`));
-    this.addMenu(topMenu, 'Vol:', () => {}, 'Change the global volume level for alarms.', 'pcm-btn-menu', 'pcm-bVolume');
     let vol = globalOpt.theVolume();
-    this.addSubMenu(topMenu, '', 'pcm-btn-dropDown', '', [
+    this.addSubMenu(topMenu, 'Vol: ', 'pcm-btn-dropDown', '', [
       {'type':'rangeMax', 'label':'100'},
       {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (e, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value) }, 'createFunc': (e, ui) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
       {'type':'rangeMin', 'label':'0'}
-    ], '', 'pcm-dropdownVolumne', true, () => {});
+    ], 'Change the global volume level for alarms.', 'pcm-volumeDropDownBtn', 'pcm-dropdownVolume', true, () => {});
     this.addMenu(topMenu, 'Jobs', () => { pandaUI.showJobsModal(); }, 'List all Panda Jobs Added', 'pcm-btn-menu', 'pcm-bListJobs');
     this.addSubMenu(topMenu, '', 'pcm-btn-dropDown', '', [
       {'type':'item', 'label':'Add', 'menuFunc': () => { pandaUI.showJobAddModal(); }, 'tooltip':'Add a new Panda or Search Job'},
@@ -88,13 +89,13 @@ class MenuClass {
       {'type':'divider'},
       {'type':'item', 'label':'Export', 'menuFunc': () => { new EximClass().exportModal(); }},
       {'type':'item', 'label':'Import', 'menuFunc': () => { new EximClass().importModal(); }}
-    ], '');
+    ]);
     this.addMenu(topMenu, 'Display', () => { pandaUI.cards.changeDisplay(2) }, 'Change how information is displayed on the jobs to Normal.', 'pcm-btn-menu', 'pcm-bCardsDisplay');
     this.addSubMenu(topMenu, ' ', 'pcm-btn-dropDown', '', [
       {'type':'item', 'label':'Normal', 'menuFunc': () => { pandaUI.cards.changeDisplay(2) }, 'tooltip':'Change how information is displayed on the jobs to Normal.'},
       {'type':'item', 'label':'Minimal Info', 'menuFunc': () => { pandaUI.cards.changeDisplay(1) }, 'tooltip':'Change how information is displayed on the jobs to minimal 3 lines.'},
       {'type':'item', 'label':'One Line Info', 'menuFunc': () => { pandaUI.cards.changeDisplay(0) }, 'tooltip':'Change how information is displayed on the jobs to only one line.'}
-    ], '');
+    ]);
     this.addMenu(topMenu, 'Groupings', () => { groupings.showGroupingsModal(); }, 'Start, stop or edit groupings you have added', 'pcm-btn-menu', 'pcm-bPandaGroupings');
     this.addSubMenu(topMenu, ' ', 'pcm-btn-dropDown', '', [
       {'type':'item', 'label':'Start/Stop', 'menuFunc': () => { groupings.showGroupingsModal(); }, 'tooltip':'Start, stop or edit groupings you have added'},
@@ -111,13 +112,13 @@ class MenuClass {
       {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease timer by ${globalOpt.getTimerDecrease()}ms`, class:'pcm-timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
       {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to timer`, class:'pcm-timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
       {'type':'item', 'menuFunc': () => { let currentTimer = globalOpt.timerUsed; $(`.pcm-timerButton.${currentTimer}:first`).click(); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}
-    ], '');
+    ]);
     this.addMenu(topMenu, 'Options', () => { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showGeneralOptions( () => this.modalOptions = null ); }, 'Change Global, Alarms or timer Options', 'pcm-btn-menu', 'pcm-bPandaOptions');
     this.addSubMenu(topMenu, ' ', 'pcm-btn-dropDown', '', [
       {'type':'item', 'label':'General', 'menuFunc':() => { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showGeneralOptions( () => this.modalOptions = null ); }, 'tooltip':'Change the general options'},
       {'type':'item', 'label':'Edit Timers', 'menuFunc':function() { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showTimerOptions( () => this.modalOptions = null ); }, 'tooltip':'Change options for the timers'},
       {'type':'item', 'label':'Edit Alarms', 'menuFunc':() => { if (!this.modalAlarms) this.modalAlarms = new ModalAlarmClass(); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null ); }, 'tooltip':'Change the options and sounds for the alarms'}
-    ], '');
+    ]);
     topMenu = null;
   }
   createPandaStats() {
@@ -156,52 +157,57 @@ class MenuClass {
 			$(e.target).blur();
 		}, 'Start searching for trigger jobs.', 'pcm-btn-toggle pcm-btn-menu pcm-searchingOff', 'pcm-searchNow');
 		topBar.append(` <small id='pcm-text-searchStatus'>[<span class='pcm-span-toggle pcm-span-off' id='pcm-searching'></span>]</small> `);
+    this.addMenu(topBar, 'Options', () => { if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null); }, 'Change General Search Options', 'pcm-btn-menu', 'pcm-bSearchOptions');
 		let options = $(`<span class='pcm-dropDown-section'></span>`).appendTo(topBar);
-    this.addSubMenu(options, 'Options ', 'pcm-btn-dropDown pcm-btn-menu', '', [
+    this.addSubMenu(options, '', 'pcm-btn-dropDown pcm-btn-menu', '', [
 			{'type':'item', 'label':`General`, 'menuFunc': () => {
-					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null);
+        if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null);
 				}, class:'pcm-searchGeneral', 'tooltip':'Change search general options'},
+      {'type':'item', 'label':`Advanced`, 'menuFunc': () => {
+        if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
+        }, class:'pcm-searchAdvanced', 'tooltip':'Change search advanced options'},
 			{'type':'item', 'label':`Alarms`, 'menuFunc': () => {
 					this.modalAlarms = new ModalAlarmClass(); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null, true );
 				}, class:'pcm-searchAlarms', 'tooltip':'Change alarms for search triggers'},
-			{'type':'item', 'label':`Advanced`, 'menuFunc': () => {
-					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
-				}, class:'pcm-searchAdvanced', 'tooltip':'Change search advanced options'},
 			{'type':'item', 'label':`Blocked Id's`, 'menuFunc': () => {
-					this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
+        if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
 				}, class:'pcm-searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
-		], 'pcm-bSearchOptions');
+		], '', 'pcm-bSearchOptions-dropdown');
 		let stats = $(`<span id='pcm-searchStats'></span>`).appendTo(topBar);
 		stats.append(` - [ <small class='pcm-elapsedStat'><span id='pcm-searchElapsed'></span></small> | `);
 		stats.append(`<small class='pcm-fetchedStat'><span id='pcm-searchTotalFetched'></span></small> | `);
 		stats.append(`<small class='pcm-searchPreStat'><span id='pcm-totalSearchPREs'></span></small> | `);
 		stats.append(`<small class='pcm-hitsAvailableStat'><span id='pcm-searchResults'></span></small> ]`);
 		let controls = $('.pcm-menuRow2:first');
-		controls.append(`<span class='pcm-text-addTriggers'></span>`);
-    this.addMenu(controls, 'Triggers', () => { search.showSearchAddModal(); }, 'Add gid or rid triggers.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggers');
-    this.addMenu(controls, 'Custom', () => { search.showSearchAddModal(true); }, 'Add a custom trigger with search terms.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggersC');
+		controls.append(`<span class='pcm-text-triggers'></span>`);
+    this.addMenu(controls, 'List', () => {
+      if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggersModal(_,_,_,_,_,_,_, () => this.modalSearch = null);
+    }, 'List all search triggers.', 'pcm-btn-menu pcm-btn-listing', 'pcm-bListTriggers');
+    this.addMenu(controls, 'Add', () => { search.showSearchAddModal(); }, 'Add a GID or RID trigger.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggers');
+    this.addMenu(controls, 'Add Custom', () => { search.showSearchAddModal(true); }, 'Add a custom trigger with search terms.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggersC');
 		controls.append(' | ');
+    this.addMenu(controls, 'Groupings', () => { sGroupings.showGroupingsModal(); }, 'Start, stop or edit groups you created.', 'pcm-btn-menu', 'pcm-bSearchGroupings');
 		let groupDrop = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
-    this.addSubMenu(groupDrop, 'Groupings ', 'pcm-btn-dropDown pcm-btn-menu', '', [
+    this.addSubMenu(groupDrop, '', 'pcm-btn-dropDown pcm-btn-menu', '', [
 			{'type':'item', 'label':`Start/Stop`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'pcm-groupStart', 'tooltip':'Start, stop or edit groups you created.'},
 			{'type':'item', 'label':`Create by Selection`, 'menuFunc': () => { sGroupings.createInstant(true); }, 'class':'pcm-groupCreate', 'tooltip':'Create a group by selecting triggers.'},
 			{'type':'item', 'label':`Create Instantly`, 'menuFunc': () => { sGroupings.createInstant(); }, 'class':'pcm-groupInstant', 'tooltip':'Create a group of all enabled or disabled triggers.'},
 			{'type':'item', 'label':`Edit`, 'menuFunc': () => { sGroupings.showGroupingsModal(); }, 'class':'pcm-groupEdit', 'tooltip':'Edit the groups you created.'},
-		], 'pcm-bSearchGroupings');
+		], '', 'pcm-bSearchGroupings-dropdown');
 		controls.append(' | ');
 		let filters = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
     this.addSubMenu(filters, 'Filters ', 'pcm-btn-dropDown pcm-btn-menu', 'pcm-filterDropDown', [
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': e => { search.filterMe(e, '', true); }, 'class':'pcm-subShowAll', 'tooltip':'Add a new Panda or Search Job'},
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': e => { search.filterMe(e, 'sEnabled'); }, 'class':'pcm-subShowEnabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
 			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': e => { search.filterMe(e, 'sDisabled'); }, 'class':'pcm-subShowDisabled', 'tooltip':'Stop All Collecting Panda or Search Jobs'},
-		], 'pcm-bSearchFilters');
+		], '', 'pcm-bSearchFilters');
 		let sorting = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
     this.addSubMenu(sorting, 'Sorting ', 'pcm-btn-dropDown pcm-btn-menu', 'pcm-sortingDropDown', [
 			{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': e => { search.sortMe(e, 0); }, 'class':'pcm-subSortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': e => { search.sortMe(e, 1); }, 'class':'pcm-subSortAdded', 'tooltip':'Sort by trigger was added.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found Hits`, 'menuFunc': e => { search.sortMe(e, 2); }, 'class':'pcm-subSortFound', 'tooltip':'Sort by Number of Found Hits.'},
 			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': e => { search.sortMe(e, 3); }, 'class':'pcm-subSortLast', 'tooltip':'Sort by Last Time Hits Found.'},
-		], 'pcm-bSearchSorting');
+		], '', 'pcm-bSearchSorting');
 		$(`#pcm-sortingDropDown .dropdown-item`).eq(search.sorting).addClass('pcm-selectedItem');
 		controls.append(' | ');
     this.addMenu(controls, 'Allow Auto', e => {
@@ -210,7 +216,7 @@ class MenuClass {
 		}, 'Add gid or rid triggers.', 'pcm-btn-menu pcm-btn-toggle pcm-autoOff', 'pcm-bAutoAllow');
 		bgSearch.searchGStats.prepare();
 		search.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
-    let [_, err] = await search.tabs.prepare();
+    let [, err] = await search.tabs.prepare();
     if (!err) {
 			search.ridTab = await search.tabs.addTab('Requester ID', true);
 			search.gidTab = await search.tabs.addTab('Group ID');

@@ -53,7 +53,7 @@ function parseCommands(command, data) {
 function addCommands() {
   let regex = /\/PandaCrazy([^\/]*)\/.*JRGID=([^&]*)&JRRName=(.*)&JRRID=([^&]*)&JRTitle=(.*)&JRReward=(.*)/;
   if (!locationUrl.includes('JRGID')) regex = /\/.{0,2}PandaCrazy([^\/]*)\/.*groupID=([^&]*)&requesterName=(.*)&requesterID=([^&]*)&hitTitle=(.*)&hitReward=(.*)/;
-  let [_, command, groupId, reqName, reqId, title, reward] = locationUrl.match(regex);
+  let [, command, groupId, reqName, reqId, title, reward] = locationUrl.match(regex);
   command = (command === 'Add') ? 'addJob' : ( (command === 'Search') ? 'ddSearchOnceJob' : ( (command === 'SearchOnce') ? 'addSearchMultiJob' : 'addOnceJob' ));
   chrome.runtime.sendMessage({'command':command, 'groupId':groupId, 'description':'', 'title':title, 'reqId':reqId, 'reqName':reqName, 'price':reward});
 }
@@ -142,7 +142,7 @@ function prevAssigned() {
 }
 function setSendData(sendData) {
   const regex = /\[hit_type_id\]=([^&]*)&.*\[requester_id\]=([^&]*)&/;
-  let [_, groupId, reqId] = (sendData.hasOwnProperty('contactRequesterUrl')) ? unescape(hitData.contactRequesterUrl).match(regex) : [null, null, null];
+  let [, groupId, reqId] = (sendData.hasOwnProperty('contactRequesterUrl')) ? unescape(hitData.contactRequesterUrl).match(regex) : [null, null, null];
   let data = {
     'groupId': (sendData.hasOwnProperty('hit_set_id')) ? sendData.hit_set_id : groupId,
     'description': sendData.description,
@@ -223,7 +223,7 @@ function tabhitLocalRemove() {
 function doAssignment() { console.log('doAssignment page');
   prevAssigned(); addIframe(); oldPCRemoval(); getReactProps(); getProjectedEarnings(); checkSubmitted(); noMoreHits(); queue_listener(true);
   const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/;
-  let [_, groupId, taskId, assignmentId] = locationUrl.match(regex), tabhit = `PCM_tHit_${assignmentId}`; assignedHit = assignmentId;
+  let [, groupId, taskId, assignmentId] = locationUrl.match(regex), tabhit = `PCM_tHit_${assignmentId}`; assignedHit = assignmentId;
   sessionStorage.setItem('pcm_hitDoing',JSON.stringify({'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId, 'pay':hitData.monetaryReward.amountInDollars}));
   chrome.storage.local.set({[tabhit]:{'assignmentId':assignmentId, 'groupId':groupId, 'taskId':taskId}});
   let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)'), buttons = addButtons();

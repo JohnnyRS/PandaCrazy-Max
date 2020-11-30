@@ -23,7 +23,7 @@ class ModalJobClass {
     ], theTable, changes, true);
   }
   pandaDetails(appendHere, changes, ridDisabled=false) {
-    $(`<div class='pcm-detailsHeading unSelectable'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(appendHere);
+    if (!ridDisabled) $(`<div class='pcm-detailsHeading unSelectable'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(appendHere);
     let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).appendTo(appendHere);
     let ridDisableTip = (ridDisabled) ? ' May not be changed by user.' : '';
     displayObjectData([
@@ -35,7 +35,7 @@ class ModalJobClass {
       {'label':'Price', 'type':'text', 'key':'price', 'money':true, 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
       {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this hit will no longer be on mturk. May not be changed by user.'},
-      {'label':'Date Added', 'type':'string', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this hit was added to PandaCrazy Max. May not be changed by user.'},
+      {'label':'Date Added', 'type':'keyValue', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this hit was added to PandaCrazy Max. May not be changed by user.'},
       {'label':'Total Seconds Collecting', 'type':'text', 'key':'totalSeconds', 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect hits since it was added. May not be changed by user.'},
       {'label':'Total Accepted Hits', 'type':'text', 'key':'totalAccepted', 'disable':true, 'tooltip':'The total amount of hits collected by this job since it was added. May not be changed by user.'}
     ], theTable, changes, true);
@@ -101,8 +101,7 @@ class ModalJobClass {
    * @param  {number} myId - Unique ID @param  {function} [successFunc=null] - Save Function @param  {function} [afterClose=null]  - Close function */
   async showDetailsModal(myId, successFunc=null, afterClose=null) {
     await bgPanda.getDbData(myId);
-    let hitInfo = bgPanda.options(myId);
-    let searchChanges = {'details':null, 'rules':null, 'options':null, 'searchDbId':null};
+    let hitInfo = bgPanda.options(myId), searchChanges = {};
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, '800px', 'pcm-jobDetailsModal', 'modal-lg', 'Details for a hit', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
       if (!hitInfo.data) { await bgPanda.getDbData(myId); }
@@ -120,19 +119,23 @@ class ModalJobClass {
     }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     const modalBody = $(`#${idName} .${modal.classModalBody}`);
     modal.showModal(null, async () => {
-      let df = document.createDocumentFragment(), df2 = document.createDocumentFragment(), detailsContents = null, optionsContents = null, ridDisabled = false;
+      let df = document.createDocumentFragment(), df2 = document.createDocumentFragment(), df3 = document.createDocumentFragment(), ridDisabled = false;
       let detailsDiv = $(`<div id='pcm-modalBody'></div>`).appendTo(modalBody);
       let detailsTabs = new TabbedClass(detailsDiv, `pcm-detailTabs`, `pcm-tabbedDetails`, `pcm-detailsContents`, false, 'Srch');
-      let [_, err] = await detailsTabs.prepare();
+      let [, err] = await detailsTabs.prepare();
       if (!err) {
         let optionTab = await detailsTabs.addTab(`${(hitInfo.search) ? 'Search' : 'Panda'} Options`, true);
-        optionsContents = $(`<div class='pcm-optionCont card-deck'></div>`).appendTo(`#${optionTab.tabContent}`);
+        let optionsContents = $(`<div class='pcm-optionCont card-deck'></div>`).appendTo(`#${optionTab.tabContent}`);
+        if (hitInfo.search) {
+          let optionTab1 = await detailsTabs.addTab(`Panda Job Options`), optionContents1 = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${optionTab1.tabContent}`);
+          this.modalSearch = new ModalSearchClass(); searchChanges = await this.modalSearch.fillInData(null, hitInfo.data.id);
+          this.modalSearch.triggerOptions(df, searchChanges, false); ridDisabled = true;
+          this.modalSearch.triggerPandaOptions(df2, searchChanges, false); optionContents1.append(df2);
+        } else this.pandaOptions(df, modal.tempObject[idName]);
         let detailTab = await detailsTabs.addTab(`${(hitInfo.search) ? 'Search' : 'Panda'} Details`);
-        detailsContents = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${detailTab.tabContent}`);
-        if (hitInfo.search) { this.modalSearch = new ModalSearchClass(); await this.modalSearch.triggerOptions(df, null, hitInfo.data.id, searchChanges); ridDisabled = true; }
-        else this.pandaOptions(df, modal.tempObject[idName]);
-        this.pandaDetails(df2, modal.tempObject[idName], ridDisabled);
-        optionsContents.append(df); detailsContents.append(df2);
+        let detailsContents = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${detailTab.tabContent}`);;
+        this.pandaDetails(df3, modal.tempObject[idName], ridDisabled);
+        optionsContents.append(df); detailsContents.append(df3);
         let muteText = (hitInfo.data.mute) ? 'Unmute Job Alarms' : 'Mute Job Alarms';
         $(`<div class='pcm-detailsBtnArea1 w-100'></div>`).append(`<button class='btn btn-xs pcm-muteJob'>${muteText}</button> <button class='btn btn-xs pcm-deleteJob'>Delete Job</button>`).appendTo(detailsDiv);
         if (!hitInfo.search) {

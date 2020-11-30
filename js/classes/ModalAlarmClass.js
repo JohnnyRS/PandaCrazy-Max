@@ -18,7 +18,7 @@ class ModalAlarmClass {
    * @param  {string} name - The name of the alarm to add.
    * @return {object}      - Jquery object of the div element created. */
   addDivAlarms(name) {
-    let data = alarms.getData(name), statusM = (data.mute) ? 'btn-mutted' : '', colorT = (data.tts) ? 'pcm-toggledOn' : '', desc = data.desc, pay = data.pay;
+    let data = alarms.getData(name), statusM = (data.mute) ? 'btn-mutted' : '', colorT = (data.tts) ? 'btn-doTTS' : '', desc = data.desc, pay = data.pay;
     let lessThan = (data.lessThan) ? data.lessThan : '', payStr = (pay) ? ` <span class='pcm-alarmsPay' title='Change the less than pay rate.'>$${pay}</span>` : '';
     let lessThanStr = (lessThan > 0 && name !== 'queueAlert') ? ` with a short timer less than <span class='pcm-alarmsMinutes' title='Change the less than minute(s).'>${lessThan}</span> minute(s)` : '';
     if (name === 'queueAlert') lessThanStr = ` <span class='pcm-alarmsMinutes' title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;

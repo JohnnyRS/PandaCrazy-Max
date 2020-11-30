@@ -193,8 +193,7 @@ class LogTabsClass {
         }
         queueWatch = [];
       }
-      newIds = []; newgIds = []; prevHits = []; oldIds = []; newPayRates = [];
-      this.queueUpdating = false; newInfo = {};
+      newIds = []; newgIds = []; prevHits = []; oldIds = []; newPayRates = []; this.queueUpdating = false; newInfo = {};
     }
   }
   /** Update the queue watch captcha counter.
@@ -221,16 +220,16 @@ class LogTabsClass {
    * @param  {object} stats - Stats  @param  {number} myId - Unique ID  @param  {number} mSeconds - Elapsed Time  @param  {object} [changes] - Changes Object */
   updateLogStatus(stats, myId, mSeconds, changes=null) {
     if (stats) {
-      this.statusContent.find(`.pcm-statusRow-${myId} .fetched:first`).html(stats.fetched.value);
-      this.statusContent.find(`.pcm-statusRow-${myId} .accepted:first`).html(stats.accepted.value);
+      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-fetchedValue:first`).html(stats.fetched.value);
+      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-acceptedValue:first`).html(stats.accepted.value);
       if (mSeconds>0) {
         let elapsedSeconds = (Math.round( (mSeconds / 1000) * 10 ) / 10).toFixed(1);
-        this.statusContent.find(`.pcm-statusRow-${myId} .elapsed:first`).html(elapsedSeconds + 's');
+        this.statusContent.find(`.pcm-statusRow-${myId} .pcm-elapsedTime:first`).html(elapsedSeconds + 's');
       }
     } else if (changes) {
       const requester = (changes.friendlyReqName !== '') ? changes.friendlyReqName : changes.reqName;
-      this.statusContent.find(`.pcm-statusRow-${myId} .requester:first`).html(requester);
-      this.statusContent.find(`.pcm-statusRow-${myId} .pay:first`).html(Number(changes.price).toFixed(2));
+      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-requesterName:first`).html(requester);
+      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-statusPrice:first`).html(Number(changes.price).toFixed(2));
     }
   }
   /** Remove a status line from the status tab giving it 12 seconds before removal.

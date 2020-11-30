@@ -181,6 +181,7 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
     if ( (obj.min === undefined && obj.max === undefined) || ((theValue >= obj.min) && (theValue <= obj.max)) ) {
       if (obj.type === 'number') thisObject[obj.key] = Number((obj.minutes) ? theValue * 60000 : (obj.seconds) ? theValue * 1000 : theValue);
       else if (theValue !== '{Empty}') thisObject[obj.key] = theValue; else thisObject[obj.key] = ''
+      if (obj.money) theValue = Number(theValue).toFixed(2);
       let theSpan = $(`<span id='pcm-${obj.key}DetailS' class='${textBorder} pcm-toggleDetails ${textColor}'>${pre}${theValue}</span>`);
       $(parent).empty().append(theSpan);
       if (!obj.disable) $(theSpan).on('click', (e) => {
@@ -208,8 +209,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (element.skip === true || !useObject || (element.ifNot && useObject[element.ifNot])) continue;
     if (element.keyCheckNot && useObject[element.keyCheck] === element.keyCheckNot) continue;
-    let textColor = '', valueCol=null, textBorder = 'pcm-bottomDotted';
-    let theValue = (element.orKey && useObject[element.orKey]!=='') ? useObject[element.orKey] : ((element.key && element.type !== 'string') ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
+    let textColor = '', valueCol=null, textBorder = 'pcm-bottomDotted'; 
+    let theValue = (element.orKey && useObject[element.orKey] !== '') ? useObject[element.orKey] : ((element.key && element.type !== 'string') ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
@@ -229,9 +230,10 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData`: '';
-    if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
+    if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
+    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
     valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
-    valueCol.appendTo(row);
+    if (element.type !== 'hr') valueCol.appendTo(row);
     if (element.type === 'range') {
       inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
     } else if (element.type === 'text' || element.type === 'number') {
@@ -254,8 +256,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
       const theCheckBox = createCheckBox(valueCol, '', `pcm-selection-${element.unique}`, element.unique, '', ' m-0', element.inputClass);
       if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
     } else if (element.type === 'keyValue') {
-      const id = (element.id) ? ` id=${element.id}` : ``;
-      const valueSpan = $(`<span${id}>${pre}${theValue}</span>`).css('cursor', 'default').appendTo(valueCol);
+      const id = (element.id) ? ` id=${element.id}` : ``, theClass = (textColor) ? ` class=${textColor}` : ``;
+      const valueSpan = $(`<span${id} ${theClass}>${pre}${theValue}</span>`).css('cursor', 'default').appendTo(valueCol);
       if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
     } else if (element.type === 'string') {
       const id = (element.id) ? ` id=${element.id}` : ``;

@@ -14,15 +14,14 @@ class ModalOptionsClass {
     $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
     displayObjectData([
       {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-      {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
-      {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-      {'label':'Captcha shown after #hits:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many hits on average will mturk show a captcha for you?'}, 
       {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for hits nearing the expiration time.'}, 
       {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for hits nearing the expiration time.'}, 
       {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting hits or warnings.'}, 
       {'label':'Show fetch highlighter on group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
       {'label':'Search job buttons create search UI triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
-      {'label':'Disable Unfocused window warning:', 'type':'trueFalse', 'key':'unfocusWarning', 'reverse':true, 'tooltip':'Stop notifying me about the unfocussed window because I know what I am doing.'}
+      {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
+      {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
+      {'label':'Captcha shown after #hits:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many hits on average will mturk show a captcha for you?'}, 
     ], df, modal.tempObject[idName], true);
     modal.showModal(_, () => {
       const modalBody = $(`#${idName} .${modal.classModalBody}`);

@@ -368,7 +368,7 @@ class EximClass {
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
-  theGroupings(rData) { console.log(rData);
+  theGroupings(rData) {
     for (const key of Object.keys(rData)) {
       let importGroup = {};
       if (!rData[key].hasOwnProperty('delayed')) { rData[key].delayed = []; }
@@ -376,7 +376,6 @@ class EximClass {
       else { importGroup = {'name':key, 'description':rData[key].description, 'grouping':rData[key].grouping, 'delayed':rData[key].delayed, pandas:{}, startTime:'', endHours:0, endMinutes:0}; }
       this.importGroupings.push(importGroup);
     }
-    console.log(this.importGroupings);
   }
   /** Parse the alarms data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */

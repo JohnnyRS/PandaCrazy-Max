@@ -313,7 +313,7 @@ class PandaCards {
       if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
 			pandaUI.removeJobs(this.ctrlDelete, (response) => {
         if ((response === 'NO' && this.ctrlDelete.length === 1) || response === 'CANCEL' ) { this.ctrlDelete = []; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
-      }, 'manual',() => {}, 'Unselect All');
+      }, 'manual', () => {}, 'Unselect All');
       e.preventDefault(); e.stopPropagation(); theButton = null; card = null;
 		});
 		$(`.pcm-detailsButton , .pcm-detailsButton1`).unbind('click').click(async e => {

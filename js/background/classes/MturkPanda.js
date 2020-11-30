@@ -541,7 +541,7 @@ class MturkPanda extends MturkClass {
 						console.log('captcha found'); globalOpt.resetCaptcha();
 					}
 				}
-				extPandaUI.updateLogStatus(myId, this.info.lastElapsed); dateNow = null;
+				extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 			}
 			this.resultsBack = true; result = null;
 		} else if (!resultsBack) {

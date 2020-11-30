@@ -21,7 +21,7 @@ class MturkDashboard extends MturkClass {
   /** Starts calculating the earnings for today by checking the dashboard. */
   doDashEarns(start=true) { if (start) { this.dashDone = false; this.total = 0.00; this.page = 1; } this.goFetch(); }
 	/** Stop the queue monitor by removing job from timer queue. */
-	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; extPandaUI.setEarnings(this.total) } }
+	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; if (extPandaUI) extPandaUI.setEarnings(this.total) } }
   /** Changes the timer to a longer time and informs panda and search class when logged off. */
   nowLoggedOff() { this.loggedOff = true; this.stopDashEarns(true); }
   /** Changes the timer to the normal time and informs panda and search class when logged back in. */
@@ -47,7 +47,7 @@ class MturkDashboard extends MturkClass {
             if (!pagination && this.page !== 1) { this.interrupt = true; this.stopDashEarns(); }
             else if (!pagination && this.page === 1) { this.firstCheck = true; this.stopDashEarns(); }
             else {
-              extPandaUI.waitEarningsPage(this.page);
+              if (extPandaUI) extPandaUI.waitEarningsPage(this.page);
               let pageData = JSON.parse(pagination), targetDiv = $(result.data).find(`.hits-status-details-table-header:first`).next('div'), total = 0.00;
               let rawProps = targetDiv.find('div[data-react-props]').attr('data-react-props'), hitsData = JSON.parse(rawProps).bodyData;
               for (const hit of hitsData) { if (hit.status !== 'Rejected') total += hit.reward; }
