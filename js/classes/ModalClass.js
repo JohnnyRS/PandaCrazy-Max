@@ -94,8 +94,12 @@ class ModalClass {
     if (this.modalLoggedOff === 0) {
       this.modalLoggedOff++;
       const idName = this.prepareModal(null, '600px', 'pcm-logOffModal', 'pcm-warning', `Program Paused!`, `<h3>Not Logged In to Mturk!</h3><h4>Please log back in by clicking link below.</h4><h5><a href='https://worker.mturk.com/' target='_blank' title='https://worker.mturk.com/' class='pcm-mturkLink'>https://worker.mturk.com/</a></h5>`, 'pcm-warning', 'pcm-warning');
-      this.showModal(null, null, () => { this.modalLoggedOff = 0; if (afterClose) afterClose(); else if (this.modals.length < 2) modal = null; });
-      $(`#${idName} .pcm-mturkLink`).click( {'popup':this.popup, 'idName':idName}, (e) => {
+      this.showModal(null, null, () => {
+        this.modalLoggedOff = 0;
+        if (afterClose) afterClose();
+        else if (this && this.modals.length < 2) modal = null;
+      });
+      $(`#${idName} .pcm-mturkLink`).click( {'popup':this.popup, 'idName':idName}, e => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
         setTimeout(this.isPopup.bind(this), 500); // check if popup is null continously
@@ -103,13 +107,13 @@ class ModalClass {
     }
   }
   /** Shows a modal to verify the jobs user wants to be deleted.
-   * @param  {string} hitsList     - Hit Details      @param  {function} deleteFunc   - Delete Function      @param  {function} noFunc       - No Function
+   * @param  {string} hitsList     - HIT Details      @param  {function} deleteFunc   - Delete Function      @param  {function} noFunc       - No Function
    * @param  {function} cancelFunc - Cancel Function  @param  {function} [afterClose] - After Show Function  @param  {function} [cancelText] - Cancel Text */
   showDeleteModal(hitsList, deleteFunc, noFunc, cancelFunc, afterClose=null, cancelText='Cancel') {
-    const idName = this.prepareModal(null, '600px', 'pcm-deleteModal', 'pcm-danger modal-lg', 'Deleting a Panda Hit!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='pcm-myPrimary'>${hitsList}</h5>`, 'pcm-danger', 'pcm-danger', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', cancelText);
+    const idName = this.prepareModal(null, '800px', 'pcm-deleteModal', 'pcm-danger modal-lg', 'Deleting a Panda HIT!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='pcm-myPrimary'>${hitsList}</h5>`, 'pcm-danger', 'pcm-danger', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', cancelText);
     this.showModal(cancelFunc, () => {
       $(`#${idName}`).find(`.pcm-modalSave`).focus();
-      $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { if (deleteFunc) deleteFunc(); this.closeModal(); } });
+      // $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { e.stopPropagation(); e.preventDefault(); if (deleteFunc) deleteFunc(); } });
     }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.
@@ -120,14 +124,14 @@ class ModalClass {
    * @param {function} [noTxt]     - No Text             @param {function} [noFunc]     - No Function          @param {function} [placeHolder] - PlaceHolder */
   showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, yesFunc, noClass, noTxt, noFunc);
+    let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, () => { if (yesFunc) yesFunc(idName); }, noClass, noTxt, noFunc);
     this.showModal(null, () => {
       let docKeys = '';
       if (question !== '') { // Should an input field be shown with a question?
         createInput($(`#${idName} .${this.classModalBody}`), ' pcm-inputDiv-question', 'pcm-formQuestion', question, placeHolder, null, '', defAns, 95, false, max).append(`<span class='pcm-inputError small'></span>`);
         docKeys = '#pcm-formQuestion,';
       }
-      $(`${docKeys}#pcm-modal-0`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13' ) yesFunc(); });
+      $(`${docKeys}#${idName}`).keypress( e => { if (yesFunc && (e.keyCode ? e.keyCode : e.which) == '13') yesFunc(idName); });
       $('#pcm-formQuestion').focus().select();
       if (afterShow) afterShow(idName);
     }, () => { if (afterClose) afterClose(); else modal = null; });

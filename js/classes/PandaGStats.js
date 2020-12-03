@@ -112,7 +112,8 @@ class PandaGStats {
 	setQueueTimer(value) { this.queueTimer.value = value; this.updateStatNav(this.queueTimer); }
 	/** Set the total earned from the potential earnings and the hits in the queue. */
 	setTotalEarned() {
-		this.totalEarned.value = (Number(this.totalPotential.value) + Number(this.totalEarnedInQueue.value)).toFixed(2);
+		if (isNaN(this.totalPotential.value)) return;
+		else this.totalEarned.value = (Number(this.totalPotential.value) + Number(this.totalEarnedInQueue.value)).toFixed(2);
 		this.updateStatNav(this.totalEarned);
 	}
 	/** Set the total earned value and then update it on the status bar.

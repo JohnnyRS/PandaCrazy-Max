@@ -159,7 +159,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId - The unique ID for a panda job.
 	 * @return {object}      - The data object is returned. */
 	async dataObj(myId) {
-		if (!this.info[myId].data) await this.getDbData(myId);
+		if (!this.info[myId] && !this.info[myId].data) await this.getDbData(myId);
 		return this.info[myId].data; 
 	}
 	/** Collects stats from timer and shows them on the panda UI.

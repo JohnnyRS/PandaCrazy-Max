@@ -152,7 +152,6 @@ html, body { height: 100%; }
 .pcm-jobsInGroup, .pcm-triggersInGroup { color: springgreen; margin-left: 0.5rem; }
 .pcm-selectTriggers, .pcm-selectJobs { color: #ffc107; font-weight: 700; padding-left: 0.50rem; }
 .pcm-monitoringQueue { color: #29873B; font-weight: 700; }
-.pcm-deleteSelected { color: #fff; background-color: #dc3545; border-color: #dc3545; margin-left: 4px; }
 .pcm-inputResult { margin: 0; padding: 0; }
 .pcm-inputBoxForm { margin-top: 1rem; margin-bottom: 0.25rem }
 .pcm-topBorder { padding-top: 1rem; border-top: 1px solid #17a2b8; }
@@ -250,10 +249,10 @@ html, body { height: 100%; }
 .pcm-triggeredhit, .pcm-modalTriggeredhit { background-color: #0b716c; }
 .pcm-triggeredhit .pcm-textInfo, .pcm-modalTriggeredhit .pcm-textInfo { color: #edf5e6; padding: 2px 1px 1px 1px; font-size: 11px; line-height: 1.5; text-align: left; }
 .pcm-triggeredhit .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
-.pcm-modalTriggeredhit .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
+.pcm-modalTriggeredhit .btn, .pcm-showTriggersModal .btn, .pcm-showJobsModal .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
 .pcm-tvLink { color: gold; text-decoration: underline; }
 .pcm-autoHit { background-color: #054604; }
-.pcm-blockedHit { background-color: #7d7578; }
+.pcm-blockedHit, .pcm-showTriggersModal .pcm-hitDisabled { background-color: #7d7578; }
 .btn-pcmUsed { background-color: darkslategray; color: burlywood; }
 .fas.pcm-deleteButton { margin-left: 5px; color: black; background-color : white; border: 1px solid cornflowerblue; }
 .fas.pcm-deleteButton.pcm-btn-selected { background-color: darkred; color: yellow; border-color: yellow; }
@@ -293,7 +292,6 @@ html, body { height: 100%; }
 .modal-footer.pcm-danger, .modal-footer.pcm-warning { border-top: 1px solid #dee2e6; padding: 10px 16px; }
 .pcm-modalControl { background-color: #0c0a1f; color: #FFFFFF; width: 100%; }
 .pcm-modal-triggers { margin-top: 5px; margin-bottom: 10px; }
-.pcm-modal-triggers .btn:hover { color: greenyellow; }
 .pcm-modal-groupingEdit .pcm-groupingsControl { border-top: 1px solid #dee2e6; }
 .modal-dialog { margin-top: 16px; margin-bottom: 16px; }
 .modal-body { padding-top: 8px; padding-bottom: 8px; background-color: #343a40; color: #f8f9fa; text-align: center; }
@@ -323,3 +321,6 @@ html, body { height: 100%; }
 .pcm-modalTriggerControl label, .pcm-modalJobControl label { color: #ffc107; padding-left: 1rem; }
 .pcm-modalTriggerControl .radio-inline, .pcm-modalJobControl .radio-inline { color: whitesmoke; margin: 0 8px 0 8px; }
 .pcm-modalTriggerControl .radio-inline input, .pcm-modalJobControl .radio-inline input { margin-right: 8px; }
+.pcm-modalJobControl .btn { margin-left:5px; }
+.pcm-modalJobControl .pcm-deleteSelected { color: #fff; background-color: #dc3545; border-color: #dc3545; margin-left: 4px; }
+.pcm-triggerEditModal .btn:hover { color: inherit; }

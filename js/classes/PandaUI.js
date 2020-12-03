@@ -49,7 +49,7 @@ class PandaUI {
 							dbIds = arrayRemove(dbIds, dbId.toString());
 							if (bgPanda.info.hasOwnProperty(myId)) this.addPandaToUI(myId, bgPanda.options(myId), null, true, true);
 							else this.tabs.removePosition(unique, dbId);
-							this.pandaStats[myId].updateAllStats(this.cards.get(myId));
+							if (this.pandaStats[myId]) this.pandaStats[myId].updateAllStats(this.cards.get(myId));
 						}
 						this.cards.appendDoc(unique);
 					}
@@ -185,13 +185,13 @@ class PandaUI {
 	 * @param  {function} [animate=true]	 - Should animation be used when removing a card?
 	 * @param  {function} [deleteDB=true]	 - Should the database be deleted too? */
 	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true, whyStop=null) {
-		this.cards.removeCard(myId, async () => {
+		await this.cards.removeCard(myId, async () => {
 			let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
 			if (deleteDB) await this.stopCollecting(myId, null, false)
 			await bgPanda.removePanda(myId, deleteDB, whyStop);
 			delete this.pandaStats[myId];
 			if (data.search) this.pandaGStats.subSearch(); else this.pandaGStats.subPanda();
-			if (afterFunc!==null) afterFunc('YES');
+			if (afterFunc!==null) await afterFunc('YES', myId);
 		}, animate);
 	}
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
@@ -201,12 +201,13 @@ class PandaUI {
 		let hitsList = '';
 		jobsArr.forEach( (thisId) => { hitsList += '( ' + $(`#pcm-hitReqName-${thisId}`).html()+' '+[$(`#pcm-hitPrice-${thisId}`).html()]+' )<BR>'; });
 		if (!modal) modal = new ModalClass();
-		modal.showDeleteModal(hitsList, () => {
-			jobsArr.forEach( async (myId) => {
+		modal.showDeleteModal(hitsList, async () => {
+			for (const myId of jobsArr) {
 				let options = bgPanda.options(myId);
-				MYDB.getFromDB('panda',_, options.dbId).then( (r) => { let info = bgPanda.options(myId); info.data = r; this.removeJob(myId, afterFunc,_,_, whyStop); },
-					rejected => console.error(rejected));
-			});
+				await MYDB.getFromDB('panda',_, options.dbId).then( async (r) => {
+					let info = bgPanda.options(myId); info.data = r; await this.removeJob(myId, afterFunc,_,_, whyStop);
+				}, rejected => console.error(rejected));
+			}
 			modal.closeModal(); jobsArr.length = 0;
 		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}

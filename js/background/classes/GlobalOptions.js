@@ -178,9 +178,10 @@ class PandaGOptions {
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
    * @return {bool}           - True if the queue alert should be sounded. */
   checkQueueAlert(seconds) {
-    let returnValue = false, minutes = Math.trunc(seconds/60);
+    let returnValue = false, minutes = Math.trunc(seconds/60), queueAlert = MyAlarms.getData('queueAlert');
     if (this.general.disableQueueAlarm && this.general.disableQueueAlert) return returnValue;
-    if (MyAlarms.getData('queueAlert').lessThan * 60 > seconds) {
+    if (!queueAlert) return returnValue;
+    if (queueAlert.lessThan * 60 > seconds) {
       if (this.lastQueueAlert===-1 || this.lastQueueAlert > minutes) { returnValue = true; }
       this.lastQueueAlert = minutes;
     } else this.lastQueueAlert = -1;

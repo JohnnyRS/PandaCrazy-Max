@@ -250,12 +250,12 @@ class SearchUI {
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr						 - The array of jobs unique ID's to delete.
 	 * @param  {function} [afterFunc=null] - The function to call after remove animation effects are finished. */
-	removeJobs(jobsArr, afterFunc=null, afterClose=null, cancelText='cancel') {
+	async removeJobs(jobsArr, afterFunc=null, afterClose=null, cancelText='cancel') {
 		let bodyText = '';
 		jobsArr.forEach( (thisId) => { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; });
 		if (!modal) modal = new ModalClass();
-		modal.showDeleteModal(bodyText, () => {
-			jobsArr.forEach( async (unique) => { if (unique) bgSearch.removeTrigger(_,_, unique, true, true); });
+		modal.showDeleteModal(bodyText, async () => {
+			for (const unique of jobsArr) { await bgSearch.removeTrigger(_,_, unique, true, true); await afterFunc('YES', unique); }
 			modal.closeModal(); jobsArr.length = 0;
 		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}

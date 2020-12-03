@@ -128,6 +128,7 @@ function getTimeLeft(seconds) {
   } else returnString = '0 seconds';
   return returnString.trim();
 }
+function testGidRid(str) {return /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,25}|^[3][^\s]{10,50})/.test(str); }
 /** Used to count object property values in arrays using a count function and returning the total count.
  * @param  {array} arr - Array @param  {function} countFunc - Counting Function @param  {bool} [counting=true] - Counting or not?
  * @return {number}    - Total value counted or from count function. */
@@ -172,9 +173,10 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
   if (editMe) {
     let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); }
     $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( (e) => doTextToggle(e) )
-      .focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); } ));
+      .focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); e.stopPropagation(); } ));
     $(`#pcm-${obj.key}DetailI`).focus();
   } else {
+    $(target).closest(`.pcm-modal`).focus();
     $(`#pcm-tdLabel-${obj.key}`).removeClass('pcm-optionLimited pcm-optionEmpty');
     if (editMe !== null) theValue = $(target).val(); // Null is on first call of function.
     if (theValue === '' || theValue === '{Empty}') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
@@ -202,9 +204,9 @@ function markInPlace(findThis, fromHere) {
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects @param  {object} divContainer     - Container   @param  {object} thisObject     - The object
  * @param  {bool} [table=false]    - Table or not?    @param  {bool} [horizontal=false] - Horizontal? */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null) {
-  let row=null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '';
-  if (horizontal) row = $(`<tr${trClass}></tr>`).hide();
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null) {
+  let row=null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '';
+  if (horizontal) row = $(`<tr${trClass}${trId}></tr>`).hide();
   for (const element of thisArrayObject) { 
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (element.skip === true || !useObject || (element.ifNot && useObject[element.ifNot])) continue;
