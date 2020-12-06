@@ -12,7 +12,7 @@ function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=
   const noIndex = (noTab) ? ` tabindex='-1'` : '', maxlength = (max) ? ` maxlength=${max}` : '';
   let theInput = $(`<div class='form-inline w-${width}${divAddClass}'></div>`).append(`<label for='${id}' class='pcm-inputLabel-md${labelClass}'>${label}</label>`).append(`<input type='text' class='form-control pcm-inputText-md' id='${id}'${noIndex}${maxlength} placeholder='${placeholder}' value='${value}'>`);
   if (appendHere) $(theInput).appendTo(appendHere); // Append to the element if defined.
-  if (enterFunc!==null) $(theInput).keypress( (e) => { if (e.which===13) enterFunc.call(this, e); } )
+  if (enterFunc!==null) $(theInput).keypress( e => { if (e.which===13) enterFunc.call(this, e); } )
   return theInput;
 }
 /** Create a Jquery file input object and returns it and appends to element if appendHere is passed.
@@ -32,7 +32,7 @@ function createFileInput(appendHere=null, accept=null) {
  * @return {object}                    - The Jquery object of the link element. */
 function createLink(appendHere, addClass, theUrl, theText, theTarget, clickFunc=null) {
   let theLink = $(`<a class='${addClass}' target='${theTarget}' href='${theUrl}'>${theText}</a>`).appendTo(appendHere);
-  if (clickFunc!==null) $(theLink).click( (e) => { clickFunc(e); } )
+  if (clickFunc!==null) $(theLink).click( e => { clickFunc(e); } )
   return theLink;
 }
 /** Creates a Jquery checkbox with a label, id name and classes of elements.
@@ -64,11 +64,11 @@ function createTimeInput(label, id, value='') {
   $(input).append(`<div class='pcm-inputClearIcon' id='pcm-clearTInput'><i class='fas fa-times fa-sm'></i></div>`);
   return input;
 }
-function inputRange(appendTo, min, max, theValue, key, setValue) {
-  $(`<input class='pcm-inputRange' type='range' min='${min}' max='${max}' value='${theValue}'></input>`).on('input', (e) => {
+function inputRange(appendTo, min, max, theValue, key, setValue, withText=true) {
+  $(`<input class='pcm-inputRange' type='range' min='${min}' max='${max}' value='${theValue}'></input>`).on('input', e => {
     $(`#pcm-${key}Detail`).val(($(e.target).val())); setValue(Number($(e.target).val()));
   }).appendTo(appendTo);
-  $(`<input class='pcm-inputRangeText' id='pcm-${key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(appendTo);
+  if (withText) $(`<input class='pcm-inputRangeText' id='pcm-${key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(appendTo);
 }
 /** Limits a value to a low limit and hight limit.
  * @param  {number} val  - The value @param  {number} low  - The low limit @param  {number} high - The high limit
@@ -171,9 +171,9 @@ function shortenGroupId(gId, preNum=2, postNum=4) { return gId.slice(0, preNum) 
 function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='', textColor='') {
   let parent = $(target).parent(), pre = (obj.money) ? '$' : '';
   if (editMe) {
-    let doTextToggle = (e) => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); }
-    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( (e) => doTextToggle(e) )
-      .focus( (e) => $(e.target).select() ).keypress( (e) => { if (e.which === 13) doTextToggle(e); e.stopPropagation(); } ));
+    let doTextToggle = e => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); }
+    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( e => doTextToggle(e) )
+      .focus( e => $(e.target).select() ).keypress( e => { if (e.which === 13) doTextToggle(e); e.stopPropagation(); } ));
     $(`#pcm-${obj.key}DetailI`).focus();
   } else {
     $(target).closest(`.pcm-modal`).focus();
@@ -186,7 +186,7 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder='
       if (obj.money) theValue = Number(theValue).toFixed(2);
       let theSpan = $(`<span id='pcm-${obj.key}DetailS' class='${textBorder} pcm-toggleDetails ${textColor}'>${pre}${theValue}</span>`);
       $(parent).empty().append(theSpan);
-      if (!obj.disable) $(theSpan).on('click', (e) => {
+      if (!obj.disable) $(theSpan).on('click', e => {
         textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor);
       });
     } else $(`#pcm-tdLabel-${obj.key}`).addClass('pcm-optionLimited');
@@ -233,7 +233,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
-    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.data).data('key',element.key)));
+    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
     valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
     if (element.type !== 'hr') valueCol.appendTo(row);
     if (element.type === 'range') {
@@ -245,22 +245,22 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     } else if (element.type === 'trueFalse') {
       if (element.reverse) theValue = !theValue;
       $(`<span id='pcm-${element.key}Detail' class='${textBorder} pcm-toggleDetails${textColor}'>${theValue}</span>`)
-      .on('click', (e) => {
+      .on('click', e => {
         $(e.target).html( ($(e.target).html() === 'true') ? 'false' : 'true' );
         useObject[element.key] = ($(e.target).html() === 'true');
         if (element.reverse) useObject[element.key] = !useObject[element.key];
       }).appendTo(valueCol);
     } else if (element.type === 'button') {
       const button = $(`<button class='btn ${element.addClass}' id='${element.idStart}-${element.unique}'>${element.btnLabel}</button>`);
-      if (element.btnFunc) $(button).on('click', {unique:element.unique}, (e) => { element.btnFunc(e); e.stopPropagation(); });
+      if (element.btnFunc) $(button).on('click', {unique:element.unique}, e => { element.btnFunc(e); e.stopPropagation(); });
       $(button).appendTo(valueCol);
     } else if (element.type === 'checkbox') {
       const theCheckBox = createCheckBox(valueCol, '', `pcm-selection-${element.unique}`, element.unique, '', ' m-0', element.inputClass);
-      if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, (e) => { element.btnFunc(e); });
+      if (element.btnFunc!==null) theCheckBox.on('click', {unique:element.unique}, e => { element.btnFunc(e); });
     } else if (element.type === 'keyValue') {
       const id = (element.id) ? ` id=${element.id}` : ``, theClass = (textColor) ? ` class=${textColor}` : ``;
       const valueSpan = $(`<span${id} ${theClass}>${pre}${theValue}</span>`).css('cursor', 'default').appendTo(valueCol);
-      if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, (e) => { element.clickFunc.apply(this, [e]); });
+      if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, e => { element.clickFunc.apply(this, [e]); });
     } else if (element.type === 'string') {
       const id = (element.id) ? ` id=${element.id}` : ``;
       const border = (element.noBorder) ? '' : ` `;
@@ -340,7 +340,7 @@ function isNewDay() {
  * @param  {object} date - The object date to drop the time from.
  * @return {string}      - Returns the string with only the date without the time. */
 function justDate(date) { return new Date(date).toISOString().substring(0, 10); }
-/** Creates and returns an object filled with data for a hit using default values without friendly data.
+/** Creates and returns an object filled with data for a HIT using default values without friendly data.
  * @param  {string} gid    - GroupId       @param  {string} desc      - Description  @param  {string} title - Title
  * @param  {string} rid    - ReqId         @param  {string} rN        - ReqName      @param  {string} pay - Price
  * @param  {number} [hA=0] - HitsAvailable @param  {number} [aT=null] - AssignedTime @param  {string} [exp=null] - Expires
@@ -348,7 +348,7 @@ function justDate(date) { return new Date(date).toISOString().substring(0, 10); 
 function hitObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null) {
   return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp};
 }
-/** Creates and returns an object filled with data for a hit and default values set if needed.
+/** Creates and returns an object filled with data for a HIT and default values set if needed.
  * @param  {string} gid			- GroupId       @param  {string} desc			 - Description     @param  {string} title			- Title
  * @param  {string} rid			- ReqId         @param  {string} rN				 - ReqName         @param  {string} pay				- Price
  * @param  {number} [hA=0]  - HitsAvailable @param  {number} [aT=null] - AssignedTime    @param  {string} [exp=null] - Expires
@@ -357,7 +357,7 @@ function hitObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null) {
 function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT='', fR='') {
   return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp, 'friendlyTitle':fT, 'friendlyReqName':fR };
 }
-/** Creates and returns an object for options of a hit and default values set if needed.
+/** Creates and returns an object for options of a HIT and default values set if needed.
  * @param  {bool} [o=false]	- once          @param  {string} [s=null] - search          @param  {number} [tab=-1] - tabUnique
  * @param  {number} [lN=0]	- limitNumQueue @param  {number} [lT=0]	  - limitTotalQueue @param  {number} [lF=0]	  - limitFetches
  * @param  {number} [dur=0] - duration      @param  {bool} [aG=false] - autoGoHam       @param  {number} [hamD=0] - hamDuration

@@ -1,7 +1,7 @@
 let bgPage = null; // Get the background page object for easier access.
-let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null; history = null, myAudio = null;
+let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, GvFocus = true;
-let localVersion = localStorage.getItem('PCM_version'), dashboard = null;
+let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null;
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
@@ -22,6 +22,7 @@ async function prepare() {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
     globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new TheGroupings(); sGroupings = new TheGroupings('searching'); pandaUI = new PandaUI(); menus = new MenuClass(); dashboard = bgPage.gGetDash();
+    themes = new ThemesClass();
     startPandaCrazy();
   });
 }
@@ -31,6 +32,7 @@ async function prepare() {
 async function startPandaCrazy() {
   $('.pcm-top').addClass('unSelectable'); $('#pcm-pandaUI .pcm-quickMenu').addClass('unSelectable');
   if (bgHistory && bgPanda && bgSearch) {
+    themes.prepareThemes();
     groupings.prepare(showMessages); // Wait for groupings to load and show message or error.
     sGroupings.prepare(showMessages);
     menus.preparePanda();
@@ -64,16 +66,16 @@ allTabs('/pandaCrazy.html', async (count) => { // Count how many Panda Crazy pag
 
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
-window.addEventListener('beforeunload', async (e) => {
-  if (bgPanda) { bgPage.gSetPandaUI(null); alarms.removeAll(); globalOpt.removeAll(); groupings.removeAll(); sGroupings.removeAll(); }
-  globalOpt = null; notify = null; alarms = null; menus = null; modal = null; groupings = null; errorObject = null; bgPanda = null;
-  bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null;
+window.addEventListener('beforeunload', async () => {
+  if (bgPanda) { bgPage.gSetPandaUI(null); groupings.removeAll(); sGroupings.removeAll(); }
+  globalOpt = null; notify = null; alarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
+  bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
 });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', (e) => {
-  if ((e.keyCode ? e.keyCode : e.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
+  if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
 });
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
 document.addEventListener("keyup", (e) => {
-  if ((e.keyCode ? e.keyCode : e.which)===17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
+  if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
 });

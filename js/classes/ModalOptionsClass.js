@@ -4,13 +4,16 @@
 class ModalOptionsClass {
 	constructor() {
     this.defDur = {'min':0, 'max':120000};
+    this.reader = new FileReader();
   }
   /** Shows the general options in a modal for changes.
    * @param  {function} [afterClose] - After Close Function */
   showGeneralOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
-      globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes)); modal.closeModal();
+      globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
+      $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
+      modal.closeModal();
     });
     modal.showModal(_, () => {
       let df = document.createDocumentFragment();
@@ -21,6 +24,7 @@ class ModalOptionsClass {
         {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for HITs nearing the expiration time.'}, 
         {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting HITs or warnings.'}, 
         {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
+        {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
         {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
@@ -35,8 +39,8 @@ class ModalOptionsClass {
   showTimerOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doTimers(), '850px', 'pcm-timerOptModal', 'modal-lg', 'Timer Options', '', '', '', 'visible btn-sm', 'Save Timer Options', changes => {
-      let errorFound = globalOpt.timerConfirm(changes);
-      if (!errorFound) {
+      let errorsFound = $('.pcm-eleLabel.pcm-optionLimited').length;
+      if (errorsFound === 0) {
         globalOpt.doTimers(changes);
         bgPanda.timerChange(globalOpt.getCurrentTimer()); pandaUI.pandaGStats.setPandaTimer(globalOpt.getCurrentTimer()); bgPanda.hamTimerChange(changes.hamTimer);
         pandaUI.pandaGStats.setHamTimer(changes.hamTimer); bgSearch.timerChange(changes.searchTimer); pandaUI.pandaGStats.setSearchTimer(changes.searchTimer);
@@ -64,6 +68,73 @@ class ModalOptionsClass {
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       df = null;
+    }, () => { modal = null; if (afterClose) afterClose(); });
+  }
+  showThemeModal(afterClose=null) {
+    let currentThemeIndex = globalOpt.theThemeIndex(), currentThemeCSS = globalOpt.theThemes();
+    if (!modal) modal = new ModalClass();
+    const idName = modal.prepareModal(null, '900px', 'pcm-themesModal', 'modal-lg', 'Change your themes', '', '', '', 'visible btn-sm', 'Use Current Theme', () => {
+      globalOpt.theThemeIndex(currentThemeIndex); globalOpt.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
+      themes.theStyle = globalOpt.theThemes(); themes.themeIndex = currentThemeIndex; themes.prepareThemes(true);
+      modal.closeModal();
+    });
+    modal.showModal(_, () => {
+      let resetFileInput = () => { $(`#${idName} .pcm-fileInput`)[0].reset(); }
+      let setFileInput = (fileName='Choose file...') => {
+        $(`#${idName} .custom-file-input`).next('.custom-file-label').removeClass('selected').html(fileName);
+        $(`#${idName} .pcm-inputError`).html('');
+      }
+      let df = document.createDocumentFragment();
+      $(`<div class='pcm-detailsEdit small'>The textbox area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.</div>`).appendTo(df);
+      let buttonGroup = $(`<div class='pcm-themeSelection'></div>`).appendTo(df);
+      $(`<button class='btn btn-xs pcm-themeSelect0 pcm-buttonOff'>Theme #1</button>`).data('index', 0).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect1 pcm-buttonOff'>Theme #2</button>`).data('index', 1).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect2 pcm-buttonOff'>Theme #3</button>`).data('index', 2).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect3 pcm-buttonOff'>Theme #4</button>`).data('index', 3).appendTo(buttonGroup);
+      buttonGroup.find('.btn').on( 'click', e => {
+        let theBody = $(`#${idName} .${modal.classModalBody}`); setFileInput(); resetFileInput();
+        $(`#${idName} .pcm-loadCSSFile`).addClass('pcm-disabled').prop('disabled',true);
+        globalOpt.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
+        currentThemeIndex = $(e.target).data('index'); currentThemeCSS = globalOpt.theThemes(currentThemeIndex); $(`#pcm-themeTextArea`).val(currentThemeCSS);
+        theBody.find(`.pcm-themeSelection .btn`).removeClass('pcm-buttonOn').addClass('pcm-buttonOff');
+        theBody.find(`.pcm-themeSelect${currentThemeIndex}`).removeClass('pcm-buttonOff').addClass('pcm-buttonOn');
+        theBody = null;
+      })
+      let themeInput = $(`<div class='pcm-themeInput'></div>`).appendTo(df);
+      let textArea = $(`<textarea class='input-sm col-9' id='pcm-themeTextArea' multiple rows='10'></textarea>`).appendTo(themeInput);
+      $(`<div class='pcm-inputError'></div>`).appendTo(df);
+      let inputContainer = $(`<form class='pcm-fileInput'></form>`).appendTo(df);
+      createFileInput(inputContainer, 'text/css');
+      $(`<button class='btn btn-xs pcm-loadCSSFile pcm-disabled'>Load CSS File</button>`).prop('disabled',true).on( 'click', e => {
+        modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to replace Theme #${currentThemeIndex + 1} with contents of file?`, () => {
+          currentThemeCSS = this.reader.result; $(`#pcm-themeTextArea`).val(currentThemeCSS);
+          globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
+        }, true, true,_,_,_,_, () => {});
+        return false;
+      }).appendTo(inputContainer);
+      $(`<button class='btn btn-xs pcm-resetCSSFile'>Reset Theme</button>`).on( 'click', e => {
+        modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to reset Theme #${currentThemeIndex + 1} to a blank theme?`, () => {
+          currentThemeCSS = ''; $(`#pcm-themeTextArea`).val(currentThemeCSS);
+          globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
+        }, true, true,_,_,_,_, () => {});
+        return false;
+      }).appendTo(inputContainer);
+      $(`<div class='pcm-themeArea'></div>`).append(df).appendTo(`#${idName} .${modal.classModalBody}`);
+      buttonGroup.find(`.pcm-themeSelect${currentThemeIndex}`).removeClass('pcm-buttonOff').addClass('pcm-buttonOn');
+      textArea.val(currentThemeCSS);
+      $('.custom-file-input').on('change', (e) => {
+        let fileName = $(e.target).val().replace('C:\\fakepath\\', '');
+        if (fileName.slice(-3) === 'css') {
+          setFileInput(fileName);
+          this.reader.onload = () => {
+            try { if (this.reader.result) { $('.pcm-loadCSSFile').removeClass('pcm-disabled').prop('disabled',false); } }
+            catch(e) { console.log('Not a valid import file. ',e); this.statusFile(false); }
+          };
+          this.reader.readAsBinaryString($(e.target).prop('files')[0]);
+          this.reader.onerror = () => { console.log('can not read the file'); }
+        } else { $(`#${idName} .pcm-inputError`).html('Only allows a CSS file to be loaded!'); }
+      });
+      df = null; buttonGroup = null; themeInput = null; textArea = null; inputContainer = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
 }

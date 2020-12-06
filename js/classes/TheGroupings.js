@@ -132,7 +132,7 @@ class TheGroupings {
       let panda = (this.type === 'panda'), dbKey = keys.shift(), myId = (panda) ? bgPanda.getMyId(dbKey) : dbKey, collecting = this.groupStatus[grouping].collecting;
       if (collecting && panda) pandaUI.startCollecting(myId);
       else if (!collecting && panda)pandaUI.stopCollecting(myId);
-      else if (!panda) { bgSearch.toggleTrigger(null, myId, collecting); search.disableMe(bgSearch.getTrigger(myId).count, (collecting) ? 'searching' : 'disabled'); }
+      else if (!panda) { bgSearch.toggleTrigger(null, myId, collecting); search.statusMe(bgSearch.getTrigger(myId).count, (collecting) ? 'searching' : 'disabled'); }
       setTimeout( () => { this.delayedToggle(grouping, keys); }, 100 );
     }
   }

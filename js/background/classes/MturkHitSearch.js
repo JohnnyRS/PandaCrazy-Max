@@ -57,7 +57,7 @@ class MturkHitSearch extends MturkClass {
 	isAll(type, value) { return (this.is(type, value, true) || this.is(type, value, false)); }
 	uniqueName(name) {
 		let returnValue = true;
-		for (const key of Object.keys(this.data)) { console.log(this.data[key].name, name); if (this.data[key].name === name) { returnValue = false; break; } }
+		for (const key of Object.keys(this.data)) { if (this.data[key].name === name) { returnValue = false; break; } }
 		return returnValue;
 	}
 	/** returns the dbid from a type and value given from any UI.
@@ -84,7 +84,7 @@ class MturkHitSearch extends MturkClass {
 	async updateToDB(name, newData, onlyNew=false, key=null) {
 		if (MYDB) {
 			await MYDB.addToDB('searching', name, newData, onlyNew, key)
-			.then(_, rejected => { console.error(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
+			.then( () => {}, rejected => { console.error(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
 		}
 	}
 	/** Close the database usually for importing or UI closing. */
@@ -148,7 +148,7 @@ class MturkHitSearch extends MturkClass {
 	/** Prepare the search URL with many options.
 	 * @param  {bool} [json=true]					- JSON         @param  {number} [pageSize=35]					- Page size  @param  {bool} [onlyQual=true]			 - Only qualified
 	 * @param  {bool} [onlyMasters=false]	- Only Masters @param  {string} [sort="updated_desc"] - Sort value @param  {string} [minReward="0.01"] - Minimum reward */
-	async prepareSearch(json=true, pageSize=35, onlyQual=true, onlyMasters=false, sort="updated_desc", minReward="0.01") {
+	prepareSearch(json=true, pageSize=35, onlyQual=true, onlyMasters=false, sort="updated_desc", minReward="0.01") {
 		sort = (this.sorting.includes(sort)) ? sort : this.sorting[0];// set up sorting with passed value or default
 		pageSize = (MyOptions.doSearch()) ? MyOptions.doSearch().pageSize : pageSize;
 		const formatJson = (json) ? "&format=json" : ""; // add format json or not?
@@ -158,7 +158,7 @@ class MturkHitSearch extends MturkClass {
 	timerChange(timer=null) { if (timer) return searchTimer.theTimer(timer); else return searchTimer.theTimer(); }
 	/** Removes all data from class to clear out memory as much as possible on exit.
 	 * @async - Just so things get cleared out before a restart. */
-	async removeAll() {
+	removeAll() {
 		this.searchesString = ''; this.livePandaUIStr = ''; this.liveSearchUIStr = ''; this.liveCounter = 0; this.pandaCollecting = [];
 		this.searchGStats = null; this.options = {}; this.data = {}; this.rules = {}; this.dbIds.pDbId = {}; this.termCounter = 0;
 		this.fromPanda.clear(); this.fromSearch.clear(); this.tempBlockGid.clear(); this.dbIds.values = {}; this.dbIds.unique = {}; this.loaded = false;
@@ -275,7 +275,7 @@ class MturkHitSearch extends MturkClass {
 		if (dbId) {
 			if (collected && !autoGid) {
 				let options = await this.theData(dbId, 'options'), unique = trigger.count;
-				if (options.once) { this.toggleTrigger(unique); disabled = true; if (extSearchUI) extSearchUI.disableMe(unique, trigger.status); }
+				if (options.once) { this.toggleTrigger(unique); disabled = true; if (extSearchUI) extSearchUI.statusMe(unique, trigger.status); }
 			} else if (collected && autoGid) {
 				let taskId = url.match(/\/projects\/.*\/tasks[\/?]([^\/?]*)/)[1]; buildSortObject(this.autoTaskIds, dbId, taskId); this.autoCollected.push(gId);
 			}

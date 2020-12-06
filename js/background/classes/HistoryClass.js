@@ -25,7 +25,7 @@ class HistoryClass {
 				if (newData.from !== 'searchResults' && newData.from !== r.from) { r.from = newData.from; updateThis = true; }
 				else updateThis = !isSameDay(new Date(r.updated));
 				return updateThis;
-			}).then(_, rejected => { extPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
+			}).then( () => {}, rejected => { extPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
 		}
 	}
 	/** Close the database usually when importing. */

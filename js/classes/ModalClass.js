@@ -113,7 +113,6 @@ class ModalClass {
     const idName = this.prepareModal(null, '800px', 'pcm-deleteModal', 'pcm-danger modal-lg', 'Deleting a Panda HIT!', `<h4>Are you sure you want me to delete this job?</h4><h5 class='pcm-myPrimary'>${hitsList}</h5>`, 'pcm-danger', 'pcm-danger', 'visible', 'Yes', deleteFunc, 'visible', 'No', noFunc, 'visible', cancelText);
     this.showModal(cancelFunc, () => {
       $(`#${idName}`).find(`.pcm-modalSave`).focus();
-      // $(`#${idName}`).on('keypress', e =>{ if (e.which === 13) { e.stopPropagation(); e.preventDefault(); if (deleteFunc) deleteFunc(); } });
     }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.

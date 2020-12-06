@@ -105,8 +105,8 @@ class EximClass {
       if (Object.keys(this.importTabsData).length > 0) {
         $('#pcm-tabbedPandas').hide();
         $('.pcm-importButton:first').append('.');
-        await bgPanda.removeAll(false);
-        await bgSearch.removeAll();
+        bgPanda.removeAll(false);
+        bgSearch.removeAll();
         bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
         await bgPanda.recreateDB(); // Recreate database and stores.
         await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
@@ -199,14 +199,14 @@ class EximClass {
         $(`<div class='pcm-importStatus'>&nbsp;</div>`).appendTo(df);
         $('<div></div>').append($(`<button class='pcm-importButton pcm-disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
         $(`#${idName} .${modal.classModalBody}`).append(df);
-        $('.custom-file-input').on('change', (e) => {
+        $('.custom-file-input').on('change', e => {
           const fileName = $(e.target).val().replace('C:\\fakepath\\', '');
           $(e.target).next('.custom-file-label').addClass('selected').html(fileName);
           this.reader.onload = () => this.readData();
           this.reader.readAsBinaryString($(e.target).prop('files')[0]);
           this.reader.onerror = () => { console.log('can not read the file'); }
         });
-        $('.pcm-importButton:first').on('click', async (e) => {
+        $('.pcm-importButton:first').on('click', async e => {
           if (!this.importCompleted) {
             $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); bgSearch.importing();
             await this.startImporting($('#pcm-importAlarms').prop('checked'));

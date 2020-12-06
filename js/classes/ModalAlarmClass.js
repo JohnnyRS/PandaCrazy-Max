@@ -1,5 +1,5 @@
 /** This class deals with any showing of modals for jobs.
- * @class ModalAlarmClass
+ * @class ModalAlarmClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalAlarmClass {
 	constructor() {

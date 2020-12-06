@@ -1,5 +1,5 @@
 let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
-let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null;
+let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
 $('body').tooltip({selector: `.pcm-tooltipData`, delay: {show:1100}, trigger:'hover'});
 
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
@@ -13,15 +13,15 @@ async function getBgPage() {
 }
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion).then( () => {
-    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB();
-    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); globalOpt = bgPage.gGetOptions();
+    themes = new ThemesClass(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
 /** Starts the search crazy UI and prepares all the search triggers. */
 async function startSearchCrazy() {
-  window.addEventListener('beforeunload', () => { bgPage.gSetSearchUI(null); sGroupings.removeAll(); });
-  await search.prepareSearch();
+  themes.prepareThemes();
+  search.prepareSearch();
   await bgSearch.loadFromDB();
   search.appendFragments();
   sGroupings.prepare(showMessages); // Wait for groupings to load and show message or error.
@@ -40,4 +40,10 @@ function showMessages(good, bad) {
 allTabs('/searchCrazy.html', count => { // Count how many Search Crazy pages are opened.
   if (count<2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
   else haltScript(null, 'You have SearchCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting SearchCrazy Max', true);
+});
+/** ================ EventListener Section =============================================== **/
+/** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
+window.addEventListener('beforeunload', async () => {
+  if (bgSearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
+  globalOpt = null; alarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null; bgQueue = null; bgHistory = null; themes = null; MYDB = null;
 });

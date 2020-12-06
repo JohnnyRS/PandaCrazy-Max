@@ -138,8 +138,8 @@ class MturkPanda extends MturkClass {
 	/** Remove all panda jobs usually because panda UI is closing.
 	 * @param {bool} - Should the pandaUI be asked to remove all also?
 	 * @async 			 - To wait for all the data to be added first before removing the jobs. */
-	async removeAll(removeUI=false) {
-		if (removeUI && extPandaUI) await extPandaUI.removeAll();
+	removeAll(removeUI=false) {
+		if (removeUI && extPandaUI) extPandaUI.removeAll();
 		this.uniqueIndex = 0; this.pandaUniques = []; this.searchesUniques = []; this.dbIds = {};
 		this.pandaGroupIds = {}; this.pandaUrls = {}; this.pandaSkipped = []; this.authenticityToken = null;
 		this.pandaSkippedData = {};	this.queueAdds = {}; this.tempPaused = false; this.skippedDoNext = false;
@@ -156,11 +156,10 @@ class MturkPanda extends MturkClass {
 	}
 	/** Gets the data from the database if needed and then returns the data object.
 	 * @async 							 - To wait to get the data from the database if needed.
-	 * @param  {number} myId - The unique ID for a panda job.
-	 * @return {object}      - The data object is returned. */
+	 * @param  {number} myId - Unique ID  @return {object} - The data object is returned. */
 	async dataObj(myId) {
-		if (!this.info[myId] && !this.info[myId].data) await this.getDbData(myId);
-		return this.info[myId].data; 
+		if (!this.info[myId]) { console.error('panda info not found.'); return null; }
+		if (!this.info[myId].data) await this.getDbData(myId); return this.info[myId].data; 
 	}
 	/** Collects stats from timer and shows them on the panda UI.
 	 * @param  {object} infoObj - The object with all the timer status. */
@@ -176,8 +175,8 @@ class MturkPanda extends MturkClass {
 	timerChange(timer=null, add=0, del=0) {
 		let newTimer = null;
 		if (timer) newTimer = pandaTimer.theTimer(timer, true);
-		else if (add>0) newTimer = pandaTimer.addToTimer(add);
-		else if (del>0) newTimer = pandaTimer.delFromTimer(del);
+		else if (add > 0) newTimer = pandaTimer.addToTimer(add);
+		else if (del > 0) newTimer = pandaTimer.delFromTimer(del);
 		else if (!timer) newTimer = pandaTimer.theTimer();
 		return newTimer
 	}

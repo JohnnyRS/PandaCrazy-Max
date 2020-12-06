@@ -338,11 +338,9 @@ class ModalJobClass {
           theDialog = null;
         });
       }).appendTo(inputControl);
-      if (type === 'jobs') $(`<button class='btn btn-xxs pcm-deleteSelected'>Delete Selected</button>`).click( async () => {
+      if (type === 'jobs') $(`<button class='btn btn-xxs pcm-deleteSelected'>Delete Selected</button>`).click( () => {
         let selected = $(`#${idName} .${modal.classModalDialog}:first`).find('.pcm-checkbox:checked').map((_,element) => Number($(element).val()) ).get();
-        if (selected.length) await pandaUI.removeJobs(selected, async (result, unique) => {
-          if (result !== 'NO') $(`#pcm-jobRow-${unique}`).remove();
-        }, 'manual', () => { selected = null; });
+        if (selected.length) pandaUI.removeJobs(selected, (result, unique) => { if (result !== 'NO') $(`#pcm-jobRow-${unique}`).remove(); }, 'manual', () => { selected = null; });
         else { selected = null; }
       }).appendTo(inputControl);
       $(df).find(`input:radio[name='theJobs']`).click( e => { $(e.target).closest('.pcm-modalControl').find('.pcm-searchingJobs').click(); });

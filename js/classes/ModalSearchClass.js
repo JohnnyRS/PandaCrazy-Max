@@ -341,7 +341,7 @@ class ModalSearchClass {
         let gidvals = bgSearch.getBlocked(), ridvals = bgSearch.getBlocked(false);
         /** Changes the status displayed to a given text and will change class if an error.
          * @param {string} tab - Tab Class Name  @param {String} [resultStr] - Html text  @param {bool} [error] - Error? */
-        let statusInput = (tab, resultStr=null, error=true) => { console.log(tab);
+        let statusInput = (tab, resultStr=null, error=true) => {
           let theClass = (error) ? 'pcm-optionLabelError' : 'pcm-statusSuccess', theBody = $(`#${idName} .${modal.classModalBody}`);
           theBody.find(`.${tab} .pcm-inputResult:first`).removeClass('pcm-optionLabelError pcm-statusSuccess').addClass(theClass).html(resultStr);
           theBody.find(`.${tab} input:first`).focus();
@@ -529,8 +529,8 @@ class ModalSearchClass {
       }).appendTo(inputControl);
       if (type === 'triggers') $(`<button class='btn btn-xxs pcm-deleteSelected'>Delete Selected</button>`).click( async () => {
         let dbSelected = $(`#${idName} .${modal.classModalDialog}:first`).find('.pcm-checkbox:checked');
-        let selected = dbSelected.map((_,element) => { return Number(bgSearch.getTrigger($(element).val()).count); }).get(); console.log(selected, selected.length);
-        if (selected.length) await search.removeJobs(selected, async (response, unique) => {
+        let selected = dbSelected.map((_,element) => { return Number(bgSearch.getTrigger($(element).val()).count); }).get();
+        if (selected.length) search.removeJobs(selected, async (response, unique) => {
           if (response !== 'NO') $(`#pcm-jobRow-${unique}`).remove();
         }, () => { selected = null; }, 'Unselect All');
       }).appendTo(inputControl);

@@ -7,7 +7,7 @@ class PandaStats {
  * @param  {number} myId - The unique number for the panda using these stats.
  * @param  {number} dbId - The database unique number for the panda using these stats.
    */
-  constructor(myId, dbId) {
+  constructor(myId, dbId, accepted, fetched) {
     this.myId = myId;                         // The unique ID for this panda job.
     this.dbId = dbId;                         // The unique database ID for this panda job.
     this.collecting = false;                  // Is this panda collecting or not?
@@ -20,10 +20,10 @@ class PandaStats {
     this.fetched = { value:0, session:0, id:'#pcm-hitFetched', class:'.pcm-hitFetched', label:'Fetched', id1:'#pcm-hitFetched1' };
     this.accepted = { value:0, id:'#pcm-hitAccepted', class:'.pcm-hitAccepted', label:'Acc', id1:'#pcm-hitAccepted1' };
     this.noMore = { value:0, id:'#pcm-hitNoMore', class:'.pcm-hitNoMore', label:'NM', id1:'#pcm-hitNoMore1' };
-    this.prepare();
+    this.prepare(accepted, fetched);
     this.updateAllStats();
   }
-  prepare() { this.fetchedStatusText = getCSSVar('hitFetched', this.fetched.label); this.acceptedStatusText = getCSSVar('hitAccepted', this.accepted.label); }
+  prepare(accepted, fetched) { this.acceptedStatusText = accepted; this.fetchedStatusText = fetched; }
   /** Will return the number of accepted hits from this panda job for this day.
    * @return {number} - The number of accepted hits for this day. */
   getDailyAccepted() { return this.dailyAccepted; }

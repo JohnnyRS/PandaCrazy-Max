@@ -10,9 +10,8 @@ function checkUIConnects() {
 }
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
-  mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB();
-  myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null;
-  pandaTimer = null; queueTimer = null; searchTimer = null;
+  mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); MyAlarms.removeAll(); MyOptions.removeAll();
+  myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null; pandaTimer = null; queueTimer = null; searchTimer = null; dbError = null;
   if (chrome.storage) chrome.storage.local.set({'pcm_running':false});
 }
 function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
@@ -31,6 +30,9 @@ function gSetSearchUI(classUI) {
 async function gSetPandaUI(classUI) {
   if (classUI === null) { myPanda.removeAll(true); MyAlarms.setAudioClass(null, 'panda'); pandaUIOpened = false; }
   extPandaUI = classUI; checkUIConnects();
+}
+function themeChanged() {
+  if (extSearchUI) extSearchUI.themeChanged(true);
 }
 /** Sends back the panda class object so pages can use it easily.
  * @return - Returns the panda class object from the external page. */
@@ -94,7 +96,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
     }, rejected => { dbError = rejected; console.error(rejected); } );
   }, rejected => { dbError = rejected; console.error(rejected); } );
 }
-function pandaUILoaded() { if (savedSearchUI) savedSearchUI.pandaUILoaded(); }
+function pandaUILoaded() { if (savedSearchUI) { savedSearchUI.pandaUILoaded(); savedSearchUI = null; } }
 async function wipeData() {
   if (!MyOptions) MyOptions = new PandaGOptions();
   if (!myHistory && !mySearch && !myPanda) {
