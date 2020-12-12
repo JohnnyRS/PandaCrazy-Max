@@ -289,6 +289,7 @@ class PandaCards {
       if (!this.ctrlDelete.includes(myId)) this.ctrlDelete.push(myId);
 			pandaUI.removeJobs(this.ctrlDelete, (response) => {
         if ((response === 'NO' && this.ctrlDelete.length === 1) || response === 'CANCEL' ) { this.ctrlDelete = []; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
+        else if (response === 'YES') this.ctrlDelete = [];
       }, 'manual', () => {}, 'Unselect All');
       e.preventDefault(); e.stopPropagation(); theButton = null; card = null;
 		});

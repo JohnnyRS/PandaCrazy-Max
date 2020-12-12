@@ -39,7 +39,7 @@ html, body { height: 100%; }
 .custom-file-label { text-align: left; }
 .btn-group-xs > .btn, .btn-xs { padding: .15rem .4rem; font-size: .775rem; line-height: .7; border-radius: .2rem; }
 .btn-group-xs > .btn, .btn-xxs { padding: .25rem .3rem; font-size: .775rem; line-height: .4; border-radius: .2rem; }
-#pcm-importCheck { width: 300px; margin: 5px auto; color: #a1e6dc; }
+#pcm-importCheck { width: 300px; margin: 5px auto; color: #e4aeae; }
 #pcm-resetMyData { background-color: crimson; color: white; }
 #pcm-selectedBox { margin-left: auto; margin-right: auto; }
 .pcm-theUI { color: white; padding: 0; border: 1px solid #f8f9fa; border-radius: 0.25rem; background-color: #343a40; }
@@ -67,7 +67,7 @@ html, body { height: 100%; }
 .pcm-groupingItem { background-color: darkslategrey; }
 .pcm-groupCollect { background-color: #066306; }
 .pcm-groupEmpty { background-color: #1b1717; }
-.pcm-inputError { color: #f78976; }
+.pcm-inputError, .modal-body .pcm-inputError { color: #f78976; }
 .pcm-btnNegTop { margin-top: -4px; }
 .pcm-optionEmpty, .pcm-optionLimited { color: #dc3545; }
 .pcm-optionDisabled { color: gold; }
@@ -125,12 +125,14 @@ html, body { height: 100%; }
 .radio-inline.pcm-disabled { text-decoration: line-through; }
 .pcm-importButton { width: 330px; }
 .pcm-importButton.pcm-disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; }
-.pcm-exportButton { width: 280px; }
-.pcm-importStatus { margin: 10px 0 10px 0; }
+.pcm-exportButton { width: 280px; margin-top: 1.5rem; }
+.pcm-importStatus { margin: 10px 0 10px 0; color: greenyellow; }
 .pcm-alarmEdit { color: #e6ebac; font-size: 15px; text-align: center; margin: 8px 0; }
 .pcm-horizontalRow { padding-top: 4px; border-top: 1px solid #17a2b8; }
 .pcm-topDetails { margin-bottom: 0; }
 .pcm-optionLabelError { color: red; }
+.pcm-verified { color: springgreen; }
+.pcm-dataNone { color: burlywood; }
 .pcm-formAddTheID { margin-left:10px; }
 .pcm-statusSuccess { color: #28a745; margin-top: 1rem; margin-bottom: 1rem; }
 .pcm-addToSelect, .pcm-removeFromSelect { background-color: #007bff; border-color: #007bff; color: white; margin-left: 0.25rem; }
@@ -229,6 +231,8 @@ html, body { height: 100%; }
 .pcm-loadCSSFile.pcm-disabled { background-color: #A9A9A9; border-color: #808080; color: #7e8286; text-decoration: none; }
 .pcm-themeArea { margin-bottom:30px; }
 .pcm-volumeHorizGroup { background-color: #063e4d; font-size:0.8em; padding-left:2px; }
+.pcm-exportText { color: cyan; margin-top: 1rem; font-size: 80%; font-weight: 400; }
+.pcm-exportCheckAlarms { margin-top: 1rem; }
 
 /* SearchUI Targeted Styles. */
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }

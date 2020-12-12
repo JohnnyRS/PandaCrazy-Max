@@ -45,7 +45,7 @@ class SearchUI {
 	}
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
-		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
+		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
 		if (!bgSearch.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */

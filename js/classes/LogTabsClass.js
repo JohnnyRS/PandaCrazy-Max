@@ -108,20 +108,20 @@ class LogTabsClass {
     }
   }
   /** Add a new HIT accepted into the queue in the correct position according to seconds left.
-   * @param  {object} hitInfo    - Panda Object  @param  {object} hitInfo2 - Mturk HIT Info  @param  {object} data - Data Object.  @param  {string} [task_url] - Task URL */
-  addIntoQueue(hitInfo, hitInfo2, data, task_url='') {
+   * @param  {object} hitInfo    - Panda Object  @param  {object} data - Data Object.  @param  {string} [task_url] - Task URL */
+  addIntoQueue(hitInfo, data, task_url='') {
     this.addIntoQueue.counter = (this.addIntoQueue.counter) ? this.addIntoQueue.counter++ : 0;
     if (this.queueUpdating && this.addIntoQueue.counter < 1000) // Check if currently updating queue.
-      setTimeout(this.addIntoQueue.bind(this), 30, hitInfo, hitInfo2, data, task_url);
+      setTimeout(this.addIntoQueue.bind(this), 30, hitInfo, data, task_url);
     else { // If not currently updating queue then add HIT to queue watch.
-      if (!this.taskIds.includes(hitInfo2.task_id)) { // Make sure HIT not in queue already.
+      if (!this.taskIds.includes(hitInfo.task_id)) { // Make sure HIT not in queue already.
         this.queueUpdating = true;
         let found = this.taskIds.findIndex( key => { return this.taskInfo[key].secondsLeft > data.assignedTime; });
-        let newInfo = { 'project': {'assignable_hits_count':data.hitsAvailable, 'assignment_duration_in_seconds':hitInfo2.assignmentDurationInSeconds, 'hit_set_id':data.groupId, 'creation_time':hitInfo2.creationTime, 'description':data.description, 'latest_expiration_time':hitInfo2.expirationTime, 'monetary_reward':{'amount_in_dollars':data.price}, 'requester_name':data.reqName, 'requester_id':data.reqId, 'title':data.title}, 'secondsLeft':hitInfo2.assignmentDurationInSeconds, 'task_id':hitInfo2.task_id, 'assignment_id':hitInfo2.assignment_id, 'task_url':task_url.replace('&auto_accept=true','')};
+        let newInfo = { 'project': {'assignable_hits_count':data.hitsAvailable, 'assignment_duration_in_seconds':hitInfo.assignmentDurationInSeconds, 'hit_set_id':data.groupId, 'creation_time':hitInfo.creationTime, 'description':data.description, 'latest_expiration_time':hitInfo.expirationTime, 'monetary_reward':{'amount_in_dollars':data.price}, 'requester_name':data.reqName, 'requester_id':data.reqId, 'title':data.title}, 'secondsLeft':hitInfo.assignmentDurationInSeconds, 'task_id':hitInfo.task_id, 'assignment_id':hitInfo.assignment_id, 'task_url':task_url.replace('&auto_accept=true','')};
         if (found === -1) this.addToWatch(newInfo, this.queueContent, true);
         else this.addToWatch(newInfo, this.queueContent.find('div')[found], false);
-        this.taskIds.splice( ((found === -1) ? this.taskIds.length : found-1), 0, hitInfo2.task_id );
-        this.taskInfo[hitInfo2.task_id] = newInfo; this.groupIds.push(data.groupId); this.payRate.push(data.price);
+        this.taskIds.splice( ((found === -1) ? this.taskIds.length : found-1), 0, hitInfo.task_id );
+        this.taskInfo[hitInfo.task_id] = newInfo; this.groupIds.push(data.groupId); this.payRate.push(data.price);
         this.queueTab.find('span').html(`Queue Watch - ${this.queueTotal} - $${this.totalResults()}`);
         newInfo = null;
       }

@@ -1,18 +1,27 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null;
-chrome.storage.local.set({'pcm_running':false});
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = {'url':'about:blank', 'tabId':null};
+chrome.storage.local.set({'PCM_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
 function checkUIConnects() {
   if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.stopSearching(); }
   if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; MyOptions = null; MyAlarms = null; } 
 }
+/** Cleans the chrome local storage of all created data from extension. Used at start and when all pages are closed. */
+function cleanLocalStorage() {
+  if (chrome.storage) {
+    chrome.storage.local.get(null, (values) => {
+      for (const key of Object.keys(values)) { if (key.includes('PCM_')) chrome.storage.local.remove(key); }
+    })
+    chrome.storage.local.set({'PCM_running':false});
+  }
+}
 /** Removes all data and classes. Also closes any databases opened when page is closing. */
 function removeAll() {
   mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); MyAlarms.removeAll(); MyOptions.removeAll();
   myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null; pandaTimer = null; queueTimer = null; searchTimer = null; dbError = null;
-  if (chrome.storage) chrome.storage.local.set({'pcm_running':false});
+  cleanLocalStorage();
 }
 function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
 /** Function to set up a search UI variable for the background and returns search class.
@@ -74,7 +83,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
   await MYDB.openSearching().then( async () => {
     await MYDB.openHistory(historyWipe).then( async () => {
       if (!myPanda && !searchUIOpened) {
-        chrome.storage.local.set({'pcm_running':true});
+        chrome.storage.local.set({'PCM_running':true});
         myHistory = new HistoryClass();
         dbHistoryGood = true;
         myHistory.maintenance();
@@ -108,3 +117,16 @@ async function wipeData() {
     myPanda = null; mySearch = null; myHistory = null; pandaTimer = null; searchTimer = null; MYDB = null;
   }
 }
+function popupOpened() {
+  console.log('popup opened');
+}
+function getCurrentTab(doAfter=null) {
+  chrome.tabs.query({ active: true, currentWindow: true
+  }, function(tabs) {
+    let tab = tabs[0];
+    let url = tab.url; console.log(url);
+    if (doAfter) doAfter(url);
+  });
+}
+
+cleanLocalStorage();

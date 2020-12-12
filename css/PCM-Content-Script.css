@@ -5,4 +5,5 @@
 .pcm-buttonHits { font-size: 12px; line-height: 1.1em; padding: 1px; color: black; background-color:beige; border:0; margin-left:2px; }
 .pcm-buttonPreview { font-size: 9px; line-height: 8px; padding: 1px; color: black; }
 .PCSpanButtons, .JR_PandaCrazy { display:none; }
-
+.pcm-expiredHit { background-color: darkred; background-image: url('/assets/alert/danger-icon.svg'); background-repeat: repeat; background-size: 50px 50px; }
+.pcm-expiredIframe { opacity: 0.8; }

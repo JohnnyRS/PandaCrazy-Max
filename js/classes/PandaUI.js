@@ -387,7 +387,7 @@ class PandaUI {
     bgPanda.authenticityToken = auth_token.val();
 		let hitDetails = JSON.parse(rawProps).modalOptions; hitDetails.task_id = formInfo[2];
 		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data); bgPanda.queueAddAccepted(pandaInfo, hitDetails);
-		this.logTabs.addIntoQueue(pandaInfo, hitDetails, pandaInfo.data, url.replace('https://worker.mturk.com',''));
+		this.logTabs.addIntoQueue(hitDetails, pandaInfo.data, url.replace('https://worker.mturk.com',''));
 		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data);
 		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
 		if (!pandaInfo.data.mute) alarms.doAlarms(pandaInfo.data);
@@ -425,9 +425,18 @@ class PandaUI {
 		this.logTabs.updateQueue(queueResults);
 		if (this.tabLogResized) { globalOpt.theTabLogHeight(this.tabLogHeight); this.tabLogResized = false; }
 	}
-	/** A HIT was submitted.
-	 * @param  {object} request - the HIT data object with info. */
+	/** A HIT was submitted externally.
+	 * @param  {object} request - The HIT data object with info. */
 	submittedHit(request) { this.logTabs.removeFromQueue(request.taskId); this.pandaGStats.addSubmitted(); this.pandaGStats.thePotentialEarnings(null, request.price); }
+	/** A HIT was returned externally.
+	 * @param {object} request - The HIT data object with info. */
+	returnedHit(request) { this.logTabs.removeFromQueue(request.taskId); }
+	/** A HIT was accepted externally.
+	 * @param {object} request - The HIT data object with info. */
+	acceptedHit(request) {
+		request.assignedTime = request.duration;
+		this.logTabs.addIntoQueue(request.hitData, request, request.hitData.task_url.replace('https://worker.mturk.com',''));
+	}
 	/** Set the value of the potential earnings from MTURK.
 	 * @param  {string} earnings - Earnings value from MTURK. */
 	setEarnings(earnings) { this.pandaGStats.thePotentialEarnings(earnings); }
