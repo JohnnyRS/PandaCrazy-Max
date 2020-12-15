@@ -1,10 +1,13 @@
 let bgPage = null;
 
+function pageData(fragment) {
+  if (fragment) $(`<div class='pcm-addedSection'></div>`).appendTo('body').append(fragment);
+}
+
 window.onload = () => {
   chrome.runtime.getBackgroundPage( (backgroundPage) => {
-    bgPage = backgroundPage; bgPage.popupOpened();
-    bgPage.getCurrentTab( (thisUrl) => { console.log(thisUrl);
-      if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(thisUrl) || /worker\.mturk\.com\/tasks/.test(thisUrl)) console.log('Hit Page or queue');
+    bgPage = backgroundPage; bgPage.popupOpened(pageData);
+    bgPage.getCurrentTab( (thisUrl) => {
     });
   });
 }

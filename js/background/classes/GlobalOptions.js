@@ -71,7 +71,8 @@ class PandaGOptions {
       'DiscordButtons':true,
       'SlackButtons':true,
       'mturkPageButtons':true,
-      'queueCommands':true
+      'queueCommands':true,
+      'tabUniqueHits':true,
     }
     this.search = {}
     this.searchDefault = {
@@ -89,6 +90,7 @@ class PandaGOptions {
       'blockedGids':'',
       'blockedRids':'',
     }
+    this.sessionQueue = {'monitorNext':false, 'gidNext':false, 'ridNext':false, 'tabHitRestrict':true}
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
@@ -273,5 +275,40 @@ class PandaGOptions {
     if (index !== null && (index < 0 || index > 3)) return null;
     let thisIndex = (index === null) ? this.general.themeIndex : index, thisTheme = `theme${thisIndex}`;
     if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update(false); } else return this.general[thisTheme];
+  }
+  /** Sends back the helper options object.
+   * @return  {object} - Helpers Options */
+  theHelperOptions() { return this.helpers; }
+  theSessionQueue(data) { this.sessionQueue = data; }
+  popupForumOptions(appendHere, prop) {
+    createCheckBox(appendHere, 'Panda Crazy Buttons', '', this.helpers[prop], this.helpers[prop],_,_, e => {
+      this.helpers[prop] = $(e.target).prop('checked'); this.update(false);
+      helperOptionsChanged(this.helpers, 'optionsChange');
+    });
+  }
+  mturkQueueOptions(appendHere) { console.log('mturkQueueOptions')
+    createCheckBox(appendHere, 'Monitor at Queue End?', '', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext,_,_, e => {
+      this.sessionQueue.monitorNext = !this.sessionQueue.monitorNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+    });
+  }
+  mturkAssignedOptions(appendHere) { console.log('mturkAssignedOptions')
+    createCheckBox(appendHere, 'Same GroupID Next?', '', this.sessionQueue.gidNext, this.sessionQueue.gidNext,_,_, e => {
+      this.sessionQueue.gidNext = !this.sessionQueue.gidNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+    });
+    createCheckBox(appendHere, 'Same RequesterID Next?', '', this.sessionQueue.ridNext, this.sessionQueue.ridNext,_,_, e => {
+      this.sessionQueue.ridNext = !this.sessionQueue.ridNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+    });
+  }
+  helperOptions(url) {
+    let df = $(document.createDocumentFragment());
+    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) this.mturkQueueOptions(df);
+    if (/\/\/[^/]*\/projects\/[^/]*\/tasks\/.*?assignment_id/.test(url)) this.mturkAssignedOptions(df);
+    else if (/\/\/[^/]*mturkcrowd.com.*$/.test(url)) this.popupForumOptions(df, 'MTCButtons');
+    else if (/\/\/[^/]*turkerview.com.*$/.test(url)) this.popupForumOptions(df, 'TVButtons');
+    else if (/\/\/[^/]*mturkforum.com.*$/.test(url)) this.popupForumOptions(df, 'MTFButtons');
+    else if (/\/\/[^/]*ourhitstop.com.*$/.test(url)) this.popupForumOptions(df, 'OHSButtons');
+    else if (/\/\/[^/]*slack.com.*$/.test(url)) this.popupForumOptions(df, 'SlackButtons');
+    else if (/\/\/[^/]*discord.com.*$/.test(url)) this.popupForumOptions(df, 'DiscordButtons');
+    if (df[0].childElementCount === 0 ) return null; else return df;
   }
 }

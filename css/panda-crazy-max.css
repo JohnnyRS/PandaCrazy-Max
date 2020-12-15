@@ -4,7 +4,7 @@ html, body { height: 100%; }
 :root {
   --pcm-bgHighlighter: #E6E6FA; /* Used for the fetch highlighter background color on the group id in panda card. */
   --pcm-searchingOn: 'Stop Search'; --pcm-searchingOff: 'Search Now'; --pcm-spanS-on: 'ON'; --pcm-spanS-off: 'Off'; --pcm-spanP-on: 'ON';
-  --pcm-spanP-off: 'Off'; --pcm-text-triggers: 'Triggers: ';
+  --pcm-spanP-off: 'Off'; --pcm-span-paused: 'Paused'; --pcm-text-triggers: 'Triggers: ';
 }
 
 /* General Styles. */
@@ -143,7 +143,7 @@ html, body { height: 100%; }
 .pcm-myWarning { color: #ffc107; text-align: center; }
 .pcm-helpPage { background-color: black; }
 .pcm-myCenter { text-align: center; }
-.pcm-popupPage { width: 200px; background-color: midnightblue; height: initial; border: 0; }
+.pcm-popupPage { width: 210px; background-color: midnightblue; height: initial; border: 0; padding-bottom: 15px; }
 .pcm-popupPage .pcm-horizontalRow { border-top: 2px solid #17a2b8; margin: 2px 0 4px 0; }
 .pcm-startPCM, .pcm-startPCMSearch { padding-top: 8px; padding-bottom: 16px; text-align: center; }
 .pcm-doHelp { padding-top: 8px; padding-bottom: 16px; text-align: center; }
@@ -163,6 +163,8 @@ html, body { height: 100%; }
 .pcm-separator { margin-left: 8px; margin-right: 8px; }
 .pcm-groupingEdit { background-color: #007bff; border-color: #007bff; color: white; }
 .pcm-groupingDelete { background-color: #007bff; border-color: #007bff; color: white; }
+.pcm-addedSection { color:lemonchiffon; border: 1px solid wheat; margin: 5px 10px; padding:8px 4px 4px 4px; background-color: navy; font-size:0.68em; }
+.pcm-addedSection input { height: 10px; }
 
 /* PandaUI Targeted Styles. */
 #pcm-pandaUI .pcm-menuRow1 { line-height: 0px; }

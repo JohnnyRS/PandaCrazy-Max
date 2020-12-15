@@ -111,6 +111,7 @@ class PandaUI {
 	}
   /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
 	resetCSSValues() { this.cards.resetCSSValues(); this.pandaGStats.resetCSSValues(); menus.resetCSSValues(); this.logTabs.resetCSSValues(); }
+	pauseToggle(val) { if (bgPanda) { if (bgPanda.pauseToggle(val)) $('#pcm-bqPandaPause').html('Unpause'); else $('#pcm-bqPandaPause').html('Pause'); }}
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); });

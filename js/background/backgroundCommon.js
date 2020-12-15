@@ -117,16 +117,14 @@ async function wipeData() {
     myPanda = null; mySearch = null; myHistory = null; pandaTimer = null; searchTimer = null; MYDB = null;
   }
 }
-function popupOpened() {
-  console.log('popup opened');
+function helperOptionsChanged(options, comm) {
+  if (options) { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if (tabs) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
+}
+function popupOpened(popupSend) {
+  getCurrentTab( (thisUrl) => { let helperOptions = (MyOptions) ? MyOptions.helperOptions(thisUrl) : ''; popupSend(helperOptions); });
 }
 function getCurrentTab(doAfter=null) {
-  chrome.tabs.query({ active: true, currentWindow: true
-  }, function(tabs) {
-    let tab = tabs[0];
-    let url = tab.url; console.log(url);
-    if (doAfter) doAfter(url);
-  });
+  chrome.tabs.query({ active: true, currentWindow: true }, tabs => { if (tabs) { let tab = tabs[0], url = tab.url; if (doAfter) doAfter(url); }});
 }
 
 cleanLocalStorage();

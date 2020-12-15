@@ -36,15 +36,17 @@ function createLink(appendHere, addClass, theUrl, theText, theTarget, clickFunc=
   return theLink;
 }
 /** Creates a Jquery checkbox with a label, id name and classes of elements.
- * @param  {object} appendHere      - Jquery element @param  {string} label - Label text @param  {string} id            - Id name
- * @param  {string} value           - Value          @param  {bool} checked - Checked?   @param  {string} [divClass=''] - Div class
- * @param  {string} [inputClass=''] - Input class
+ * @param  {object} appendHere      - Jquery element @param  {string} label         - Label text @param  {string} id            - Id name
+ * @param  {string} value           - Value          @param  {bool} checked         - Checked?   @param  {string} [divClass=''] - Div class
+ * @param  {string} [inputClass=''] - Input class    @param  {function} [clickFunc] - Click Function
  * @return {object}                 - The Jquery object of the checkbox element. */
-function createCheckBox(appendHere, label, id, value, checked, divClass='', inputClass='') {
+function createCheckBox(appendHere, label, id, value, checked, divClass='', inputClass='', clickFunc=null) {
   const checkedText = (checked) ? ' checked' : '';
   const formCheck = $(`<div class='form-check form-check-inline${divClass}'></div>`).appendTo(appendHere);
-  $(`<input class='form-check-input${checkedText}${inputClass}' type='checkbox' id='${id}' value='${value}'${checkedText}>`).appendTo(formCheck);
+  let input = $(`<input class='form-check-input${checkedText}${inputClass}' type='checkbox' id='${id}' value='${value}'${checkedText}>`).appendTo(formCheck);
+  if (clickFunc) input.click(clickFunc);
   $(`<label class='form-check-label' for='${id}'>${label}</label>`).appendTo(formCheck);
+  input = null;
   return formCheck;
 }
 /** Creates a Jquery radio button with a name group, label and value.

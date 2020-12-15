@@ -1,5 +1,5 @@
 const locationUrl = window.location.href, _ = undefined;
-let hitCounter = 0, hitInfo = {};
+let hitCounter = 0, hitInfo = {}, gForumName = null, gForumOptProp = null, gForumOptions = null, gForumObserver = null, gSlackObserver = null, gRObserver = null, gMObserver = null;
 let forumObj = {
   'MTC': {'quote':'.bbCodeBlock-content:first', 'container':'.block--messages .block-body ', 'messages':'article.message--post', 'message':'article .bbWrapper', 'postNumber':'header ul:first a:not([class])'},
   'TV': {'quote':'.quoteContainer:first .quote:first', 'container':'#messageList ', 'messages':'.messageInfo', 'message':'blockquote', 'postNumber':'.postNumber:first'},
@@ -20,7 +20,6 @@ let formatObj = {
   'DISQUAL': {'regex':/Requester:\s*(.*)\s*(http:[^\s]*)\s*HIT Title:\s*(.*)\s*Panda:\s*([^\s]*)\s*Qualification:\s*(.*)\s*(http:[^\s]*)\s*Qual Description:\s*(.*)\s*Qual/, 'order':[3,1,_,_,_,_,_,4,2,_,6,7]},
   'QUALATT': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|)\s*•\s*[^\s]*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*TO2/, 'order':[1,3,'rid-4',_,_,_,_,'gid-2']}
 };
-let forumButtons = true, MTC_enabled = true, TV_enabled = true, OHS_enabled = true, MTF_enabled = true, slack_enabled = true, discord_enabled = true;
 
 /** Sends a message to the extension with given values.
  * @param  {string} com     - Command   @param  {object} data  - Data Object     @param  {string} gId     - GroupID         @param  {string} [desc]  - Description
@@ -191,7 +190,7 @@ function findMessages(containerMessages, theMessage, theNumber, forum) {
 function slack() {
   $(window).on('load', () => {
     let message = '.p-rich_text_section', message2 = '.c-message_kit__attachments';
-    setUpObserver($('.c-message_list:first').find('.c-virtual_list__scroll_container'), false, node => {
+    gSlackObserver = setUpObserver($('.c-message_list:first').find('.c-virtual_list__scroll_container'), false, node => {
       if ($(node).find(message).length) findMessages($(node), message, '.c-timestamp:first', 'slack'); 
       if ($(node).find(message2).length) findMessages($(node), message2, '.c-timestamp:first', 'slack'); 
     });
@@ -201,27 +200,27 @@ function slack() {
 }
 /** Finds the message container and sets up an observer for scrolling for discord app when used in browser. */
 function discordApp() {
-  let mturkCrowd = false, roomObserver = null, messageObserver = null;
+  let mturkCrowd = false;
   let messageExpanded = () => {
     return setUpObserver($('div[class^=scrollerInner-]'), false, node => { setTimeout( () => { findMessages($(node), 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 100); });
   }
   let roomChange = () => {
     return setUpObserver($('div[class^=content-] div[class^=chat-]'), false, null, () => {
-      messageObserver.disconnect(); messageObserver = null; messageObserver = messageExpanded();
+      gMObserver.disconnect(); gMObserver = null; gMObserver = messageExpanded();
       setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
     });
   };
   $(window).on('load', () => {
     setTimeout(() => {
       let loaded = setUpObserver($('div[class^=base-] div[class^=content-]'), true, null, () => {
-        loaded.disconnect(); roomObserver = roomChange(); messageObserver = messageExpanded();
+        loaded.disconnect(); gRObserver = roomChange(); gMObserver = messageExpanded();
         setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
-        setUpObserver($('div[class^=base-] div[class^=content-]'), false, () => {
+        gForumObserver = setUpObserver($('div[class^=base-] div[class^=content-]'), false, () => {
           if (/discord\.com\/channels\/555541818771636254\//.test(window.location.href)) mturkCrowd = true; else mturkCrowd = false;
-          if (roomObserver) { roomObserver.disconnect(); roomObserver = null; }
+          if (gRObserver) { gRObserver.disconnect(); gRObserver = null; }
           if (mturkCrowd) {
             setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
-            roomObserver = roomChange(); messageObserver.disconnect(); messageObserver = null; messageObserver = messageExpanded();
+            gRObserver = roomChange(); gMObserver.disconnect(); gMObserver = null; gMObserver = messageExpanded();
           }
         });
       });
@@ -230,8 +229,8 @@ function discordApp() {
 }
 /** Works on forum pages with the name given. Sets up an event listener and removes older buttons.
  * @param  {string} name - The name of the forum this page is on. */
-function onForums(forum) {
-  let forumInfo = forumObj[forum];
+function onForums() {
+  let forumInfo = forumObj[gForumName];
   setTimeout( () => { $('.PCSpanButtons').remove(); if ($(`.div-pandacrazy`).length === 0) $('.pcm-buttonZone').show(); }, 1000);
   window.addEventListener('JR_message_pandacrazy', e => {
     if (e.detail && e.detail.hasOwnProperty('time') && e.detail.hasOwnProperty('command') && e.detail.hasOwnProperty('data')) {
@@ -239,20 +238,42 @@ function onForums(forum) {
       sendToExt(command, data, data.groupId, data.description, data.title, data.requesterId, data.requesterName, data.pay, data.duration, data.hitsAvailable);
     }
   }, false);
-  if (forumInfo.messages) findMessages(forumInfo.container + forumInfo.messages, forumInfo.message, forumInfo.postNumber, forum);
-  if ($(forumInfo.container).length) setUpObserver($(forumInfo.container), false, node => {
+  if (forumInfo.messages) findMessages(forumInfo.container + forumInfo.messages, forumInfo.message, forumInfo.postNumber, gForumName);
+  if ($(forumInfo.container).length) gForumObserver = setUpObserver($(forumInfo.container), false, node => {
     setTimeout( () => { if ($(`.div-pandacrazy`).length === 0) $('.pcm-buttonZone').show(); }, 1000);
-    if ($(node).find(forumInfo.message).length) findMessages($(node), forumInfo.message, forumInfo.postNumber, forum);
+    if ($(node).find(forumInfo.message).length) findMessages($(node), forumInfo.message, forumInfo.postNumber, gForumName);
   });
 }
-
-if (forumButtons) {
-  if (MTC_enabled && /mturkcrowd\.com/.test(locationUrl)) onForums('MTC');
-  else if (TV_enabled  && /turkerview\.com/.test(locationUrl)) onForums('TV');
-  else if (MTF_enabled && /mturkforum\.com/.test(locationUrl)) onForums('MTF');
-  else if (OHS_enabled && /ourhitstop\.com/.test(locationUrl)) onForums('OHS');
-  else if (slack_enabled && /slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) slack();
-  else if (discord_enabled && /discord\.com\/channels\//.test(locationUrl)) discordApp();
-  else if (discord_enabled && /discord\.com\/app/.test(locationUrl)) discordApp('@me');
-  else { console.log('unknown page'); }
+function detectForums(data) {
+  if (data && data.forumButtons) {
+    if (/mturkcrowd\.com/.test(locationUrl)) { gForumName = 'MTC'; gForumOptProp = 'MTCButtons'; if (data.MTCButtons) onForums(); }
+    else if (/turkerview\.com/.test(locationUrl)) { gForumName = 'TV'; gForumOptProp = 'TVButtons'; if (data.TVButtons) onForums(); }
+    else if (/mturkforum\.com/.test(locationUrl)) { gForumName = 'MTF'; gForumOptProp = 'MTFButtons'; if (data.MTFButtons) onForums(); }
+    else if (/ourhitstop\.com/.test(locationUrl)) { gForumName = 'OHS'; gForumOptProp = 'OHSButtons'; if (data.OHSButtons) onForums(); }
+    else if (/slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) { gForumName = 'slack'; gForumOptProp = 'SlackButtons'; if (data.SlackButtons) slack(); }
+    else if (/discord\.com\/channels\//.test(locationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp(); }
+    else if (/discord\.com\/app/.test(locationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp('@me'); }
+    else { console.log('unknown page'); }
+    gForumOptions = data;
+  }
 }
+
+chrome.runtime.sendMessage( {'command':'forumOptions', 'data':{}}, detectForums);
+
+chrome.runtime.onMessage.addListener( (request) => { console.log('--', request);
+  let command = request.command, data = request.data;
+  if (command && data) {
+    console.log('command',command);
+    if (command === 'optionsChange') {
+      console.log('gForumOptProp',gForumOptProp,gForumOptions[gForumOptProp],data[gForumOptProp]);
+      if (gForumOptions[gForumOptProp] !== data[gForumOptProp]) {
+        if (gForumObserver) gForumObserver.disconnect(); if (gSlackObserver) gSlackObserver.disconnect();
+        if (gRObserver) gRObserver.disconnect(); if (gMObserver) gMObserver.disconnect();
+        $('.pcm-buttonZone').remove(); $('.PCM_doneButtons').removeClass('PCM_doneButtons');
+        if (gForumName === 'slack' || gForumName === 'discord') location.reload();
+        else if (data[gForumOptProp] && gForumName) onForums();
+      }
+      gForumOptions = data;
+    }
+  }
+});

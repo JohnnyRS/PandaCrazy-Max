@@ -139,7 +139,7 @@ class MenuClass {
   createPandaQuickMenu() {
     let quickMenu = $(`<div class='btn-group w-100' role='group'></div>`).appendTo($(`.${this.quickMenu}:first`));
     let group = $(`<div class='btn-group'></div>`).appendTo(quickMenu);
-    this.addMenu(group, 'Pause', e => { if (bgPanda.pauseToggle()) $(e.target).html('Unpause'); else $(e.target).html('Pause'); }, 'Pause Timer.', 'pcm-btn-menu', 'pcm-bqPandaPause');
+    this.addMenu(group, 'Pause', e => { pandaUI.pauseToggle(); }, 'Pause Timer.', 'pcm-btn-menu', 'pcm-bqPandaPause');
     this.addMenu(group, 'Start Group', () => { groupings.showGroupingsModal(pandaUI); }, 'Start groupings', 'pcm-btn-menu', 'pcm-bqPandaStartGroup');
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.', 'pcm-btn-menu', 'pcm-bqPandaStopAll');
     this.addMenu(group, 'Add Job', () => { pandaUI.showJobAddModal(); }, 'Add a Panda or Search Job.', 'pcm-btn-menu', 'pcm-bqPandaAddJobs');

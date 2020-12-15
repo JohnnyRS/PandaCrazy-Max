@@ -163,6 +163,9 @@ class TheGroupings {
   /** Stops collecting the panda's from the group with the unique ID only if it's collecting right now. 
    * @param  {number} grouping - The unique number for the grouping to be stopped. */
   stopCollecting(grouping) { if (this.groupStatus[grouping].collecting) this.toggle(grouping, true); }
+  /** Starts or stops a group with the unique ID from an external script.
+   * @param {string} command - External Command  @param {number} groupUnique - Unique ID */
+  externalCommand(command, groupUnique) { if (groupUnique) {  } }
   /** Check all panda jobs for a grouping to make sure it's not deleted and remove from grouping if it is.
    * @param  {object} grouping - Grouping Unique Number  @param  {bool} [doToggle] - True if toggle group when all panda's collecting or not collecting. */
   goCheckGroup(grouping, doToggle=false) {
