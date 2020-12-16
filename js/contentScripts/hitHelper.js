@@ -1,9 +1,9 @@
 const locationUrl = window.location.href;
-let gParentUrl = document.referrer, gDocTitle = document.title, gAssignmentPage = false, gHitReturned = null, gInterval = null, gQueuePage = false;
+let gParentUrl = document.referrer, gDocTitle = document.title, gAssignmentPage = false, gHitReturned = false, gInterval = null, gQueuePage = false, gNextGID = null, gNextRID = null;
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
-let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false;
+let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null;
 let gNewQueue = false, gHolders = {}, gTabIds = {}, gPostionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = new Date().getTime();
-let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false, 'tabHitRestrict':true}
+let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false, 'tabHitRestrict':true}, gSubmits = [], gReturns = [];
 
 /** Detects if the extension was restarted or uninstalled. */
 function extensionLoad() { if (!chrome.app || typeof chrome.app.isInstalled === 'undefined') return false; else return true; }
@@ -17,14 +17,16 @@ function sendToExt(com, data, passHit, gId, desc='', title='', rId='', rName='',
     if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
     window.location.reload();
   } else if (passHit) {
-    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'hitData':hD});
+    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'hitData':hD, 'data':data});
   } else chrome.runtime.sendMessage({'command':com, 'data': data});
 }
 /** Parses the command string and sends message to extension.
  * @param  {string} command - Command  @param  {object} data    - The data object that was given from a message. */
 function parseCommands(command, data) {
   switch (command) {
-    case 'accepted': case 'returned': case 'submitted':
+    case 'accepted':
+      command = 'acceptedhit';
+    case 'returned': case 'submitted':
       sendToExt(command, data, true, data.groupId,_,_,_,_, data.pay,_,_, data.assignmentId, data.hitId);
       break;
     case 'externalrun': case 'externalstop': case 'externalpong':
@@ -52,9 +54,10 @@ function doLocalStorage() {
 }
 /** Prepares global variables from local chrome storage. Starts storage listener. */
 function prepareGlobals() {
+  if ($('.mturk-alert-danger').text().includes('This HIT is no longer available')) console.log('Old HIT error for', locationUrl);
   chrome.storage.local.get(null, value => {
     for (const key of Object.keys(value)) {
-      if (key === 'PCM_returnedHit') gHitReturned = value.PCM_returnedHit.assignmentId;
+      if (key === 'PCM_returnedHit') { setRememberIds('return', value.PCM_returnedHit.assignmentId); gHitReturned = true; }
       else if (key.includes('PCM_t_')) { let obj = value[key]; gTabIds[obj.unique] = obj; doIds(obj.assignmentId, obj.unique); }
     }
     gIdsDone = true;
@@ -130,22 +133,22 @@ function resetTitle(original=false) {
 /** Recursive calls if Ids object is not completed. Will find the next HIT not in other tabs from the queue.
  * @param  {string} [groupID] - Group ID to get next URL.
  * @return {string}       - The task URL of HIT or null if not found. */
-function nextHit(groupID=null, RequesterID=null) {
+function nextHit() {
   let theIds = (Object.keys(gIdsSession).length) ? gIdsSession : (gIdsDone) ? gIds : null;
   if (theIds) {
     let foundHit = null;
     for (const hit of gQueueResults) {
       if (hit.time_to_deadline_in_seconds < 15) continue; // Queue seems to be about 5 seconds behind and allows 5 seconds for loading of HIT. Allows 5 seconds for user to do HIT.
       if (gAssignedHit === hit.assignment_id) continue; // Skip current HIT.
-      if (gHitSubmitted && gHitSubmitted === hit.assignment_id) continue; // Skip submitted HIT.
-      if (gHitReturned && gHitReturned === hit.assignment_id) continue; // Skip returned HIT.
+      if (gSubmits.length && gSubmits.includes(hit.assignment_id)) continue; // Skip submitted HIT.
+      if (gReturns.length && gReturns.includes(hit.assignment_id)) continue; // Skip returned HIT.
       if (!theIds.hasOwnProperty(hit.assignment_id)) {
-        if (gSessionData.gidNext) { if (gPrevHit && gPrevHit.groupId === hit.project.hit_set_id) { foundHit = hit; break; }}
-        else if (gSessionData.ridNext) { if (gPrevHit && gPrevHit.reqId === hit.project.requester_id) { foundHit = hit; break; }}
+        if (gSessionData.gidNext) { if (gNextGID === hit.project.hit_set_id) { foundHit = hit; break; }}
+        else if (gSessionData.ridNext) { if (gNextRID === hit.project.requester_id) { foundHit = hit; break; }}
         else { foundHit = hit; break; }
       }
     }
-    if (foundHit) return foundHit.task_url; else return null;
+    if (foundHit) return foundHit.task_url.replace('&ref=w_pl_prvw', '&from_queue=true'); else return null;
   } else return null;
 }
 /** Recursive calls if queue data is being loaded at same time. Will copy new queue data to global variable. Resets title to show queue stats if allowed.
@@ -170,6 +173,11 @@ function checkQueue(queueResults) {
     window.location.replace('https://worker.mturk.com' + task_url.replace('&ref=w_pl_prvw','&from_queue=true'))
   }
 }
+function setRememberIds(arrName, id) {
+  let arr = (arrName === 'submit') ? gSubmits : gReturns, sessValue = (arrName === 'submit') ? 'PCM_hitSubmits' : 'PCM_hitReturns';
+  if (!arr.includes(id)) { if (arr.length > 2) arr.shift(); arr.push(id); }
+  sessionStorage.setItem(sessValue,JSON.stringify(arr));
+}
 /** When chrome storage detects a change then this function will be called to find out what has changed and do whatever it needs to do.
  * @param {object} changes - Changes Object  @param {string} name - Storage Name Changed */
 function listenChanged(changes, name) {
@@ -179,22 +187,16 @@ function listenChanged(changes, name) {
       if (key === 'PCM_queueData') {
         queueData(newVal);
         if (gIframeAtt) localStorage.setItem('JR_QUEUE_StoreData',JSON.stringify( {'date': new Date().getTime(), 'ScriptID': '1', 'queue':gQueueResults} ));
-        else checkQueue(gQueueResults); 
-      }
+        else checkQueue(gQueueResults); }
       else if (key === 'PCM_running') { gPcmRunning = newVal; document.title = gDocTitle; }
       else if (key === 'PCM_returnClicked') { // Detects a return cancelled from a prompt dialog due to a script.
         if (newVal) {
           let thisAssignedID = newVal.assignmentId;
           if (thisAssignedID && thisAssignedID === gAssignedHit) { if (returnBtn) { setTimeout( () => { returnBtn = false; }, 1000); }}
-        }
-      }
-      else if (key === 'PCM_returnedHit') { if (newVal) { gHitReturned = newVal.assignmentId; }}
-      else if (key === 'PCM_submittedHit') { if (newVal) { gHitSubmitted = newVal.assignmentId; }}
-      // else if (key === 'PCM_acceptedHit') { if (newVal) console.log('-Accepted HIT', newVal.assignmentId); }
-      // else if (key.includes('PCM_tHit_')) { if (newVal && newVal.unique !== gTabUnique) { doIds(newVal.assignmentId); } }
+        }}
+      else if (key === 'PCM_returnedHit') { if (newVal) { setRememberIds('return', newVal.assignmentId); }}
       else if (key.includes('PCM_t_')) {
-        if (!newVal && oldVal) doIds(oldVal.assignmentId, oldVal.unique, true); else if (newVal) doIds(newVal.assignmentId, newVal.unique);
-      }
+        if (!newVal && oldVal) doIds(oldVal.assignmentId, oldVal.unique, true); else if (newVal) doIds(newVal.assignmentId, newVal.unique); }
       else if (key === 'PCM_externalMessage') { console.log('got a message to send to an external script', changes[key].newValue); }
     }
   }
@@ -208,8 +210,8 @@ function loadSessionData() {
   gHolders = JSON.parse(sessionStorage.getItem('PCM_holders')); sessionStorage.removeItem('PCM_holders');
   gIdsSession = JSON.parse(sessionStorage.getItem('PCM_gIds')) || {}; if (Object.keys(gIdsSession).length) { sessionStorage.removeItem('PCM_gIds'); }
   gSessionData = JSON.parse(sessionStorage.getItem('PCM_sessionValues')) || gSessionDefault;
-  gHitSubmitted = gHitSubmitted || sessionStorage.getItem('PCM_hitSubmitted') || null; sessionStorage.removeItem('PCM_hitSubmitted');
-  gHitReturned = gHitReturned || sessionStorage.getItem('PCM_hitReturned') || null; sessionStorage.removeItem('PCM_hitReturned');
+  gNextGID = sessionStorage.getItem('PCM_nextGroupID') || null; gNextRID = sessionStorage.getItem('PCM_nextReqID') || null;
+  gSubmits = JSON.parse(sessionStorage.getItem('PCM_hitSubmits')) || []; gReturns = JSON.parse(sessionStorage.getItem('PCM_hitReturns')) || [];
   if (gQueuePage && gSessionData.monitorNext) gMonitorOn = true;
   chrome.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData});
 }
@@ -278,7 +280,7 @@ function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits'
 function checkSubmitted() {
   let submitText1 = `The HIT has been successfully submitted`, submitText2 = `HIT Submitted`, alertContent = $(`.mturk-alert-content`).text();
   if (gPrevHit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) {
-    gHitSubmitted = gPrevHit.assignmentId;
+    gHitSubmitted = true; setRememberIds('submit', gPrevHit.assignmentId);
     chrome.storage.local.set({'PCM_submittedHit':{'assignmentId':gPrevHit.assignmentId, 'groupId':gPrevHit.groupId, 'taskId':gPrevHit.taskId, 'unique':new Date().getTime()}});
     sendToExt('submitted', gPrevHit, true, gPrevHit.groupId,_,_,_,_, gPrevHit.pay,_,_, gPrevHit.assignmentId, gPrevHit.taskId);
   }
@@ -341,7 +343,7 @@ function addCommands() {
 /** Parses a URL with no assignment ID attached so must be a preview. */
 function doPreview() {
   console.log('doPreview page');
-  resetIDNext(); prevAssigned(); oldPCRemoval(); checkSubmitted(); noMoreHits();
+  resetIDNext(); oldPCRemoval(); noMoreHits();
   let span = addButtons('pcm-buttonZonePreview no-wrap', 'pcm-buttonPreview'), [, groupId] = locationUrl.match(/\/projects\/([^\/]*)\/tasks.*/);
   span.find('.pcm-button').css({'font-size':'9px','line-height':'8px','padding':'1px','color':'black'});
   $('.project-detail-bar:first .task-project-title:first').append(span);
@@ -350,35 +352,34 @@ function doPreview() {
 /** Parses a URL with an assignment ID attached and detects accepted HIT. Also sets up local chrome storage variables for current HIT in tab. */
 function doAssignment() {
   console.log('doAssignment page');
-  gPostionsTitle = true; prevAssigned(); oldPCRemoval(); checkSubmitted(); noMoreHits();
+  gPostionsTitle = true; oldPCRemoval(); noMoreHits();
   gPay = gHitData.monetaryReward.amountInDollars; gHitData.task_id = gTaskId; gHitData.assignment_id = gAssignedHit; gHitData.task_url = locationUrl;
-  let requesterUrl = $(`.project-detail-bar a[href*='/requesters/']`).attr('href'), rid = requesterUrl.split('/')[2], tabUnique = `PCM_t_${gTabUnique}`;
+  let requesterUrl = $(`.project-detail-bar a[href*='/requesters/']`).attr('href'), tabUnique = `PCM_t_${gTabUnique}`; gReqId = requesterUrl.split('/')[2];
   let acceptedId = sessionStorage.getItem('PCM_acceptedBtn'); sessionStorage.removeItem('PCM_acceptedBtn'), tabHit = `PCM_tHit_${gAssignedHit}`;
   if (acceptedId && acceptedId === gGroupId) {
     chrome.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
-    sendToExt('accepted', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, rid, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
+    sendToExt('acceptedhit', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, gReqId, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
   }
   if (gHolders) {
     chrome.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
-    sendToExt('accepted', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, rid, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
+    sendToExt('acceptedhit', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, gReqId, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
   }
   if (gSessionData.tabHitRestrict && gIdsDone && gIds[gAssignedHit]) {
     let newUrl = nextHit(); gIds[gAssignedHit].count++;
-    if (gHitSubmitted) sessionStorage.setItem('PCM_hitSubmitted', gHitSubmitted); if (gHitReturned) sessionStorage.setItem('PCM_hitReturned', gHitReturned);
     if (newUrl) window.location.replace('https://worker.mturk.com' + newUrl);
     else if (gSessionData.monitorNext) window.location.replace('https://worker.mturk.com/tasks?JRPC=monitornext');
     else window.location.replace('https://worker.mturk.com/tasks');
-  } else if (gSessionData.gidNext && gPrevHit && gGroupId !== gPrevHit.groupId) {
-    let newUrl = nextHit(gGroupId);
+  } else if (gSessionData.gidNext && gPrevHit && gGroupId !== gNextGID) {
+    let newUrl = nextHit();
     if (!newUrl) { resetIDNext(); window.location.replace('https://worker.mturk.com/tasks'); } else window.location.replace('https://worker.mturk.com' + newUrl);
-  } else if (gSessionData.ridNext && gPrevHit && rid !== gPrevHit.reqId) {
-    let newUrl = nextHit(_, rid);
+  } else if (gSessionData.ridNext && gPrevHit && gReqId !== gNextRID) {
+    let newUrl = nextHit();
     if (!newUrl) { resetIDNext(); window.location.replace('https://worker.mturk.com/tasks'); } else window.location.replace('https://worker.mturk.com' + newUrl);
   } else {
     chrome.storage.local.set({[tabUnique]:{'unique':gTabUnique, 'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
     chrome.storage.local.set({[tabHit]:{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
   }
-  sessionStorage.setItem('PCM_hitDoing',JSON.stringify({'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'pay':gHitData.monetaryReward.amountInDollars, 'reqId':rid}));
+  sessionStorage.setItem('PCM_hitDoing',JSON.stringify({'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'pay':gHitData.monetaryReward.amountInDollars, 'reqId':gReqId}));
 
   let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)'), buttons = addButtons();
   if (detailArea.find('div').length === 0) detailArea.append(buttons);
@@ -388,7 +389,7 @@ function doAssignment() {
 /** Adds buttons to the HITs listed pages. Removes any old buttons too. */
 function hitList() {
   console.log('HITList page');
-  resetIDNext(); prevAssigned(); checkSubmitted(); noMoreHits();
+  resetIDNext(); noMoreHits();
   $('.hit-set-table .hit-set-table-row').click( e => {
     let tableRow = $(e.target).closest('.table-row');
     setTimeout( () => {
@@ -404,7 +405,7 @@ function hitList() {
     },0);
   });
   setHoldData();
-  if (gHitSubmitted && gSessionData.monitorNext) window.location.replace('https://worker.mturk.com/tasks?JRPC=monitornext');
+  if ((gHitSubmitted || gHitReturned) && gSessionData.monitorNext) window.location.replace('https://worker.mturk.com/tasks?JRPC=monitornext');
 }
 /** Used when user goes to the monitor page and sets up the monitor queue text on page. */
 function monitorNext() { console.log('doing monitoring');
@@ -432,6 +433,7 @@ chrome.storage.local.get('PCM_running', value => {
   cleanLocalStorage(); setBeforeUnload(); checkExtension();
   // Wait for page and jquery to load before doing anything.
   $( () => {
+    prevAssigned(); checkSubmitted();
     if (gPcmRunning) { // Make sure Panda Crazy extension is running.
       if (/requesters\/PandaCrazyMax/.test(locationUrl) || /worker\.mturk\.com\/tasks\?PandaCrazyMax/.test(locationUrl)) {} // pcMAX_listener();
       else {
@@ -465,6 +467,9 @@ chrome.storage.local.get('PCM_running', value => {
 chrome.runtime.onMessage.addListener( (request) => {
   let command = request.command, data = request.data;
   if (command && data) {
-    if (command === 'optionsChange') { sessionStorage.setItem('PCM_sessionValues', JSON.stringify(data)); gSessionData = data; }
+    if (command === 'optionsChange') {
+      sessionStorage.setItem('PCM_sessionValues', JSON.stringify(data)); gSessionData = data;
+      sessionStorage.setItem('PCM_nextGroupID', gGroupId); sessionStorage.setItem('PCM_nextReqID', gReqId);
+    }
   }
 });

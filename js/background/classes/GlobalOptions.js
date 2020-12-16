@@ -286,17 +286,21 @@ class PandaGOptions {
       helperOptionsChanged(this.helpers, 'optionsChange');
     });
   }
-  mturkQueueOptions(appendHere) { console.log('mturkQueueOptions')
-    createCheckBox(appendHere, 'Monitor at Queue End?', '', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext,_,_, e => {
+  mturkQueueOptions(appendHere) {
+    createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext,_,_, e => {
       this.sessionQueue.monitorNext = !this.sessionQueue.monitorNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
     });
   }
-  mturkAssignedOptions(appendHere) { console.log('mturkAssignedOptions')
-    createCheckBox(appendHere, 'Same GroupID Next?', '', this.sessionQueue.gidNext, this.sessionQueue.gidNext,_,_, e => {
-      this.sessionQueue.gidNext = !this.sessionQueue.gidNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+  mturkAssignedOptions(appendHere) {
+    createCheckBox(appendHere, 'Same GroupID Next?', 'pcm-sameGIDHit', this.sessionQueue.gidNext, this.sessionQueue.gidNext,_,_, e => {
+      this.sessionQueue.gidNext = !this.sessionQueue.gidNext; this.sessionQueue.ridNext = false;
+      $(e.target).closest('.pcm-addedSection').find('#pcm-sameRIDHit').prop('checked',false);
+      helperOptionsChanged(this.sessionQueue, 'optionsChange');
     });
-    createCheckBox(appendHere, 'Same RequesterID Next?', '', this.sessionQueue.ridNext, this.sessionQueue.ridNext,_,_, e => {
-      this.sessionQueue.ridNext = !this.sessionQueue.ridNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+    createCheckBox(appendHere, 'Same RequesterID Next?', 'pcm-sameRIDHit', this.sessionQueue.ridNext, this.sessionQueue.ridNext,_,_, e => {
+      this.sessionQueue.ridNext = !this.sessionQueue.ridNext; this.sessionQueue.gidNext = false;
+      $(e.target).closest('.pcm-addedSection').find('#pcm-sameGIDHit').prop('checked',false);
+      helperOptionsChanged(this.sessionQueue, 'optionsChange');
     });
   }
   helperOptions(url) {
