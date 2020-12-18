@@ -71,7 +71,6 @@ class PandaGOptions {
       'DiscordButtons':true,
       'SlackButtons':true,
       'mturkPageButtons':true,
-      'queueCommands':true,
       'tabUniqueHits':true,
     }
     this.search = {}
@@ -90,7 +89,7 @@ class PandaGOptions {
       'blockedGids':'',
       'blockedRids':'',
     }
-    this.sessionQueue = {'monitorNext':false, 'gidNext':false, 'ridNext':false, 'tabHitRestrict':true}
+    this.sessionQueue = {};
     this.captchaCounter = 0;
     this.lastQueueAlert = -1;
     this.timerUsed = 'mainTimer';
@@ -180,7 +179,9 @@ class PandaGOptions {
   updateCaptcha() { this.captchaCounter = (this.general.captchaAt > this.captchaCounter) ? this.captchaCounter + 1 : 0; return this.captchaCounter; }
   /** Resets the captcha counter back down to 0. */
   resetCaptcha() { this.captchaCounter = 0; }
-  /** Checks to see if it's ok to sound the queue alarm or not.
+  /** Resets any tooltip helpers that should be disabled if helptooltips option is disabled or shown if enabled. */
+  resetToolTips() { if (extPandaUI) extPandaUI.resetToolTips(this.general.showHelpTooltips);  }
+  /** Checks to see if it's OK to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
    * @return {bool}           - True if the queue alert should be sounded. */
   checkQueueAlert(seconds) {
@@ -279,33 +280,68 @@ class PandaGOptions {
   /** Sends back the helper options object.
    * @return  {object} - Helpers Options */
   theHelperOptions() { return this.helpers; }
+  /** Updates the current session queue data options.
+   * @param {object} data - Session Options */
   theSessionQueue(data) { this.sessionQueue = data; }
+  /** Adds the Panda Crazy Buttons option to the element provided to forum pages and the property for the helper option to use.
+   * @param {object} appendHere - Jquery Object  @param  {string} prop - Property Name to Change */
   popupForumOptions(appendHere, prop) {
-    createCheckBox(appendHere, 'Panda Crazy Buttons', '', this.helpers[prop], this.helpers[prop],_,_, e => {
+    createCheckBox(appendHere, 'Panda Crazy Buttons', '', this.helpers[prop], this.helpers[prop], ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', e => {
       this.helpers[prop] = $(e.target).prop('checked'); this.update(false);
-      helperOptionsChanged(this.helpers, 'optionsChange');
+      helperSendCommands(this.helpers, 'optionsChange');
     });
   }
+  /** Adds options to MTURK pages on the element provided using helper and session options from current page.
+   * @param {object} appendHere - Jquery Object */
   mturkQueueOptions(appendHere) {
-    createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext,_,_, e => {
-      this.sessionQueue.monitorNext = !this.sessionQueue.monitorNext; helperOptionsChanged(this.sessionQueue, 'optionsChange');
+    createCheckBox(appendHere, 'Panda Crazy Buttons', 'pcm-mturkButtons', this.helpers.mturkPageButtons, this.helpers.mturkPageButtons, ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', () => {
+      this.helpers.mturkPageButtons = !this.helpers.mturkPageButtons; this.update(false); helperSendCommands(this.helpers, 'globalOptions');
+    });
+    createCheckBox(appendHere, 'Unique Tab Hits Restriction', 'pcm-restrictTabUnique', this.helpers.tabUniqueHits, this.helpers.tabUniqueHits, ' pcm-tooltipData', ' pcm-tooltipData', 'Allow only unique HITs in each tab.', () => {
+      this.helpers.tabUniqueHits = !this.helpers.tabUniqueHits; this.update(false); helperSendCommands(this.helpers, 'globalOptions');
+    });
+    $(`<hr class='pcm-sessionVarsSplit'><div class='pcm-sessionOptText'>Session Options:</div>`).appendTo(appendHere);
+    createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext, ' pcm-tooltipData', ' pcm-tooltipData', 'Monitor Queue automatically once you finish HITs in your queue.', () => {
+      this.sessionQueue.monitorNext = !this.sessionQueue.monitorNext; helperSendCommands(this.sessionQueue, 'optionsChange');
     });
   }
+  /** Adds options to HIT pages on the element provided using session options from current page.
+   * @param {object} appendHere - Jquery Object */
   mturkAssignedOptions(appendHere) {
-    createCheckBox(appendHere, 'Same GroupID Next?', 'pcm-sameGIDHit', this.sessionQueue.gidNext, this.sessionQueue.gidNext,_,_, e => {
+    createCheckBox(appendHere, 'Same GroupID Next?', 'pcm-sameGIDHit', this.sessionQueue.gidNext, this.sessionQueue.gidNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue with the same group ID as this HIT.', e => {
       this.sessionQueue.gidNext = !this.sessionQueue.gidNext; this.sessionQueue.ridNext = false;
       $(e.target).closest('.pcm-addedSection').find('#pcm-sameRIDHit').prop('checked',false);
-      helperOptionsChanged(this.sessionQueue, 'optionsChange');
+      helperSendCommands(this.sessionQueue, 'optionsChange');
     });
-    createCheckBox(appendHere, 'Same RequesterID Next?', 'pcm-sameRIDHit', this.sessionQueue.ridNext, this.sessionQueue.ridNext,_,_, e => {
+    createCheckBox(appendHere, 'Same RequesterID Next?', 'pcm-sameRIDHit', this.sessionQueue.ridNext, this.sessionQueue.ridNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue from the same Requester ID as this HIT.', e => {
       this.sessionQueue.ridNext = !this.sessionQueue.ridNext; this.sessionQueue.gidNext = false;
       $(e.target).closest('.pcm-addedSection').find('#pcm-sameGIDHit').prop('checked',false);
-      helperOptionsChanged(this.sessionQueue, 'optionsChange');
+      helperSendCommands(this.sessionQueue, 'optionsChange');
     });
   }
-  helperOptions(url) {
-    let df = $(document.createDocumentFragment());
-    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) this.mturkQueueOptions(df);
+  /**
+   * Adds the go to queue position link using the number of HITs in queue and a function to send any commmands needed to popup page.
+   * @param {object} appendHere - Jquery Object  @param  {number} queueSize - Number of HITs in Queue  @param  {function} popupSend - Send To Popup Function */
+  mturkQueueLinks(appendHere, queueSize, popupSend=null) {
+    if (queueSize > 0) {
+      let gotoLink = $(`<div class='pcm-goSelectDiv'>Go To Queue Position: </div>`).appendTo(appendHere);
+      let sel = $(`<select></select>`).change( e => {
+        let value = $(e.target).val(), position = (value.length <= 2) ? value : '1', goUrl = null;
+        if (value === 'Last') goUrl = 'https://worker.mturk.com/tasks?JRPC=lasthit'; else if (value) goUrl = `https://worker.mturk.com/tasks?JRPC=gohit${position}`;
+        if (goUrl) helperSendCommands({'url':goUrl}, 'newUrl', popupSend);
+      }).appendTo(gotoLink);
+      sel.append($('<option>').attr('value','---').text('---'));
+      sel.append($('<option>').attr('value','First').text('First'));
+      for (let i=2; i<queueSize; i++) { sel.append($('<option>').attr('value',i).text(i)); }
+      sel.append($('<option>').attr('value','Last').text('Last'));
+      gotoLink = null; sel = null;
+    }
+  }
+  /** Figures out which options should be shown on the popup page from the URL and then uses the queue size and popup function.
+   * @param {string} url - Page URL  @param {number} queueSize - Number of HITs in Queue  @param {function} popupSend Send To Popup Function */
+  helperOptions(url, queueSize, popupSend=null) {
+    let df = $(document.createDocumentFragment()), onMturk = false;
+    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) { onMturk = true; this.mturkQueueOptions(df, popupSend); }
     if (/\/\/[^/]*\/projects\/[^/]*\/tasks\/.*?assignment_id/.test(url)) this.mturkAssignedOptions(df);
     else if (/\/\/[^/]*mturkcrowd.com.*$/.test(url)) this.popupForumOptions(df, 'MTCButtons');
     else if (/\/\/[^/]*turkerview.com.*$/.test(url)) this.popupForumOptions(df, 'TVButtons');
@@ -313,6 +349,7 @@ class PandaGOptions {
     else if (/\/\/[^/]*ourhitstop.com.*$/.test(url)) this.popupForumOptions(df, 'OHSButtons');
     else if (/\/\/[^/]*slack.com.*$/.test(url)) this.popupForumOptions(df, 'SlackButtons');
     else if (/\/\/[^/]*discord.com.*$/.test(url)) this.popupForumOptions(df, 'DiscordButtons');
-    if (df[0].childElementCount === 0 ) return null; else return df;
+    if (onMturk) this.mturkQueueLinks(df, queueSize, popupSend);
+    return df;
   }
 }

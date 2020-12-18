@@ -138,15 +138,14 @@ html, body { height: 100%; }
 .pcm-addToSelect, .pcm-removeFromSelect { background-color: #007bff; border-color: #007bff; color: white; margin-left: 0.25rem; }
 .pcm-autoCollectOptions { text-align: left; padding-left: 3rem; color: aqua; }
 .pcm-myPrimary { color: #007bff; text-align: center; }
-.pcm-myPrimary.btn { background-color: #007bff; border-color: #007bff; color: white; }
+.pcm-myPrimary.btn { background-color: #007bff; border-color: #007bff; color: white; padding: 1px 16px; }
 .pcm-myInfo { color: aqua; text-align: center; padding-top: 3px; }
 .pcm-myWarning { color: #ffc107; text-align: center; }
 .pcm-helpPage { background-color: black; }
 .pcm-myCenter { text-align: center; }
 .pcm-popupPage { width: 210px; background-color: midnightblue; height: initial; border: 0; padding-bottom: 15px; }
 .pcm-popupPage .pcm-horizontalRow { border-top: 2px solid #17a2b8; margin: 2px 0 4px 0; }
-.pcm-startPCM, .pcm-startPCMSearch { padding-top: 8px; padding-bottom: 16px; text-align: center; }
-.pcm-doHelp { padding-top: 8px; padding-bottom: 16px; text-align: center; }
+.pcm-startPCM, .pcm-startPCMSearch, .pcm-doHelp { padding: 8px 0; text-align: center; }
 .pcm-muteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
 .pcm-deleteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
 .pcm-createGidJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
@@ -165,6 +164,15 @@ html, body { height: 100%; }
 .pcm-groupingDelete { background-color: #007bff; border-color: #007bff; color: white; }
 .pcm-addedSection { color:lemonchiffon; border: 1px solid wheat; margin: 5px 10px; padding:8px 4px 4px 4px; background-color: navy; font-size:0.68em; }
 .pcm-addedSection input { height: 10px; }
+.pcm-addedSection hr { margin: 8px 0; border-color: aquamarine; }
+.pcm-addedSection hr.pcm-sessionVarsSplit { margin: 2px 0; }
+.pcm-addedSection .pcm-sessionOptText { text-align: center; color: darksalmon; padding-bottom:2px; }
+.pcm-newVersionUpdate { text-align: center; font-size: 0.9em; padding-bottom: 8px; }
+.pcm-newVersionUpdate button { background-color: #007bff; border-color: #007bff; color: white; }
+.pcm-goLink { color: lavender; text-decoration: underline; cursor: pointer; display: block; }
+.pcm-goLink:hover { color: orangered; }
+.pcm-goLinkDiv { text-align: center; }
+.pcm-goSelectDiv { text-align: center; margin-top:2px; }
 
 /* PandaUI Targeted Styles. */
 #pcm-pandaUI .pcm-menuRow1 { line-height: 0px; }
@@ -285,6 +293,8 @@ html, body { height: 100%; }
 .pcm-modalTriggeredhit .btn.pcm-hitBlocked { background-color: #680e0e; border-color: #680e0e; color: #d7e0d1; }
 #pcm-blockingTabs .tab-pane { padding-bottom: 12px; }
 .pcm-groupingInstantly input { margin: 0 5px; }
+.pcm-popupPage .tooltip { font-size: 14px; }
+.pcm-popupPage .tooltip-inner { min-width:90px; max-width:180px; }
 
 /* Content styles to change text for buttons and stats. */
 #pcm-searchNow.pcm-searchingOn::before { content: var(--pcm-searchingOn); }

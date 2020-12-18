@@ -40,8 +40,8 @@ class MenuClass {
    * @param  {object} appendHere - Jquery Element  @param  {string} label       - Menu label  @param  {function} btnFunc - Button Function
    * @param  {string} [tooltip]  - Tooltip String  @param  {string} [className] - Class name  @param  {string} [idName]    - Id Name */
   addMenu(appendHere, label, btnFunc, tooltip='', className='', idName='') {
-    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' title='${tooltip}'` : ``;
-    let idAdd = (idName !== '') ? `id='${idName}' ` : '', classAdd = (tooltip !== '') ? 'pcm-tooltipData ' : '';
+    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``;
+    let idAdd = (idName !== '') ? `id='${idName}' ` : '', classAdd = (tooltip !== '') ? 'pcm-tooltipData pcm-tooltipHelper' : '';
     let theButton = $(`<button type='button' ${idAdd}class='${classAdd} ${className}'${addtip}></button>`).data('label',label).click( e => btnFunc.apply(this, [e]) ).appendTo(appendHere);
     let cssVar = getCSSVar(idName.replace('pcm-', ''), label); theButton.html(cssVar); theButton = null;
   }
@@ -51,7 +51,7 @@ class MenuClass {
    * @param  {string} [tooltip]     - CSS style           @param  {string} [buttonId] - CSS style        @param  {string} [dropdownClass] - CSS style
    * @param  {string} [noClick]     - CSS style           @param  {string} [onClosed] - CSS style */
   addSubMenu(appendHere, label, theClass, btnGroupClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
-    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
+    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
     let btnGroup = $(`<div class='btn-group ${btnGroupClass}'${addId}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';
     let classAdd = (tooltip !== '') ? 'pcm-tooltipData' : '';
     let theButton = $(`<button type='button' ${idAdd}class='${theClass} ${classAdd} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown'${addtip} aria-haspopup='true' aria-expanded='false'></button>`).data('label',label).append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
@@ -60,7 +60,7 @@ class MenuClass {
     if (noClick) dropdownMenu.click( e => { e.stopPropagation(); } );
     if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', () => { onClosed(); });
     dropdownInfo.forEach( info => {
-      const addtip = (info.tooltip && info.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' title='${info.tooltip}'` : ``;
+      const addtip = (info.tooltip && info.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' data-original-title='${info.tooltip}'` : ``;
       if (info.type === 'item') {
         const classAdd = (info.class) ? ` ${info.class}` : '';
         const item = $(`<a class='dropdown-item${classAdd}' href='#' ${addtip}>${info.label}</a>`).appendTo(dropdownMenu);

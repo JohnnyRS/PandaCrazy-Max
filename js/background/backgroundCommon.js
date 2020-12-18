@@ -1,6 +1,6 @@
-let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false;
+let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newVersion = null;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = {'url':'about:blank', 'tabId':null};
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null;
 chrome.storage.local.set({'PCM_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
@@ -11,9 +11,7 @@ function checkUIConnects() {
 /** Cleans the chrome local storage of all created data from extension. Used at start and when all pages are closed. */
 function cleanLocalStorage() {
   if (chrome.storage) {
-    chrome.storage.local.get(null, (values) => {
-      for (const key of Object.keys(values)) { if (key.includes('PCM_')) chrome.storage.local.remove(key); }
-    })
+    chrome.storage.local.get(null, values => { for (const key of Object.keys(values)) { if (key.includes('PCM_')) chrome.storage.local.remove(key); } });
     chrome.storage.local.set({'PCM_running':false});
   }
 }
@@ -23,10 +21,11 @@ function removeAll() {
   myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null; pandaTimer = null; queueTimer = null; searchTimer = null; dbError = null;
   cleanLocalStorage();
 }
+/** Importing data so make sure searchUI gets refreshed if it was opened also.  */
 function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
 /** Function to set up a search UI variable for the background and returns search class.
- * @param {object} classUI - Object variable for the search UI or null if UI is closing.
- * @return {object}        - Returns the search class in background for easier access. */
+ * @param {class} classUI - Object variable for the search UI or null if UI is closing.
+ * @return {class}        - Returns the search class in background for easier access. */
 function gSetSearchUI(classUI) {
   extSearchUI = classUI;
   if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); myPanda.searchUIConnect(false); MyAlarms.setAudioClass(null, 'search'); searchUIOpened = false; }
@@ -36,43 +35,51 @@ function gSetSearchUI(classUI) {
 }
 /** Function to set up a panda UI variable for the background use. Also checks on the status of the panda UI to see if it's closing.
  * @param {pandaUI} classUI - Object variable for the panda UI or null if UI is closing. */
-async function gSetPandaUI(classUI) {
+function gSetPandaUI(classUI) {
   if (classUI === null) { myPanda.removeAll(true); MyAlarms.setAudioClass(null, 'panda'); pandaUIOpened = false; }
   extPandaUI = classUI; checkUIConnects();
 }
-function themeChanged() {
-  if (extSearchUI) extSearchUI.themeChanged(true);
-}
+/** Theme has been changed so tell searchUI about it so it can change it's theme also. */
+function themeChanged() { if (extSearchUI) extSearchUI.themeChanged(true); }
 /** Sends back the panda class object so pages can use it easily.
- * @return - Returns the panda class object from the external page. */
+ * @return {class} - Returns the panda class object from the external page. */
 function gGetPanda() { return myPanda; }
 /** Sends back the queue class object so pages can use it easily.
- * @return - Returns the queue class object from the external page. */
+ * @return {class} - Returns the queue class object from the external page. */
 function gGetQueue() { return myQueue; }
+/** Sends back the dashboard class object so pages can use it easily.
+ * @return {class} - Returns the dashboard class object from the external page. */
 function gGetDash() { return myDash; }
 /** Sends back the search class object so pages can use it easily.
- * @return - Returns the search class object from the external page. */
+ * @return {class} - Returns the search class object from the external page. */
 function gGetSearch() { return mySearch; }
 /** Sends back the history class object so pages can use it easily.
- * @return - Returns the history class object from the external page. */
+ * @return {class} - Returns the history class object from the external page. */
 function gGetHistory() { return myHistory; }
-/** Checks to make sure the database is fully opened and if not it will keep checking for 30 seconds.
- * @return {promise} - Returns true if database opened. Rejects if timedout waiting for an open database. */
+/** Sends back the MYDB class object so pages can use it easily.
+ * @return {class} - Returns the MYDB class object from the external page. */
 function gGetMYDB() { return MYDB; }
+/** Sends back the options class object so pages can use it easily.
+ * @return {class} - Returns the options class object from the external page. */
 function gGetOptions() { return MyOptions; }
+/** Sets up the audio class to the alarms class and then returns the alarms class.
+ * @param  {class} audioClass - Audio Class  @param  {object} ui - User Interface
+ * @return {class}            - Returns the alarms class. */
 function gGetAlarms(audioClass, ui) { MyAlarms.setAudioClass(audioClass, ui); return MyAlarms; }
-async function gCheckPandaDB() { new Promise(resolve => {
+/** Checks for the history and panda database to be set. If not ready then recursively calls 50 times until the databases are ready.
+ * @async - to wait for recursive calls to send a promised return. */
+async function gCheckPandaDB() { new Promise( resolve => {
     let counting = 0;
     checkDBs = () => {
       counting++;
-      if (myHistory.db && myPanda.db) return true;
-      else if (counting > 50) return true;
-      else setTimeout( checkDBs(), 20 );
+      if (myHistory.db && myPanda.db) return true; else if (counting > 50) return false; else setTimeout( checkDBs(), 20 );
     }
     resolve(checkDBs());
   });
 }
-// Open the panda and search DB and sets a good variable or sets database error variable.
+/** Open the panda and search DB and sets a good variable or sets database error variable.
+ * @async - To wait for databases to be opened and data loaded.
+ * @param  {bool} [panda] - Should panda be prepared?  @param  {bool} [search] - Should search be prepared?  @param  {string} [version] - Extension Version */
 async function prepareToOpen(panda=null, search=null, version=null) {
   let historyWipe = false; if (compareversion(version, '0.8.7')) historyWipe = true; // For older versions of history.
   if (!panda && !search) return; else if (panda) pandaOpening = true; else if (search) searchOpening = true;
@@ -105,7 +112,12 @@ async function prepareToOpen(panda=null, search=null, version=null) {
     }, rejected => { dbError = rejected; console.error(rejected); } );
   }, rejected => { dbError = rejected; console.error(rejected); } );
 }
-function pandaUILoaded() { if (savedSearchUI) { savedSearchUI.pandaUILoaded(); savedSearchUI = null; } }
+/** Once PandaUI is fully loaded check if searchUI needs to refresh and reset all tooltips using tooltip options. */
+function pandaUILoaded() {
+  if (savedSearchUI) { savedSearchUI.pandaUILoaded(); savedSearchUI = null; }
+  if (MyOptions) MyOptions.resetToolTips();
+}
+/** Wipe all data from memory and database from each class usually from a user wipe data request. */
 async function wipeData() {
   if (!MyOptions) MyOptions = new PandaGOptions();
   if (!myHistory && !mySearch && !myPanda) {
@@ -117,14 +129,42 @@ async function wipeData() {
     myPanda = null; mySearch = null; myHistory = null; pandaTimer = null; searchTimer = null; MYDB = null;
   }
 }
-function helperOptionsChanged(options, comm) {
-  if (options) { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if (tabs) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
+/** Sends commands to the current tab or sends a close popup command to popup page.
+ * @param {object} options - Options Object  @param {string} comm - Command  @param {function} [popupSend] - Popup Send Function  */
+function helperSendCommands(options, comm, popupSend=null) {
+  if (comm === 'newUrl' && popupSend) popupSend(null, true);
+  if (options) { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if (tabs && tabs[0]) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
 }
+/** Used when a user clicks on the extension icon to show popup. Handles options or update notice to show on popup.
+ * @param {function} popupSend - Popup Send Function */
 function popupOpened(popupSend) {
-  getCurrentTab( (thisUrl) => { let helperOptions = (MyOptions) ? MyOptions.helperOptions(thisUrl) : ''; popupSend(helperOptions); });
+  if (!myQueue || !MyOptions) return; // Needs queue to be running to get the queue size.
+  let generalOpt = MyOptions.doGeneral(); popupSend(null,_, generalOpt.showHelpTooltips);
+  getCurrentTab( thisUrl => {
+    let helperOptions = (MyOptions) ? MyOptions.helperOptions(thisUrl, myQueue.getQueueSize(), popupSend) : $(document.createDocumentFragment());
+    if (newVersion) {
+      let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${newVersion} is detected.<br></div>`).appendTo(helperOptions.append('<hr>'));
+      $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
+        let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
+        if (result === true) { chrome.runtime.reload(); }
+        else { alert('OK. Extension update will happen after next chrome start.'); newVersion = null; popupSend(null, true); }
+      }).appendTo(versionUpdate);
+      versionUpdate = null;
+    }
+    popupSend(helperOptions);
+    helperOptions = null;
+  });
 }
+/** Gets the current URL of window tab and sends it to the do after function.
+ * @param {function} doAfter - Do After Function */
 function getCurrentTab(doAfter=null) {
-  chrome.tabs.query({ active: true, currentWindow: true }, tabs => { if (tabs) { let tab = tabs[0], url = tab.url; if (doAfter) doAfter(url); }});
+  chrome.tabs.query({'active':true, 'currentWindow':true}, tabs => { if (tabs && tabs.length) {
+    let tab = tabs[0], url = tab.url; if (doAfter && !tab.title.includes('NO PCM')) doAfter(url);
+  }});
 }
 
+/** Clean any local storage when first starting up. */
 cleanLocalStorage();
+
+/** Sets the newVersion variable so next time user clicks on the extension icon it can show a notice of a new update. Also will show a notification to user. */
+chrome.runtime.onUpdateAvailable.addListener( details => { newVersion = details.version; });

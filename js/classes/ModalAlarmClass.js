@@ -11,17 +11,17 @@ class ModalAlarmClass {
    * @param  {string} [title] - Title        @param  {string} [size] - Button Size
    * @return {object}         - The Jquery button element created. */
   btnStr(text, theClass='', status='', title='', size='xxs') {
-    let titleStr = (title !== '') ? ` title='${title}'` : '';
-    return `<button class='${theClass} btn btn-${size} ${status}'${titleStr}>${text}</button>`;
+    let titleStr = (title !== '') ? ` data-original-title='${title}'` : '';
+    return `<button class='${theClass} btn btn-${size} ${status} pcm-tooltipData pcm-tooltipHelper'${titleStr}>${text}</button>`;
   }
   /** Creates the div element for each alarm option and returns it.
    * @param  {string} name - The name of the alarm to add.
    * @return {object}      - Jquery object of the div element created. */
   addDivAlarms(name) {
     let data = alarms.getData(name), statusM = (data.mute) ? 'btn-mutted' : '', colorT = (data.tts) ? 'btn-doTTS' : '', desc = data.desc, pay = data.pay, lessThanStr = ``;
-    let lessThan = (data.lessThan) ? data.lessThan : '', payStr = (pay) ? ` <span class='pcm-alarmsPay' title='Change the less than pay rate.'>$${pay}</span>` : '';
-    if (lessThan > 0 && name !== 'queueAlert') lessThanStr = ` with a short timer less than <span class='pcm-alarmsMinutes' title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
-    else if (name === 'queueAlert') lessThanStr = ` <span class='pcm-alarmsMinutes' title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
+    let lessThan = (data.lessThan) ? data.lessThan : '', payStr = (pay) ? ` <span class='pcm-alarmsPay pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than pay rate.'>$${pay}</span>` : '';
+    if (lessThan > 0 && name !== 'queueAlert') lessThanStr = ` with a short timer less than <span class='pcm-alarmsMinutes pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
+    else if (name === 'queueAlert') lessThanStr = ` <span class='pcm-alarmsMinutes pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
     return $(`<div class='${name}'></div>`).data('snd',name).append(this.btnStr('Play','pcm-playMe',_, 'Play the sound now!')).append(this.btnStr('Mute','pcm-muteMe', statusM, 'Mute this sound.')).append(this.btnStr('TTS','pcm-ttsMe', colorT, 'Use Text to Speech instead.')).append(this.btnStr('Change','pcm-newSnd',_, 'Change the alarm to your own sound file.')).append(`<span class='pcm-alarmDesc'>${desc}</span>${payStr}${lessThanStr}</div>`);
   }
   /** Add the save button when a user is changing the alarm sound.
@@ -51,6 +51,7 @@ class ModalAlarmClass {
       }
       $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect'></select>`).append(alarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
         alarms.theVoiceIndex(index); alarms.theVoiceName(name);

@@ -444,6 +444,9 @@ class PandaUI {
 	/** Shows the page number for the earnings page on the status bar.
 	 * @param {number} [page] Page # for Earning Page */
 	waitEarningsPage(page=1) { this.pandaGStats.waitEarningsPage(page); }
+	/** Resets any helper tooltips with the tooltip option value from user.
+	 * @param {bool} [enabled] - Show Helper ToolTips? */
+	resetToolTips(enabled=true) { if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
 	/** Halt this script with an error message.
 	 * @param  {object} error - Error Object  @param  {string} alertMessage - Alert Message  @param  {string} title - Title. */
 	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }

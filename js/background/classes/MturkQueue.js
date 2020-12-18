@@ -26,10 +26,13 @@ class MturkQueue extends MturkClass {
   /** Returns the value of loggedOff value;
    * @return {bool} - True if logged off. */
   isLoggedOff() { return this.loggedOff; }
+  /** Returns the queue size.
+   * @return {number} - The queue size number. */
+  getQueueSize() { return this.queueResults.length; }
   /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI. */
   sendQueueResults() {
-    if (myPanda) myPanda.gotNewQueue(this.queueResults,this.authenticityToken);
-    if (mySearch) mySearch.gotNewQueue(this.queueResults,this.authenticityToken);
+    if (myPanda) myPanda.gotNewQueue(this.queueResults, this.authenticityToken);
+    if (mySearch) mySearch.gotNewQueue(this.queueResults, this.authenticityToken);
     chrome.storage.local.set({'PCM_queueData':this.queueResults});
   }
   /** Changes the time for the queue timer and returns the time saved.

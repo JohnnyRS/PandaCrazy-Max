@@ -6,7 +6,7 @@
 class ListenerClass {
   constructor() {
     chrome.runtime.onMessage.addListener( (request, sender, sendResponse) => { console.log(request.command);
-      if (!sender.url.includes('generated_background_page')) {
+      if (sender.url && !sender.url.includes('generated_background_page')) {
         let command = request.command, data = request.data;
         if (command && data) {
           if (command.substring(0, 3) === 'add' || command.slice(-7) === 'collect') pandaUI.addFromExternal(request);
@@ -24,7 +24,7 @@ class ListenerClass {
           else if (command === 'pause') { pandaUI.pauseToggle(true); }
           else if (command === 'unpause') { pandaUI.pauseToggle(false); }
           else if (command === 'forumOptions') { sendResponse(globalOpt.theHelperOptions()); }
-          else if (command === 'queueOptions') { globalOpt.theSessionQueue(data); }
+          else if (command === 'queueOptions') { globalOpt.theSessionQueue(data); if (sendResponse) sendResponse(globalOpt.theHelperOptions()); }
           else if (command === 'monitorSpeech') { alarms.speakThisNow('HITs in Queue. Going to first.'); }
           else console.log(JSON.stringify(request), sender);
         }

@@ -40,10 +40,10 @@ function createLink(appendHere, addClass, theUrl, theText, theTarget, clickFunc=
  * @param  {string} value           - Value          @param  {bool} checked         - Checked?   @param  {string} [divClass=''] - Div class
  * @param  {string} [inputClass=''] - Input class    @param  {function} [clickFunc] - Click Function
  * @return {object}                 - The Jquery object of the checkbox element. */
-function createCheckBox(appendHere, label, id, value, checked, divClass='', inputClass='', clickFunc=null) {
-  const checkedText = (checked) ? ' checked' : '';
-  const formCheck = $(`<div class='form-check form-check-inline${divClass}'></div>`).appendTo(appendHere);
-  let input = $(`<input class='form-check-input${checkedText}${inputClass}' type='checkbox' id='${id}' value='${value}'${checkedText}>`).appendTo(formCheck);
+function createCheckBox(appendHere, label, id, value, checked, divClass='', inputClass='', divTitle=null, clickFunc=null) {
+  let checkedText = (checked) ? ' checked' : '', titleText = (divTitle) ? ` title='${divTitle}'`: '';
+  let formCheck = $(`<div class='form-check form-check-inline${divClass}'${titleText}></div>`).appendTo(appendHere);
+  let input = $(`<input class='form-check-input${checkedText}${inputClass}' type='checkbox' id='${id}' value='${value}'${checkedText}${titleText}>`).appendTo(formCheck);
   if (clickFunc) input.click(clickFunc);
   $(`<label class='form-check-label' for='${id}'>${label}</label>`).appendTo(formCheck);
   input = null;
@@ -232,8 +232,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
     const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
-    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' title='${element.tooltip}${theRange}'` : ``;
-    const toolTipClass = (element.tooltip) ? ` pcm-tooltipData`: '';
+    const addtip = (element.tooltip && element.tooltip!=='') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
+    const toolTipClass = (element.tooltip) ? ` pcm-tooltipData pcm-tooltipHelper`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
     else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
     valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);

@@ -13,6 +13,7 @@ class ModalOptionsClass {
     const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
       $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
+      pandaUI.resetToolTips(changes.showHelpTooltips);
       modal.closeModal();
     });
     modal.showModal(_, () => {
@@ -31,6 +32,7 @@ class ModalOptionsClass {
         {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will mturk show a captcha for you?'}, 
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -67,6 +69,7 @@ class ModalOptionsClass {
         {'label':'Default Search Panda Durations (Seconds):', 'type':'number', 'key':'searchDuration', 'seconds':true, 'tooltip':'The duration temporarily used for any HITs found from search jobs.', 'minMax':this.defDur}
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }

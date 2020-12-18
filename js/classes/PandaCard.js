@@ -90,9 +90,9 @@ class PandaCards {
     const textCollect = (info.search) ? '-Collecting-' : this.collectText;
     let group = `<div class='card-text pcm-buttonGroup' id='pcm-buttonGroup-${myId}'>`;
     group += `<button class='pcm-hitButton pcm-collectButton pcm-tooltipData pcm-buttonOff' id='pcm-collectButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
-    if (!info.search) group += `<button class='pcm-hitButton pcm-hamButton pcm-tooltipData pcm-buttonOff' id='pcm-hamButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>${this.goHamText}</span></button>`;
-    group += `<button class='pcm-hitButton pcm-detailsButton pcm-tooltipData pcm-buttonOff' id='pcm-detailsButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.details}'><span>${this.detailsText}</span></button>`;
-    group += `<button class='pcm-hitButton pcm-deleteButton pcm-tooltipData pcm-buttonOff' id='pcm-deleteButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.delete}'><span>${this.deleteText}</span></button>`;
+    if (!info.search) group += `<button class='pcm-hitButton pcm-hamButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-hamButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>${this.goHamText}</span></button>`;
+    group += `<button class='pcm-hitButton pcm-detailsButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-detailsButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.details}'><span>${this.detailsText}</span></button>`;
+    group += `<button class='pcm-hitButton pcm-deleteButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-deleteButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.delete}'><span>${this.deleteText}</span></button>`;
     group += `</div>`;
     return group;
   }
@@ -116,7 +116,7 @@ class PandaCards {
     const searchCard = (info.data.search) ? ' pcm-jobSearch' : '', mutedCard = (info.data.mute) ? ' pcm-cardMuted' : '';
     let card = $(`<div class='pcm-pandaCard card${searchCard}${mutedCard}' id='pcm-pandaCard-${myId}'></div>`).data('myId',myId);
     let cardBody = $(`<div class='card-body'></div>`).appendTo(card), cardText = $(`<div class='card-text' id='pcm-cardText-${myId}'>`).appendTo(cardBody);
-    $(`<div class='pcm-nameGroup row w-100'></div>`).append($(`<span class='pcm-reqName pcm-tooltipData col text-truncate' id='pcm-hitReqName-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></span>`).css('cursor', 'default')).append($(`<span class='pcm-groupId pcm-tooltipData col col-auto' id='pcm-groupId-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='Click to copy preview page URL or double click to open preview page.'></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
+    $(`<div class='pcm-nameGroup row w-100'></div>`).append($(`<span class='pcm-reqName pcm-tooltipData col text-truncate' id='pcm-hitReqName-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></span>`).css('cursor', 'default')).append($(`<span class='pcm-groupId pcm-tooltipData pcm-tooltipHelper col col-auto' id='pcm-groupId-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='Click to copy preview page URL or double click to open preview page.'></span>`).css('cursor', 'pointer').data('myId',myId).data('double',0)).appendTo(cardText);
     this.oneLineCard(myId, info).appendTo(cardText);
     $(`<div class='pcm-priceGroup'></div>`).append($(`<span class='pcm-price text-truncate' id='pcm-hitPrice-${myId}'></span>`).css('cursor', 'default')).append($(`<span class='pcm-numbers text-truncate' id='pcm-numbers-${myId}'></span>`)).appendTo(cardText);
     $(`<div class='pcm-title pcm-tooltipData text-truncate' id='pcm-hitTitle-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' title=''></div>`).css('cursor', 'default').appendTo(cardText);
@@ -415,7 +415,7 @@ class PandaCard {
   /** Adds a string to or changes the collect help tip.
    * @param  {object} val - Values Object  @param  {string} [change] - New Tip Text  @param  {bool} [add] - Added or Replaced? */
   collectTipChange(val, change='', add=false) {
-    let newTitle = (change !== '') ? ((add) ? val.collectTip + change : change) : val.collectTip;
-    this.df.attr('data-original-title', newTitle).tooltip('update');
+    let newTitle = (change !== '') ? ((add) ? val.collectTip + change : change) : val.collectTip, cl = val.collectBtn.class;
+    this.df.find(cl, cl + '1').attr('data-original-title', newTitle).tooltip('update');
   }
 }

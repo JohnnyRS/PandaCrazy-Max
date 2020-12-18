@@ -188,6 +188,7 @@ class ModalJobClass {
         $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
         optionTab = null; optionsContents = null; detailTab = null; detailsContents = null;
       }
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; df2 = null, df3 = null; detailsDiv = null; detailsTabs = null;
     }, () => { if (afterClose) afterClose(); else modal = null; this.modalSearch = null; });
   }
@@ -229,6 +230,7 @@ class ModalJobClass {
         $(`label[for='pcm-formAddGroupID']`).addClass('pcm-inputError');
         theBody.find('.pcm-checkStatus.pcm-inputError').html('Invalid Group ID or URL').data('gIdInvalid',true);
       }
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       theBody = null;
     }
     if (!modal) modal = new ModalClass();

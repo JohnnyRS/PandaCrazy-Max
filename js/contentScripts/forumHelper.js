@@ -39,7 +39,7 @@ function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.
  * @return {class}                - Returns MutationObserver Class */
 function setUpObserver(observeTarget, subTree, doFunc, triggerFunc) {
   let elementToObserve = observeTarget[0];
-  let observer = new MutationObserver( (mutationsList) => {
+  let observer = new MutationObserver( mutationsList => {
     if (doFunc) for (const mutation of mutationsList) { if (mutation.type === 'childList') for (const node of mutation.addedNodes) doFunc(node); } else triggerFunc();
   });
   observer.observe(elementToObserve, {childList: true, subtree:subTree});
@@ -88,7 +88,7 @@ function createButton(appendHere, addClass, text, index, clickFunc) {
   appendHere.append($(`<button class='pcm-button ${addClass}'>${text}</button>`).data('index',index).click( e => { clickFunc(e); return false; } ));
 }
 /** Will add buttons to the message on a forum with the given HIT object data.
- * @param {object} message - Jquery Message Object  @param {object} forum - Object With Forum Values  @param {object} obj - Object With HIT Data */
+ * @param {object} message - Jquery Message Object  @param  {object} forum - Object With Forum Values  @param  {object} obj - Object With HIT Data  @param  {bool} - Hide Buttons? */
 function addButtons(message, forum, obj, hide=false) {
   hitInfo[++hitCounter] = obj;
   let mtsExport = message.find(`.ctaBbcodeTableCellLeft:first`), tdFirst = message.find('td:first'), buttons = $(`<div class='pcm-buttonZone'>[PCM] </div>`);
@@ -203,7 +203,7 @@ function discordApp() {
   let mturkCrowd = false;
   let messageExpanded = () => {
     return setUpObserver($('div[class^=scrollerInner-]'), false, node => { setTimeout( () => { findMessages($(node), 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 100); });
-  }
+  };
   let roomChange = () => {
     return setUpObserver($('div[class^=content-] div[class^=chat-]'), false, null, () => {
       gMObserver.disconnect(); gMObserver = null; gMObserver = messageExpanded();
@@ -258,14 +258,14 @@ function detectForums(data) {
   }
 }
 
+/** Sends a message to the extension background page to send the forum options back. */
 chrome.runtime.sendMessage( {'command':'forumOptions', 'data':{}}, detectForums);
 
-chrome.runtime.onMessage.addListener( (request) => { console.log('--', request);
+/** Adds a listener to get any messages coming from the background page to change the forum options. */
+chrome.runtime.onMessage.addListener( (request) => {
   let command = request.command, data = request.data;
   if (command && data) {
-    console.log('command',command);
     if (command === 'optionsChange') {
-      console.log('gForumOptProp',gForumOptProp,gForumOptions[gForumOptProp],data[gForumOptProp]);
       if (gForumOptions[gForumOptProp] !== data[gForumOptProp]) {
         if (gForumObserver) gForumObserver.disconnect(); if (gSlackObserver) gSlackObserver.disconnect();
         if (gRObserver) gRObserver.disconnect(); if (gMObserver) gMObserver.disconnect();
