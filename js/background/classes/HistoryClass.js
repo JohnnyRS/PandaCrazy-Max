@@ -1,26 +1,30 @@
 /**
  * Class dealing with history info of requester ID's and group ID's.
- * @class HistoryClass
+ * @class HistoryClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com
  */
 class HistoryClass {
-  constructor() {
-  }
+	/** Wipes all the data in the history database. Usually because of an import.
+	 * @async - To wait for database to completely wipe all data. */
 	async wipeData() { await MYDB.openHistory().then( async () => { await MYDB.deleteDB('history'); }) }
+	/** Finds values in the history with the keys given.
+	 * @async									- To wait for the data to be got from the database.
+	 * @param  {array} values - Array of Keys
+	 * @return {array}			  - Returns the data from the keys given. */
 	async findValues(values) { let returnValue = {}; await MYDB.getFromDB('history',_,_, values).then( r => { returnValue = r; } ); return returnValue; }
 	/** Deletes data that is from searchResults and hasn't been updated in 15 days. */
 	maintenance() {
-		let beforeDate = new Date(); beforeDate.setDate( beforeDate.getDate() - 15 );
-		let keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
+		let beforeDate = new Date(), keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
+		beforeDate.setDate( beforeDate.getDate() - 15 );
 		MYDB.deleteFromDB('history',_, keyRange, 'searchDate').then( null, (rejected) => console.error(rejected));
 	}
 	/** Updates the database with new data.
 	 * @async											 - To wait for the database to be updated.
-	 * @param  {object} newData    - New data  @param  {string} [key=null] - The key */
+	 * @param  {object} newData    - New data  @param  {string} [key] - The key */
 	async updateToDB(newData, key=null) {
 		if (MYDB) {
 			let onlyNew = (key) ? true : false;
- 			await MYDB.addToDB('history',_, newData, onlyNew, key, (r) => {
+ 			await MYDB.addToDB('history',_, newData, onlyNew, key, r => {
 				let updateThis = false;
 				if (newData.from !== 'searchResults' && newData.from !== r.from) { r.from = newData.from; updateThis = true; }
 				else updateThis = !isSameDay(new Date(r.updated));
@@ -37,7 +41,7 @@ class HistoryClass {
 	}
 	/** Fill in the history database with the group ID and requester info from history object.
 	 * @async										- To wait for database to be updated.
-	 * @param  {object} history - History object @param  {string} [from='unknown'] - Originated @param  {bool} [loaded=false]   - Data loaded? */
+	 * @param  {object} history - History object @param  {string} [from] - Originated @param  {bool} [loaded] - Data loaded? */
 	async fillInHistory(history, from='unknown', loaded=false) {
 		for (const key of Object.keys(history)) {
 			let item = history[key], hits = 1, nowDate = new Date().getTime(), passKey = (loaded) ? null : key;

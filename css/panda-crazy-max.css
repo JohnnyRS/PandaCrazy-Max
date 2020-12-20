@@ -242,7 +242,8 @@ html, body { height: 100%; }
 .pcm-themeArea { margin-bottom:30px; }
 .pcm-volumeHorizGroup { background-color: #063e4d; font-size:0.8em; padding-left:2px; }
 .pcm-exportText { color: cyan; margin-top: 1rem; font-size: 80%; font-weight: 400; }
-.pcm-exportCheckAlarms { margin-top: 1rem; }
+.pcm-exportCheckAlarms { margin-top: 1rem; margin-bottom: 0.3rem; }
+.pcm-groupingItem .pcm-myPrimary, .pcm-optionCont .pcm-myPrimary { padding: .25rem .3rem; }
 
 /* SearchUI Targeted Styles. */
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }
@@ -274,10 +275,11 @@ html, body { height: 100%; }
 .pcm-foundHitsTable small { background-color: darkgreen; color: yellow; font-size: 90%; }
 .pcm-foundHitsTable .btn-xxs { padding: .25rem .2rem; font-size: .55rem; line-height: .4; border-radius: .2rem; }
 .pcm-triggeredhit, .pcm-modalTriggeredhit { background-color: #0b716c; }
-.pcm-triggeredhit .pcm-textInfo, .pcm-modalTriggeredhit .pcm-textInfo { color: #edf5e6; padding: 2px 1px 1px 1px; font-size: 11px; line-height: 1.5; text-align: left; }
+.pcm-triggeredhit .pcm-textInfo, .pcm-modalTriggeredhit .pcm-textInfo { color: #edf5e6; padding: 2px 1px 1px 4px; font-size: 11px; line-height: 1.5; text-align: left; }
 .pcm-triggeredhit .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
 .pcm-modalTriggeredhit .btn, .pcm-showTriggersModal .btn, .pcm-showJobsModal .btn { color: #fff; background-color: #007bff; border-color: #007bff; }
 .pcm-tvLink { color: gold; text-decoration: underline; }
+.pcm-tvLink:hover { color: darkorange; }
 .pcm-autoHit { background-color: #054604; }
 .pcm-blockedHit, .pcm-showTriggersModal .pcm-hitDisabled { background-color: #7d7578; }
 .btn-pcmUsed { background-color: darkslategray; color: burlywood; }
@@ -289,7 +291,7 @@ html, body { height: 100%; }
 .pcm-groupingsControl { text-align: center; }
 .pcm-autoSearchUI { color: darkturquoise; margin-top: 8px; margin-bottom: 8px; }
 .pcm-addBlocked, .pcm-removeBlocked, .pcm-blockGid, .pcm-blockRid { color: #fff; background-color: #007bff; border-color: #007bff; margin-left: 0.25rem; }
-#pcm-blockDetails .btn:hover, .pcm-detailsTable .btn:hover { color: lawngreen; }
+#pcm-blockDetails .btn:hover, .pcm-detailsTable .btn:hover, .pcm-triggerEditModal .pcm-triggerSelectModalBody .btn:hover { color: lawngreen; }
 .pcm-modalTriggeredhit .btn.pcm-hitBlocked { background-color: #680e0e; border-color: #680e0e; color: #d7e0d1; }
 #pcm-blockingTabs .tab-pane { padding-bottom: 12px; }
 .pcm-groupingInstantly input { margin: 0 5px; }
@@ -326,9 +328,10 @@ html, body { height: 100%; }
 .modal-body { padding-top: 8px; padding-bottom: 8px; background-color: #343a40; color: #f8f9fa; text-align: center; }
 .pcm-searchModal .pcm-textInfo { font-size: 0.8em; }
 .pcm-jobDetailsModal .modal-body, .pcm-triggerDetailsModal .modal-body { padding: 1rem 0.3rem; }
-.pcm-jobsModalBody { max-height: calc(100vh - 165px); overflow-y: auto; }
+.pcm-jobsModalBody, .pcm-triggerModalBody { max-height: calc(100vh - 185px); overflow-y: auto; min-height: 200px; }
 .pcm-jobsModalBody .btn { background-color: #D3D3D3; color: #000000; }
 .pcm-jobsModalBody .btn.pcm-buttonOn { background-color: #008000; color: #FFFFFF; }
+.pcm-groupingModalBody, .pcm-searchOptionsModalBody, .pcm-modalHitsFound { min-height: 200px; }
 .pcm-groupingsEditModalBody { max-height: calc(100vh - 235px); overflow-y: auto; }
 .pcm-groupingsEditModalBody .btn { background-color: #D3D3D3; color: #000000; }
 .pcm-searchModal .pcm-detailsTable tr { font-size: 1.0em; }

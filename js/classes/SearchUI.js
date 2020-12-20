@@ -187,15 +187,15 @@ class SearchUI {
 				theButton = null; theCard = null;
 			});
 		let body = $(`<div class='card-body'></div>`).appendTo(card), text = $(`<div class='card-text' id='pcm-cardText-${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
-		let nameGroup = $(`<div class='pcm-triggerGroup row w-100 pcm-tooltipData' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'></div>`).appendTo(text);
-		nameGroup.append($(`<span class='pcm-triggerName col text-truncate unSelectable' id='pcm-triggerName-${unique}'>${name}</span>`));
-		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn'>Found HITs</button>: <span class='pcm-stats-numHits'>${data.numHits}</span> | Total: <span class='pcm-stats-totalFound'>${data.numFound}</span></span>`).hide());
+		let nameGroup = $(`<div class='pcm-triggerGroup row w-100'></div>`).appendTo(text);
+		nameGroup.append($(`<span class='pcm-triggerName col text-truncate unSelectable pcm-tooltipData' id='pcm-triggerName-${unique}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' data-original-title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'>${name}</span>`));
+		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn pcm-tooltipData pcm-tooltipHelper' data-original-title='Display all the HITs found from this trigger.'>Found HITs</button>: <span class='pcm-stats-numHits'>${data.numHits}</span> | Total: <span class='pcm-stats-totalFound'>${data.numFound}</span></span>`).hide());
 		let buttonGroup = $(`<span class='pcm-tButtonGroup col col-auto' id='pcm-tButtons-${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
-		$(`<i class='fas fa-caret-square-down pcm-optionsMenu'></i>`).click( e => {
+		$(`<i class='fas fa-caret-square-down pcm-optionsMenu pcm-tooltipData pcm-tooltipHelper' data-original-title='Display and edit all options for this trigger.'></i>`).click( e => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			this.modalSearch = new ModalSearchClass(); this.modalSearch.showDetailsModal(unique, () => this.modalSearch = null);
 		}).data('unique',unique).appendTo(buttonGroup);
-		$(`<i class='fas fa-times pcm-deleteButton'></i>`).click( e => {
+		$(`<i class='fas fa-times pcm-deleteButton pcm-tooltipData pcm-tooltipHelper' data-original-title='Delete this trigger. [CTRL] click cards to delete multiple triggers.'></i>`).click( e => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
 			if (!this.ctrlDelete.includes(unique)) this.ctrlDelete.push(unique);
 			this.removeJobs(this.ctrlDelete, response => {
@@ -269,7 +269,7 @@ class SearchUI {
 			let trClass = (auto) ? 'pcm-autoHit' : 'pcm-triggeredhit';
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm-tvLink', 'tooltip':`Turkerview Requester Link`},
-				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`},
+				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`, 'notHelper':true},
 				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
 				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount HIT pays.`},
 				{'type':'button', 'btnLabel':'P', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
@@ -302,6 +302,9 @@ class SearchUI {
 	/** Remove the trigger with the unique number from the search UI.
 	 * @param  {string} unique - Unique Number of Trigger */
 	removeTrigger(unique) { let theTrigger = $(`#pcm-triggerCard-${unique}`); if (theTrigger.length) theTrigger.remove(); theTrigger = null; }
+	/** Resets any helper tooltips with the tooltip option value from user.
+	 * @param {bool} [enabled] - Show Helper ToolTips? */
+	resetToolTips(enabled=true) { console.log(enabled); if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr				 - Jobs to Delete     @param  {function} [afterFunc] - After Function  @param  {function} [afterClose] - After Close Function
 	 * @param  {function} [cancelText] - Cancel Button Text */

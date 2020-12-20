@@ -49,9 +49,10 @@ class ModalAlarmClass {
         this.addDivAlarms('more15').appendTo(df); this.addDivAlarms('queueFull').appendTo(df); this.addDivAlarms('queueAlert').appendTo(df);
         this.addDivAlarms('loggedOut').appendTo(df); this.addDivAlarms('captchaAlarm').appendTo(df);
       }
-      $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect'></select>`).append(alarms.voicesOption())).appendTo(df);
+      $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(alarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      let resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : search;
+      resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
         alarms.theVoiceIndex(index); alarms.theVoiceName(name);
@@ -80,10 +81,10 @@ class ModalAlarmClass {
       modalBody.find('.pcm-newSnd').click( e => {
         $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
         alarms.stopSound(); if (this.audio) this.audio.load();
-        let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd');
+        let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd'), resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : search;
         $('.pcm-changeMe').remove();
         if (prevSnd !== soundName) {
-          $(e.target).closest('div').after($(`<div class='pcm-changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm-fileInput'></span>`).append(createFileInput(_,'audio/*')).append($(`<span class='pcm-fileStatus'></span>`).append(this.btnStr('Default Audio', 'pcm-defaultAudio', '', 'xs'))));
+          $(e.target).closest('div').after($(`<div class='pcm-changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm-fileInput'></span>`).append(createFileInput(_,'audio/*', 'Browse for an audio file on your computer to replace the alarm with.')).append($(`<span class='pcm-fileStatus'></span>`).append(this.btnStr('Default Audio', 'pcm-defaultAudio pcm-tooltipData pcm-tooltipHelper', '', 'Change alarm back to the default alarm sound.', 'xs'))));
           $('.custom-file-input').on('change', e => {
             let fileName = $(e.target).val().replace('C:\\fakepath\\', ''), theFile = $(e.target).prop('files')[0];
             if (theFile) {
@@ -103,6 +104,7 @@ class ModalAlarmClass {
             let data = alarms.getData(soundName);
             this.audio = new Audio(); this.audio.src = chrome.runtime.getURL(`${alarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
           });
+          resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
         }
       });
       modalBody.find('.pay').click( e => {

@@ -450,4 +450,7 @@ class PandaUI {
 	/** Halt this script with an error message.
 	 * @param  {object} error - Error Object  @param  {string} alertMessage - Alert Message  @param  {string} title - Title. */
 	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }
+	/** New version detected so send a notification to user.
+	 * @param  {string} - New Version Number */
+	newVersionAvailable(version) { if (notify) notify.showNewVersion(version); }
 }

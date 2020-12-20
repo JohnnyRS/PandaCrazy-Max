@@ -1,6 +1,6 @@
 'use strict'
 /** This class gets the earnings from the dashboard for the current date.
- * @class MturkDashboard
+ * @class MturkDashboard ##
  * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MturkDashboard extends MturkClass {
@@ -17,21 +17,24 @@ class MturkDashboard extends MturkClass {
     this.total = 0.00;
     this.dashUrl = 'https://worker.mturk.com/status_details/';
   }
+  /** Returns a value representing if it finished calculating earnings.
+   * @return {bool} - Is calculating done? */
   isFetching() { return !this.dashDone; }
-  /** Starts calculating the earnings for today by checking the dashboard. */
+  /** Starts calculating the earnings for today by checking the dashboard.
+   * @param  {bool} [start] - Initial start? */
   doDashEarns(start=true) { if (start) { this.dashDone = false; this.total = 0.00; this.page = 1; } this.goFetch(); }
-	/** Stop the queue monitor by removing job from timer queue. */
+	/** Stops calculating the earnings and sets the pause variable.
+   * @param  {bool} [paused] - Pausing or not? */
 	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; if (extPandaUI) extPandaUI.setEarnings(this.total) } }
-  /** Changes the timer to a longer time and informs panda and search class when logged off. */
+  /** Sets loggedOff to true and pauses the earning calculations. */
   nowLoggedOff() { this.loggedOff = true; this.stopDashEarns(true); }
-  /** Changes the timer to the normal time and informs panda and search class when logged back in. */
+  /** Sets loggedOff to false and starts to calculate the earnings. */
   nowLoggedOn() { this.loggedOff = false; this.paused = false; if (!this.dashDone) this.doDashEarns(false); }
-  /** Fetches the url for the queue after timer class tells it to do so and handles mturk results.
-   * Can detect logged off, PRE's and good queue results. */
+  /** Fetches the url for the dasgboard after timer class tells it to do so and handles mturk results. */
   goFetch() {
     let theDate = moment().format('YYYY-MM-DD'), urlString = `${this.dashUrl}${theDate}`, startTime = new Date().getTime();
     urlString = urlString + ((this.page > 1) ? `/?page_number=${this.page}` : '/'); let theUrl = new UrlClass(urlString);
-    super.goFetch(theUrl).then(result => {
+    super.goFetch(theUrl).then( result => {
       if (!result) { console.error('Returned result fetch was a null.', JSON.stringify(theUrl)); }
       else {
         if (result.mode === 'logged out') { this.nowLoggedOff(); }

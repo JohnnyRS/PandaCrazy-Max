@@ -1,6 +1,6 @@
 let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
-$('body').tooltip({selector: `.pcm-tooltipData`, delay: {show:1100}, trigger:'hover'});
+$('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
@@ -26,6 +26,7 @@ async function startSearchCrazy() {
   search.appendFragments();
   sGroupings.prepare(showMessages); // Wait for groupings to load and show message or error.
   modal.closeModal('Loading Data');
+  bgPage.searchUILoaded();
 }
 /**  Shows good messages in loading modal and console. Shows error message on page and console before halting script.
  * @param {array} good - Array of good messages to display in the loading modal and console.

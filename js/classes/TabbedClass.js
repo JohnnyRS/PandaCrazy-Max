@@ -58,7 +58,7 @@ class TabbedClass {
       await MYDB.getFromDB('panda', 'tabs').then( async result => {
         let theData = (result.length) ? result : this.defaultTabs, active = true;
         for (let index=0, len=theData.length; index < len; index++) {
-          this.addFromDB(theData[index], active, (error) => { err = error; }).then( () => {} );
+          await this.addFromDB(theData[index], active, (error) => { err = error; }).then( () => {} );
           active = false;
         }
         if (!err) success = 'Added all panda tabs.';

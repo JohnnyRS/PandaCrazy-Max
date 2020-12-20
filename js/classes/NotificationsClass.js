@@ -49,4 +49,9 @@ class NotificationsClass {
   showDailyLimit() {
     this.show('ALERT: CONGRATS!', 'You have reached your daily limit!! You must wait for tomorrow. Go outside and see the sun!', 'dailyLimit', '3alert3', true);
   }
+  /** Shows a new version notification.
+   * @param {string} version - Ver Version Number */
+  showNewVersion(version) {
+    this.show('ALERT: New Version Available', `There is a new version: ${version}! \nYour current version is ${localVersion}!`, 'newVersion', '3alert3', true);
+  }
 }

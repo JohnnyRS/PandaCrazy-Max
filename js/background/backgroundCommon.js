@@ -21,7 +21,7 @@ function removeAll() {
   myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null; pandaTimer = null; queueTimer = null; searchTimer = null; dbError = null;
   cleanLocalStorage();
 }
-/** Importing data so make sure searchUI gets refreshed if it was opened also.  */
+/** Importing data so make sure searchUI gets refreshed if it was opened also. */
 function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
 /** Function to set up a search UI variable for the background and returns search class.
  * @param {class} classUI - Object variable for the search UI or null if UI is closing.
@@ -68,7 +68,8 @@ function gGetOptions() { return MyOptions; }
 function gGetAlarms(audioClass, ui) { MyAlarms.setAudioClass(audioClass, ui); return MyAlarms; }
 /** Checks for the history and panda database to be set. If not ready then recursively calls 50 times until the databases are ready.
  * @async - to wait for recursive calls to send a promised return. */
-async function gCheckPandaDB() { new Promise( resolve => {
+async function gCheckPandaDB() {
+  new Promise( resolve => {
     let counting = 0;
     checkDBs = () => {
       counting++;
@@ -117,6 +118,8 @@ function pandaUILoaded() {
   if (savedSearchUI) { savedSearchUI.pandaUILoaded(); savedSearchUI = null; }
   if (MyOptions) MyOptions.resetToolTips();
 }
+/** Once SearchUI is fully loaded check if tooltips needs to be reset using tooltip options. */
+function searchUILoaded() { if (MyOptions) MyOptions.resetToolTips(); }
 /** Wipe all data from memory and database from each class usually from a user wipe data request. */
 async function wipeData() {
   if (!MyOptions) MyOptions = new PandaGOptions();
@@ -133,7 +136,7 @@ async function wipeData() {
  * @param {object} options - Options Object  @param {string} comm - Command  @param {function} [popupSend] - Popup Send Function  */
 function helperSendCommands(options, comm, popupSend=null) {
   if (comm === 'newUrl' && popupSend) popupSend(null, true);
-  if (options) { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if (tabs && tabs[0]) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
+  if (options) { chrome.tabs.query({'active': true, 'currentWindow': true}, tabs => { if (tabs && tabs[0]) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
 }
 /** Used when a user clicks on the extension icon to show popup. Handles options or update notice to show on popup.
  * @param {function} popupSend - Popup Send Function */
@@ -156,7 +159,7 @@ function popupOpened(popupSend) {
   });
 }
 /** Gets the current URL of window tab and sends it to the do after function.
- * @param {function} doAfter - Do After Function */
+ * @param {function} [doAfter] - Do After Function */
 function getCurrentTab(doAfter=null) {
   chrome.tabs.query({'active':true, 'currentWindow':true}, tabs => { if (tabs && tabs.length) {
     let tab = tabs[0], url = tab.url; if (doAfter && !tab.title.includes('NO PCM')) doAfter(url);
@@ -167,4 +170,7 @@ function getCurrentTab(doAfter=null) {
 cleanLocalStorage();
 
 /** Sets the newVersion variable so next time user clicks on the extension icon it can show a notice of a new update. Also will show a notification to user. */
-chrome.runtime.onUpdateAvailable.addListener( details => { newVersion = details.version; });
+chrome.runtime.onUpdateAvailable.addListener( details => {
+  newVersion = details.version;
+  if (extPandaUI) { extPandaUI.newVersionAvailable(newVersion); }
+});

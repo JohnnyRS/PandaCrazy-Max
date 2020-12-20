@@ -20,6 +20,7 @@ class PandaGOptions {
       'toSearchUI':false,           // Should search jobs go directly to search UI?
       'fetchHighlight':true,        // Highlight the groupID when script tries to fetch it.
       'debugger':0,                 // Main debugger level.
+      'disableMonitorAlert':false,
       'volHorizontal':false,
       'tabLogHeight':0,
       'themeIndex':0,
@@ -98,16 +99,23 @@ class PandaGOptions {
    * @param {string} optionName - Option Name  @param {object} changes - Object Changes  @param {bool} [update] - Update Database? */
   doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(false); }
   /** Changes the timers options with the changes object and updates database if update is true.
-   * @param  {object} changes - Object Changes  @param {bool} [update] - Update Database?
-   * @return {object}         - Timers Options Object */
+   * @param  {object} [changes] - Object Changes  @param {bool} [update] - Update Database?
+   * @return {object}           - Timers Options Object */
   doTimers(changes=null, update=true) { if (changes) this.doChanges('timers', changes, update); else return this.timers; }
   /** Changes the general options with the changes object and updates database if update is true.
-   * @param {object} changes - Object Changes  @param {bool} [update] - Update Database? 
-   * @return {object}        - General Options Object */
- doGeneral(changes=null, update=true) { if (changes) this.doChanges('general', changes, update); else return this.general; }
+   * @param {object} [changes] - Object Changes  @param {bool} [update] - Update Database? 
+   * @return {object}          - General Options Object */
+  doGeneral(changes=null, update=true) {
+    if (changes) {
+      this.doChanges('general', changes, update);
+      if (extPandaUI) extPandaUI.resetToolTips(changes.showHelpTooltips);
+      if (extSearchUI) extSearchUI.resetToolTips(changes.showHelpTooltips);
+    }
+    else return this.general;
+  }
   /** Changes the search options with the changes object and updates database if update is true.
-   * @param {object} changes - Object Changes  @param {bool} [update] - Update Database? 
-   * @return {object}        - Search Options Object */
+   * @param {object} [changes] - Object Changes  @param {bool} [update] - Update Database? 
+   * @return {object}          - Search Options Object */
  doSearch(changes=null, update=true) { if (changes) this.doChanges('search', changes, update); else return this.search; }
   /** Returns the timer range object.
    * @return  {object} - Returns Timer Range */
@@ -159,6 +167,17 @@ class PandaGOptions {
   }
   /** Removes data from memory so it's ready for closing or importing. */
   removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; this.search = {}; }
+  /** Updates the captcha text area with updated info.
+   * @return {number} - Returns the value in the captcha counter. */
+  updateCaptcha() { this.captchaCounter = (this.general.captchaAt > this.captchaCounter) ? this.captchaCounter + 1 : 0; return this.captchaCounter; }
+  /** Resets the captcha counter back down to 0. */
+  resetCaptcha() { this.captchaCounter = 0; }
+  /** Updates the global options and resets anything that is needed. */
+  update() {
+    if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
+    MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
+    MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
+  }
   /** Import the options from an exported file.
    * @param  {object} newData - Data with the imported objects. */
   importOptions(newData) {
@@ -168,19 +187,11 @@ class PandaGOptions {
   /** Returns an array of options for easy exporting.
    * @return {array} - The array of objects to be exported. */
   exportOptions() { return [this.general, this.timers, this.alarms, this.helpers, this.search]; }
-  /** Updates the global options and resets anything that is needed. */
-  update() {
-    if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
-    MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
-    MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
-  }
-  /** Updates the captcha text area with updated info.
-   * @return {number} - Returns the value in the captcha counter. */
-  updateCaptcha() { this.captchaCounter = (this.general.captchaAt > this.captchaCounter) ? this.captchaCounter + 1 : 0; return this.captchaCounter; }
-  /** Resets the captcha counter back down to 0. */
-  resetCaptcha() { this.captchaCounter = 0; }
   /** Resets any tooltip helpers that should be disabled if helptooltips option is disabled or shown if enabled. */
-  resetToolTips() { if (extPandaUI) extPandaUI.resetToolTips(this.general.showHelpTooltips);  }
+  resetToolTips() {
+    if (extPandaUI) extPandaUI.resetToolTips(this.general.showHelpTooltips);
+    if (extSearchUI) extSearchUI.resetToolTips(this.general.showHelpTooltips);
+  }
   /** Checks to see if it's OK to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
    * @return {bool}           - True if the queue alert should be sounded. */
@@ -252,7 +263,7 @@ class PandaGOptions {
   getQueueTimer() { return this.timers.queueTimer; }
   /** Change the display number used to display information in the panda cards.
    * @param  {number} display - The number for the display format to use for information in the panda card. */
-  setCardDisplay(display) { this.general.cardDisplay = display; }
+  setCardDisplay(display) { this.general.cardDisplay = display; this.update(false); }
   /** Sets or Gets the value of the volume.
    * @param  {number} [vol] - The value of the volume to change or null to return current value.
    * @return {number}       - Returns the value of the volume. */
@@ -270,12 +281,14 @@ class PandaGOptions {
    * @return {string}       - Current Theme Index */
   theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(false); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
-   * @param  {number} [index] - Theme Index Value  @param  {string} [cssTheme] - Theme CSS Value
+   * @param  {number} [index] - Theme Index Value  @param  {string} [cssTheme] - Theme CSS Value  @param  {bool} all - Return All Themes
    * @return {string}         - Returns current theme string. */
-  theThemes(index=null, cssTheme=null) {
+  theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;
     let thisIndex = (index === null) ? this.general.themeIndex : index, thisTheme = `theme${thisIndex}`;
-    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update(false); } else return this.general[thisTheme];
+    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update(false); }
+    else if (all) return {'theme0':this.general['theme0'], 'theme1':this.general['theme1'], 'theme2':this.general['theme2'], 'theme3':this.general['theme3']};
+    else return this.general[thisTheme];
   }
   /** Sends back the helper options object.
    * @return  {object} - Helpers Options */

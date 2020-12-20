@@ -104,7 +104,7 @@ class TheGroupings {
       modal = new ModalClass(); let dialogStatus = `the ${collectNum} ${(isPanda) ? 'HIT(s) collecting now' : 'enabled trigger(s)'}`;
       let body = $(`<div>Do you want to create an instant grouping for <span class='pcm-instantDialogStatus'>${dialogStatus}</span>?</div>`);
       if (!isPanda) {
-        const radioGroup = $(`<div class='pcm-groupingInstantly'></div>`).appendTo(body);
+        let radioGroup = $(`<div class='pcm-groupingInstantly'></div>`).appendTo(body);
         radioButtons(radioGroup, 'theTriggers', 'isEnabled', 'Enabled', true); radioButtons(radioGroup, 'theTriggers', 'isDisabled', 'Disabled');
         radioGroup.find(`input`).click( e => {
           collection = this.doInstantFilter(isPanda, $(e.target).val());
@@ -189,22 +189,23 @@ class TheGroupings {
     modal = new ModalClass();
     const idName = modal.prepareModal(null, '800px', 'pcm-groupingsModal', 'modal-lg', 'List Groupings', '', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
     const divContainer = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(`#${idName} .${modal.classModalBody}`);
-    let df = document.createDocumentFragment(), panda = (this.type === 'panda'), gType = (panda) ? 'pandas' : 'triggers';
-    Object.keys(this.groups).forEach( grouping => {
-      this.goCheckGroup(grouping, true);
-      const bgClass = (this.groupStatus[grouping].collecting) ? 'pcm-groupCollect' : ((Object.keys(this.groups[grouping][gType]).length === 0) ? 'pcm-groupEmpty' : '');
-      displayObjectData([
-        {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>{${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Jobs' : 'Trigger(s)'}}</span>`, 'unique':grouping, 'clickFunc': e => { this.toggle(e.data.unique); } },
-        {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs pcm-groupingEdit pcm-myPrimary', 'idStart':'pcm-editButton1-', 'width':'45px', 'unique':grouping, 'btnFunc': () => {
-          this.showgroupingEditModal(grouping,_,_, () => {});
-        }},
-        {'btnLabel':'Del', 'type':'button', 'addClass':' btn-xxs pcm-groupingDelete pcm-myPrimary', 'idStart':'pcm-deleteButton1-', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
-          this.delete(grouping);
-          $(e.target).closest('tr').remove();
-        }},
-      ], df, this.groups[grouping], true, true, true, `pcm-groupingItem ${bgClass}`); }
-    );
     modal.showModal(null, () => {
+      $(`#${idName} .${modal.classModalBody}`).addClass('pcm-groupingModalBody')
+      let df = document.createDocumentFragment(), panda = (this.type === 'panda'), gType = (panda) ? 'pandas' : 'triggers';
+      Object.keys(this.groups).forEach( grouping => {
+        this.goCheckGroup(grouping, true);
+        const bgClass = (this.groupStatus[grouping].collecting) ? 'pcm-groupCollect' : ((Object.keys(this.groups[grouping][gType]).length === 0) ? 'pcm-groupEmpty' : '');
+        displayObjectData([
+          {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>{${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Job(s)' : 'Trigger(s)'}}</span>`, 'unique':grouping, 'clickFunc': e => { this.toggle(e.data.unique); }, 'tooltip':`Grouping Name with description and the number of ${(panda) ? 'Job(s)' : 'Trigger(s)'} it contains.`},
+          {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs pcm-groupingEdit pcm-myPrimary', 'idStart':'pcm-editButton1', 'width':'45px', 'unique':grouping, 'btnFunc': () => {
+            this.showgroupingEditModal(grouping,_,_, () => {});
+          }, 'tooltip':`Edit this grouping by selecting or deselecting ${(panda) ? 'Job(s)' : 'Trigger(s)'}.`},
+          {'btnLabel':'Del', 'type':'button', 'addClass':' btn-xxs pcm-groupingDelete pcm-myPrimary', 'idStart':'pcm-deleteButton1', 'width':'45px', 'unique':grouping, 'btnFunc': (e) => {
+            this.delete(grouping);
+            $(e.target).closest('tr').remove();
+          }, 'tooltip':'Delete this grouping right away.'},
+        ], df, this.groups[grouping], true, true, true, `pcm-groupingItem ${bgClass}`); }
+      );
       divContainer.append(df);
       df = null;
     }, () => { modal = null; });
@@ -234,7 +235,7 @@ class TheGroupings {
       let dbId = (panda) ? bgPanda.options(e.data.unique).dbId : e.data.unique, inGroup = (panda) ? '.pcm-jobsInGroup:first' : '.pcm-triggersInGroup:first';
       if ($(e.target).prop('checked')) {
         $(e.target).closest('tr').effect( 'highlight', {'color':'#3CB371'}, 800, () => {
-          this.groups[grouping][prop][dbId] = {'hamMode':false};
+          this.groups[grouping][prop][dbId] = (panda) ? {'hamMode':false} : {'id':dbId};
           $(e.target).closest('.modal-content').find(inGroup).text(`${(panda) ? 'Jobs' : 'Triggers'} in Groups: ${Object.keys(this.groups[grouping][prop]).length}`);
         });
       } else {

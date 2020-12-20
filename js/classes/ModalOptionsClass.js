@@ -13,7 +13,6 @@ class ModalOptionsClass {
     const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
       $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
-      pandaUI.resetToolTips(changes.showHelpTooltips);
       modal.closeModal();
     });
     modal.showModal(_, () => {
@@ -27,6 +26,7 @@ class ModalOptionsClass {
         {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
         {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+        {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
         {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
         {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will mturk show a captcha for you?'}, 
@@ -90,13 +90,12 @@ class ModalOptionsClass {
       let df = document.createDocumentFragment();
       $(`<div class='pcm-detailsEdit small'>The textbox area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.</div>`).appendTo(df);
       let buttonGroup = $(`<div class='pcm-themeSelection'></div>`).appendTo(df);
-      $(`<button class='btn btn-xs pcm-themeSelect0 pcm-buttonOff'>Theme #1</button>`).data('index', 0).appendTo(buttonGroup);
-      $(`<button class='btn btn-xs pcm-themeSelect1 pcm-buttonOff'>Theme #2</button>`).data('index', 1).appendTo(buttonGroup);
-      $(`<button class='btn btn-xs pcm-themeSelect2 pcm-buttonOff'>Theme #3</button>`).data('index', 2).appendTo(buttonGroup);
-      $(`<button class='btn btn-xs pcm-themeSelect3 pcm-buttonOff'>Theme #4</button>`).data('index', 3).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect0 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #1 as current theme and display the CSS styles in the textarea below for edit.'>Theme #1</button>`).data('index', 0).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #2 as current theme and display the CSS styles in the textarea below for edit.'>Theme #2</button>`).data('index', 1).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect2 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #3 as current theme and display the CSS styles in the textarea below for edit.'>Theme #3</button>`).data('index', 2).appendTo(buttonGroup);
+      $(`<button class='btn btn-xs pcm-themeSelect3 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #4 as current theme and display the CSS styles in the textarea below for edit.'>Theme #4</button>`).data('index', 3).appendTo(buttonGroup);
       buttonGroup.find('.btn').on( 'click', e => {
-        let theBody = $(`#${idName} .${modal.classModalBody}`); setFileInput(); resetFileInput();
-        $(`#${idName} .pcm-loadCSSFile`).addClass('pcm-disabled').prop('disabled',true);
+        let theBody = $(`#${idName} .${modal.classModalBody}`);
         globalOpt.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
         currentThemeIndex = $(e.target).data('index'); currentThemeCSS = globalOpt.theThemes(currentThemeIndex); $(`#pcm-themeTextArea`).val(currentThemeCSS);
         theBody.find(`.pcm-themeSelection .btn`).removeClass('pcm-buttonOn').addClass('pcm-buttonOff');
@@ -107,15 +106,16 @@ class ModalOptionsClass {
       let textArea = $(`<textarea class='input-sm col-9' id='pcm-themeTextArea' multiple rows='10'></textarea>`).appendTo(themeInput);
       $(`<div class='pcm-inputError'></div>`).appendTo(df);
       let inputContainer = $(`<form class='pcm-fileInput'></form>`).appendTo(df);
-      createFileInput(inputContainer, 'text/css');
-      $(`<button class='btn btn-xs pcm-loadCSSFile pcm-disabled'>Load CSS File</button>`).prop('disabled',true).on( 'click', e => {
+      createFileInput(inputContainer, 'text/css', 'Browse for a CSS theme file on your computer to load for the current theme selected.');
+      $(`<button class='btn btn-xs pcm-loadCSSFile pcm-disabled pcm-tooltipData pcm-tooltipHelper' data-original-title='Load the selected file to the current theme selected.'>Load CSS File</button>`).prop('disabled',true).on( 'click', e => {
         modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to replace Theme #${currentThemeIndex + 1} with contents of file?`, () => {
           currentThemeCSS = this.reader.result; $(`#pcm-themeTextArea`).val(currentThemeCSS);
           globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
+          $(e.target).addClass('pcm-disabled').prop('disabled',true);
         }, true, true,_,_,_,_, () => {});
         return false;
       }).appendTo(inputContainer);
-      $(`<button class='btn btn-xs pcm-resetCSSFile'>Reset Theme</button>`).on( 'click', e => {
+      $(`<button class='btn btn-xs pcm-resetCSSFile pcm-tooltipData pcm-tooltipHelper' data-original-title='Reset this theme selected to the default value which will be blank.'>Reset Theme</button>`).on( 'click', e => {
         modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to reset Theme #${currentThemeIndex + 1} to a blank theme?`, () => {
           currentThemeCSS = ''; $(`#pcm-themeTextArea`).val(currentThemeCSS);
           globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();

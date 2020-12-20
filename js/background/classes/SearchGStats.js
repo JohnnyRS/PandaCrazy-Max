@@ -19,7 +19,7 @@ class SearchGStats {
 	 * @return {bool} - True if searching is on now. */
 	isSearchOn() { return this.searching.value; }
 	/** Checks to see if searching is on by using searchNow value.
-	 * @return {bool} - True is searchNow is on. */
+	 * @return {bool} - True if searchNow is on. */
 	isSearchNowOn() { return this.searchNow.value; }
 	/** Updates the given stat object on the status bar and pass a text to use too.
 	 * @param  {object} statObj   - The stat object  @param  {string} [text] - The text to use in the status bar for this stat object. */

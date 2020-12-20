@@ -237,12 +237,16 @@ class ModalJobClass {
     const idName = modal.prepareModal(null, '920px', 'pcm-addJobsModal', 'modal-lg', 'Add new Panda Info', '<h4>Enter New Panda Information.</h4>', '', '', 'visible btn-sm', 'Add new Panda Info', () => { checkGroupID(idName); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
-      $(`<div><div class='pcm-checkStatus pcm-inputError'></div><div class='pcm-myInfo'>Enter a Group ID, Requester ID, Preview URL or accept URL.</div></div>`).appendTo(df);
-      createInput(df, ' pcm-inputDiv-url', 'pcm-formAddGroupID', '* Enter info for new Job: ', 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY');
-      createCheckBox(df, 'Start Collecting', 'pcm-startCollecting', '', true); createCheckBox(df, 'Collect Only Once', 'pcm-onlyOnce', '');
-      createCheckBox(df, 'Search Job', 'pcm-searchJob', ''); createInput(df, 'pcm-topBorder', 'pcm-formReqName', 'Requester Name: ', 'default: group ID shown');
-      createInput(df, '', 'pcm-formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2'); createInput(df, '', 'pcm-formAddTitle', 'Title: ', 'default: group ID shown');
-      createInput(df, '', 'pcm-formAddDesc', 'Description: ', 'default: group ID shown'); createInput(df, '', 'pcm-formAddPay', 'Pay Amount: ', 'default: 0.00');
+      $(`<div><div class='pcm-checkStatus pcm-inputError'></div><div class='pcm-myInfo'>Enter a Group ID, Requester ID, Preview URL or Accept URL.</div></div>`).appendTo(df);
+      createInput(df, ' pcm-inputDiv-url', 'pcm-formAddGroupID', '* Enter info for new Job: ', 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Group ID, Requester ID, Preview URL or Accept URL. This is a required input.');
+      createCheckBox(df, 'Start Collecting', 'pcm-startCollecting', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Start to collect after job is added.');
+      createCheckBox(df, 'Collect Only Once', 'pcm-onlyOnce', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Only allow one HIT to be collected and then stop collecting.');
+      createCheckBox(df, 'Search Job', 'pcm-searchJob', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Create a search GID or RID search job instead of a normal panda job.');
+      createInput(df, 'pcm-topBorder', 'pcm-formReqName', 'Requester Name: ', 'default: group ID shown',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in Requester Name if known. Will be replaced when the HIT is found.');
+      createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in Requester ID if known. Will be replaced when the HIT is found.');
+      createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddTitle', 'Title: ', 'default: group ID shown',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in the title of the HIT if known. Will be replaced when the HIT is found.');
+      createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddDesc', 'Description: ', 'default: group ID shown',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in the description of the HIT if known. Will be replaced when the HIT is found.');
+      createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddPay', 'Pay Amount: ', 'default: 0.00',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in the pay reward of the HIT if known. Will be replaced when the HIT is found.');
       let modalBody = $(`#${idName} .${modal.classModalBody}`);
       modalBody.append(df);
       modalBody.find('.pcm-inputText-md').keypress( e => { if((e.keyCode ? e.keyCode : e.which) == '13') checkGroupID(idName); });
@@ -263,18 +267,18 @@ class ModalJobClass {
   async showJobsTable(modalBody, jobs, type, checkboxFunc=null, afterClose=null) {
     let divContainer = $(`<table class='table table-dark table-sm table-moreCondensed pcm-jobTable table-bordered w-auto'></table>`).append($(`<tbody></tbody>`)).appendTo(modalBody);
     displayObjectData([
-      {'string':'', 'type':'checkbox', 'btnFunc': e => { $(`.modal-body input[type='checkbox']`).prop('checked', $(e.target).is(':checked')); }},
+      {'string':'', 'type':'checkbox', 'btnFunc': e => { $(`.modal-body input[type='checkbox']`).prop('checked', $(e.target).is(':checked')); }, 'tooltip':'Click here to select all jobs displayed.'},
       {'string':'Requester Name', 'type':'string', 'noBorder':false}, {'string':'HIT Title', 'type':'string', 'noBorder':true}, {'string':'Pay', 'type':'string', 'noBorder':true},
       {'string':' ', 'type':'string'}, {'string':' ', 'type':'string'}
     ], divContainer, bgPanda.info, true, true, true, 'pcm-jobsListHeader');
     for (const myId of jobs) {
       let status = (pandaUI.pandaStats[myId].collecting) ? 'On' : 'Off', data = await bgPanda.dataObj(myId);
       displayObjectData([
-        {'string':'', 'type':'checkbox', 'width':'25px', 'maxWidth':'25px', 'unique':myId, 'inputClass':' pcm-checkbox', 'btnFunc':checkboxFunc},
+        {'string':'', 'type':'checkbox', 'width':'25px', 'maxWidth':'25px', 'unique':myId, 'inputClass':' pcm-checkbox', 'btnFunc':checkboxFunc, 'tooltip':'Click here to select this job.'},
         {'string':'Requester Name', 'type':'keyValue', 'key':'reqName', 'orKey':'friendlyReqName', 'width':'220px', 'maxWidth':'220px', id:`pcm-RQN-${myId}`},
         {'string':'HIT Title', 'type':'keyValue', 'key':'title', 'orKey':'friendlyTitle', 'width':'550px', 'maxWidth':'550px', 'id':`pcm-TTL-${myId}`},
         {'string':'Pay', 'type':'keyValue', 'key':'price', 'width':'45px', 'maxWidth':'45px', 'money':true, 'id':`pcm-Pay-${myId}`, 'pre':'$'},
-        {'btnLabel':'Collect', 'type':'button', 'addClass':` btn-xxs pcm-collectButton pcm-button${status}`, 'idStart':'pcm-collectButton2', 'width':'62px', 'maxWidth':'62px', 'unique':myId, 'btnFunc': e => { $(`#pcm-collectButton-${e.data.unique}`).click(); }, 'skip':(type === 'groupingEdit')},
+        {'btnLabel':'Collect', 'type':'button', 'addClass':` btn-xxs pcm-collectButton pcm-button${status}`, 'idStart':'pcm-collectButton2', 'width':'62px', 'maxWidth':'62px', 'unique':myId, 'btnFunc': e => { $(`#pcm-collectButton-${e.data.unique}`).click(); }, 'skip':(type === 'groupingEdit'), 'tooltip': 'Start Collecting this Panda HIT'},
         {'btnLabel':'Details', 'type':'button', 'addClass':' btn-xxs', 'idStart':'pcm-detailsButton2', 'width':'62px', 'maxWidth':'62px', 'unique':myId, 'btnFunc': e => { 
             const myId = e.data.unique;
             this.showDetailsModal( myId, (changes) => {
@@ -282,7 +286,7 @@ class ModalJobClass {
               $(`#pcm-TTL-${myId}`).text( (changes.friendlyTitle!=='') ? changes.friendlyTitle : changes.title );
               $(`#pcm-Pay-${myId}`).text(changes.price);
             }, () => { if (afterClose) afterClose(); });
-          }}
+          }, 'tooltip':'Display and edit all options for this Panda.'}
       ], divContainer, data, true, true,_,_, `pcm-jobRow-${myId}`);
     }
     divContainer = null;
@@ -326,13 +330,17 @@ class ModalJobClass {
         createInput(modalControl, ' border-bottom', 'pcm-groupingDescI', 'Description: ', 'default: no description', null, '', modal.tempObject[idName].description).append(createTimeElapse(thisObj.endHours, thisObj.endMinutes));
       }
       let radioGroup = $(`<div class='pcm-uiGroup'></div>`).appendTo(modalControl);
-      radioButtons(radioGroup, 'theJobs', '0', 'All Jobs', true); 
-      if (type === 'jobs') { radioButtons(radioGroup, 'theJobs', '1', 'Collecting'); radioButtons(radioGroup, 'theJobs', '2', 'Not Collecting'); }
-      radioButtons(radioGroup, 'theJobs', '3', 'Searching Mode'); radioButtons(radioGroup, 'theJobs', '4', 'Only Once');
+      radioButtons(radioGroup, 'theJobs', '0', 'All Jobs', true, 'pcm-tooltipData pcm-tooltipHelper', 'Display all jobs in the list below.'); 
+      if (type === 'jobs') {
+        radioButtons(radioGroup, 'theJobs', '1', 'Collecting',_, 'pcm-tooltipData pcm-tooltipHelper', 'Display Only the jobs currently being collected in the list below.');
+        radioButtons(radioGroup, 'theJobs', '2', 'Not Collecting',_, 'pcm-tooltipData pcm-tooltipHelper', 'Display Only the jobs not currently being collected in the list below.');
+      }
+      radioButtons(radioGroup, 'theJobs', '3', 'Searching Mode',_, 'pcm-tooltipData pcm-tooltipHelper', 'Display only the search jobs in the list below.');
+      radioButtons(radioGroup, 'theJobs', '4', 'Only Once',_, 'pcm-tooltipData pcm-tooltipHelper', 'Display the jobs that will only collect one HIT in the list below.');
       let inputControl = createInput(modalControl, '', 'pcm-searchJobs', 'Search phrase: ', 'example: receipts', e => {
         $(e.target).closest('.pcm-modalControl').find('.pcm-searchingJobs').click();
-      });
-      $(`<button class='btn btn-xxs pcm-searchingJobs'>Search</button>`).on( 'click', async () => {
+      }, 'pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Enter text in the input field to search for in the requester name or HIT title.');
+      $(`<button class='btn btn-xxs pcm-searchingJobs pcm-tooltipData pcm-tooltipHelper' data-original-title='Display only the jobs in the list below with the input text in the requester name or HIT title.'>Search</button>`).on( 'click', async () => {
         let theDialog = $(`#${idName} .${modal.classModalDialog}:first`); theDialog.find('.pcm-jobTable').remove();
         await this.jobsFilter($('#pcm-searchJobs').val().toLowerCase(), theDialog.find(`.pcm-modalJobControl:first`)).then( async (filtered) => {
           await this.showJobsTable(theDialog.find(`.${modal.classModalBody}:first`), filtered, type, checkFunc, () => {});
@@ -340,7 +348,7 @@ class ModalJobClass {
           theDialog = null;
         });
       }).appendTo(inputControl);
-      if (type === 'jobs') $(`<button class='btn btn-xxs pcm-deleteSelected'>Delete Selected</button>`).click( () => {
+      if (type === 'jobs') $(`<button class='btn btn-xxs pcm-deleteSelected pcm-tooltipData pcm-tooltipHelper' data-original-title='Delete all the jobs which are selected in the list below.'>Delete Selected</button>`).click( () => {
         let selected = $(`#${idName} .${modal.classModalDialog}:first`).find('.pcm-checkbox:checked').map((_,element) => Number($(element).val()) ).get();
         if (selected.length) pandaUI.removeJobs(selected, (result, unique) => { if (result !== 'NO') $(`#pcm-jobRow-${unique}`).remove(); }, 'manual', () => { selected = null; });
         else { selected = null; }
@@ -361,6 +369,7 @@ class ModalJobClass {
         if (afterShow) afterShow(this);
         df2 = null; modalControl = null;
       });
+      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
     }, () => { if (afterClose) afterClose(); else modal = null; });
   }
 }

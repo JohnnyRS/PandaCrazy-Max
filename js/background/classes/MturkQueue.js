@@ -1,12 +1,12 @@
 'use strict'
 /** This class gets the queue from mturk and sends it out to other classes that need it.
- * @class MturkQueue
+ * @class MturkQueue ##
  * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MturkQueue extends MturkClass {
 	/**
-   * @param  {number} timer           - Time to use for the timer to get queue results.
-   * @param  {number} [OffTimer=5000] - Time to use for the timer when logged off or disconnected to get queue results.
+   * @param  {number} timer      - Time to use for the timer to get queue results.
+   * @param  {number} [OffTimer] - Time to use for the timer when logged off or disconnected to get queue results.
 	 */
 	constructor(timer, OffTimer=5000, disconnectedTimer=10000) {
     super();
@@ -15,10 +15,10 @@ class MturkQueue extends MturkClass {
     this.disconnectTimer = disconnectedTimer;
     this.loggedOffTimer = OffTimer;   // Sets the timer to use for when it's logged off.
     this.queueUnique = null;          // The unique number set by the timer class for this class.
-    this.queueResults = [];           // The results from mturk queue with all hits info.
+    this.queueResults = [];           // The results from mturk queue with all HITs info.
     this.queueAdd = [];
     this.loggedOff = false;           // Are we logged off or not?
-    this.authenticityToken = null;    // Keeps the authenticity token used for returning hits.
+    this.authenticityToken = null;    // Keeps the authenticity token used for returning HITs.
 		queueTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
 		queueTimer.theTimer(timer);       // Sets the timer for the timer class.
     this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
@@ -53,11 +53,9 @@ class MturkQueue extends MturkClass {
     if (this.dLog(1)) console.info(`%cStopping Queue Monitor. Delete ${this.queueUnique}`, CONSOLE_INFO);
     queueTimer.deleteFromQueue(this.queueUnique);
   }
-  /** Will count how many hits in queue with the given group ID or requester ID.
-   * If no ID's are given then it will get the total reward potential of all the hits in queue.
-   * @param  {string} [rId='']  - Requester ID to get total count from.
-   * @param  {string} [gId='']  - Group ID to get total count from.
-   * @return {number}           - Returns total counted value of given options. */
+  /** Will count how many HITs in queue with the given group ID or requester ID. Will send total reward potential if no ID's given.
+   * @param  {string} [rId] - Requester ID to get total count from.  @param  {string} [gId]  - Group ID to get total count from.
+   * @return {number}       - Returns total counted value of given options. */
   totalResults(rId='', gId='') {
     let total = 0;
     if (this.queueResults.length) {
@@ -75,7 +73,7 @@ class MturkQueue extends MturkClass {
     }
     return total;
   }
-  /** Adds 1 to the accepted value for this hit job.
+  /** Adds 1 to the accepted value for this HIT job.
    * @param  {object} pandaInfo - The information data for this panda job. */
   addAccepted(pandaInfo) { this.queueAdd.push(pandaInfo.data); }
   /** Changes the timer to a longer time and informs panda and search class when logged off. */
@@ -90,22 +88,20 @@ class MturkQueue extends MturkClass {
     if (this.dLog(1)) console.info('%cYou are logged back in to mturk.com.',CONSOLE_WARN);
     if (myPanda) myPanda.nowLoggedOn(); if (mySearch) mySearch.nowLoggedOn(); // Remove logged off warning on all running UI's.
   }
-  /** Fetches the url for the queue after timer class tells it to do so and handles mturk results.
-   * Can detect logged off, PRE's and good queue results.
-   * @param  {object} objUrl      - Url object to use when fetching.
-   * @param  {number} queueUnique - Unique number for the job in timer queue. */
+  /** Fetches the URL for the queue after timer class tells it to do so and handles MTURK results.
+   * @param  {object} objUrl      - URL object to use when fetching.  @param  {number} queueUnique - Unique number for the job in timer queue. */
   goFetch(objUrl, queueUnique) {
     if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 		super.goFetch(objUrl).then(result => {
       if (!result) {
-        // if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }
+        if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }
       } else {
         if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
         else if (result.type === 'ok.text') {
           if (this.disconnected) { this.disconnected = false; queueTimer.theTimer(this.timer); }
-          if (this.loggedOff) this.nowLoggedOn(); // Must be logged in if mturk sent relevant data.
+          if (this.loggedOff) this.nowLoggedOn(); // Must be logged in if MTURK sent relevant data.
           let errorPage = $(result.data).find('.error-page');
-          if (errorPage.length>0) {
+          if (errorPage.length > 0) {
             let errorMessage = errorPage.find('p.message').html();
             if (errorMessage.includes('We have detected an excessive rate of page')) // PRE found.
             if (this.dLog(1)) console.info('%cReceived a Queue PRE!!',CONSOLE_WARN);
@@ -113,12 +109,12 @@ class MturkQueue extends MturkClass {
           } else {
             let targetDiv = $(result.data).find('.task-queue-header').next('div');
             let rawProps = targetDiv.find('div[data-react-props]').attr('data-react-props');
-            let authenticityToken = $(result.data).filter('meta[name="csrf-token"]')[0].content;
+            let authenticityToken = $(result.data).filter(`meta[name='csrf-token']`)[0].content;
             if (authenticityToken) this.authenticityToken = authenticityToken;
             this.queueResults = JSON.parse(rawProps).bodyData;
             this.queueAdd = [];
             this.sendQueueResults();
-            targetDiv = rawProps = null;
+            targetDiv = null; rawProps = null;
           }
           errorPage = null;
         } else if (result.type === 'caught.error') {

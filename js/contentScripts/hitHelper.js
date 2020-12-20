@@ -2,7 +2,7 @@ const locationUrl = window.location.href;
 let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false;
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null;
-let gNewQueue = false, gHolders = {}, gTabIds = {}, gPostionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null; 
+let gNewQueue = false, gHolders = {}, gTabIds = {}, gPostionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false; 
 let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true};
 let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [];
 
@@ -107,7 +107,7 @@ function doIds(assignedHit, uniqueTab, closed=false) {
 }
 /** This HIT is expired or not found so add classes to iframe to show it is not in your queue anymore. */
 function hitExpired() {
-  $(`.task-question-iframe-container`).addClass(`pcm-expiredHit`); $(`iframe.embed-responsive-item`).addClass(`pcm-expiredIframe`);
+  if (!gUnloading) $(`.task-question-iframe-container`).addClass(`pcm-expiredHit`); $(`iframe.embed-responsive-item`).addClass(`pcm-expiredIframe`);
   document.title = gDocTitle;
 }
 /** This HIT is not expired so make sure any expired classes are removed. */
@@ -311,6 +311,7 @@ function setReturnBtn() {
 /** Sets up a listener for unloading page so it can remove old local chrome storage variables. Detects returned HITs here also. */
 function setBeforeUnload() {
   window.addEventListener('beforeunload', async () => {
+    gUnloading = true;
     if (extensionLoad()) {
       if (gIds[gAssignedHit] && gIds[gAssignedHit].count < 2) { chrome.storage.local.remove(`PCM_tHit_${gAssignedHit}`); delete gIds[gAssignedHit]; }
       chrome.storage.local.remove(`PCM_t_${gTabUnique}`);

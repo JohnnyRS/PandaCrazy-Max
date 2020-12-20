@@ -100,13 +100,13 @@ class PandaCards {
    * @param  {number} myId - Unique ID @param  {object} info - Panda Info
    * @return {string}      - HTML of the card one line area. */
   oneLineCard(myId, info) {
-    const nameGroup = $(`<div class='pcm-nameGroup1 row w-90'></div>`).css('cursor', 'default').hide().append(`<span class='pcm-reqName1 col text-truncate' id='pcm-hitReqName1-${myId}'></span>`);
+    const nameGroup = $(`<div class='pcm-nameGroup1 row w-90'></div>`).css('cursor', 'default').hide().append(`<span class='pcm-reqName1 col text-truncate pcm-tooltipData' id='pcm-hitReqName1-${myId}' data-toggle='tooltip' data-html='true'></span>`);
     $(this.createCardStatus(myId, info, true)).hide().appendTo(nameGroup);
     let buttonGroup = $(`<span class='d-flex pcm-buttonGroup1' id='pcm-buttonGroup1-${myId}'></span>`).appendTo(nameGroup);
-    buttonGroup.append(`<button class='pcm-hitButton pcm-collectButton1 pcm-buttonOff' type='button' id='pcm-collectButton1-${myId}'><span>C</span></button>`);
-    buttonGroup.append(`<button class='pcm-hitButton pcm-hamButton1 pcm-buttonOff' type='button' id='pcm-hamButton1-${myId}'><span>H</span></button>`);
-    buttonGroup.append(`<button class='pcm-hitButton pcm-detailsButton1 pcm-buttonOff' type='button' id='pcm-detailsButton1-${myId}'><span>D</span></button>`);
-    buttonGroup.append(`<button class='pcm-hitButton pcm-deleteButton1 pcm-buttonOff' type='button' id='pcm-deleteButton1-${myId}'><span>X</span></button>`);
+    buttonGroup.append(`<button class='pcm-hitButton pcm-collectButton1 pcm-buttonOff pcm-tooltipData' type='button' id='pcm-collectButton1-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.collectTip}'><span>C</span></button>`);
+    buttonGroup.append(`<button class='pcm-hitButton pcm-hamButton1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' type='button' id='pcm-hamButton1-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>H</span></button>`);
+    buttonGroup.append(`<button class='pcm-hitButton pcm-detailsButton1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' type='button' id='pcm-detailsButton1-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.details}'><span>D</span></button>`);
+    buttonGroup.append(`<button class='pcm-hitButton pcm-deleteButton1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' type='button' id='pcm-deleteButton1-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.delete}'><span>X</span></button>`);
     buttonGroup = null;
     return nameGroup;
   }
@@ -129,7 +129,7 @@ class PandaCards {
   appendCard(myId, info, fromDB=false) {
     let thisTabUnique = (info.data.tabUnique !== null) ? info.data.tabUnique : this.tabs.currentTab; this.df = $('');
     if (!this.tabs.getUniques().includes(thisTabUnique)) thisTabUnique = this.tabs.currentTab;
-    if (info.data.tabUnique != thisTabUnique) { info.data.tabUnique = thisTabUnique; bgPanda.updateDbData(this.myId); }
+    if (info.data.tabUnique != thisTabUnique) { info.data.tabUnique = thisTabUnique; bgPanda.updateDbData(myId); }
     if (!fromDB) this.tabs.setPosition(thisTabUnique, info.dbId, !fromDB);
     this.createCard(myId, info); this.cards[myId].updateCardDisplay(this.values);
   }

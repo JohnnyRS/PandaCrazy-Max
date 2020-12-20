@@ -17,6 +17,7 @@ class EximClass {
     this.importAlarmsData = {};
     this.importTriggersData = [];
     this.importCompleted = false;
+    this.alarmsOnly = false;
     this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}, 'SearchGroupings':{'func':'searchGroupings', 'prop':'SearchGroupings'}, 'Triggers':{'func':'theTriggers', 'prop':'SearchTriggers'}};
     this.soundConvert = {'more15':'less99', 'queueFull':'fullQueue', 'loggedOut':'hasToPause', 'captchaAlarm':'captchaAlarm'};
     this.reader = new FileReader();
@@ -36,19 +37,23 @@ class EximClass {
     this.tabPosition = 0; this.importJobData = {}; this.importTabsData = {}; this.importOptions = {}; this.importSearchData = {}; this.importJobsTabs = {};
     this.importJobIds = []; this.importTabsIds = []; this.importGroupings = []; this.importSGroupings = [];
   }
+  exportOnlyAlarms(doneFunc=null) {
+    let exportAlarms = alarms.exportAlarms(true, true);
+    saveToFile({'pre':this.exportPre, 'Alarms':exportAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });
+  }
   /** Export all the data to a file with alarms or not.
    * @async                      - To wait for all panda job data to be loaded.
    * @param  {bool} [withAlarms] - Should alarm sounds be included?  @param  {function} [doneFunc] - The function to call after saving file to computer. */
   async exportData(withAlarms=false, doneFunc=null) {
-    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = [], exportAlarms = [], exportTriggers = [], exportSearchGroups = [];
+    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = {}, exportAlarms = [], exportTriggers = {}, exportSearchGroups = {};
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups();
     exportAlarms = alarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
-    this.exportPre.jobs = exportJobs.length;
+    this.exportPre.jobs = exportJobs.length; 
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
-      'SearchGroupings':exportSearchGroups, 'SoundOptions':exportAlarms}, withAlarms, () => {
+      'SearchGroupings':exportSearchGroups, 'SoundOptions':exportAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
       bgPanda.nullData(false); if (doneFunc) doneFunc();
     });
   }
@@ -92,7 +97,7 @@ class EximClass {
    * @async                      - To wait for all the current data to be deleted and new imported data to be saved in database.
    * @param  {bool} [onlyAlarms] - Should alarm sounds only get imported? */
   async startImporting(onlyAlarms=false) {
-    if (onlyAlarms) {
+    if (onlyAlarms || this.alarmsOnly) {
       await alarms.clearAlarms();
       await alarms.prepareAlarms(Object.values(this.importAlarmsData), false);
     } else {
@@ -151,14 +156,15 @@ class EximClass {
         newPositions[mInfo[i].tabUnique].push(mInfo[i].id);
         for (const group of this.importGroupings) {
           if (group.grouping && group.grouping.includes(mData[i].myId)) group.pandas[mInfo[i].id] = group.delayed.includes(mData[i].myId);
+          else if (group.pandas && group.pandas.hasOwnProperty(mData[i].myId)) { group.pandas[mInfo[i].id] = group.pandas[mData[i].myId]; delete group.pandas[mData[i].myId]; }
         }
       }
       if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules,_, true);
-      let triggerData = this.importTriggersData, imTriggers = [], imOptions = [], imRules = [], imHistory = [], counter = 1;
+      let triggerData = this.importTriggersData, imTriggers = [], imOptions = [], imRules = [], imHistory = [], prevId = [], newIds = {}, counter = 1;
       if (triggerData.length) {
         for (const data of this.importTriggersData) {
-          delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId;
           let older = data.history.hasOwnProperty('gids'), gidsObject = (older) ? data.history.gids : data.history, numHits = -1, historyGids = {};
+          prevId.push({'prevId':data.trigger.id, 'newId':-1}); delete data.trigger.id; delete data.options.dbId; delete data.rules.dbId;
           for (const key of Object.keys(gidsObject)) {
             let value = gidsObject[key]; numHits++;
             if (older) { historyGids[numHits] = {'gid':key, 'date':value.date, 'sent':value.sent}; }
@@ -169,8 +175,14 @@ class EximClass {
           if (numHits > 0) data.trigger.numHits = numHits;
           imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history); counter++;
         }
-        await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true);
-      }
+        await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true, prevId);
+        for (const theId of prevId) { newIds[theId.prevId] = theId.newId; }
+        for (const group of this.importSGroupings) {
+          let newTriggers = {};
+          for (const key of Object.keys(group.triggers)) { if (newIds.hasOwnProperty(key)) newTriggers[newIds[key]] = {'id':newIds[key]}; }
+          group.triggers = newTriggers;
+        }
+    }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
       groupings.importToDB(this.importGroupings); sGroupings.importToDB(this.importSGroupings);
       for (const unique of pandaUI.tabs.getUniques()) { if (newPositions[unique]) pandaUI.tabs.setpositions(unique, newPositions[unique]); }
@@ -183,12 +195,12 @@ class EximClass {
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       if (window.File && window.FileReader && window.FileList && window.Blob) {
-        createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' pcm-importCheckbox');
+        createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' pcm-importCheckbox',_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Import Alarm sounds ONLY from the exported file. No other data will be imported and all data will be kept.');
         let inputContainer = $(`<div class='col-xs-12 pcm-fileInput'></div>`).appendTo(df);
-        createFileInput(inputContainer);
+        createFileInput(inputContainer, 'application/JSON', 'Browse for an exported json file on your computer to import all your data.');
         $(`<div id='pcm-importCheck'></div>`).appendTo(df);
         $(`<div class='pcm-importStatus'>&nbsp;</div>`).appendTo(df);
-        $('<div></div>').append($(`<button class='pcm-importButton pcm-disabled'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
+        $('<div></div>').append($(`<button class='pcm-importButton pcm-disabled pcm-tooltipData pcm-tooltipHelper' data-original-title='Import jobs, options, groupings, triggers and alarm options from an exported file.'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
         $(`#${idName} .${modal.classModalBody}`).append(df);
         $('.custom-file-input').on('change', e => {
           const fileName = $(e.target).val().replace('C:\\fakepath\\', '');
@@ -220,12 +232,16 @@ class EximClass {
     modal.showModal(null, () => {
       let df = document.createDocumentFragment();
       $(`<h4 class='pcm-exportText'>Any added jobs, tabs, groupings and all options will be exported.<br />Only the alarm options will be saved unless you click the checkbox to save alarm sounds.<br />Saving alarm sounds will create a larger exported file so only do it when you add new sounds.</div>`).appendTo(df);
-      createCheckBox(df, 'Export alarm sounds too: ', 'pcm-exportAlarmsToo', 'alarmsYes', false, ' pcm-exportCheckAlarms');
-      $(`<div></div>`).append($(`<button class='pcm-exportButton'>Export Your Data To A File</button>`)).appendTo(df);
+      let div1 = $(`<div></div>`).appendTo(df);
+      createCheckBox(div1, 'Export alarm sounds too: ', 'pcm-exportAlarmsToo', 'alarmsYes', false, ' pcm-exportCheckAlarms',_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Export Alarm sounds also to the export file which could cause it to be large.');
+      let div2 = $(`<div></div>`).appendTo(df);
+      createCheckBox(div2, 'Export ONLY alarm sounds: ', 'pcm-exportAlarmsOnly', 'alarmsYes', false, ' pcm-exportCheckAlarmsOnly',_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Export ONLY Alarm sounds to the export file. No other data will be exported so you can share your personal alarms only.');
+      $(`<div></div>`).append($(`<button class='pcm-exportButton pcm-tooltipData pcm-tooltipHelper' data-original-title='Export jobs, options, groupings, triggers and alarms to a file.'>Export Your Data To A File</button>`)).appendTo(df);
       $(`#${idName} .${modal.classModalBody}`).append(df);
       $('.pcm-exportButton:first').on('click', e => {
         $(e.target).html('Please Wait: Exporting').css('color','white').prop('disabled',true);
-        this.exportData($('#pcm-exportAlarmsToo').prop('checked'), async () => { await delay(1500); modal.closeModal(); });
+        if ($('#pcm-exportAlarmsOnly').prop('checked')) this.exportOnlyAlarms(async () => { await delay(1500); modal.closeModal(); });
+        else this.exportData($('#pcm-exportAlarmsToo').prop('checked'), async () => { await delay(1500); modal.closeModal(); });
       });
       df = null;
     }, () => { modal = null; });
@@ -250,7 +266,7 @@ class EximClass {
       await delay(400);
       $('#pcm-importCheck .jobs').html('Job Data - Verified').addClass('pcm-verified');
       return true;
-    } else return false;
+    } else { $('#pcm-importCheck .jobs').html('Job Data - None').addClass('pcm-dataNone'); return false; }
   }
   /** Checks the properties from an import data and then calls the specific function for it.
    * @param  {object} data        - Import data  @param  {string} version    - Import version  @param  {string} type - Property Id
@@ -259,8 +275,9 @@ class EximClass {
     $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - Checking`).removeClass('pcm-verified');
     await delay(400);
     let prop = this.propData[type].prop;
-    if (type === 'Tabs' && data.hasOwnProperty(prop)) { for (const tab of data.Tabsdata) { this.theTabs(tab, version); } }
-    else if (type !== 'Tabs') this[this.propData[type].func]((data[prop]) ? data[prop] : {}, version);
+    if (type === 'Tabs') { if (data.hasOwnProperty(prop)) { for (const tab of data.Tabsdata) { this.theTabs(tab, version); }}}
+    else if (type === 'Alarms' && data.hasOwnProperty('Alarms')) { this.theSoundOptions(data['Alarms']); prop = 'Alarms'; this.alarmsOnly = true; }
+    else this[this.propData[type].func]((data[prop]) ? data[prop] : {}, version);
     if (data.hasOwnProperty(prop)) $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - Verified`).addClass('pcm-verified');
     else $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - None`).addClass('pcm-dataNone');
   }

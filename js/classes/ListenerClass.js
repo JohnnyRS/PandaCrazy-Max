@@ -25,7 +25,7 @@ class ListenerClass {
           else if (command === 'unpause') { pandaUI.pauseToggle(false); }
           else if (command === 'forumOptions') { sendResponse(globalOpt.theHelperOptions()); }
           else if (command === 'queueOptions') { globalOpt.theSessionQueue(data); if (sendResponse) sendResponse(globalOpt.theHelperOptions()); }
-          else if (command === 'monitorSpeech') { alarms.speakThisNow('HITs in Queue. Going to first.'); }
+          else if (command === 'monitorSpeech') { if (!globalOpt.doGeneral().disableMonitorAlert) alarms.speakThisNow('HITs in Queue. Going to first.'); }
           else console.log(JSON.stringify(request), sender);
         }
       }
