@@ -73,12 +73,12 @@ function prepareGlobals() {
       }
     }
   }, false);
-  // window.addEventListener('JR_message_pandacrazy', e => { console.log('HH pandacrazy to: ', e.key, e.url, gParentUrl);
-  //   if (e.detail && e.detail.hasOwnProperty('time') && e.detail.hasOwnProperty('command') && e.detail.hasOwnProperty('data')) {
-  //     let data = e.detail.data, command = e.detail.command;
-  //     parseCommands(command, data)
-  //   }
-  // }, false);
+  window.addEventListener('JR_message_pandacrazy', e => {
+    if (e.detail && e.detail.hasOwnProperty('time') && e.detail.hasOwnProperty('command') && e.detail.hasOwnProperty('data')) {
+      let data = e.detail.data, command = e.detail.command;
+      parseCommands(command, data)
+    }
+  }, false);
 }
 /** To make older scripts work correctly. Examples: HITForker, Overwatch, PandaPush. MIGHT NOT BE NEEDED ANYMORE. */
 function pcMAX_listener() { console.log('pcMAX_listener page'); }
@@ -453,7 +453,7 @@ chrome.storage.local.get('PCM_running', value => {
         else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
         else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
         else if (/worker\.mturk\.com\/overwatch$/.test(locationUrl)) { addIframe(); }
-        else if (/worker\.mturk\.com\/\?hit_forker$/.test(locationUrl)) { addIframe(); }
+        else if (/worker\.mturk\.com\/.*[?|&](hit_forker|finder_beta_test)/.test(locationUrl)) { addIframe(); }
         else if (/worker\.mturk\.com\/requesters\/PandaPush\/projects$/.test(locationUrl)) { addIframe(); }
         else if (/worker\.mturk\.com[\/]tasks.*$/.test(locationUrl)) { if (gSessionData.monitorNext) monitorNext(); else queuePage(); }
         else if (/worker\.mturk\.com[\/].*$/.test(locationUrl)) otherPage();

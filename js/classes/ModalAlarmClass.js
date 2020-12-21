@@ -27,9 +27,9 @@ class ModalAlarmClass {
   /** Add the save button when a user is changing the alarm sound.
    * @param  {string} name - The name of the alarm being changed. */
   addSaveButton(name) {
-    $('.pcm-fileStatus').html('').removeClass('pcm-optionLabelError').append(this.btnStr('Save Audio', 'pcm-saveAudio', '', 'xs'));
-    $('.saveAudio').click( () => {
-      $('.pcm-changeMe').remove();
+    $('.pcm-fileStatus').html('').removeClass('pcm-optionLabelError').append(this.btnStr('Save Audio', 'pcm-saveAudio', '', 'Save this audio for this alarm.', 'xs'));
+    $('.pcm-saveAudio').click( () => {
+      $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
       if (this.audio) this.audio.load();
       alarms.getData(name).audio = this.audio; alarms.saveAlarm(name); this.audio = null;
     });
@@ -82,7 +82,7 @@ class ModalAlarmClass {
         $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
         alarms.stopSound(); if (this.audio) this.audio.load();
         let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd'), resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : search;
-        $('.pcm-changeMe').remove();
+        $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
         if (prevSnd !== soundName) {
           $(e.target).closest('div').after($(`<div class='pcm-changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm-fileInput'></span>`).append(createFileInput(_,'audio/*', 'Browse for an audio file on your computer to replace the alarm with.')).append($(`<span class='pcm-fileStatus'></span>`).append(this.btnStr('Default Audio', 'pcm-defaultAudio pcm-tooltipData pcm-tooltipHelper', '', 'Change alarm back to the default alarm sound.', 'xs'))));
           $('.custom-file-input').on('change', e => {
@@ -107,7 +107,7 @@ class ModalAlarmClass {
           resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
         }
       });
-      modalBody.find('.pay').click( e => {
+      modalBody.find('.pcm-alarmsPay').click( e => {
         let soundName = $(e.target).closest('div').data('snd');
         modal.showDialogModal('700px', 'Change New Less Than Pay Rate.', 'Enter the pay rate this alarm will sound when the pay rate is less than this:', () => {
           let newValue = $('#pcm-formQuestion').val();
@@ -121,7 +121,7 @@ class ModalAlarmClass {
           $(e.target).html('$' + alarms.setPayDef(soundName));
         });
       });
-      modalBody.find('.minutes').click( e => {
+      modalBody.find('.pcm-alarmsMinutes').click( e => {
         let soundName = $(e.target).closest('div').data('snd');
         modal.showDialogModal('700px', 'Change New Less Than Minutes.', 'Enter the minutes that this alarm will sound if the duration is less than this:', () => {
           let newValue = $('#pcm-formQuestion').val();
@@ -133,7 +133,7 @@ class ModalAlarmClass {
         });
       });
       modalBody = null; df = null;
-    }, () => { if (this.audio) this.audio.load(); this.audio = null; alarms.stopSound(); modal = null; if (afterClose) afterClose(); });
+    }, () => { alarms.stopSound(); if (this.audio) this.audio.load(); this.audio = null; modal = null; if (afterClose) afterClose(); });
   }
   /** Reads a file, sets up the audio and plays the audio to user.
    * @param  {string} name - Alarm Name  @param  {string} type - Audio Type */

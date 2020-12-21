@@ -196,7 +196,7 @@ class TheGroupings {
         this.goCheckGroup(grouping, true);
         const bgClass = (this.groupStatus[grouping].collecting) ? 'pcm-groupCollect' : ((Object.keys(this.groups[grouping][gType]).length === 0) ? 'pcm-groupEmpty' : '');
         displayObjectData([
-          {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>{${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Job(s)' : 'Trigger(s)'}}</span>`, 'unique':grouping, 'tooltip':`Grouping Name with description and the number of ${(panda) ? 'Job(s)' : 'Trigger(s)'} it contains.`, 'addTdClass':'pcm-groupingNameDesc'},
+          {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Job(s)' : 'Trigger(s)'}</span>`, 'unique':grouping, 'tooltip':`Grouping Name with description and the number of ${(panda) ? 'Job(s)' : 'Trigger(s)'} it contains.`, 'addTdClass':'pcm-groupingNameDesc'},
           {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs pcm-groupingEdit pcm-myPrimary', 'idStart':'pcm-editButton1', 'width':'45px', 'unique':grouping, 'btnFunc': () => {
             this.showgroupingEditModal(grouping,_,_, () => {});
           }, 'tooltip':`Edit this grouping by selecting or deselecting ${(panda) ? 'Job(s)' : 'Trigger(s)'}.`},

@@ -240,8 +240,8 @@ class ModalJobClass {
       $(`<div><div class='pcm-checkStatus pcm-inputError'></div><div class='pcm-myInfo'>Enter a Group ID, Requester ID, Preview URL or Accept URL.</div></div>`).appendTo(df);
       createInput(df, ' pcm-inputDiv-url', 'pcm-formAddGroupID', '* Enter info for new Job: ', 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Group ID, Requester ID, Preview URL or Accept URL. This is a required input.');
       createCheckBox(df, 'Start Collecting', 'pcm-startCollecting', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Start to collect after job is added.');
-      createCheckBox(df, 'Collect Only Once', 'pcm-onlyOnce', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Only allow one HIT to be collected and then stop collecting.');
-      createCheckBox(df, 'Search Job', 'pcm-searchJob', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Create a search GID or RID search job instead of a normal panda job.');
+      createCheckBox(df, 'Collect Only Once', 'pcm-onlyOnce', '', false,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Only allow one HIT to be collected and then stop collecting.');
+      createCheckBox(df, 'Search Job', 'pcm-searchJob', '', false,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Create a search GID or RID search job instead of a normal panda job.');
       createInput(df, 'pcm-topBorder', 'pcm-formReqName', 'Requester Name: ', 'default: group ID shown',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in Requester Name if known. Will be replaced when the HIT is found.');
       createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddReqID', 'Requester ID: ', 'example: AGVV5AWLJY7H2',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in Requester ID if known. Will be replaced when the HIT is found.');
       createInput(df, 'pcm-tooltipData pcm-tooltipHelper', 'pcm-formAddTitle', 'Title: ', 'default: group ID shown',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Optional Field. Enter in the title of the HIT if known. Will be replaced when the HIT is found.');
