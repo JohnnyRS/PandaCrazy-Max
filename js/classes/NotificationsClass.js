@@ -39,7 +39,7 @@ class NotificationsClass {
   }
   /** Shows a logged off notification. */
   showLoggedOff() {
-    this.show('ALERT: Logged Off!', 'You are logged off of mturk so need to log back in as soon as possible', 'loggedoff', '3alert3', true);
+    this.show('ALERT: Logged Off!', 'You are logged off of MTURK so need to log back in as soon as possible', 'loggedoff', '3alert3', true);
   }
   /** Shows a captcha alert notification. */
   showCaptchaAlert() {
@@ -50,7 +50,7 @@ class NotificationsClass {
     this.show('ALERT: CONGRATS!', 'You have reached your daily limit!! You must wait for tomorrow. Go outside and see the sun!', 'dailyLimit', '3alert3', true);
   }
   /** Shows a new version notification.
-   * @param {string} version - Ver Version Number */
+   * @param {string} version - New Version Number */
   showNewVersion(version) {
     this.show('ALERT: New Version Available', `There is a new version: ${version}! \nYour current version is ${localVersion}!`, 'newVersion', '3alert3', true);
   }

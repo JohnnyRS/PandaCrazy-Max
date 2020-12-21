@@ -5,6 +5,10 @@ const _ = undefined; // used for sending to functions if parameter is not used.
  * @param  {object} val - unknown type of value
  * @return {bool}       - True if val is a string and false otherwise. */
 function checkString(val) { if (typeof val === 'string') return true; else return false; }
+/** Returns an empty sting if the value given is undefined or null.
+ * @param  {object} val - Value to Check
+ * @return {string}     - Returns an empty string if value is empty. */
+function passEmptyStr(val) { return (val) ? val : ''; }
 /** Creates a Jquery input object and returns it and appends to element if appendHere is passed.
  * @param  {object} appendHere   - Jquery Element  @param  {string} divAddClass - Div class      @param  {string} id            - Input ID
  * @param  {string} label        - Label Name      @param  {string} placeholder - Placeholder    @param  {function} [enterFunc] - Enter Pressed Function
@@ -214,12 +218,13 @@ function markInPlace(findThis, fromHere) {
 }
 /** Displays an array of objects line by line in different ways and allows for toggling an edit input
  * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
- * @param  {array} thisArrayObject - Array of objects   @param  {object} divContainer - Container      @param  {object} thisObject - The object
- * @param  {bool} [table]          - Table or not?      @param  {bool} [horizontal]   - Horizontal?    @param  {bool} [append]     - Append or Prepend?
- * @param  {string} [addClass]     - Class to be Added  @param  {string} [addId]      - ID to be added */
-function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null) {
+ * @param  {array} thisArrayObject - Array of objects   @param  {object} divContainer - Container       @param  {object} thisObject - The object
+ * @param  {bool} [table]          - Table or not?      @param  {bool} [horizontal]   - Horizontal?     @param  {bool} [append]     - Append or Prepend?
+ * @param  {string} [addClass]     - Class to be Added  @param  {string} [addId]      - ID to be added  @param  {object} [theData]  - Data to Save
+ * @param  {object} [theData]      - Second Data to Save */
+function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null, theData=null, data2=null) {
   let row = null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '';
-  if (horizontal) row = $(`<tr${trClass}${trId}></tr>`).hide();
+  if (horizontal) { row = $(`<tr${trClass}${trId}></tr>`).hide(); if (theData) row.data('theData', theData); if (data2) row.data('data2', data2); }
   for (const element of thisArrayObject) { 
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (element.skip === true || !useObject || (element.ifNot && useObject[element.ifNot])) continue;
@@ -230,7 +235,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
     if (theValue === undefined) { theValue = element.default; }
-    if (element.money) theValue = Number(theValue).toFixed(2);
+    if (element.money) theValue = (theValue !== null) ? Number(theValue).toFixed(2) : '_.__';
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
@@ -239,13 +244,13 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const pre = (element.pre) ? element.pre : '', addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '', tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
-    const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`;
+    const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`, tdClass = (element.addTdClass) ? ` ${element.addTdClass}` : '';
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
     const addtip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData${(element.notHelper) ? '' : ' pcm-tooltipHelper'}`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
     else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
-    valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}'${tdStyle}${addtip}>${addSpan}</td>`);
+    valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}${tdClass}'${tdStyle}${addtip}>${addSpan}</td>`).data('unique',element.unique);
     if (element.type !== 'hr') valueCol.appendTo(row);
     if (element.type === 'range') {
       inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
@@ -382,6 +387,13 @@ function sRulesObject(bG=[], oG=[], exc=[], inc=[], min=0.00, max=0.00) {
 function sHistoryObject(rN, rid, pay=0.00, title='', desc='', dur='', date=null) {
   if (!date) date = new Date().toISOString();
   return {'reqName':rN, 'reqId':rid, 'pay': pay, 'title': title, 'description':desc, 'duration': dur, 'date': date};
+}
+/** Converts history HIT data back into MTURK data format to show on some modal dialogs.
+ * @param  {object} data - History Data
+ * @return {object}      - Returns data back into MTURK data format. */
+function hConverterObject(data) {
+  data = (data) ? data : {};
+  return {'requester_name':'', 'title':passEmptyStr(data.title), 'description':passEmptyStr(data.description), 'monetary_reward':{'amount_in_dollars':(data.pay) ? data.pay : null}, 'requester_id':passEmptyStr(data.reqId), 'hit_set_id':passEmptyStr(data.theId), 'date':data.date};
 }
 /** Delays the script for certain amount of milliseconds.
  * @param  {number} ms - The milliseconds to delay script for. */

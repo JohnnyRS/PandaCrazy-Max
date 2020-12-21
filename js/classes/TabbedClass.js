@@ -1,5 +1,5 @@
 /** A class that works with the tabbed areas of the page for panda's and logging.
- * @class TabbedClass
+ * @class TabbedClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class TabbedClass {
   #tabsArr = [];                // The array of all the tab unique ID's.
@@ -45,7 +45,7 @@ class TabbedClass {
    * @return {array}            - Returns the array of the positions for jobs in tab. */
   getpositions(tabUnique) { return this.#dataTabs[tabUnique].list; }
   /** Sets the positions of the jobs in the tab with the unique number with the new positions.
-   * @param  {number} tabUnique - The unique tab number  @param  {array} newList    - The array of positions to set for this tab. */
+   * @param  {number} tabUnique - The unique tab number  @param  {array} newList - The array of positions to set for this tab. */
   setpositions(tabUnique, newList) { this.#dataTabs[tabUnique].list = newList; MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]); }
   /** Prepare the tabbed areas on this page at the start up of the program.
    * @async                   - To wait for the loading of the tab data from the database.
@@ -103,7 +103,7 @@ class TabbedClass {
    * @param  {object} tabElement - The jquery element to append the add button. */
   addAddButton(tabElement) {
     this.addButton = true;
-    $(`<li class='nav-item pcm-addTab'></li>`).append($(`<a class='nav-link small' href='#tabadd'>+</a>`).click( e => {
+    $(`<li class='nav-item pcm-addTab'></li>`).append($(`<a class='nav-link small' href='#tabadd'>+</a>`).click( () => {
       modal = new ModalClass();
       modal.showDialogModal('700px', 'Add New Tab', 'Type in the title of the new tab you want.', () => {
         const label = $('#pcm-formQuestion').val();
@@ -127,10 +127,10 @@ class TabbedClass {
   }
   /** Add tab to the page with name and active status. Only used for manual additions to get unique ID.
    * @async                - To wait for the loading of the data from database.
-   * @param  {string} name - Tab Name @param  {bool} [active] - Activated @param  {bool} [manualAdd] - Added Manually
+   * @param  {string} name - Tab Name  @param  {bool} [active] - Activated  @param  {bool} [manualAdd] - Added Manually
    * @return {object}      - Tab Data */
   async addTab(name, active=false, manualAdd=false) {
-    let arrPos = this.#tabsArr.length, unique = this.unique++, thisTab = {'title':name, 'position':arrPos, list:[]};
+    let arrPos = this.#tabsArr.length, unique = this.unique++, thisTab = {'title':name, 'position':arrPos, 'list':[]};
     if (manualAdd) {
       await MYDB.addToDB('panda', 'tabs', thisTab).then( async dbId => {
         if (dbId >= 0) { this.#dataTabs[dbId] = thisTab; this.#dataTabs[dbId].id = unique = dbId; this.#tabsArr.push(dbId); }
@@ -211,8 +211,8 @@ class TabbedClass {
   }
   /** Handles the dragging of the card from a sortable or droppable area.
    * @async             - To wait for the updating the tab data for repositioning in database.
-   * @param  {object} e - Event Object  @param  {object} ui - UI Jquery Element  @param  {string} action - Dragged Action */
-  async cardDragged(e, ui, action) {
+   * @param  {object} _e - Event Object  @param  {object} ui - UI Jquery Element  @param  {string} action - Dragged Action */
+  async cardDragged(_e, ui, action) {
     let theItem = (action === 'sortable') ? ui.item : ui.draggable; $(theItem).find('.pcm-tooltipData').removeClass('pcm-tooltipDisable');
     let myId = $(theItem).data('myId'), activeTab = $(`#pcm-tabbedPandas a.active:first`).closest('li');
     let unique = $(activeTab).data('unique'), hitData = await bgPanda.dataObj(myId), tabUnique = hitData.tabUnique, tabsInfo = this.#dataTabs[tabUnique];
@@ -232,20 +232,17 @@ class TabbedClass {
   /** Updates the captcha number in the bottom area of the page.
    * @param  {number} captchaCount - The captcha counter that needs to be updated on page. */
   updateCaptcha(captchaCount) {
-    if (globalOpt.general.captchaCountText)
-      $(`#${this.ulId} .pcm-captchaText:first`).html(`Captcha Count: ${captchaCount}`);
+    if (globalOpt.general.captchaCountText) $(`#${this.ulId} .pcm-captchaText:first`).html(`Captcha Count: ${captchaCount}`);
     else $(`#${this.ulId} .pcm-captchaText:first`).html('');
   }
   /** Sets the panda with the unique ID to the tab unique ID and then saves to database.
-   * @param  {number} tabUnique - The tab unique ID that the panda should be positioned in.
-   * @param  {number} id        - The unique ID for the panda that is being positioned. */
+   * @param  {number} tabUnique - The tab unique ID  @param  {number} id - The unique ID for the panda */
   setPosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list.push(id);
     MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
   }
   /** Removes the panda from this tab unique ID and then saves the updated positions to database.
-   * @param  {number} tabUnique - The tab unique ID that the panda should be removed from.
-   * @param  {number} id        - The unique ID for the panda that is being removed from position. */
+   * @param  {number} tabUnique - The tab unique ID  @param  {number} id - The unique ID for the panda */
   removePosition(tabUnique, id) {
     this.#dataTabs[tabUnique].list = arrayRemove(this.#dataTabs[tabUnique].list, id);
     MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);

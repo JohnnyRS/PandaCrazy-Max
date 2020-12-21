@@ -13,9 +13,10 @@ function modalLoadingData() {
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
     null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
 }
-async function getBgPage() {
-  chrome.runtime.getBackgroundPage( (backgroundPage) => { bgPage = backgroundPage; prepare(); });
-}
+/** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
+function getBgPage() { chrome.runtime.getBackgroundPage( backgroundPage => { bgPage = backgroundPage; prepare(); }); }
+/** Prepares the main global variables with classes and background data.
+ * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
   $(window).on( 'focus blur', () => GvFocus = document.hasFocus() );
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
@@ -27,7 +28,6 @@ async function prepare() {
   });
 }
 /** Starts the process of loading data in the program and check for errors as it goes.
- * Make sure to check for a good DB open and wait for slower computers.
  * @async - To wait for preparations for classes to end their database operations. */
 async function startPandaCrazy() {
   $('.pcm-top').addClass('unSelectable'); $('#pcm-pandaUI .pcm-quickMenu').addClass('unSelectable');
@@ -49,8 +49,7 @@ async function startPandaCrazy() {
 }
 
 /**  Shows good messages in loading modal and console. Shows error message on page and console before halting script.
- * @param {array} good - Array of good messages to display in the loading modal and console.
- * @param {object} bad - If set then an error has happened so display it and stop script. */
+ * @param {array} good - Array of good messages to display  @param {object} bad - If set then an error has happened so display it and stop script. */
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
   if (good.length > 0) { // Does it have good messages?
@@ -59,8 +58,8 @@ function showMessages(good, bad) {
 }
 
 /** ================ First lines executed when page is loaded. ============================ **/
-allTabs('/pandaCrazy.html', async (count) => { // Count how many Panda Crazy pages are opened.
-  if (count<2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
+allTabs('/pandaCrazy.html', async count => { // Count how many Panda Crazy pages are opened.
+  if (count < 2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
   else haltScript(null, 'You have PandaCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting PandaCrazy Max', true);
 });
 
@@ -72,10 +71,10 @@ window.addEventListener('beforeunload', async () => {
   bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
 });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', e => {
   if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
 });
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
-document.addEventListener("keyup", (e) => {
+document.addEventListener('keyup', e => {
   if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
 });

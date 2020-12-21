@@ -23,10 +23,10 @@ class LogTabsClass {
     this.bgLowTimeHighlighterDef = '#ff0000'; this.bgLowTimeHighlighter = null;
   }
 	/** Getter to return if the queue has actually changed.
-	 * @return {bool} - True if there was anything new that changed in mturk queue. */
+	 * @return {bool} - True if there was anything new that changed in MTURK queue. */
 	get queueIsNew() { return this._queueIsNew; }
 	/** Setter to change if queue has actually changed. If it did change then do skipped check on jobs.
-	 * @param {bool} v - Set if there was anything new that changed in mturk queue. */											
+	 * @param {bool} v - Set if there was anything new that changed in MTURK queue. */											
 	set queueIsNew(v) { this._queueIsNew = v; if (v) { bgPanda.doNewChecks(); } }
   /** Gets the total HITs in the queue.
    * @return {number} - Total HITs in the queue. */
@@ -108,7 +108,7 @@ class LogTabsClass {
     }
   }
   /** Add a new HIT accepted into the queue in the correct position according to seconds left.
-   * @param  {object} hitInfo    - Panda Object  @param  {object} data - Data Object.  @param  {string} [task_url] - Task URL */
+   * @param  {object} hitInfo - Panda Object  @param  {object} data - Data Object.  @param  {string} [task_url] - Task URL */
   addIntoQueue(hitInfo, data, task_url='') {
     this.addIntoQueue.counter = (this.addIntoQueue.counter) ? this.addIntoQueue.counter++ : 0;
     if (this.queueUpdating && this.addIntoQueue.counter < 1000) // Check if currently updating queue.
@@ -129,7 +129,7 @@ class LogTabsClass {
     }
   }
   /** Update the queue watch with newer HITs and update time left in the queue watch. Also removes returned HITs with a line-through.
-   * @param  {object} queueResults - Object of all the HITs on the mturk queue. */
+   * @param  {object} queueResults - Object of all the HITs on the MTURK queue. */
   updateQueue(queueResults) {
     this.updateQueue.counter = (this.updateQueue.counter) ? this.updateQueue.counter++ : 0;
     if (this.queueUpdating && this.updateQueue.counter < 1000) setTimeout(this.updateQueue.bind(this), 30, queueResults);

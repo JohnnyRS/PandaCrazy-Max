@@ -3,7 +3,7 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
 	constructor() {
-    this.pandaDur = {min:0, max:120} // Limits for the panda duration in minutes.
+    this.pandaDur = {'min':0, 'max':120} // Limits for the panda duration in minutes.
     this.modalSearch = null;
   }
   /** Will create a table with the panda options ready to be changed by user.
@@ -39,7 +39,7 @@ class ModalJobClass {
       {'label':'Description', 'type':'text', 'key':'description', 'disable':true, 'tooltip':'The description for this job. May not be changed by user.'},
       {'label':'Price', 'type':'text', 'key':'price', 'money':true, 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
-      {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this HIT will no longer be on mturk. May not be changed by user.'},
+      {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this HIT will no longer be on MTURK. May not be changed by user.'},
       {'label':'Date Added', 'type':'keyValue', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this HIT was added to PandaCrazy Max. May not be changed by user.'},
       {'label':'Total Seconds Collecting', 'type':'text', 'key':'totalSeconds', 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect HITs since it was added. May not be changed by user.'},
       {'label':'Total Accepted HITs', 'type':'text', 'key':'totalAccepted', 'disable':true, 'tooltip':'The total amount of HITs collected by this job since it was added. May not be changed by user.'}
@@ -262,6 +262,7 @@ class ModalJobClass {
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
   /** Show jobs in a table with a checkbox, collect button and details button.
+   * @async                     - To load in the data object if needed.
    * @param  {object} modalBody - Jquery Element  @param  {array} jobs - Jobs Array  @param  {string} type - job Type @param  {function} [checkboxFunc] - Checkbox Function
    * @param  {function} [afterClose] - After Close Function */
   async showJobsTable(modalBody, jobs, type, checkboxFunc=null, afterClose=null) {
@@ -293,7 +294,7 @@ class ModalJobClass {
   }
   /** Filters out jobs with the search term, collecting radio, search mode and once options.
    * @async                  - To load in search data.
-   * @param  {string} search - Search Term            @param  {object} modalControl - Jquery Element
+   * @param  {string} search - Search Term   @param  {object} modalControl - Jquery Element
    * @return {array}         - Array of ID's filtered */
   async jobsFilter(search, modalControl) {
     let newArray = []; await delay(2);

@@ -14,8 +14,8 @@ class HistoryClass {
 	async findValues(values) { let returnValue = {}; await MYDB.getFromDB('history',_,_, values).then( r => { returnValue = r; } ); return returnValue; }
 	/** Deletes data that is from searchResults and hasn't been updated in 15 days. */
 	maintenance() {
-		let beforeDate = new Date(), keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
-		beforeDate.setDate( beforeDate.getDate() - 15 );
+		let beforeDate = new Date(), dayLimit = MyOptions.doGeneral().historyDays; beforeDate.setDate( beforeDate.getDate() - dayLimit );
+		let keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
 		MYDB.deleteFromDB('history',_, keyRange, 'searchDate').then( null, (rejected) => console.error(rejected));
 	}
 	/** Updates the database with new data.

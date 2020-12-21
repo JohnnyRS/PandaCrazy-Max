@@ -84,7 +84,7 @@ class TheGroupings {
     return this.unique++;
   }
   /** Returns an object with the id's of the jobs filtered by type.
-   * @param {bool} isPanda - Panda Groupings?  @param {string} searchType - Type to Filter.
+   * @param {bool} isPanda - Panda Groupings?  @param {string} [searchType] - Type to Filter.
    * @return {object}      - Filtered Jobs. */
   doInstantFilter(isPanda, searchType='isEnabled') {
     let filtered = (isPanda) ? bgPanda.pandaUniques.filter((val) => pandaUI.pandaStats[val].collecting) : bgSearch.getFrom('Search').filter((val) => bgSearch[searchType](val));
@@ -188,7 +188,7 @@ class TheGroupings {
   showGroupingsModal() {
     modal = new ModalClass();
     const idName = modal.prepareModal(null, '800px', 'pcm-groupingsModal', 'modal-lg', 'List Groupings', '', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
-    const divContainer = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(`#${idName} .${modal.classModalBody}`);
+    let divContainer = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`)).appendTo(`#${idName} .${modal.classModalBody}`);
     modal.showModal(null, () => {
       $(`#${idName} .${modal.classModalBody}`).addClass('pcm-groupingModalBody')
       let df = document.createDocumentFragment(), panda = (this.type === 'panda'), gType = (panda) ? 'pandas' : 'triggers';
@@ -196,7 +196,7 @@ class TheGroupings {
         this.goCheckGroup(grouping, true);
         const bgClass = (this.groupStatus[grouping].collecting) ? 'pcm-groupCollect' : ((Object.keys(this.groups[grouping][gType]).length === 0) ? 'pcm-groupEmpty' : '');
         displayObjectData([
-          {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>{${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Job(s)' : 'Trigger(s)'}}</span>`, 'unique':grouping, 'clickFunc': e => { this.toggle(e.data.unique); }, 'tooltip':`Grouping Name with description and the number of ${(panda) ? 'Job(s)' : 'Trigger(s)'} it contains.`},
+          {'string':'Grouping Name and Description', 'type':'keyValue', 'key':'name', 'id':`pcm-nameDesc-${grouping}`, 'andKey':'description', 'andString':`<span class='small'>{${Object.keys(this.groups[grouping][gType]).length} ${(panda) ? 'Job(s)' : 'Trigger(s)'}}</span>`, 'unique':grouping, 'tooltip':`Grouping Name with description and the number of ${(panda) ? 'Job(s)' : 'Trigger(s)'} it contains.`, 'addTdClass':'pcm-groupingNameDesc'},
           {'btnLabel':'Edit', 'type':'button', 'addClass':' btn-xxs pcm-groupingEdit pcm-myPrimary', 'idStart':'pcm-editButton1', 'width':'45px', 'unique':grouping, 'btnFunc': () => {
             this.showgroupingEditModal(grouping,_,_, () => {});
           }, 'tooltip':`Edit this grouping by selecting or deselecting ${(panda) ? 'Job(s)' : 'Trigger(s)'}.`},
@@ -207,9 +207,9 @@ class TheGroupings {
         ], df, this.groups[grouping], true, true, true, `pcm-groupingItem ${bgClass}`); }
       );
       divContainer.append(df);
-      df = null;
+      $('.pcm-groupingNameDesc').dblclick( e => { let unique = $(e.target).data('unique'); if (unique) this.toggle(unique); } );
+      df = null; divContainer = null;
     }, () => { modal = null; });
-    
   }
   /** Show grouping edit modal so user can change grouping options.
    * @param  {number} grouping       - Unique number        @param  {function} [afterFunc] - Save function  @param  {function} [cancelFunc] - Cancel function

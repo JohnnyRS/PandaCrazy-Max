@@ -24,7 +24,7 @@ class EximClass {
     this.options = {'HamCycleNumber':'hamTimer', 'cycleNumber':'mainTimer', 'cycleNumber2':'secondTimer', 'cycleNumber3':'thirdTimer', 'cycleAdding':'timerAddMore', 'cycleAutoIncrease':'timerAutoIncrease', 'cycleDecrease':'timerDecrease', 'cycleIncrease':'timerIncrease', 'savedCycleNum':'timerUsed', 'alarmVolume':'volume'};
   }
   /** Converts the amount of time set for the HIT from string to seconds.
-   * @param  {string} duration - The duration in a string format that mturk has for this HIT.
+   * @param  {string} duration - The duration in a string format that MTURK has for this HIT.
    * @return {number}          - Returns the number in seconds. */
   secondsDuration(duration) {
     let testReg = /(\d*) (week|day|hour|minute|second)/g, totalMinutes = 0, matches = Array.from(duration.matchAll(testReg));
@@ -37,6 +37,8 @@ class EximClass {
     this.tabPosition = 0; this.importJobData = {}; this.importTabsData = {}; this.importOptions = {}; this.importSearchData = {}; this.importJobsTabs = {};
     this.importJobIds = []; this.importTabsIds = []; this.importGroupings = []; this.importSGroupings = [];
   }
+  /** Export only alarms to an export file.
+   * @param {function} doneFunc - Do After Function */
   exportOnlyAlarms(doneFunc=null) {
     let exportAlarms = alarms.exportAlarms(true, true);
     saveToFile({'pre':this.exportPre, 'Alarms':exportAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });

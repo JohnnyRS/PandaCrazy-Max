@@ -308,7 +308,12 @@ class PandaCards {
 				}
 			}, 250);
 		});
-    $(`.pcm-groupId`).unbind('dblclick').on('dblclick', e => { $(e.target).data('double', 2); });
+    $(`.pcm-groupId`).unbind('dblclick').on('dblclick', e => {
+      $(e.target).data('double', 2);
+      let myId = $(e.target).data('myId'), info = bgPanda.options(myId), theHeight = window.outerHeight-80, theWidth = window.outerWidth-10;
+      let theUrl = (info.search === 'rid') ? bgPanda.pandaUrls[myId].reqUrl : bgPanda.pandaUrls[myId].accept;
+      window.open(theUrl,'_blank','width=' + theWidth + ',height=' +  theHeight + ',scrollbars=yes,toolbar=yes,menubar=yes,location=yes');
+    });
 		$(`.pcm-nameGroup1`).unbind('click').click( e => {
       let myId = $(e.target).closest('.card').data('myId'), reqName = $(`#pcm-hitReqName1-${myId}`), stats = $(`#pcm-hitStats1-${myId}`);
       if (reqName.is(':visible')) { reqName.hide(); stats.show(); } else { stats.hide(); reqName.show(); }

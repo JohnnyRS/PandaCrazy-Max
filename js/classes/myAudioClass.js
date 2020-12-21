@@ -6,7 +6,7 @@ class myAudioClass {
     this.audios = {};
   }
   /** Creates a new audio for this specified audio with name and data.
-   * @param  {string} name - The name of the audio.  @param {object} data - The audio data
+   * @param  {string} name - The name of the audio.  @param {object} [data] - The audio data
    * @return {object}      - Returns the audio object. */
   newAudio(name, data=null) {
     this.audios[name] = new Audio(data);

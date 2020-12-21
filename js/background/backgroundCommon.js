@@ -94,7 +94,6 @@ async function prepareToOpen(panda=null, search=null, version=null) {
         chrome.storage.local.set({'PCM_running':true});
         myHistory = new HistoryClass();
         dbHistoryGood = true;
-        myHistory.maintenance();
         pandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
         queueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
         searchTimer = new TimerClass(950,920,'searchTimer'); // little lower than 1s for search timer by default
@@ -102,6 +101,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
         await MYDB.openPCM().then( async () => {
           await MYDB.openStats(true).then( async () => {
             await MyOptions.prepare();
+            myHistory.maintenance();
             mySearch = new MturkHitSearch(950);
             myPanda.timerChange(MyOptions.getCurrentTimer()); mySearch.timerChange(MyOptions.theSearchTimer()); myQueue.timerChange(MyOptions.getQueueTimer());
             MyAlarms.prepare();

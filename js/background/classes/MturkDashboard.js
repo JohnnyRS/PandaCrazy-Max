@@ -30,7 +30,7 @@ class MturkDashboard extends MturkClass {
   nowLoggedOff() { this.loggedOff = true; this.stopDashEarns(true); }
   /** Sets loggedOff to false and starts to calculate the earnings. */
   nowLoggedOn() { this.loggedOff = false; this.paused = false; if (!this.dashDone) this.doDashEarns(false); }
-  /** Fetches the url for the dasgboard after timer class tells it to do so and handles mturk results. */
+  /** Fetches the URL for the dashboard after timer class tells it to do so and handles MTURK results. */
   goFetch() {
     let theDate = moment().format('YYYY-MM-DD'), urlString = `${this.dashUrl}${theDate}`, startTime = new Date().getTime();
     urlString = urlString + ((this.page > 1) ? `/?page_number=${this.page}` : '/'); let theUrl = new UrlClass(urlString);

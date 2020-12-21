@@ -1,5 +1,5 @@
 'use strict'
-/** This class gets the queue from mturk and sends it out to other classes that need it.
+/** This class gets the queue from MTURK and sends it out to other classes that need it.
  * @class MturkQueue ##
  * @extends MturkClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
@@ -15,13 +15,13 @@ class MturkQueue extends MturkClass {
     this.disconnectTimer = disconnectedTimer;
     this.loggedOffTimer = OffTimer;   // Sets the timer to use for when it's logged off.
     this.queueUnique = null;          // The unique number set by the timer class for this class.
-    this.queueResults = [];           // The results from mturk queue with all HITs info.
+    this.queueResults = [];           // The results from MTURK queue with all HITs info.
     this.queueAdd = [];
     this.loggedOff = false;           // Are we logged off or not?
     this.authenticityToken = null;    // Keeps the authenticity token used for returning HITs.
 		queueTimer.setMyClass(this);			// Tell timer what class is using it so it can send information back
 		queueTimer.theTimer(timer);       // Sets the timer for the timer class.
-    this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for mturk queue.
+    this.queueUrl = new UrlClass('https://worker.mturk.com/tasks');  // Sets up a url class for MTURK queue.
   }
   /** Returns the value of loggedOff value;
    * @return {bool} - True if logged off. */

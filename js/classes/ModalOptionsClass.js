@@ -4,6 +4,7 @@
 class ModalOptionsClass {
 	constructor() {
     this.defDur = {'min':0, 'max':120000};
+    this.historyRange = {'min':3, 'max':90};
     this.reader = new FileReader();
   }
   /** Shows the general options in a modal for changes.
@@ -26,10 +27,11 @@ class ModalOptionsClass {
         {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
         {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+        {'label':'Days to keep History:', 'type':'number', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange}, 
         {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
         {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will mturk show a captcha for you?'}, 
+        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?'}, 
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
@@ -62,7 +64,7 @@ class ModalOptionsClass {
         {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds.`, 'minMax':timerRange}, 
         {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'minMax':this.defDur}, 
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':searchRange},
-        {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the mturk queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'minMax':queueRange},
+        {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the MTURK queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'minMax':queueRange},
         {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'minMax':timerChange},
         {'label':'Timer Decrease By:', 'type':'number', 'key':'timerDecrease', 'tooltip':'Change the value in milliseconds on the decrease menu button to decrease the current timer by.', 'minMax':timerChange},
         {'label':'Timer Add Timer By:', 'type':'number', 'key':'timerAddMore', 'tooltip':'Change the value in milliseconds on the add more time menu button to increase the current timer by.', 'minMax':timerChange},

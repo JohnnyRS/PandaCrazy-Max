@@ -250,7 +250,7 @@ class ModalSearchClass {
    * @param {number} unique - Trigger Unique  @param {function} [afterClose] After Close Function */
   showTriggerFound(unique, afterClose=null) {
     if (!modal) modal = new ModalClass(); let dbId = bgSearch.uniqueToDbId(unique);
-    const idName = modal.prepareModal(null, '860px', 'pcm-triggerFoundModal', 'modal-lg', 'Show triggers found by Trigger.', '', 'pcm-modalHitsFound', '', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
+    const idName = modal.prepareModal(null, '860px', 'pcm-triggerFoundModal', 'modal-lg', 'Show HITs found by Trigger.', '', 'pcm-modalHitsFound', '', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(null, async () => {
       let groupHist = await bgSearch.getFromDB('history', dbId, 'dbId', true, false, 80), rules = await bgSearch.theData(dbId, 'rules');
       let gidsValues = [], gidsData = {}, blocked = rules.blockGid, df = document.createDocumentFragment();
@@ -277,9 +277,17 @@ class ModalSearchClass {
             else { blocked.add(key); $(e.target).addClass(`pcm-hitBlocked`).html('Unblock'); }
             rules.blockGid = blocked; bgSearch.theData(dbId, 'rules', rules)
           }, 'idStart': 'pcm-blockThis', 'unique': key, 'tooltip': 'Block or unblock this HIT for this trigger ONLY.'}
-        ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm-modalTriggeredhit');
+        ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm-modalTriggeredhit',_, gidsHistory[key], gidsData[key]);
         tempObj = null;
       }
+      $(df).find('tr.pcm-modalTriggeredhit').dblclick( async e => {
+        let data = $(e.target).closest('tr').data('theData'), data2 = $(e.target).closest('tr').data('data2'), cData = null, reqData = null;
+        cData = hConverterObject(data);
+        if (cData.requester_id) reqData = await bgHistory.findValues([cData.requester_id]);
+        else { cData.hit_set_id = data2.gid; cData.date = data2.date; }
+        if (reqData) cData.requester_name = reqData[cData.requester_id].reqName;
+        this.showTriggeredHit(cData, () => {},_, false);
+      });
       $(`#${idName} .${modal.classModalBody}`).append(df);
       search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       groupHist = null; df = null; gidsHistory = null; theTable = null;
@@ -309,7 +317,7 @@ class ModalSearchClass {
         {'label':'Default Custom Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The default duration for new custom triggers to use on panda jobs.`, 'minMax':this.pandaDur},
         {'label':'Default Custom Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs.`, 'minMax':this.hamDur},
         {'label':'Default Custom Limit Fetches:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The default number of fetches for new custom triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
-        {'label':'Page Size for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of HITs used on mturk first search page. The higher the number can slow searching but also can give a better chance of finding HITs you want.`, 'minMax':this.pageSize},
+        {'label':'Page Size for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of HITs used on MTURK first search page. The higher the number can slow searching but also can give a better chance of finding HITs you want.`, 'minMax':this.pageSize},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
@@ -431,35 +439,38 @@ class ModalSearchClass {
   }
   /** Shows a modal with data from a HIT that was triggered. Double clicked on the HIT on the Custom Triggered HITs tab.
    * @param {object} theData - HIT data  @param {function} [afterClose] - After Close Function  @param {object} [e] - Event Object */
-  showTriggeredHit(theData, afterClose=null, e=null) {
+  showTriggeredHit(theData, afterClose=null, e=null, blocking=true) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'pcm-triggeredHitModal', 'modal-lg', 'Triggered HIT Details', '', '', '', 'visible btn-sm', 'Done', () => {
-      let check = bgSearch.theBlocked(theData.gid, theData.rid), tr = $(e.target).closest('tr');
-      if (e && (check[0] || check[1])) tr.addClass('pcm-blockedHit'); else tr.removeClass('pcm-blockedHit');
+      let check = bgSearch.theBlocked(theData.gid, theData.rid), tr = (e) ? $(e.target).closest('tr') : null;
+      if (e && (check[0] || check[1])) tr.addClass('pcm-blockedHit'); else if (tr) tr.removeClass('pcm-blockedHit');
       modal.closeModal(); check = null; tr = null
     }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(() => {}, async () => {
       let df = document.createDocumentFragment(), blocked = bgSearch.theBlocked(theData.hit_set_id, theData.requester_id);
       $(`<div class='pcm-detailsEdit'>Details of this HIT:</div>`).appendTo(df);
       displayObjectData( [
+        {'label':'Date Found:', 'type':'keyValue', 'key':'date', 'disable':true, 'format':'date', 'skip':(!theData.date), 'tooltip':`The date HIT was found last.`},
         {'label':'Requester Name:', 'type':'keyValue', 'key':'requester_name', 'disable':true, 'tooltip':`Requester Name for this HIT.`},
         {'label':'Title:', 'type':'keyValue', 'key':'title', 'disable':true, 'tooltip':`Title of this HIT.`},
         {'label':'Description:', 'type':'keyValue', 'key':'description', 'disable':true, 'tooltip':`Description of this HIT.`},
-        {'label':'Price:', 'type':'number', 'key1':'monetary_reward', 'key':'amount_in_dollars', 'money':true, 'disable':true, 'tooltip':`Price for this HIT.`},
+        {'label':'Price:', 'type':'keyValue', 'key1':'monetary_reward', 'key':'amount_in_dollars', 'money':true, 'disable':true, 'pre':'$', 'tooltip':`Price for this HIT.`},
         {'label':'Requester ID:', 'type':'keyValue', 'key':'requester_id', 'disable':true, 'tooltip':`Requester ID for this HIT.`},
         {'label':'Group ID:', 'type':'keyValue', 'key':'hit_set_id', 'disable':true, 'tooltip':`Group ID for this HIT.`},
       ], df, theData, true);
-      $(`<div class='pcm-buttonArea '></div>`).append($(`<button class='btn btn-xs pcm-blockGid pcm-tooltipData pcm-tooltipHelper' data-original-title='Block or unblock this Group ID globally.'>${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( e => {
+      if (blocking) {
+        $(`<div class='pcm-buttonArea '></div>`).append($(`<button class='btn btn-xs pcm-blockGid pcm-tooltipData pcm-tooltipHelper' data-original-title='Block or unblock this Group ID globally.'>${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( e => {
           bgSearch.theBlocked(theData.hit_set_id, null, true, false, true); let check = bgSearch.theBlocked(theData.hit_set_id, null);
           $(e.target).text(`${(check[0]) ? 'UNBLOCK' : 'Block'} this Group ID`); check = null;
         })).append($(`<button class='btn btn-xs pcm-blockRid pcm-tooltipData pcm-tooltipHelper' data-original-title='Block or unblock this Requester ID globally.'>${(blocked[1]) ? 'UNBLOCK' : 'Block'} this Requester</button>`).click( e => {
           bgSearch.theBlocked(null, theData.requester_id, true, false, true); let check = bgSearch.theBlocked(null, theData.requester_id);
           $(e.target).text(`${(check[1]) ? 'UNBLOCK' : 'Block'} this Requester`); check = null;
         })).appendTo(df);
-        $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
-        search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
-        df = null; blocked = null;
-    }, () => { modal = null; if (afterClose) afterClose(); });
+      }
+      $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
+      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      df = null; blocked = null;
+    }, () => { if (afterClose) afterClose(); else modal = null; });
   }
   /** Creates a table for the triggers cards in the triggers array.
    * @async                    - To wait for search trigger data from database.

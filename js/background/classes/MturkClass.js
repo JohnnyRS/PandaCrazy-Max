@@ -1,4 +1,4 @@
-/** This class deals with fetching urls from mturk and send results back to other classes.
+/** This class deals with fetching urls from MTURK and send results back to other classes.
  * @class MturkClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class MturkClass {
@@ -8,7 +8,7 @@ class MturkClass {
 		this.timerValue = {'value':0, 'id':'#pcm-timerValue', 'disabled':null, 'type':'integer'};
 		this.resultUrl = '';			// Just a place to keep results from fetch for future use.
 	}
-	/** This method updates the status bar with relevant information from fetching mturk urls.
+	/** This method updates the status bar with relevant information from fetching MTURK urls.
 	 * @param  {object} statObj - The object that needs to be updated in status bar. */
 	updateStatNav(statObj) {
 		if (window.jQuery) {
@@ -20,7 +20,7 @@ class MturkClass {
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
 	/** Adds 1 to the total PRE's and updates the stat in status bar. */
 	addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
-	/** Fetches the url in url object and handles mturk results. Can deal with Pre's, maxxed out and logged out for any mturk URL;
+	/** Fetches the url in url object and handles MTURK results. Can deal with Pre's, maxxed out and logged out for any MTURK URL;
 	 * @param  {object} objUrl - The url object to use for fetching.
 	 * @return {object} 			 - Returns data in an object or null if got nothing. */
 	goFetch(objUrl) {

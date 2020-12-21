@@ -20,8 +20,8 @@ class MturkHitSearch extends MturkClass {
 		this.onlyQualified = true;      					// Show only qualified HITs in search results.
 		this.onlyMasters = false;       					// Show only master HITs in search results.
 		this.minReward = 0.01;          					// The minimum reward will be $0.01 by default.
-		this.resultsBack = true;									// Used to make sure the last results from mturk has been processed.
-		this.loggedOff = false;         					// Are we logged off from mturk?
+		this.resultsBack = true;									// Used to make sure the last results from MTURK has been processed.
+		this.loggedOff = false;         					// Are we logged off from MTURK?
 		this.queueDbIds = [];											// Array of dbid's in memory which is limited by size to save memory use.
 		this.triggers = {};												// Object with info in memory for triggers. Stays in memory.
 		this.data = {};														// Object with all the data for triggers. Stays in memory.

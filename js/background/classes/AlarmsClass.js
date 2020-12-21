@@ -236,7 +236,7 @@ class AlarmsClass {
     let exportAlarms = {};
     for (const key of Object.keys(this.data)) {
       exportAlarms[key] = (!onlyAlarms) ? Object.assign({}, this.data[key]) : {};
-      if (base64 || onlyAlarms) { console.log(this.data[key]);
+      if (base64 || onlyAlarms) {
         if (this.data[key].audio && this.data[key].audio.src.substr(0,4) === 'data') exportAlarms[key].obj = this.data[key].audio.src;
         else exportAlarms[key].obj = 'default';
       } else exportAlarms[key].obj = null;

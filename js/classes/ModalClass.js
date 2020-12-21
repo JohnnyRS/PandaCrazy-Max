@@ -88,7 +88,7 @@ class ModalClass {
     $(`#${idName} .${this.classCancelButton}`).removeClass('invisible visible').addClass(cancelButton).html(cancelText);
     return idName;
   }
-  /** Shows a modal informing user that they are logged off from mturk.
+  /** Shows a modal informing user that they are logged off from MTURK.
    * @param  {function} [afterClose] - Function to call after close animation is completed. */
   showLoggedOffModal(afterClose=null) {
     if (this.modalLoggedOff === 0) {

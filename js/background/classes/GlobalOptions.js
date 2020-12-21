@@ -23,6 +23,7 @@ class PandaGOptions {
       'disableMonitorAlert':false,
       'volHorizontal':false,
       'tabLogHeight':0,
+      'historyDays':15,
       'themeIndex':0,
       'theme0': '',
       'theme1': '',

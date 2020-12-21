@@ -111,7 +111,9 @@ class PandaUI {
 	}
   /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
 	resetCSSValues() { this.cards.resetCSSValues(); this.pandaGStats.resetCSSValues(); menus.resetCSSValues(); this.logTabs.resetCSSValues(); }
-	pauseToggle(val) { if (bgPanda) { if (bgPanda.pauseToggle(val)) $('#pcm-bqPandaPause').html('Unpause'); else $('#pcm-bqPandaPause').html('Pause'); }}
+	/** Will toggle the paused value or force the paused value to a given value.
+	 * @param {bool} [val] - Force Pause Value  */
+	pauseToggle(val=null) { if (bgPanda) { if (bgPanda.pauseToggle(val)) $('#pcm-bqPandaPause').html('Unpause'); else $('#pcm-bqPandaPause').html('Pause'); }}
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); });
@@ -205,7 +207,7 @@ class PandaUI {
 	 * @param  {function} [afterClose] - After Close Function   @param {string} [cancelText]   - Text on Cancel Button */
 	removeJobs(jobsArr, afterFunc=null, whyStop=null, afterClose=null, cancelText='cancel') {
 		let hitsList = '';
-		for (const thisId of jobsArr) { hitsList += '( ' + $(`#pcm-hitReqName-${thisId}`).html()+' '+[$(`#pcm-hitPrice-${thisId}`).html()]+' )<BR>'; }
+		for (const thisId of jobsArr) { hitsList += '( ' + $(`#pcm-hitReqName-${thisId}`).html() + ' ' + [$(`#pcm-hitPrice-${thisId}`).html()] + ' )<BR>'; }
 		if (!modal) modal = new ModalClass();
 		modal.showDeleteModal(hitsList, async () => {
 			for (const myId of jobsArr) {
@@ -218,7 +220,7 @@ class PandaUI {
 		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}
 	/** Shows that this ham button was clicked or went into go ham mode automatically.
-	 * @param  {number} myId - Unique ID @param  {object} targetBtn - Ham Button @param  {bool} [autoGoHam] - Auto Go Ham?  @param {bool} [manual] - Added Manually? */
+	 * @param  {number} myId - Unique ID  @param  {object} targetBtn - Ham Button  @param  {bool} [autoGoHam] - Auto Go Ham?  @param {bool} [manual] - Added Manually? */
 	hamButtonClicked(myId, targetBtn, autoGoHam=false, manual=false) {
 		let options = bgPanda.options(myId);
 		if (!this.pandaStats[myId].collecting) { this.startCollecting(myId, !autoGoHam); }
@@ -276,7 +278,7 @@ class PandaUI {
 			} else this.nextInDelayedQueue(-1);
 		} else { this.cards.updateAllCardInfo(myId, hitInfo); }
 	}
-	/** Add panda job from an external source like forums, script or panda buttons on MTURK.
+	/** Add panda job from an external source like forums, scripts or panda buttons on MTURK.
 	 * @param  {object} msg - The message object from the external source. */
 	addFromExternal(msg) {
 		if (msg.groupId !== '' && msg.reqId !== '') {
@@ -345,7 +347,7 @@ class PandaUI {
 			this.runThisPanda(gidFound, tDur, tGoH);
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
-			let dbInfo = {...d, ...opt, 'dateAdded': dated, totalSeconds:seconds, totalAccepted:accepts}, newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};
+			let dbInfo = {...d, ...opt, 'dateAdded': dated, 'totalSeconds':seconds, 'totalAccepted':accepts}, newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};
 			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
 		}
 	}
@@ -373,7 +375,7 @@ class PandaUI {
     return myId;
   }
   /** When a HIT is accepted then set up the stats and display it on the card.
-   * @param  {number} myId - Unique ID  @param  {number} queueUnique - Queue ID  @param  {object} html - Html object  @param  {object} url - url */
+   * @param  {number} myId - Unique ID  @param  {number} queueUnique - Queue ID  @param  {object} html - Html object  @param  {object} url - URL */
 	hitAccepted(myId, queueUnique, html, url) {
 		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
     this.pandaGStats.addTotalAccepted(); this.cards.highlightEffect_card(myId);
@@ -451,6 +453,6 @@ class PandaUI {
 	 * @param  {object} error - Error Object  @param  {string} alertMessage - Alert Message  @param  {string} title - Title. */
 	haltScript(error, alertMessage, title) { haltScript(error, alertMessage, null, title); }
 	/** New version detected so send a notification to user.
-	 * @param  {string} - New Version Number */
+	 * @param  {string} version - New Version Number */
 	newVersionAvailable(version) { if (notify) notify.showNewVersion(version); }
 }

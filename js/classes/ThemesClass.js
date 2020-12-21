@@ -18,7 +18,7 @@ class ThemesClass {
     document.getElementsByTagName('head')[0].appendChild(link);
   }
   /** Loads the new CSS style theme and resets the default theme. Also will reset the CSS values from CSS variables.
-   * @param {bool} reset - Reset Default Theme? */
+   * @param {bool} [reset] - Reset Default Theme? */
   prepareThemes(reset=false) {
     this.themeIndex = globalOpt.theThemeIndex(); this.theStyle = globalOpt.theThemes();
     this.loadCSS(this.theStyle);

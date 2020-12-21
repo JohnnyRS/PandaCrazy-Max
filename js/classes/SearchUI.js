@@ -279,15 +279,14 @@ class SearchUI {
 			], df, foundData, true, true, true, trClass);
 			$(df).find('.pcm-tvLink').click( e => { window.open($(e.target).attr('href'), '_blank', 'width=800,height=600'); return false; });
 			$(df).find('td').data('hitData',hitData).dblclick( e => {
-				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).closest('td').data('hitData'), () => this.modalSearch = null, e);
+				this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggeredHit($(e.target).closest('td').data('hitData'), () => { modal = null; this.modalSearch = null; }, e);
 			});
 			this.triggeredContent.find(`tbody`).prepend(df);
 			df = null;
 		}
 		$(`#` + this.triggeredTab.tabId).html(this.triggeredTab.tabTitle + ` (${this.triggeredContent.find('tbody tr').length})`);
 	}
-	/**
-	 * 
+	/** Will fill in the triggered HIT found from a custom trigger to the Triggered HITs tab.
 	 * @param {number} unique   - Unique Number        @param {object} triggerData - Trigger Data     @param {object} [hitData] - HIT Data  @param {string} [term] - Term Found
 	 * @param {bool} [started]  - Started Collecting?  @param {bool} [auto]        - Auto Collecting? */
 	triggeredHit(unique, triggerData, hitData=null, term=null, started=true, auto=false) {
@@ -304,7 +303,7 @@ class SearchUI {
 	removeTrigger(unique) { let theTrigger = $(`#pcm-triggerCard-${unique}`); if (theTrigger.length) theTrigger.remove(); theTrigger = null; }
 	/** Resets any helper tooltips with the tooltip option value from user.
 	 * @param {bool} [enabled] - Show Helper ToolTips? */
-	resetToolTips(enabled=true) { console.log(enabled); if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
+	resetToolTips(enabled=true) { if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr				 - Jobs to Delete     @param  {function} [afterFunc] - After Function  @param  {function} [afterClose] - After Close Function
 	 * @param  {function} [cancelText] - Cancel Button Text */
