@@ -418,6 +418,7 @@ class MturkPanda extends MturkClass {
 		let data = this.pandaSkippedData[myId], hits = extPandaUI.totalResults(data.groupId), unskip = true;
 		if (data.limitTotalQueue > 0 && extPandaUI.getQueueTotal() >= data.limitTotalQueue) unskip = false;
 		if (unskip && data.limitNumQueue > 0 && hits >= data.limitNumQueue) unskip=false;
+		if (!this.info[myId]) return true;
 		if (unskip) {
 			extPandaUI.cards.cardEffectPreviousColor(myId,false);
 			pandaTimer.unSkipThis(this.info[myId].queueUnique); // Unskip this panda in timer.

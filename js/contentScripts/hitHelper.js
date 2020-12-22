@@ -45,12 +45,8 @@ function parseCommands(command, data) {
 }
 /** This sends a pong message after removing a ping message. Used primarily for scripts for older Panda Crazy script. */
 function sendPong() {
-  sendPong.pongSent = sendPong.pongSent || false;
-  if (!sendPong.pongSent) {
-    let message = JSON.stringify({'time':new Date().getTime(),'command':'run','url':gParentUrl,'data':null,'theTarget':null, 'version':'0.6.3','idNum':null});
-    localStorage.removeItem('JR_message_ping_pandacrazy'); localStorage.setItem('JR_message_pong_pandacrazy', message);
-    sendPong.pongSent = true;
-  }
+  let message = JSON.stringify({'time':new Date().getTime(),'command':'run','url':gParentUrl,'data':null,'theTarget':null, 'version':'0.6.3','idNum':null});
+  localStorage.removeItem('JR_message_ping_pandacrazy'); localStorage.setItem('JR_message_pong_pandacrazy', message);
 }
 /** Prepares global variables from local chrome storage. Starts storage listener. */
 function prepareGlobals() {
