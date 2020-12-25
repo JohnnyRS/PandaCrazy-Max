@@ -30,6 +30,7 @@ class PandaGStats {
 		this.preStats = [this.totalPandaPREs, this.totalSearchPREs, this.totalPREs];
 		this.jobStats = [this.totalPandas, this.totalSearches, this.totalSubmitted, this.totalReturned, this.totalAbandoned];
 		this.earningsStats = [this.totalEarned, this.totalPotential, this.totalEarnedInQueue];
+		this.sendStatsTime = new Date().getTime();
 		this.prepare();
 	}
 	/** Updates the status bar for a specific stat with updated stat or with the text supplied.
@@ -152,4 +153,20 @@ class PandaGStats {
 	addSubmitted() { this.totalSubmitted.value++; this.updateStatNav(this.totalSubmitted); }
   /** Resets stats when wiping data for importing. */
 	resetStats() { this.totalPandas.value = 0; this.totalSearches.value = 0; this.totalSubmitted.value = 0; }
+	/** Will send the full stats back using the function given.
+	 * @param {function} sendResponse - Function to send response back. */
+	sendStats(sendResponse) {
+		let newTime = new Date().getTime();
+		if (newTime - this.sendStatsTime < 1000) sendResponse({'for':'getStats', 'response':{error:'Too Fast'}});
+		else {
+			this.sendStatsTime = newTime;
+			let statsReturned = {}, stats = [this.timerStats, this.jobFetchStats, this.preStats, this.jobStats, this.earningsStats, [this.collecting], [this.collectingTotal]];
+			this.collecting = {'value':false, 'id':'#pcm-collecting', 'disabled':false, 'type':'boolean', 'on':'pcm-span-on', 'off':'pcm-span-off', 'paused':'pcm-span-paused'};
+			this.collectingTotal = {'value':0, 'id':'#pcm-collectingTotal', 'disabled':false, 'type':'integer', 'string':'', 'post':''};
+			for (const statObj of stats) {
+				for (const stat of statObj) { let key = (stat.string) ? stat.string : stat.id.replace('#', ''); statsReturned[key] = stat.value; }
+			}
+			sendResponse({'for':'getStats', 'response':statsReturned});
+		}
+	}
 }

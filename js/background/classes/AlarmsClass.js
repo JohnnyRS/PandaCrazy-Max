@@ -148,7 +148,7 @@ class AlarmsClass {
         }
       }
     } else if (speakThis !== '') this.speakThisNow(speakThis, endFunc);
-    else console.log('Alarms not fully loaded yet.');
+    else console.info('Alarms not fully loaded yet.');
   }
   /** Stop any sound currently playing from the myAudio variable. */
   stopSound() { if (this.myAudio) this.myAudio.load(); }

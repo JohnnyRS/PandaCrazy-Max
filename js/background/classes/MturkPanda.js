@@ -34,6 +34,12 @@ class MturkPanda extends MturkClass {
 			pandaTimer.theHamTimer(hamTimer);   		// Set hamTimer for this timer.
 		}
 	}
+	/** Checks to see if unique number is matched to a panda job.
+	 * @param {number} myId - Unique ID */
+	checkUnique(myId) { return this.info.hasOwnProperty(myId); }
+	/** Returns the panda data object from class.
+	 * @return {object} - Returns panda data */
+	getData() { return this.info; }
 	/** Returns the option info about a panda job with the unique ID.
 	 * @param  {number} myId - The unique ID for a panda job.
 	 * @return {object}			 - The options for this panda job with the unique ID. */
@@ -99,7 +105,7 @@ class MturkPanda extends MturkClass {
 	/** Updates the data for this panda using the unique ID. Key should already be in the data object.
 	 * @async									- To wait for the updating of data in the database
 	 * @param  {number} myId	- Unique ID  @param  {object} [newData] - Object to update panda with or use the data in the panda info object. */
-	async updateDbData(myId, newData=null) { console.trace('myId',myId,newData);
+	async updateDbData(myId, newData=null) {
 		let theData = (newData) ? newData : this.info[myId].data;
 		await MYDB.addToDB('panda',_, theData).then( id => theData.id = id,
 			rejected => { extPandaUI.haltScript(rejected, 'Failed updating data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
@@ -497,16 +503,16 @@ class MturkPanda extends MturkClass {
 					else if (result.mode === 'mturkLimit') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.mturkLimit(); }
 					else if (result.mode === 'maxxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
 					else if (result.mode === 'noMoreHits') { extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
-					else if (result.mode === 'noQual' && stopped===null) { console.log('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', '#DDA0DD'); }
-					else if (result.mode === 'blocked') { console.log('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', '#575b6f'); }
+					else if (result.mode === 'noQual' && stopped===null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', '#DDA0DD'); }
+					else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', '#575b6f'); }
 					else if (result.mode === 'notValid') {
-						console.log('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', '#575b6f');
+						console.info('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', '#575b6f');
 						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.mode === 'unknown') { console.log('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors(); }
+					} else if (result.mode === 'unknown') { console.info('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors(); }
 					else if (result.mode === 'cookies.large') {
-						console.log('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
+						console.info('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
 						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.type === 'ok.text') { extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert(); console.log('captcha found'); globalOpt.resetCaptcha(); }
+					} else if (result.type === 'ok.text') { extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert(); console.info('captcha found'); globalOpt.resetCaptcha(); }
 				}
 				extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 			}

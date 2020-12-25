@@ -26,11 +26,12 @@ let formatObj = {
  * @param  {string} [title] - Title     @param  {string} [rId] - Requester ID    @param  {string} [rName] - Requester name  @param  {number} [price] - Price
  * @param  {string} [dur]   - Duration  @param  {number} [hA]  - HITs available  @param  {number} [aI]    - Assignment ID   @param  {number} [tI]    - Tasks ID */
 function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.00, dur='', hA=0, aI=null, tI=null) {
+  let extCommands = ['addOnlyJob', 'addOnceJob', 'addSearchJob', 'addSearchOnceJob', 'addJob', 'addSearchMultiJob', 'getQueueData'];
   if (typeof chrome.app.isInstalled === 'undefined')  {
     if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
     window.location.reload();
-  } else {
-    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI});
+  } else if (extCommands.includes(com)) {
+    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'data':data});
   }
 }
 /** Sets up a mutation observer on the target element and use a function for each mutation or a trigger function when something changes.
@@ -62,7 +63,7 @@ function pandaUrl(message) { let pandaUrl = message.find('a:eq(1)').attr('href')
  * @return {array}          - [ Requester ID, Requester Name ] */
 function reqUrl(message) {
   try { let reqNode = message.find('a:first'), reqUrl = reqNode.attr('href'), reqName = reqNode.text(); return [ridMatch(reqUrl), reqName]; }
-  catch (error) { console.log(message, error); return null; }
+  catch (error) { console.error(message, error); return null; }
 }
 /** Returns the requester ID of the requester from the URL.
  * @param  {string} reqUrl - Requester URL
@@ -132,7 +133,7 @@ function fillArray(arr, values, message) {
 /** Uses a specified regex on the text for the message with the number given.
  * @param  {string} text - Text To Use  @param  {regex} r - The Regex To Use  @param  {number} number - Message Number
  * @return {array}      - Returns the array from a match of the regex provided or null if got an error. */
-function useRegex(text, r, number) { try { let returnValue = text.match(r); return returnValue; } catch (error) { console.log(number, error); return null; } }
+function useRegex(text, r, number) { try { let returnValue = text.match(r); return returnValue; } catch (error) { console.error(number, error); return null; } }
 /** Does parsing on message found with the unique format name of the message to use to get regex and other message details.
  * @param  {string} format - Name of Message  @param {object} message - Jquery Element  @param {string} text - Message Element in Text Format
  * @param  {number} number - Message Number
@@ -178,7 +179,7 @@ function findMessages(containerMessages, theMessage, theNumber, forum) {
           else if (/Requester:.*Title:.*Pay:.*Group ID:/.test(messageText)) exportFormat = 'RTPG';
           else if (/Requester:.*HIT Title:.*Panda:.*Qual Description:/.test(messageText)) exportFormat = 'DISQUAL';
           else if (/Title:.*Requester:.*TV:.*TO .*TO2 /.test(messageText)) exportFormat = 'QUALATT';
-          // else console.log('Not a HIT: ',postNumber, {'text':messageText});
+          // else console.info('Not a HIT: ',postNumber, {'text':messageText});
           if (exportFormat) parseHit(message, messageText, postNumber, forum, exportFormat);
         }
       }
@@ -234,8 +235,8 @@ function onForums() {
   setTimeout( () => { $('.PCSpanButtons').remove(); if ($(`.div-pandacrazy`).length === 0) $('.pcm-buttonZone').show(); }, 1000);
   window.addEventListener('JR_message_pandacrazy', e => {
     if (e.detail && e.detail.hasOwnProperty('time') && e.detail.hasOwnProperty('command') && e.detail.hasOwnProperty('data')) {
-      let data = e.detail.data, command = e.detail.command;
-      sendToExt(command, data, data.groupId, data.description, data.title, data.requesterId, data.requesterName, data.pay, data.duration, data.hitsAvailable);
+      let data = e.detail.data, comm = e.detail.command;
+      sendToExt(comm, data, data.groupId, data.description, data.title, data.requesterId, data.requesterName, data.pay, data.duration, data.hitsAvailable);
     }
   }, false);
   if (forumInfo.messages) findMessages(forumInfo.container + forumInfo.messages, forumInfo.message, forumInfo.postNumber, gForumName);
@@ -253,7 +254,7 @@ function detectForums(data) {
     else if (/slack\.com\/client\/TDBT14TPY\//.test(locationUrl)) { gForumName = 'slack'; gForumOptProp = 'SlackButtons'; if (data.SlackButtons) slack(); }
     else if (/discord\.com\/channels\//.test(locationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp(); }
     else if (/discord\.com\/app/.test(locationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp('@me'); }
-    else { console.log('unknown page'); }
+    else { console.info('unknown page'); }
     gForumOptions = data;
   }
 }

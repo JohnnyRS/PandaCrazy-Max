@@ -24,15 +24,15 @@ class UrlClass {
 				else { theData = await response.text(); dataType = 'text'; }
 				returnValue = {'type': `${thisResult}.${dataType}`, 'url': response.url, 'status': response.status, 'data': theData};
 			} else {
-				console.log('Fetch responses was not OK.');
-				const type = response.headers.get('Content-Type'); console.log(type);
-				if (type.includes('application/json')) console.log(await response.json());
-				else console.log(await response.text());
+				console.info('Fetch responses was not OK.');
+				const type = response.headers.get('Content-Type'); console.info(type);
+				if (type.includes('application/json')) console.info(await response.json());
+				else console.info(await response.text());
 				returnValue = {'type': 'unknown.result', 'url1': response.url, 'status': response.status, 'data': null};
 			}
 		}
 		catch (e) {
-			console.log('Got an error when trying to fetch the URL.');
+			console.error('Got an error when trying to fetch the URL.');
 			returnValue = {'type': 'caught.error', 'url': '', 'status': e.message, 'data': null};
 		}
 		response = {}; theData = null;

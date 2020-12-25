@@ -92,7 +92,7 @@ class EximClass {
         } else { this.statusFile(false); }
         data = null;
       }
-    } catch (e) { console.log('Not a valid import file. ',e); this.statusFile(false); }
+    } catch (e) { console.info('Not a valid import file. ',e); this.statusFile(false); }
     textData = null;
   }
   /** Starts to import the data to the program and deleting all the old data.
@@ -209,7 +209,7 @@ class EximClass {
           $(e.target).next('.custom-file-label').addClass('selected').html(fileName);
           this.reader.onload = () => this.readData();
           this.reader.readAsBinaryString($(e.target).prop('files')[0]);
-          this.reader.onerror = () => { console.log('can not read the file'); }
+          this.reader.onerror = () => { console.info('can not read the file'); }
         });
         $('.pcm-importButton:first').on('click', async e => {
           if (!this.importCompleted) {

@@ -86,7 +86,7 @@ class LogTabsClass {
         }, true, true);
         e.preventDefault();
       });
-      toAdd.append(' :: '); if (!hitInfo.task_url.includes('w_pl_prvw')) hitInfo.task_url + '&from_queue=true';
+      toAdd.append(' :: '); if (!hitInfo.task_url.includes('w_pl_prvw')) hitInfo.task_url += '&from_queue=true';
       createLink(toAdd, 'pcm-continueLink', 'https://worker.mturk.com' + hitInfo.task_url.replace('ref=w_pl_prvw', 'from_queue=true'), 'Continue Work', '_blank', e => {
           let theHeight = window.outerHeight-80, theWidth = window.outerWidth-10;
           window.open($(e.target).attr('href'),'_blank','width=' + theWidth + ',height=' +  theHeight + ',scrollbars=yes,toolbar=yes,menubar=yes,location=yes');

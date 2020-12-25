@@ -1,7 +1,7 @@
 let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, GvFocus = true;
-let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null;
+let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, search = null;
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
@@ -53,7 +53,7 @@ async function startPandaCrazy() {
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
   if (good.length > 0) { // Does it have good messages?
-    good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); console.log(value); });
+    good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); });
   }
 }
 

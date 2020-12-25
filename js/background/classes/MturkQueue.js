@@ -29,11 +29,15 @@ class MturkQueue extends MturkClass {
   /** Returns the queue size.
    * @return {number} - The queue size number. */
   getQueueSize() { return this.queueResults.length; }
-  /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI. */
-  sendQueueResults() {
-    if (myPanda) myPanda.gotNewQueue(this.queueResults, this.authenticityToken);
-    if (mySearch) mySearch.gotNewQueue(this.queueResults, this.authenticityToken);
-    chrome.storage.local.set({'PCM_queueData':this.queueResults});
+  /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI.
+   * @param {function} sendResults - The function to use to send results if given. */
+  sendQueueResults(sendResults=null) {
+    if (sendResults) sendResults({'for':'getQueueData', 'response':this.queueResults});
+    else {
+      if (myPanda) myPanda.gotNewQueue(this.queueResults, this.authenticityToken);
+      if (mySearch) mySearch.gotNewQueue(this.queueResults, this.authenticityToken);
+      chrome.storage.local.set({'PCM_queueData':this.queueResults});
+    }
   }
   /** Changes the time for the queue timer and returns the time saved.
    * @param  {number} timer - The time to change the queue timer to.
@@ -118,8 +122,8 @@ class MturkQueue extends MturkClass {
           }
           errorPage = null;
         } else if (result.type === 'caught.error') {
-          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.log('disconnected'); this.disconnected = true; queueTimer.theTimer(this.disconnectTimer); }
-          console.log(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
+          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.info('disconnected'); this.disconnected = true; queueTimer.theTimer(this.disconnectTimer); }
+          console.info(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
         }
       }
       result = null;

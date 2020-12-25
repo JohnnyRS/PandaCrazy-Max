@@ -1,4 +1,4 @@
-let bgPage = null, search = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let bgPage = null, search = null, pandaUI = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
@@ -35,7 +35,7 @@ async function startSearchCrazy() {
 function showMessages(good, bad) {
   if (bad) { haltScript(bad, bad.message, null, 'Error loading data: '); } // Check for errors first.
   if (good.length > 0) { // Does it have good messages?
-    good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); console.log(value); });
+    good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); });
   }
 }
 /** ================ First lines executed when page is loaded. ============================ **/

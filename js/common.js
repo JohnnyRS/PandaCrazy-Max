@@ -310,7 +310,7 @@ function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null)
  * @param  {string} url - The URL to parse and return info from.
  * @return {array}			- Group ID is first in array. Requester ID is second in array. */
 function parsePandaUrl(url) {
-  const groupInfo = url.match(/\/projects\/([^\/]*)\/tasks[\/?]([^\/?]*)/), requesterInfo = url.match(/\/requesters\/([^\/]*)\/projects(\/|\?|$)/);
+  const groupInfo = url.match(/\/projects\/([^\/]*)\/tasks([\/?]|$)/), requesterInfo = url.match(/\/requesters\/([^\/]*)\/projects(\/|\?|$)/);
   let groupId = (groupInfo) ? groupInfo[1] : null, reqId = (requesterInfo) ? requesterInfo[1] : null;
   return [groupId, reqId];
 }
@@ -325,7 +325,7 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
     if (modal) modal.closeModal('Loading Data'); // Close modal before stopping script.
     if (bgQueue) bgQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
-  } else console.log('Warning: ' + alertMessage); // Show a warning alert message on the console.
+  } else console.info('Warning: ' + alertMessage); // Show a warning alert message on the console.
 }
 /** Checks if the day sent is the same day as today.
  * @param  {date} day - The date that needs to be compared to today.

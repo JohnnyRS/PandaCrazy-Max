@@ -64,8 +64,8 @@ class MturkDashboard extends MturkClass {
           }
           errorPage = null;
         } else if (result.type === 'caught.error') {
-          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.log('disconnected'); this.disconnected = true; this.stopDashEarns(true); }
-          console.log(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
+          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.error('disconnected'); this.disconnected = true; this.stopDashEarns(true); }
+          console.info(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
         }
       }
       result = null;

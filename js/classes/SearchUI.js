@@ -26,6 +26,7 @@ class SearchUI {
 		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
 		this.totals = {'rid':0, 'gid':0, 'custom':0};
 		this.clickTimer = null;
+		this.listener = new ListenerClass();		// Listener class for any message listens.
 		this.hitsTabInactive = true;
 		this.triggeredHits = [];
 		this.triggeredUnique = 0;
@@ -137,6 +138,9 @@ class SearchUI {
 	/** Changes the status of the trigger with the unique number.
 	 * @param {number} unique - Unique Number  @param {string} [theStatus] - Trigger Status */
 	statusMe(unique, theStatus=null) { this.updateTrigger($(`#pcm-triggerCard-${unique}`), theStatus); this.redoAllTabTitles(); }
+	/** Sets the trigger status to the provided status value when it comes from an external command.
+	 * @param {number} dbId - Unique ID  @param {bool} status - Status */
+	externalSet(dbId, status) { if (dbId) { let unique = bgSearch.getTrigger(dbId).count; bgSearch.toggleTrigger(_, dbId, status); this.statusMe(unique, (status) ? 'searching' : 'disabled') }}
 	/** Set up the card events for a click.
 	 * @param  {object} [card] - Jquery element to find cards. */
 	cardEvents(card=null) {

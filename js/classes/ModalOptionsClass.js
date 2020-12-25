@@ -133,10 +133,10 @@ class ModalOptionsClass {
           setFileInput(fileName);
           this.reader.onload = () => {
             try { if (this.reader.result) { $('.pcm-loadCSSFile').removeClass('pcm-disabled').prop('disabled',false); } }
-            catch(e) { console.log('Not a valid import file. ',e); this.statusFile(false); }
+            catch(e) { console.info('Not a valid import file. ',e); this.statusFile(false); }
           };
           this.reader.readAsBinaryString($(e.target).prop('files')[0]);
-          this.reader.onerror = () => { console.log('can not read the file'); }
+          this.reader.onerror = () => { console.info('can not read the file'); }
         } else { $(`#${idName} .pcm-inputError`).html('Only allows a CSS file to be loaded!'); }
       });
       df = null; buttonGroup = null; themeInput = null; textArea = null; inputContainer = null;

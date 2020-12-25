@@ -66,6 +66,9 @@ class MturkHitSearch extends MturkClass {
 		for (const key of Object.keys(this.data)) { if (this.data[key].name === name) { returnValue = false; break; } }
 		return returnValue;
 	}
+	/** To send all triggers from the searchUI to a function given.
+	 * @param {function} sendResponse - Function to send response */
+	getAllTriggers(sendResponse) { sendResponse({'for':'getTriggers', 'response':{'info':this.triggers, 'data':this.data}}); }
 	/** returns the dbid from a type and value given from any UI.
 	 * @param  {string} type  - Trigger type @param  {string} value - Trigger value
 	 * @return {number}	      - The dbID for this trigger to use for all other data. */
@@ -478,7 +481,7 @@ class MturkHitSearch extends MturkClass {
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
 					if (rules.terms) triggered = triggered & this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
 					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(gId)) {
-						console.log(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
+						console.info(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
 						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime();
 						if ((key1 === 'rid' && !rules.blockGid.has(gId)) || key1 === 'gid') {
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
@@ -539,7 +542,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} unique - Trigger Unique ID  @param  {string} [passdbId] - Passed Database ID  @param  {bool} [forceEnabled] - Enabled Status
 	 * @return {bool}          - Status of the trigger. */
 	toggleTrigger(unique, passdbId=null, forceEnabled=null) {
-		let dbId = (passdbId) ? passdbId : this.dbIds.unique[unique];
+		let dbId = (passdbId !== null) ? passdbId : this.dbIds.unique[unique];
 		if (dbId) {
 			let oldStatus = this.triggers[dbId].status, disabled = (forceEnabled !== null) ? forceEnabled : (oldStatus === 'disabled') ? true : false;
 			this.setDisabled(this.data[dbId].type, this.data[dbId].value, !disabled);
@@ -651,16 +654,16 @@ class MturkHitSearch extends MturkClass {
 	appendFragments() { if (extSearchUI) extSearchUI.appendFragments(); }
 	/** Remove the trigger from memory with the database ID, Panda Database ID, unique number with sUI value. Can also force removal from database.
 	 * @async 									 - To wait for Disabling the trigger.
-	 * @param  {number} [dbId]   - Database ID  @param  {number} [pDbId] - Panda Database ID.  @param {number} [unique] - Unique Number  @param {bool} [sUI] - SearchUI?
-	 * @param  {bool} [removeDB] - Remove From Database? */
-	async removeTrigger(dbId=null, pDbId=null, unique=null, sUI=true, removeDB=false) {
+	 * @param  {number} [dbId]   - Database ID            @param  {number} [pDbId] - Panda Database ID.  @param {number} [unique] - Unique Number  @param {bool} [sUI] - SearchUI?
+	 * @param  {bool} [removeDB] - Remove From Database?  @param {function} sendResponse - Function to send Queue Results. */
+	async removeTrigger(dbId=null, pDbId=null, unique=null, sUI=true, removeDB=false, sendResponse=null) {
 		dbId = (dbId) ? dbId : (unique !== null) ? this.dbIds.unique[unique] : this.dbIds.pDbId[pDbId];
-		if (dbId) {
+		if (dbId && this.data[dbId]) {
 			let tempData = Object.assign({}, this.data[dbId]);
 			await this.setDisabled(tempData.type, tempData.value, true); // Remove trigger from live strings.
 			if (sUI && extSearchUI) extSearchUI.removeTrigger(this.triggers[dbId].count);
 			this.fromPanda.delete(dbId); this.fromSearch.delete(dbId);
-			delete this.options[dbId]; delete this.rules[dbId]; delete this.triggers[dbId];
+			delete this.options[dbId]; delete this.rules[dbId]; delete this.triggers[dbId]; delete this.data[dbId];
 			delete this.dbIds.pDbId[pDbId]; delete this.dbIds.values[`${tempData.type}:${tempData.value}:${sUI}`];
 			if (removeDB) {
 				MYDB.deleteFromDB('searching',_, dbId); MYDB.deleteFromDB('searching', 'rules', dbId);
@@ -668,7 +671,8 @@ class MturkHitSearch extends MturkClass {
 			}
 			if (this.searchGStats && this.searchGStats.isSearchOn() && this.liveCounter === 0 && this.termCounter === 0) this.stopSearching();
 			myPanda.searchUIConnect(true);
-		}
+			if (sendResponse) this.getAllTriggers( (data) => { data.for = 'removeTrigger'; data['removedTrigger'] = true; sendResponse(data); });
+		} else if (sendResponse) sendResponse({'for':'removeJob', 'response':{}, 'removedJob':false});
 	}
 	/** When a UI is closed then this method will remove any triggers added from that UI.
 	 * @async								- To wait for removal of triggers from memory.

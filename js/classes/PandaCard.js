@@ -136,6 +136,7 @@ class PandaCards {
   /** Remove this panda card from UI.
    * @param  {number} myId - Unique ID  @param  {function} removeFunc - Removal Function  @param  {bool} [animate] - Show Animation? */
   removeCard(myId, removeFunc, animate=true) {
+    $(`#pcm-pandaCard-${myId}`).stop(true, true);
     let doRemoval = (removeFunc) => { $(`#pcm-pandaCard-${myId}`).remove(); this.cards[myId].removeCard(); delete this.cards[myId]; removeFunc(); }
     if (animate) $(`#pcm-pandaCard-${myId}`).effect('slide', { direction:'left', mode:'hide' }, 250, async () => { doRemoval(removeFunc); });
     else { doRemoval(removeFunc); }

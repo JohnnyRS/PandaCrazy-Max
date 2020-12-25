@@ -27,6 +27,9 @@ class PandaUI {
 	/** Delete the panda stats from the stat database for this panda with this unique ID and database ID.
 	 * @param  {number} myId - MyID  @param  {number} dbId - Database ID */
 	deleteFromStats(myId, dbId) { this.pandaStats[myId].deleteIdFromDB(dbId); }
+	/** Will send all stats to the function given.
+	 * @param {function} sendResponse - Function to send the stats response. */
+	sendStats(sendResponse) { if (this.pandaGStats) this.pandaGStats.sendStats(sendResponse); }
 	/** Loads up any panda jobs that are saved or saves default panda jobs if database was just created.
 	 * @async												- To wait for the tabs to completely load from the database.
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object. */
@@ -155,6 +158,7 @@ class PandaUI {
 	 * @param  {number} myId 			  - Unique ID 				@param  {bool} [goHamStart] - Ham Start  @param  {number} [tempDuration] - Temp duration
 	 * @param  {number} [tempGoHam] - Temp ham duration */
 	async startCollecting(myId, goHamStart=false, tempDuration=0, tempGoHam=0) {
+		if (!bgPanda.checkUnique(myId)) return;
 		let pandaStat = this.pandaStats[myId], alreadySearching = pandaStat.searching;
 		if (!pandaStat.collecting) { // Make sure this panda is not collecting.
 			let goodCollect = await bgPanda.startCollecting(myId, goHamStart, tempDuration, tempGoHam);
@@ -172,28 +176,31 @@ class PandaUI {
 	 * @param  {number} myId      - Unique ID   @param  {string} [whyStop] - Stopped Reason  @param  {bool} [deleteData] - Delete Data?
 	 * @param  {bool} [searching]	- Job Search? */
 	async stopCollecting(myId, whyStop=null, deleteData=true, searching=false) {
+		if (!bgPanda.checkUnique(myId)) return;
 		let info = bgPanda.options(myId), classToo = '', pandaStat = this.pandaStats[myId];
-		if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
-		if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
-		let theStats = pandaStat.stopCollecting(); this.pandaGStats.collectingOff();
-		info.data.totalSeconds += theStats.seconds; info.data.totalAccepted += theStats.accepted;
-		let hitData = Object.assign({}, info.data); // Make a copy of data.
-		bgPanda.stopCollecting(myId, hitData, whyStop);
-		if ($(`#pcm-collectButton-${myId}`).is('.pcm-btnCollecting')) classToo = ' pcm-searchDisable';
-		$(`#pcm-collectButton-${myId}, #pcm-collectButton1-${myId}, #pcm-collectButton2-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
-		$(`#pcm-hamButton-${myId}`).removeClass('pcm-delayedHam');
-		let previousColor = $(`#pcm-pandaCard-${myId}`).data('previousColor');
-		if (previousColor && !info.skipped) $(`#pcm-pandaCard-${myId}`).stop(true,true).removeData('previousColor').animate({'backgroundColor':previousColor},{'duration':1000});
-		await bgPanda.updateDbData(myId, hitData); this.logTabs.removeFromStatus(myId);
-		if (deleteData && !info.skipped) info.data = null;
-		info.queueUnique = null; info.autoTGoHam = 'off';
+		if (pandaStat.collecting || pandaStat.searching) {
+			if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
+			if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
+			let theStats = pandaStat.stopCollecting(); this.pandaGStats.collectingOff();
+			info.data.totalSeconds += theStats.seconds; info.data.totalAccepted += theStats.accepted;
+			let hitData = Object.assign({}, info.data); // Make a copy of data.
+			bgPanda.stopCollecting(myId, hitData, whyStop);
+			if ($(`#pcm-collectButton-${myId}`).is('.pcm-btnCollecting') && !searching) classToo = ' pcm-searchDisable';
+			$(`#pcm-collectButton-${myId}, #pcm-collectButton1-${myId}, #pcm-collectButton2-${myId}`).removeClass('pcm-buttonOn pcm-btnCollecting').addClass(`pcm-buttonOff${classToo}`);
+			$(`#pcm-hamButton-${myId}`).removeClass('pcm-delayedHam');
+			let previousColor = $(`#pcm-pandaCard-${myId}`).data('previousColor');
+			if (previousColor && !info.skipped) $(`#pcm-pandaCard-${myId}`).stop(true,true).removeData('previousColor').animate({'backgroundColor':previousColor},{'duration':1000});
+			await bgPanda.updateDbData(myId, hitData); this.logTabs.removeFromStatus(myId);
+			if (deleteData && !info.skipped) info.data = null;
+			info.queueUnique = null; info.autoTGoHam = 'off';
+		}
 	}
 	/** Removes a job from the UI.
 	 * @async												 - To wait for removal of cards with animation on UI and panda job from database.
 	 * @param  {Number} myId				 - Unique Number     @param  {function} [afterFunc] - After Function   @param  {function} [animate]	 - Animate Card?
 	 * @param  {function} [deleteDB] - Database Delete?  @param  {string} [whyStop]     - Why Stopping? */
 	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true, whyStop=null) {
-		await this.cards.removeCard(myId, async () => {
+		this.cards.removeCard(myId, async () => {
 			let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
 			if (deleteDB) await this.stopCollecting(myId, null, false)
 			await bgPanda.removePanda(myId, deleteDB, whyStop);
@@ -201,6 +208,13 @@ class PandaUI {
 			if (data.search) this.pandaGStats.subSearch(); else this.pandaGStats.subPanda();
 			if (afterFunc !== null) await afterFunc('YES', myId);
 		}, animate);
+	}
+	/** Remove job from an external script command and then send response back with the updated job list and removedjob key equal to true;
+	 * @param {number} dbId - Database ID  @param {function} sendResponse - Function to send response.  */
+	extRemoveJob(dbId, sendResponse) {
+		let myId = bgPanda.getMyId(dbId);
+		if (myId >= 0) this.removeJob(myId, () => { this.getAllData( (data) => { data.for = 'removeJob'; data['removedJob'] = true; sendResponse(data); } )});
+		else { sendResponse({'for':'removeJob', 'response':{}, 'removedJob':false}); }
 	}
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr				 - Array of Deleted Jobs  @param  {function} [afterFunc] - After Function        @param  {string} [whyStop] - Why Stopping?
@@ -253,7 +267,7 @@ class PandaUI {
 			if (diff === null) diff = new Date().getTime() - this.lastAdded;
 			if (diff === -1 || diff >= this.hitQueue[0].lowestDur) {
 				let obj = this.hitQueue.shift(), info = bgPanda.options(obj.myId), data = await bgPanda.dataObj(obj.myId);
-				this.lastAdded = new Date().getTime(); info.autoAdded = true; data.hitsAvailable = obj.hitsAvailable;
+				this.lastAdded = new Date().getTime(); if (info.autoAdded !== false) info.autoAdded = true; data.hitsAvailable = obj.hitsAvailable;
 				this.cards.updateAllCardInfo(obj.myId, info); this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam);
 				if (this.hitQueue.length === 0) { this.lastAdded = null; this.delayedTimeout = null; }
 				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
@@ -281,29 +295,19 @@ class PandaUI {
 	/** Add panda job from an external source like forums, scripts or panda buttons on MTURK.
 	 * @param  {object} msg - The message object from the external source. */
 	addFromExternal(msg) {
-		if (msg.groupId !== '' && msg.reqId !== '') {
-			let myId = null;
-			if (msg.command.slice(-7) === 'collect') {
-				if (msg.groupId != '' && bgPanda.pandaGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.pandaGroupIds[msg.groupId][0];
-				if (msg.groupId != '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
-				if (myId && msg.command.includes('stop')) this.stopCollecting(myId);
-				else if (myId) this.startCollecting(myId);
-			} else {
-				let search = (msg.command === 'addSearchOnceJob') ? 'gid' : (msg.command === 'addSearchMultiJob') ? 'rid' : null;
-				let once = (msg.command === 'addOnceJob' || msg.command === 'addSearchOnceJob'), run = (msg.command !== 'addOnlyJob');
-				if (!msg.auto) msg.auto = false;
-				let duration = ((search) ? 10000 : (msg.auto) ? 12000 : 0), hamD = (msg.hamDuration === 0) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
-				if (search === 'rid' && msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
-				if (search === 'gid' && msg.groupId !== '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
-				if (myId === null) {
-					let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
-					let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-					if (search && globalOpt.theToSearchUI() && bgSearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
-					else this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
-				} else if (search === 'rid') this.doSearching(myId);
-				else this.startCollecting(myId)
-			}
-		}
+		let myId = null, search = (msg.command === 'addSearchOnceJob') ? 'gid' : (msg.command === 'addSearchMultiJob') ? 'rid' : null;
+		let once = (msg.command === 'addOnceJob' || msg.command === 'addSearchOnceJob'), run = (msg.command !== 'addOnlyJob');
+		if (!msg.auto) msg.auto = false;
+		let duration = ((search) ? 10000 : (msg.auto) ? 12000 : 0), hamD = (!msg.hamDuration) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
+		if (search === 'rid' && msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
+		if (search === 'gid' && msg.groupId !== '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
+		if (myId === null) {
+			let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
+			let opt = optObject(once, search,_,_,_,_,_,_, hamD);
+			if (search && globalOpt.theToSearchUI() && bgSearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
+			else this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
+		} else if (search === 'rid') this.doSearching(myId);
+		else this.startCollecting(myId)
 	}
 	/** Add panda from search triggers. Is used to use search jobs instead of adding a new HIT if not needed.
 	 * @param  {object} data			- Data                 @param  {object} opt			   - Options         @param  {object} auto			    - Auto Added
@@ -405,6 +409,13 @@ class PandaUI {
 			this.pandaStats[key].setDailyStats(); let data = bgPanda.data(key); data.day = new Date().getTime(); data.dailyDone = 0;
 		}
 		bgHistory.maintenance(); bgPanda.nullData(false, true);
+	}
+	/** Returns all panda jobs data after getting all data from database for sending back to another tab in a response send function.
+	 * @async                         - To wait for all the data to be loaded.
+	 * @param {function} sendResponse - Function to send the panda job data. */
+	async getAllData(sendResponse) {
+		await bgPanda.getAllPanda(false); let copiedData = JSON.parse(JSON.stringify(bgPanda.getData()));
+		bgPanda.nullData(false, true); sendResponse({'for':'getJobs', 'response':copiedData});
 	}
 	/** Returns the total number recorded of HITs in queue.
 	 * @param  {string} [gId] - Group ID to search for and count the HITs in queue.
