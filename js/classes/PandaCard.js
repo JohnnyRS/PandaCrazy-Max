@@ -167,7 +167,7 @@ class PandaCards {
   /** Highlight the panda card's gid number with this unique ID.
    * @param  {number} myId - The unique ID for a panda job. */
   highlightEffect_gid(myId) {
-    if (GvFocus && globalOpt.doGeneral().fetchHighlight) $(`#pcm-groupId-${myId}, #pcm-buttonGroup1-${myId}`).effect('highlight', {color:this.bgHighlighter}, 300);
+    if (globalOpt.doGeneral().fetchHighlight) $(`#pcm-groupId-${myId}, #pcm-buttonGroup1-${myId}`).stop(true, true).effect('highlight', {color:this.bgHighlighter}, 300);
   }
   /** Highlight the panda card according to the action and duration.
    * @param  {number} myId - Unique ID @param  {string} [action] - Effect Action @param  {number} [duration] - Effect Duration */
@@ -182,7 +182,7 @@ class PandaCards {
     if (newBgColor !== '') {
       $(`#pcm-pandaCard-${myId}`).data('previousColor1', $(`#pcm-pandaCard-${myId}`).data('stopped',whyStop).css('background-color')).css('background-color', newBgColor);
     }
-		if (stopEffect) this.highlightEffect_card(myId,'stop',7500);
+    if (stopEffect) this.highlightEffect_card(myId, 'stop', 7500);
 		pandaUI.stopCollecting(myId, whyStop);
   }
   /** Either change background color to provided color and save the previous color or change the

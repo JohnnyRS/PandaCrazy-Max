@@ -2,20 +2,26 @@ let bgPage = null, search = null, pandaUI = null, alarms = null, bgQueue = null,
 let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
+/** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
+function getBgPage() {
+  chrome.runtime.getBackgroundPage( backgroundPage => {
+    bgPage = backgroundPage;
+    if (!bgPage.gGetSearchUI()) modalLoadingData();
+    else haltScript(null, `You have SearchCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting SearchCrazy Max', true);
+  });
+}
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, () => prepare() ); // Calls startPandaCrazy after modal shown.
 }
-/** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
-function getBgPage() { chrome.runtime.getBackgroundPage( backgroundPage => { bgPage = backgroundPage; prepare(); }); }
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion).then( () => {
     search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); globalOpt = bgPage.gGetOptions();
-    themes = new ThemesClass(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+    themes = new ThemesClass(); alarms = bgPage.gGetAlarms(new MyAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
@@ -39,10 +45,7 @@ function showMessages(good, bad) {
   }
 }
 /** ================ First lines executed when page is loaded. ============================ **/
-allTabs('/searchCrazy.html', count => { // Count how many Search Crazy pages are opened.
-  if (count < 2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
-  else haltScript(null, 'You have SearchCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting SearchCrazy Max', true);
-});
+getBgPage(); // Grabs the background page, detects if another UI is opened and then starts SearchUI.
 
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/

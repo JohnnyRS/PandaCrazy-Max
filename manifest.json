@@ -1,8 +1,10 @@
 {
   "manifest_version": 2,
   "name": "PandaCrazy Max",
-  "version": "0.9.18.0",
-  "description": "Extension for Mturk.com to Collect panda's for you at a certain cycle instead of timers. Lot of organizing of panda's and grouping them together to start and stop them at once.",
+  "short_name": "PC Max",
+  "version": "0.9.20.0",
+  "author": "JohnnyRS",
+  "description": "Extension for Mturk.com to Collect HIT's for you at a set time value. Lot of organizing of panda's for easier use.",
 
   "browser_action": {
     "default_icon": {
@@ -56,10 +58,10 @@
         "*://forum.turkerview.com/*",
         "*://*.mturkforum.com/*",
         "*://*.ourhitstop.com/*",
+        "*://*.mturkcrowd.com/*",
         "*://*.slack.com/client/TDBT14TPY/*",
         "*://*.discord.com/channels/*",
-        "*://*.discord.com/app*",
-        "*://*.mturkcrowd.com/*"
+        "*://*.discord.com/app*"
       ],
       "css": ["css/PCM-Content-Script.css"],
       "js": [
@@ -71,12 +73,9 @@
   ],
   "permissions": [
     "activeTab",
-    "clipboardWrite",
     "storage",
-    "tabs",
-    "unlimitedStorage",
     "https://worker.mturk.com/*",
-    "https://www.amazon.com/ap/signin?*"
+    "https://www.amazon.com/ap/signin?*openid.return_to=https://worker.mturk.com/*"
   ],
   "icons": {
     "48": "pcMax-48x48.png",

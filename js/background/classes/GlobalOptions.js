@@ -355,7 +355,7 @@ class PandaGOptions {
    * @param {string} url - Page URL  @param {number} queueSize - Number of HITs in Queue  @param {function} popupSend Send To Popup Function */
   helperOptions(url, queueSize, popupSend=null) {
     let df = $(document.createDocumentFragment()), onMturk = false;
-    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) { onMturk = true; this.mturkQueueOptions(df, popupSend); }
+    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) { onMturk = true; this.mturkQueueOptions(df); }
     if (/\/\/[^/]*\/projects\/[^/]*\/tasks\/.*?assignment_id/.test(url)) this.mturkAssignedOptions(df);
     else if (/\/\/[^/]*mturkcrowd.com.*$/.test(url)) this.popupForumOptions(df, 'MTCButtons');
     else if (/\/\/[^/]*turkerview.com.*$/.test(url)) this.popupForumOptions(df, 'TVButtons');

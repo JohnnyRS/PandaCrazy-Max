@@ -1,5 +1,5 @@
 const locationUrl = window.location.href;
-let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false;
+let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false, gOpenHits = null, gAlreadyOpened = false;
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null;
 let gNewQueue = false, gHolders = {}, gTabIds = {}, gPostionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false; 
@@ -161,16 +161,28 @@ function queueData(data=null, older=false, depth=0) {
  * @param {object} queueResults - Queue data */
 function checkQueue(queueResults) {
   if (gGotoHit === 26) gGotoHit = queueResults.length;
-  if (extensionLoad() && gMonitorOn && queueResults.length > 0) {
-    let task_url = nextHit();
-    if (task_url) {
-      chrome.runtime.sendMessage({'command':'monitorSpeech', 'data':{}});
+  if (extensionLoad()) {
+    if (gGotoHit && gGotoHit > 0 && queueResults.length >= gGotoHit) {
       chrome.storage.onChanged.removeListener(listenChanged);
-      window.location.replace('https://worker.mturk.com' + task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
+      window.location.replace('https://worker.mturk.com' + queueResults[gGotoHit-1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
+    } else if (!gAlreadyOpened && gOpenHits && gOpenHits > 1 && queueResults.length >= gOpenHits) {
+      console.log(`let's open up ${gOpenHits} hits in tabs now`);
+      let hitPosition = 2, numOpenHits = gOpenHits; gAlreadyOpened = true;
+      let nowOpenHits = () => {
+        window.open('https://worker.mturk.com' + queueResults[hitPosition - 1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'), '_blank');
+        hitPosition++; numOpenHits--;
+        if (numOpenHits > 1) setTimeout(nowOpenHits, 1270);
+        else { window.location.replace('https://worker.mturk.com' + queueResults[0].task_url.replace('&ref=w_pl_prvw','&from_queue=true')); window.focus(); }
+      }
+      nowOpenHits();
+    } else if (gMonitorOn && queueResults.length > 0) {
+      let task_url = nextHit();
+      if (task_url) {
+        chrome.runtime.sendMessage({'command':'monitorSpeech', 'data':{}});
+        chrome.storage.onChanged.removeListener(listenChanged);
+        window.location.replace('https://worker.mturk.com' + task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
+      }
     }
-  } else if (extensionLoad() && gGotoHit > 0 && queueResults.length >= gGotoHit) {
-    chrome.storage.onChanged.removeListener(listenChanged);
-    window.location.replace('https://worker.mturk.com' + queueResults[gGotoHit-1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'))
   }
 }
 /** Sets the session storage with the id array using the array name and add the id value.
@@ -439,9 +451,10 @@ function oldPandaCrazy() { resetIDNext(); console.log('old pandacrazy page'); }
 
 /** Checks for special commands in URL and sets the global values. */
 if (/worker\.mturk\.com\/tasks.*$/.test(locationUrl)) { gQueuePage = true; }
-if (/worker\.mturk\.com\/tasks\?JRPC=monitornext$/.test(locationUrl)) { gMonitorOn = true; }
+if (/worker\.mturk\.com\/tasks\?JRPC=(monitornext|nexthit)$/.test(locationUrl)) { gMonitorOn = true; }
 else if (/worker\.mturk\.com\/tasks\?JRPC=gohit\d*$/.test(locationUrl)) gGotoHit = locationUrl.split('JRPC=gohit')[1];
 else if (/worker\.mturk\.com\/tasks\?JRPC=lasthit\d*$/.test(locationUrl)) gGotoHit = 26;
+else if (/worker\.mturk\.com\/tasks\?JRPC=openhits\d*$/.test(locationUrl)) gOpenHits = locationUrl.split('JRPC=openhits')[1];
 else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) { grabCurrentHit(); gPostionsTitle = true; gAssignmentPage = true; }
 
 /** load up any local storage data saved */

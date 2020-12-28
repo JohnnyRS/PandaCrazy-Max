@@ -8,5 +8,7 @@ function pageData(fragment, closeThis=false, tooltips=null) {
   else if (fragment && fragment[0].childElementCount > 0) $(`<div class='pcm-addedSection'></div>`).appendTo('body').append(fragment);
 }
 
-/** Will inform extension that it's icon has been clicked and popup opened. Waits for any sent data back to add to popup or close it. */
-window.onload = () => { chrome.runtime.getBackgroundPage( (backgroundPage) => { backgroundPage.popupOpened(pageData); }); };
+/** Will inform extension that it's icon has been clicked and sends active tab object. Waits for any sent data back to add to popup or close it. */
+window.onload = () => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => { chrome.runtime.getBackgroundPage( (backgroundPage) => { backgroundPage.popupOpened(tabs[0], pageData); }); });
+};

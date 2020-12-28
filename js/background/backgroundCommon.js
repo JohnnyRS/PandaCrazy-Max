@@ -1,6 +1,6 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newVersion = null;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null;
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null;
 chrome.storage.local.set({'PCM_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
@@ -19,10 +19,14 @@ function cleanLocalStorage() {
 function removeAll() {
   mySearch.removeAll(); myPanda.closeDB(); mySearch.closeDB(); myHistory.closeDB(); MyAlarms.removeAll(); MyOptions.removeAll();
   myPanda = null; mySearch = null; myHistory = null; myQueue = null; myDash = null; pandaTimer = null; queueTimer = null; searchTimer = null; dbError = null;
+  extPandaUI = null;
   cleanLocalStorage();
 }
 /** Importing data so make sure searchUI gets refreshed if it was opened also. */
 function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
+/** Returns the search UI class. Useful when detecting if the UI is already opened in another tab.
+ * @return {class} - The Search UI Class. */
+function gGetSearchUI() { return extSearchUI; }
 /** Function to set up a search UI variable for the background and returns search class.
  * @param {class} classUI - Object variable for the search UI or null if UI is closing.
  * @return {class}        - Returns the search class in background for easier access. */
@@ -33,6 +37,9 @@ function gSetSearchUI(classUI) {
   checkUIConnects();
   return mySearch;
 }
+/** Returns the panda UI class. Useful when detecting if the UI is already opened in another tab.
+ * @return {class} - The Panda UI Class. */
+function gGetPandaUI() { return extPandaUI; }
 /** Function to set up a panda UI variable for the background use. Also checks on the status of the panda UI to see if it's closing.
  * @param {pandaUI} classUI - Object variable for the panda UI or null if UI is closing. */
 function gSetPandaUI(classUI) {
@@ -136,34 +143,29 @@ async function wipeData() {
  * @param {object} options - Options Object  @param {string} comm - Command  @param {function} [popupSend] - Popup Send Function  */
 function helperSendCommands(options, comm, popupSend=null) {
   if (comm === 'newUrl' && popupSend) popupSend(null, true);
-  if (options) { chrome.tabs.query({'active': true, 'currentWindow': true}, tabs => { if (tabs && tabs[0]) chrome.tabs.sendMessage(tabs[0].id, {'command':comm, 'data':options}); }); }
+  if (options && currentTab) { chrome.tabs.sendMessage(currentTab.id, {'command':comm, 'data':options}); }
 }
 /** Used when a user clicks on the extension icon to show popup. Handles options or update notice to show on popup.
  * @param {function} popupSend - Popup Send Function */
-function popupOpened(popupSend) {
+function popupOpened(tab, popupSend) {
   if (!myQueue || !MyOptions) return; // Needs queue to be running to get the queue size.
-  let generalOpt = MyOptions.doGeneral(); popupSend(null,_, generalOpt.showHelpTooltips);
-  getCurrentTab( thisUrl => {
-    let helperOptions = (MyOptions) ? MyOptions.helperOptions(thisUrl, myQueue.getQueueSize(), popupSend) : $(document.createDocumentFragment());
-    if (newVersion) {
-      let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${newVersion} is detected.<br></div>`).appendTo(helperOptions.append('<hr>'));
-      $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
-        let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
-        if (result === true) { chrome.runtime.reload(); }
-        else { alert('OK. Extension update will happen after next chrome start.'); newVersion = null; popupSend(null, true); }
-      }).appendTo(versionUpdate);
-      versionUpdate = null;
+  let generalOpt = MyOptions.doGeneral(); currentTab = tab; popupSend(null,_, generalOpt.showHelpTooltips);
+  if (currentTab.url && /^(?!.*chrome-extension:\/\/|.*chrome:\/\/).*$/.test(currentTab.url)) {
+    if (currentTab.title && !currentTab.title.includes('NO PCM')) {
+      let helperOptions = (MyOptions) ? MyOptions.helperOptions(currentTab.url, myQueue.getQueueSize(), popupSend) : $(document.createDocumentFragment());
+      if (newVersion) {
+        let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${newVersion} is detected.<br></div>`).appendTo(helperOptions.append('<hr>'));
+        $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
+          let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
+          if (result === true) { chrome.runtime.reload(); }
+          else { alert('OK. Extension update will happen after next chrome start.'); newVersion = null; popupSend(null, true); }
+        }).appendTo(versionUpdate);
+        versionUpdate = null;
+      }
+      popupSend(helperOptions);
+      helperOptions = null;
     }
-    popupSend(helperOptions);
-    helperOptions = null;
-  });
-}
-/** Gets the current URL of window tab and sends it to the do after function.
- * @param {function} [doAfter] - Do After Function */
-function getCurrentTab(doAfter=null) {
-  chrome.tabs.query({'active':true, 'currentWindow':true}, tabs => { if (tabs && tabs.length) {
-    let tab = tabs[0], url = tab.url; if (doAfter && !tab.title.includes('NO PCM')) doAfter(url);
-  }});
+  }
 }
 
 /** Clean any local storage when first starting up. */

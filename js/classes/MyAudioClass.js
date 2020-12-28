@@ -1,7 +1,7 @@
 /** Class for playing audio on pages instead of background page.
- * @class myAudioClass ##
+ * @class MyAudioClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
-class myAudioClass {
+class MyAudioClass {
   constructor() {
     this.audios = {};
   }

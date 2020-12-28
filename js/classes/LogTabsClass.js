@@ -207,29 +207,30 @@ class LogTabsClass {
    * @param  {object} data  - Data Object  @param  {object} stats - Stats Object  @param  {number} myId  - Unique ID for a panda job. */
   addToStatus(data, stats, myId) {
     const requester = (data.friendlyReqName !== '') ? data.friendlyReqName : data.reqName;
+    $(`.pcm-statusRow-${myId}`).remove();
     this.statusContent.append(`<div class='pcm-statusRow-${myId}'><span class='pcm-emp'>Requester:</span> <span class='pcm-requesterName'>${requester}</span> | <span class='pcm-emp'>Pay:</span> $<span class='pcm-statusPrice'>${Number(data.price).toFixed(2)}</span> | <span class='pcm-emp'>Mode:</span> panda | <span class='pcm-emp'>Accepted:</span> <span class='pcm-acceptedValue'>${stats.accepted.value}</span> | <span class='pcm-emp'>Fetched:</span> <span class='pcm-fetchedValue'>${stats.fetched.value}</span> | <span class='pcm-emp'>Elapsed:</span> <span class='pcm-elapsedTime'>0.0s</span></div>`);
   }
   /** Display the stats from panda job with the unique ID on the status tab or the changes to requester name and pay.
    * @param  {object} stats - Stats  @param  {number} myId - Unique ID  @param  {number} mSeconds - Elapsed Time  @param  {object} [changes] - Changes Object */
   updateLogStatus(stats, myId, mSeconds, changes=null) {
     if (stats) {
-      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-fetchedValue:first`).html(stats.fetched.value);
-      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-acceptedValue:first`).html(stats.accepted.value);
+      this.statusContent.find(`.pcm-statusRow-${myId}:not(.pcm-status-stop) .pcm-fetchedValue:first`).html(stats.fetched.value);
+      this.statusContent.find(`.pcm-statusRow-${myId}:not(.pcm-status-stop) .pcm-acceptedValue:first`).html(stats.accepted.value);
       if (mSeconds > 0) {
         let elapsedSeconds = (Math.round( (mSeconds / 1000) * 10 ) / 10).toFixed(1);
-        this.statusContent.find(`.pcm-statusRow-${myId} .pcm-elapsedTime:first`).html(elapsedSeconds + 's');
+        this.statusContent.find(`.pcm-statusRow-${myId}:not(.pcm-status-stop) .pcm-elapsedTime:first`).html(elapsedSeconds + 's');
       }
     } else if (changes) {
       const requester = (changes.friendlyReqName !== '') ? changes.friendlyReqName : changes.reqName;
-      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-requesterName:first`).html(requester);
-      this.statusContent.find(`.pcm-statusRow-${myId} .pcm-statusPrice:first`).html(Number(changes.price).toFixed(2));
+      this.statusContent.find(`.pcm-statusRow-${myId}:not(.pcm-status-stop) .pcm-requesterName:first`).html(requester);
+      this.statusContent.find(`.pcm-statusRow-${myId}:not(.pcm-status-stop) .pcm-statusPrice:first`).html(Number(changes.price).toFixed(2));
     }
   }
   /** Remove a status line from the status tab giving it 12 seconds before removal.
    * @param  {number} myId - The unique ID for a panda job. */
   removeFromStatus(myId) {
     this.statusContent.find(`.pcm-statusRow-${myId}`).addClass(`pcm-status-stop`);
-    setTimeout( () => { this.statusContent.find(`.pcm-statusRow-${myId}`).remove(); }, 12000);
+    setTimeout( () => { this.statusContent.find(`.pcm-statusRow-${myId}.pcm-status-stop`).remove(); }, 12000);
   }
 	/** Returns the total number recorded of HITs in queue.
 	 * @param  {string} [gId] - Group ID to search for and count the HITs in queue.

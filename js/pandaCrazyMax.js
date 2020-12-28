@@ -1,27 +1,32 @@
 let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
-let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, GvFocus = true;
+let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
 let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, search = null;
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
+/** Gets the background page and sets up a global variable for it. Then it runs the modal Loading function. Also detects if another UI is opened. */
+function getBgPage() {
+  chrome.runtime.getBackgroundPage( backgroundPage => { 
+    bgPage = backgroundPage;
+    if (!bgPage.gGetPandaUI()) modalLoadingData();
+    else haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
+  });
+}
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
 function modalLoadingData() {
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, () => getBgPage() ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, () => prepare() ); // Calls startPandaCrazy after modal shown.
 }
-/** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
-function getBgPage() { chrome.runtime.getBackgroundPage( backgroundPage => { bgPage = backgroundPage; prepare(); }); }
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
-  $(window).on( 'focus blur', () => GvFocus = document.hasFocus() );
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
-    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new myAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new TheGroupings(); sGroupings = new TheGroupings('searching'); pandaUI = new PandaUI(); menus = new MenuClass(); dashboard = bgPage.gGetDash();
     themes = new ThemesClass();
     startPandaCrazy();
@@ -58,10 +63,7 @@ function showMessages(good, bad) {
 }
 
 /** ================ First lines executed when page is loaded. ============================ **/
-allTabs('/pandaCrazy.html', async count => { // Count how many Panda Crazy pages are opened.
-  if (count < 2) modalLoadingData(); // If there are less than 2 pages opened then start loading data.
-  else haltScript(null, 'You have PandaCrazy Max running in another tab or window. You can\'t have multiple instances running or it will cause database problems.', null, 'Error starting PandaCrazy Max', true);
-});
+getBgPage(); // Grabs the background page, detects if another UI is opened and then starts PandaUI.
 
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/

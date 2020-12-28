@@ -32,7 +32,7 @@ class UrlClass {
 			}
 		}
 		catch (e) {
-			console.error('Got an error when trying to fetch the URL.');
+			console.info('Got an error when trying to fetch the URL.');
 			returnValue = {'type': 'caught.error', 'url': '', 'status': e.message, 'data': null};
 		}
 		response = {}; theData = null;
