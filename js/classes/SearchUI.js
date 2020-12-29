@@ -39,7 +39,7 @@ class SearchUI {
 		if (bgSearch.searchGStats.isSearchOn()) bgSearch.searchGStats.searchingOff();
 		bgSearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
 	}
-  /** Starts the searching prcoess. */
+  /** Starts the searching process. */
   startSearching() {
 		if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
@@ -248,7 +248,7 @@ class SearchUI {
 	}
 	/** Adds a trigger to the database and the UI.
 	 * @async 								 - To wait for triggers to be added and fetched.
-	 * @param {object} hitData - HIT Data  @param {bool} [once] - Only Acceot Once? */
+	 * @param {object} hitData - HIT Data  @param {bool} [once] - Only Accept Once? */
 	async addTrigger(hitData, once=true) {
 		let gId = hitData.hit_set_id, rId = hitData.requester_id;
 		bgSearch.setTempBlockGid(gId, true);

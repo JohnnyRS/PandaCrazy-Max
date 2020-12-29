@@ -15,7 +15,7 @@ class ModalSearchClass {
     this.minPayRange = {'min':0.00, 'max':300.00};
   }
   /** Shows a modal for adding panda or search jobs.
-   * @param  {function} [afterClose] - Afer Function  @param {bool} [doCustom] - Custom Trigger? */
+   * @param  {function} [afterClose] - After Function  @param {bool} [doCustom] - Custom Trigger? */
   showTriggerAddModal(afterClose=null, doCustom=false) {
     /** Displays an error string and adds an error class to the label given.
      * @param {object} doc - Document Fragment  @param {string} [errorStr] - Error String  @param {object} - Label Element */
@@ -337,7 +337,7 @@ class ModalSearchClass {
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
       displayObjectData( [
         {'label':'Number of Trigger Data to Keep in Memory:', 'type':'number', 'key':'queueSize', 'tooltip':`To save memory the script will only keep this number of most active trigger data in memory. Loading from database can be slower.`, 'minMax':this.queueSize},
-        {'label':'Trigger HITs History Days Expiriration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`HITs found by trigger is saved in the database and this number represents the days to keep those HITs saved.`, 'minMax':this.triggerHistDays},
+        {'label':'Trigger HITs History Days Expiration:', 'type':'number', 'key':'triggerHistDays', 'tooltip':`HITs found by trigger is saved in the database and this number represents the days to keep those HITs saved.`, 'minMax':this.triggerHistDays},
         {'label':'Custom HITs History Days Expiration:', 'type':'number', 'key':'customHistDays', 'tooltip':`Custom triggered HITs can find a large amount of HITs so this number limit how many days to save HITs.`, 'minMax':this.customHistDays},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
@@ -364,7 +364,7 @@ class ModalSearchClass {
           theBody.find(`.${tab} .pcm-inputResult:first`).removeClass('pcm-optionLabelError pcm-statusSuccess').addClass(theClass).html(resultStr);
           theBody.find(`.${tab} input:first`).focus();
         }
-        /** Checks if the input values are correct according to the rules. Uses booleon value to know if it's removing or adding.
+        /** Checks if the input values are correct according to the rules. Uses boolean value to know if it's removing or adding.
          * @async            - To wait for data from the history database.
          * @param {object} e - Event Object  @param {bool} remove - Value Removed? */
         let checkInput = async (e, remove) => {

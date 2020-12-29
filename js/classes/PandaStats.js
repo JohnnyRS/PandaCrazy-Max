@@ -71,16 +71,16 @@ class PandaStats {
   addToSeconds(end) { this.secondsCollecting += Math.floor( (end - this.collectStart) / 1000); }
   /** Adds the start time and end time for this panda that was collecting in the stats database.
    * @param  {dateTime} end - The Date that collecting has stopped. */
-  addTocollectTimes(end) { this.collectStatsDB( {'dbId':this.dbId, 'start':this.collectStart, 'end':end} ); }
+  addToCollectTimes(end) { this.collectStatsDB( {'dbId':this.dbId, 'start':this.collectStart, 'end':end} ); }
   /** Adds the time a HIT was accepted to the stats database. */
-  addToacceptedTimes() { this.acceptedStatsDB( {'dbId':this.dbId, 'date':new Date().getTime()} ); }
+  addToAcceptedTimes() { this.acceptedStatsDB( {'dbId':this.dbId, 'date':new Date().getTime()} ); }
   /** Adds 1 to the fetched counter for this panda and updates stat on the panda card. */
   addFetched() { this.fetched.value++; this.fetched.session++; this.updateHitStat(this.fetched); }
   /** Returns the fetched value for this collected session.
    * @return {number} - The value of the number of fetches made in the collected session. */
   getFetchedSession() { return this.fetched.session; }
   /** Adds 1 to the total accepted and collected session for this panda and updates stat on the panda card. Saves to database too.*/
-  addAccepted() { this.accepted.value++; this.dailyAccepted++; this.addToacceptedTimes(); this.collectAccepted++; this.updateHitStat(this.accepted); }
+  addAccepted() { this.accepted.value++; this.dailyAccepted++; this.addToAcceptedTimes(); this.collectAccepted++; this.updateHitStat(this.accepted); }
   /** Adds 1 to the total no mores for this panda and updates stat on the panda card. */
   addNoMore() { this.noMore.value++; this.updateHitStat(this.noMore); }
   /** Starts the stats for this collecting session. */
@@ -89,7 +89,7 @@ class PandaStats {
    * @return {object} - Returns the seconds and accepted stats for this collecting session. */
   stopCollecting() {
     const ended = new Date().getTime(); this.collecting = false;
-    this.addToSeconds(ended); this.addTocollectTimes(ended); this.collectStart = null;
+    this.addToSeconds(ended); this.addToCollectTimes(ended); this.collectStart = null;
     return {'seconds':this.secondsCollecting, 'accepted':this.collectAccepted};
   }
 	/** Sets or returns value of the searching status.

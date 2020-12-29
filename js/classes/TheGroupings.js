@@ -13,7 +13,7 @@ class TheGroupings {
     this.endTimes = {};               // Object with all the end times for groupings.
     this.type = theType;
   }
-  /** Loads up any groupings saved in datbase.
+  /** Loads up any groupings saved in database.
    * @async                       - To wait for the groupings to be loaded from the database.
    * @param  {function} afterFunc - Function to call after done to send success array or error object. */
   async prepare(afterFunc) {

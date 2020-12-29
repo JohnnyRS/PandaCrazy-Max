@@ -38,7 +38,7 @@ class AlarmsClass {
     if (!thisAudio) alarm.obj = src; else alarm.obj = null;
     alarm = null; thisAudio = null;
   }
-  /** Sets the audio class for the UI page suppliedso each page can sound alarms from their page.
+  /** Sets the audio class for the UI page supplied so each page can sound alarms from their page.
    * @param {class} audioClass - Audio Class Object  @param {string} ui - Name of the UI Page */
   setAudioClass(audioClass, ui) {
     this.audio[ui] = audioClass;
@@ -46,7 +46,7 @@ class AlarmsClass {
   }
   /** Removes any data that should be removed when closing down. */
   removeAll() { this.modal = null; this.voices = []; this.data = {}; this.myAudio = null; }
-  /** Uses the Text to speach sythesis to speak a text provided. Will cancel any text speaking first.
+  /** Uses the Text to speech synthesis to speak a text provided. Will cancel any text speaking first.
    * @param  {string} thisText - The text  @param  {string} [endFunc] - The function to run when the text spoken ends. */
   async speakThisNow(thisText, endFunc=null) {
     if (this.synth) {
@@ -197,7 +197,7 @@ class AlarmsClass {
 			if (minutes <= this.data.less5.lessThan) this.playSound('less5Short',_, speakThis); else this.playSound('less5',_, speakThis);
 		} else if (this.data.less15 && hitData.price <= parseFloat(this.data.less15.pay)) {
 			if (minutes <= this.data.less15.lessThan) this.playSound('less15Short',_, speakThis); else this.playSound('less15',_, speakThis);
-		} else if (this.data.more15 && hitData.price < parseFloat(this.data.more15.pay)) { this.playSound('more15',_, speakThis); }
+		} else if (this.data.more15 && hitData.price > parseFloat(this.data.more15.pay)) { this.playSound('more15',_, speakThis); }
   }
   /** Shows the alarms modal to change alarms and other options. */
   showAlarmsModal() { this.modal = new ModalAlarmClass(); this.modal.showAlarmsModal( () => { this.modal = null; } ); }

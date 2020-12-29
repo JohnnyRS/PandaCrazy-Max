@@ -43,10 +43,10 @@ class TabbedClass {
   /** Gets the positions of the jobs in the tab with the unique number.
    * @param  {number} tabUnique - The unique tab number for the new tab from database ID.
    * @return {array}            - Returns the array of the positions for jobs in tab. */
-  getpositions(tabUnique) { return this.#dataTabs[tabUnique].list; }
+  getPositions(tabUnique) { return this.#dataTabs[tabUnique].list; }
   /** Sets the positions of the jobs in the tab with the unique number with the new positions.
    * @param  {number} tabUnique - The unique tab number  @param  {array} newList - The array of positions to set for this tab. */
-  setpositions(tabUnique, newList) { this.#dataTabs[tabUnique].list = newList; MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]); }
+  setPositions(tabUnique, newList) { this.#dataTabs[tabUnique].list = newList; MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]); }
   /** Prepare the tabbed areas on this page at the start up of the program.
    * @async                   - To wait for the loading of the tab data from the database.
    * @return {array.<Object>} - Returns an array of success messages or Error object for rejections. */

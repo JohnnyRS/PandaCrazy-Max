@@ -20,7 +20,7 @@ class MturkClass {
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
 	/** Adds 1 to the total PRE's and updates the stat in status bar. */
 	addPRE() { this.totalPREs.value++; this.updateStatNav(this.totalPREs); }
-	/** Fetches the url in url object and handles MTURK results. Can deal with Pre's, maxxed out and logged out for any MTURK URL;
+	/** Fetches the url in url object and handles MTURK results. Can deal with Pre's, maxed out and logged out for any MTURK URL;
 	 * @param  {object} objUrl - The url object to use for fetching.
 	 * @return {object} 			 - Returns data in an object or null if got nothing. */
 	goFetch(objUrl) {
@@ -30,7 +30,7 @@ class MturkClass {
 			let returnObj = { type:result.type, status:result.status, mode: '', data:result.data, url:result.url };
 			if (this.resultUrl && this.resultUrl.includes('https://www.amazon.com/ap/signin')) { returnObj.mode = 'logged out'; returnObj.data = null; }
 			else if (result.type === 'ok.json' && result.data.error && result.data.error.includes('You have exceeded the allowable')) { this.addPRE(); returnObj.mode = 'pre'; returnObj.data = null; }
-			else if (result.type === 'ok.json' && result.data.message && result.data.message.includes('You have accepted the maximum number')) { returnObj.mode = 'maxxedOut'; returnObj.data = null; }
+			else if (result.type === 'ok.json' && result.data.message && result.data.message.includes('You have accepted the maximum number')) { returnObj.mode = 'maxedOut'; returnObj.data = null; }
 			else if (result.type === 'ok.json' && result.data.message && result.data.message.includes('cannot work on any more HITs today')) { returnObj.mode = 'mturkLimit'; returnObj.data = null; }
 			else if (result.type === 'ok.json' && result.data.message && result.data.message === 'There are no more of these HITs available.') { returnObj.mode = 'noMoreHits'; returnObj.data = null; }
 			else if ( result.type === 'ok.json' && result.data.message && result.data.message.includes('you do not meet those Qualifications') ) { returnObj.mode = 'noQual'; returnObj.data = null; }
@@ -40,7 +40,7 @@ class MturkClass {
 			else if ( result.type === 'bad.request.text' && result.data.includes('Header Or Cookie Too Large') ) { returnObj.mode = 'cookies.large'; returnObj.data = null; }
 			result = {};
 			return returnObj;
-		}, () => { console.error('error has occured'); });
+		}, () => { console.error('error has occurred'); });
 		return response;
 	}
 }

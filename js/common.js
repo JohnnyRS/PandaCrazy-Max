@@ -68,12 +68,12 @@ function radioButtons(appendHere, nameGroup, value, label, checked=false, classA
   let radioButton = $(`<label class='radio-inline small${addClass}'${lAddTitle}><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
   return radioButton;
 }
-/** Creates a time input using a datetimepicker from tempus dominus plugin.
+/** Creates a time input using a date time picker from tempus dominus plugin.
  * @param  {string} label - The Label  @param  {string} id - The Time Input ID.  @param {string} [value] - The Time Input Value
  * @return {object}       - The Jquery object for the time input. */
 function createTimeInput(label, id, value=null) {
-  let thevalue = (value) ? ` value='${value}'` : '';
-  let input = $(`<div class='input-group pcm-inputGroup'><label for='${id}' class='pcm-timeLabel'>${label}</label><input type='text' class='form-control pcm-inputDate-md' id='${id}' tabindex='-1' placeholder='None'${thevalue}/></div>`);
+  let theValue = (value) ? ` value='${value}'` : '';
+  let input = $(`<div class='input-group pcm-inputGroup'><label for='${id}' class='pcm-timeLabel'>${label}</label><input type='text' class='form-control pcm-inputDate-md' id='${id}' tabindex='-1' placeholder='None'${theValue}/></div>`);
   $(input).append(`<div class='pcm-inputClearIcon' id='pcm-clearTInput'><i class='fas fa-times fa-sm'></i></div>`);
   return input;
 }
@@ -217,7 +217,7 @@ function markInPlace(findThis, fromHere) {
   return returnStr + fromHere.substring(start);
 }
 /** Displays an array of objects line by line in different ways and allows for toggling an edit input
- * for each value. Types: text, range, truefalse, button, checkbox, keyValue and string.
+ * for each value. Types: text, range, trueFalse, button, checkbox, keyValue and string.
  * @param  {array} thisArrayObject - Array of objects   @param  {object} divContainer - Container       @param  {object} thisObject - The object
  * @param  {bool} [table]          - Table or not?      @param  {bool} [horizontal]   - Horizontal?     @param  {bool} [append]     - Append or Prepend?
  * @param  {string} [addClass]     - Class to be Added  @param  {string} [addId]      - ID to be added  @param  {object} [theData]  - Data to Save
@@ -246,11 +246,11 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
     const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`, tdClass = (element.addTdClass) ? ` ${element.addTdClass}` : '';
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
-    const addtip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
+    const addTip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData${(element.notHelper) ? '' : ' pcm-tooltipHelper'}`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
-    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addtip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
-    valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}${tdClass}'${tdStyle}${addtip}>${addSpan}</td>`).data('unique',element.unique);
+    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addTip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
+    valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}${tdClass}'${tdStyle}${addTip}>${addSpan}</td>`).data('unique',element.unique);
     if (element.type !== 'hr') valueCol.appendTo(row);
     if (element.type === 'range') {
       inputRange(valueCol, element.min, element.max, theValue, element.key, (value) => { useObject[element.key] = value; });
@@ -401,7 +401,7 @@ function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 /** If the version1 is older than version2 then returns true otherwise false. 
  * @param  {string} version1 - Older version  @param {string} version2 - Newer Version
  * @return {bool}            - Returns if first is older than second. */
-function compareversion(version1, version2) {
+function compareVersion(version1, version2) {
   let result = false; if (!version1) return true;
   if (typeof version1 !== 'object'){ version1 = version1.toString().split('.'); }
   if (typeof version2 !== 'object'){ version2 = version2.toString().split('.'); }

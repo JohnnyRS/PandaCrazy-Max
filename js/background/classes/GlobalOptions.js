@@ -334,7 +334,7 @@ class PandaGOptions {
     });
   }
   /**
-   * Adds the go to queue position link using the number of HITs in queue and a function to send any commmands needed to popup page.
+   * Adds the go to queue position link using the number of HITs in queue and a function to send any commands needed to popup page.
    * @param {object} appendHere - Jquery Object  @param  {number} queueSize - Number of HITs in Queue  @param  {function} popupSend - Send To Popup Function */
   mturkQueueLinks(appendHere, queueSize, popupSend=null) {
     if (queueSize > 0) {

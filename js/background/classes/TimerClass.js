@@ -26,7 +26,7 @@ class TimerClass {
 		this._paused = false;						// Is this timer paused?
 		this.started = null;						// The time that the timeout started.
 		this.myClass = null;						// The class object that is using this timer.
-		this.timerName = timerName;			// The timername used for debugging purposes.
+		this.timerName = timerName;			// The timerName used for debugging purposes.
 		this.sendBack = false;					// Should timer status be sent back to the class?
 	}
 	/** Setters and getters to change the private properties and send back info */

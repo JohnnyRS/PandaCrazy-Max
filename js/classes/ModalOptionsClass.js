@@ -29,7 +29,7 @@ class ModalOptionsClass {
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
         {'label':'Days to keep History:', 'type':'number', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange}, 
         {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
-        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':'Disable the captcha alert and notification. Disable this if you are a master or using another script for captchas.'}, 
+        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`}, 
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
         {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?'}, 
       ], df, modal.tempObject[idName], true);
@@ -90,7 +90,7 @@ class ModalOptionsClass {
         $(`#${idName} .pcm-inputError`).html('');
       }
       let df = document.createDocumentFragment();
-      $(`<div class='pcm-detailsEdit small'>The textbox area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.</div>`).appendTo(df);
+      $(`<div class='pcm-detailsEdit small'>The text box area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.</div>`).appendTo(df);
       let buttonGroup = $(`<div class='pcm-themeSelection'></div>`).appendTo(df);
       $(`<button class='btn btn-xs pcm-themeSelect0 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #1 as current theme and display the CSS styles in the textarea below for edit.'>Theme #1</button>`).data('index', 0).appendTo(buttonGroup);
       $(`<button class='btn btn-xs pcm-themeSelect1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #2 as current theme and display the CSS styles in the textarea below for edit.'>Theme #2</button>`).data('index', 1).appendTo(buttonGroup);

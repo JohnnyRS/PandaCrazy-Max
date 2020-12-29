@@ -501,7 +501,7 @@ class MturkPanda extends MturkClass {
 					if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
 					else if (result.mode === 'pre') { extPandaUI.pandaGStats.addPandaPRE(); }
 					else if (result.mode === 'mturkLimit') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.mturkLimit(); }
-					else if (result.mode === 'maxxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
+					else if (result.mode === 'maxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
 					else if (result.mode === 'noMoreHits') { extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
 					else if (result.mode === 'noQual' && stopped===null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', '#DDA0DD'); }
 					else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', '#575b6f'); }

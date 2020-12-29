@@ -2,7 +2,7 @@ const locationUrl = window.location.href;
 let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false, gOpenHits = null, gAlreadyOpened = false;
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null;
-let gNewQueue = false, gHolders = {}, gTabIds = {}, gPostionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false; 
+let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false; 
 let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true};
 let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [], gExtVerified = false;
 let secure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enableSgroup', 'disableSgroup', 'getJobs', 'getTriggers', 'removeJob', 'removeTrigger', 'getGroups', 'getSGroups', 'pause', 'unpause', 'enableTrigger', 'disableTrigger', 'startSearching', 'stopSearching', 'getStats'];
@@ -152,10 +152,10 @@ function nextHit() {
   } else return null;
 }
 /** Recursive calls if queue data is being loaded at same time. Will copy new queue data to global variable. Resets title to show queue stats if allowed.
- * @param {object} data - The queue data  @param {number} depth - Deptch of recursion */
+ * @param {object} data - The queue data  @param {number} depth - Depth of recursion */
 function queueData(data=null, older=false, depth=0) {
   if (gNewQueue && ++depth < 500) setTimeout( () => { queueData(data, older, depth); }, 20);
-  else { gNewQueue = true; if (data) gQueueResults = data; gNewQueue = false; if (gPostionsTitle) resetTitle(older); }
+  else { gNewQueue = true; if (data) gQueueResults = data; gNewQueue = false; if (gPositionsTitle) resetTitle(older); }
 }
 /** Checks the queue data to see if needs to go to another HIT due to user commands.
  * @param {object} queueResults - Queue data */
@@ -300,7 +300,7 @@ function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits'
   buttons = null;
   return returnThis;
 }
-/** Checks for any message that a HIT was submitted and then uses the previous HIT data saved to send message to extension and set local chrome strorage submittedHit variable. */
+/** Checks for any message that a HIT was submitted and then uses the previous HIT data saved to send message to extension and set local chrome storage submittedHit variable. */
 function checkSubmitted() {
   let submitText1 = `The HIT has been successfully submitted`, submitText2 = `HIT Submitted`, alertContent = $(`.mturk-alert-content`).text();
   if (gPrevHit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) {
@@ -315,7 +315,7 @@ function noMoreHits() {
     $(`.mturk-alert-content:contains('There are no more of these HITs available') p:first`).append(addButtons(_,_, {'groupId': gHolders.pcm_holdGID, 'description': null, 'title': gHolders.pcm_holdTitle, 'reqId': gHolders.pcm_holdRID, 'reqName': gHolders.pcm_holdRname, 'reward': gHolders.pcm_holdReward }));
   }
 }
-/** Removes old PandCrazy buttons on MTURK pages. */
+/** Removes old PandaCrazy buttons on MTURK pages. */
 function oldPCRemoval() {
   checkButtons = e => {
     if (e.key === 'JR_message_pong_pandacrazy') {
@@ -354,7 +354,7 @@ function checkExtension() {
     if (!extensionLoad()) { resetTitle(); clearInterval(gInterval); $(`.btn-secondary:contains('Return')`).unbind('click blur'); };
   }, 8000);
 }
-/** Grabs goup ID, task ID and assigned ID quickly from the current URL. */
+/** Grabs group ID, task ID and assigned ID quickly from the current URL. */
 function grabCurrentHit() { const regex = /\/projects\/([^\/]*)\/tasks\/([^\?]*)\?assignment_id=([^&]*)/; [, gGroupId, gTaskId, gAssignedHit] = locationUrl.match(regex); }
 /** Sends message commands to PandaCrazy Max about a new panda or search job to add. Used for forums with older PC buttons. */
 function addCommands() {
@@ -391,7 +391,7 @@ function assignmentButtons() {
 /** Parses a URL with an assignment ID attached and detects accepted HIT. Also sets up local chrome storage variables for current HIT in tab. */
 function doAssignment() {
   console.log('doAssignment page');
-  gPostionsTitle = true; oldPCRemoval(); noMoreHits();
+  gPositionsTitle = true; oldPCRemoval(); noMoreHits();
   gPay = gHitData.monetaryReward.amountInDollars; gHitData.task_id = gTaskId; gHitData.assignment_id = gAssignedHit; gHitData.task_url = locationUrl;
   let requesterUrl = $(`.project-detail-bar a[href*='/requesters/']`).attr('href'), tabUnique = `PCM_t_${gTabUnique}`; gReqId = requesterUrl.split('/')[2];
   let acceptedId = sessionStorage.getItem('PCM_acceptedBtn'); sessionStorage.removeItem('PCM_acceptedBtn'), tabHit = `PCM_tHit_${gAssignedHit}`;
@@ -442,7 +442,7 @@ function monitorNext() { console.log('doing monitoring');
   $(`.task-queue-header`).after(`<div class='pcm-monitoringDiv'></div>`);
   $(`.pcm-monitoringDiv`).append(`<h2 class='pcm-monitoringQueue'>Monitoring queue for a new HIT to open.</h2>`); queuePage();
 }
-/** Check if this page is a HIT list or some othe page that is unknown. */
+/** Check if this page is a HIT list or some other page that is unknown. */
 function otherPage() { if ($('.projects-controls').length) hitList(); else { resetIDNext(); console.log('otherPage page'); } }
 /** Used when user goes to a queue page. Sets the return buttons on each HIT too. */
 function queuePage() { resetIDNext(); setReturnBtn(); }
@@ -455,7 +455,7 @@ if (/worker\.mturk\.com\/tasks\?JRPC=(monitornext|nexthit)$/.test(locationUrl)) 
 else if (/worker\.mturk\.com\/tasks\?JRPC=gohit\d*$/.test(locationUrl)) gGotoHit = locationUrl.split('JRPC=gohit')[1];
 else if (/worker\.mturk\.com\/tasks\?JRPC=lasthit\d*$/.test(locationUrl)) gGotoHit = 26;
 else if (/worker\.mturk\.com\/tasks\?JRPC=openhits\d*$/.test(locationUrl)) gOpenHits = locationUrl.split('JRPC=openhits')[1];
-else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) { grabCurrentHit(); gPostionsTitle = true; gAssignmentPage = true; }
+else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) { grabCurrentHit(); gPositionsTitle = true; gAssignmentPage = true; }
 
 /** load up any local storage data saved */
 loadSessionData(); prepareGlobals(); getReactProps();

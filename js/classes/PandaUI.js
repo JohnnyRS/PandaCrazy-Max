@@ -47,7 +47,7 @@ class PandaUI {
 				if (!err) {
 					let tabUniques = this.tabs.getUniques(), dbIds = Object.keys(bgPanda.dbIds);
 					for (const unique of tabUniques) {
-						let positions = this.tabs.getpositions(unique);
+						let positions = this.tabs.getPositions(unique);
 						for (const dbId of positions) {
 							let myId = bgPanda.getMyId(dbId);
 							dbIds = arrayRemove(dbIds, dbId.toString());
@@ -209,7 +209,7 @@ class PandaUI {
 			if (afterFunc !== null) await afterFunc('YES', myId);
 		}, animate);
 	}
-	/** Remove job from an external script command and then send response back with the updated job list and removedjob key equal to true;
+	/** Remove job from an external script command and then send response back with the updated job list and removed job key equal to true;
 	 * @param {number} dbId - Database ID  @param {function} sendResponse - Function to send response.  */
 	extRemoveJob(dbId, sendResponse) {
 		let myId = bgPanda.getMyId(dbId);

@@ -40,9 +40,9 @@ class MenuClass {
    * @param  {object} appendHere - Jquery Element  @param  {string} label       - Menu label  @param  {function} btnFunc - Button Function
    * @param  {string} [tooltip]  - Tooltip String  @param  {string} [className] - Class name  @param  {string} [idName]    - Id Name */
   addMenu(appendHere, label, btnFunc, tooltip='', className='', idName='') {
-    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``;
+    const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``;
     let idAdd = (idName !== '') ? `id='${idName}' ` : '', classAdd = (tooltip !== '') ? 'pcm-tooltipData pcm-tooltipHelper' : '';
-    let theButton = $(`<button type='button' ${idAdd}class='${classAdd} ${className}'${addtip}></button>`).data('label',label).click( e => btnFunc.apply(this, [e]) ).appendTo(appendHere);
+    let theButton = $(`<button type='button' ${idAdd}class='${classAdd} ${className}'${addTip}></button>`).data('label',label).click( e => btnFunc.apply(this, [e]) ).appendTo(appendHere);
     let cssVar = getCSSVar(idName.replace('pcm-', ''), label); theButton.html(cssVar); theButton = null;
   }
   /** Adds a sub menu to a menu with dropdownstyle allowing for 3 submenus under the main menu.
@@ -51,19 +51,19 @@ class MenuClass {
    * @param  {string} [tooltip]     - CSS style           @param  {string} [buttonId] - CSS style        @param  {string} [dropdownClass] - CSS style
    * @param  {string} [noClick]     - CSS style           @param  {string} [onClosed] - CSS style */
   addSubMenu(appendHere, label, theClass, btnGroupClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
-    const addtip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
+    const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
     let btnGroup = $(`<div class='btn-group ${btnGroupClass}'${addId}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';
     let classAdd = (tooltip !== '') ? 'pcm-tooltipData pcm-tooltipHelper' : '';
-    let theButton = $(`<button type='button' ${idAdd}class='${theClass} ${classAdd} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown'${addtip} aria-haspopup='true' aria-expanded='false'></button>`).data('label',label).append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
+    let theButton = $(`<button type='button' ${idAdd}class='${theClass} ${classAdd} dropdown-toggle dropdown-toggle-split' data-toggle='dropdown'${addTip} aria-haspopup='true' aria-expanded='false'></button>`).data('label',label).append($(`<span class='sr-only'>Toggle Dropdown</span>`)).appendTo(btnGroup);
     let cssVar = getCSSVar(buttonId.replace('pcm-', ''), label); theButton.html(cssVar);
     let dropdownMenu = $(`<div class='dropdown-menu pcm-dropdownMenu ${dropdownClass}'></div>`).appendTo(btnGroup);
     if (noClick) dropdownMenu.click( e => { e.stopPropagation(); } );
     if (onClosed) dropdownMenu.parent().on('hidden.bs.dropdown', () => { onClosed(); });
     dropdownInfo.forEach( info => {
-      const addtip = (info.tooltip && info.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' data-original-title='${info.tooltip}'` : ``;
+      const addTip = (info.tooltip && info.tooltip!=='') ? ` data-toggle='tooltip' data-placement='right' data-original-title='${info.tooltip}'` : ``;
       if (info.type === 'item') {
         const classAdd = (info.class) ? ` ${info.class}` : '';
-        const item = $(`<a class='dropdown-item${classAdd} pcm-tooltipData pcm-tooltipHelper' href='#' ${addtip}>${info.label}</a>`).appendTo(dropdownMenu);
+        const item = $(`<a class='dropdown-item${classAdd} pcm-tooltipData pcm-tooltipHelper' href='#' ${addTip}>${info.label}</a>`).appendTo(dropdownMenu);
         if (info.menuFunc) $(item).click( e => { info.menuFunc.apply(this, [e]) });
       } else if (info.type === 'rangeMax') $(`<label for='max'>${info.label}</label>`).appendTo(dropdownMenu);
       else if (info.type === 'rangeMin') $(`<label for='min'>${info.label}</label>`).appendTo(dropdownMenu);

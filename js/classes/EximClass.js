@@ -187,7 +187,7 @@ class EximClass {
     }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
       groupings.importToDB(this.importGroupings); sGroupings.importToDB(this.importSGroupings);
-      for (const unique of pandaUI.tabs.getUniques()) { if (newPositions[unique]) pandaUI.tabs.setpositions(unique, newPositions[unique]); }
+      for (const unique of pandaUI.tabs.getUniques()) { if (newPositions[unique]) pandaUI.tabs.setPositions(unique, newPositions[unique]); }
     }
   }
   /** Shows the import modal for user to select a file to import. */
@@ -300,7 +300,7 @@ class EximClass {
     this.importJobData[rData.id] = {'data':dO, 'options':oO, 'dateAdded':rData.dateAdded, 'totalSeconds':rData.totalSeconds, 'totalAccepted':rData.totalAccepted};
   }
   /** Parse job data read from an older import file to the data object needed.
-   * @param  {object} rData - Job Data  @param  {number} key - Job KeynName  @param  {string} type  - The version of the import file. */
+   * @param  {object} rData - Job Data  @param  {number} key - Job Key Name  @param  {string} type  - The version of the import file. */
   olderImportsJobs(rData, key, type) {
     let firstOne = (rData.requesterName && ['JRSep','JRAPR'].includes(rData.requesterName.substring(0,5))) ? true : false;
     if (!firstOne && (rData.groupId || rData.requesterId)) {

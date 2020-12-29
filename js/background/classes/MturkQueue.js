@@ -95,7 +95,7 @@ class MturkQueue extends MturkClass {
   /** Fetches the URL for the queue after timer class tells it to do so and handles MTURK results.
    * @param  {object} objUrl      - URL object to use when fetching.  @param  {number} queueUnique - Unique number for the job in timer queue. */
   goFetch(objUrl, queueUnique) {
-    if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
+    if (this.dLog(4)) console.debug(`%cGoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 		super.goFetch(objUrl).then(result => {
       if (!result) {
         if (this.dError(1)) { console.error('Returned result fetch was a null.', JSON.stringify(objUrl)); }

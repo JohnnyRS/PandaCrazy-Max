@@ -1,4 +1,4 @@
-<h1 align="center">PandaCrazy Chrome Extension for Amazon Mturk</h1>
+<h1 align="center">PandaCrazy Chrome Extension for Amazon MTURK</h1>
 
 *This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.*
 
@@ -16,8 +16,8 @@
 1. To create a groupID search job (gid) you have to paste in a panda url and then click on the search job box.
 1. To create a requesterID search job (rid) you paste in a requester url with or without clicking the search job box.
 1. Search options to include or exclude groupID's are not working right now.
-1. GroupID search jobs (gid) will first start collecting for 10 seconds and then will use the mturk search page.
-1. RequesterID search jobs (rid) will search the requester url page first and then use the mturk search page.
+1. GroupID search jobs (gid) will first start collecting for 10 seconds and then will use the MTURK search page.
+1. RequesterID search jobs (rid) will search the requester url page first and then use the MTURK search page.
 1. You may import older import files but only the jobs and tabs will be imported at this time.
 1. You may export jobs and options but it will not work with the older Panda Crazy script.
 
@@ -26,7 +26,7 @@
 * There is a button to wipe all data and go back to default in the help page.
 * Older scripts that send messages to the old PC script should now work with this extension too.
 * Buttons on forums should still work but they may change in the future.
-* Buttons on some mturk pages have been changed and search multiple button has been added.
+* Buttons on some MTURK pages have been changed and search multiple button has been added.
 * Search button will add a groupID search job (gid) that accepts only one hit. Good for surveys.
 * Search multiple button will add a requesterID search job (rid) with no limits.
 

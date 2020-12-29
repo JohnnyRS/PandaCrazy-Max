@@ -75,7 +75,7 @@ class DatabasesClass {
 		return new Promise( (resolve, reject) => {
 			this.stats.db = new DatabaseClass(this.stats.dbName, 1);
     	this.stats.db.openDB( del, e => {
-				if (e.oldVersion === 0) { // Had no database so let's initialise it.
+				if (e.oldVersion === 0) { // Had no database so let's initialize it.
 					e.target.result.createObjectStore(this.stats.storeName, {'keyPath':'id', 'autoIncrement':'true'}).createIndex('dbId', 'dbId', {'unique':false});
 					let objStore = e.target.result.createObjectStore(this.stats.accepted, {'keyPath':'id', 'autoIncrement':'true'});
 					objStore.createIndex('dbId', 'dbId', {'unique':false}); objStore.createIndex('gid', 'gid', {'unique':false}); objStore.createIndex('rid', 'rid', {'unique':false});
@@ -123,7 +123,7 @@ class DatabasesClass {
    * @param {string} target - Database Name  @param {string} store - Store Name */
   clearStore(target, store='storeName') { this[target].db.clearStore(this[target][store]); }
 }
-/** Class for using datbases with promises for operations so it can wait for completion of function.
+/** Class for using databases with promises for operations so it can wait for completion of function.
  * @class DatabaseClass
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class DatabaseClass {

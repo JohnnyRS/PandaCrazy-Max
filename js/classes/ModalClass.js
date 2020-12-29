@@ -102,7 +102,7 @@ class ModalClass {
       $(`#${idName} .pcm-mturkLink`).click( {'popup':this.popup, 'idName':idName}, e => {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
-        setTimeout(this.isPopup.bind(this), 500); // check if popup is null continously
+        setTimeout(this.isPopup.bind(this), 500); // check if popup is null continuously
       });
     }
   }
