@@ -1,8 +1,8 @@
 const locationUrl = window.location.href;
 let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false, gOpenHits = null, gAlreadyOpened = false;
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
-let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null;
-let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false; 
+let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null, gNextHit = null;
+let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false, gThisPosition = null; 
 let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true};
 let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [], gExtVerified = false;
 let secure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enableSgroup', 'disableSgroup', 'getJobs', 'getTriggers', 'removeJob', 'removeTrigger', 'getGroups', 'getSGroups', 'pause', 'unpause', 'enableTrigger', 'disableTrigger', 'startSearching', 'stopSearching', 'getStats'];
@@ -52,10 +52,7 @@ function sendPong() {
 }
 /** Prepares global variables from local chrome storage. Starts storage listener. */
 function prepareGlobals() {
-  if ($('.mturk-alert-danger').text().includes('This HIT is no longer available')) {
-    console.log('Old HIT error for', locationUrl);
-    if (gSessionData.monitorNext) $('.mturk-alert-danger').remove();
-  }
+  if ($('.mturk-alert-danger').text().includes('This HIT is no longer available')) { if (gSessionData.monitorNext) $('.mturk-alert-danger').remove(); }
   chrome.storage.local.get(null, value => {
     for (const key of Object.keys(value)) {
       if (key === 'PCM_returnedHit') { setRememberIds('return', value.PCM_returnedHit.assignmentId); gHitReturned = true; }
@@ -117,22 +114,39 @@ function hitExpired() {
 }
 /** This HIT is not expired so make sure any expired classes are removed. */
 function notExpired() { $(`.task-question-iframe-container`).removeClass(`pcm-expiredHit`); $(`iframe.embed-responsive-item`).removeClass(`pcm-expiredIframe`); }
-/** Shows the position in queue of this HIT and the total queue size in the document title. */
+/** Finds the given assigned HIT id in the queue and then sets the global position found variable and returns the time left.
+ * @param {string} assignedHit - The Assigned Hit ID
+ * @return {number}            - Returns the timeLeft in seconds. */
+function findPosition(assignedHit) {
+  let position = 0, timeLeft = 0;
+  arrayCount(gQueueResults, (item) => { 
+    position++;
+    if (item.assignment_id === assignedHit) { gThisPosition = position; timeLeft = item.time_to_deadline_in_seconds; return true; } else return false;
+  }, true);
+  return timeLeft;
+}
+/** Changes the location of page to the HIT in the given position in the queue or the given URL.
+ * @param {number} position - Position in Queue  @param {string} [goUrl] - TaskURL */
+function goPosition(position, goUrl=null) {
+  if (position < gQueueResults.length || goUrl) {
+    let workerMturk = 'https://worker.mturk.com', fromQueue = '&from_queue=true', theUrl = (goUrl) ? goUrl : gQueueResults[position].task_url;
+    let thePreUrl = (theUrl.includes(workerMturk)) ? theUrl : workerMturk + theUrl;
+    window.location.replace(thePreUrl.replace('&ref=w_pl_prvw',fromQueue));
+  }
+}
+/** Shows the position in queue of this HIT and the total queue size in the document title.
+ * @param {boolean} older - The queue results saved may be too old to test expiration of HIT. */
 function resetTitle(older=false) {
   if (gPcmRunning && extensionLoad()) {
-    let queueSize = gQueueResults.length, position = 0, positionFound = 0, timeLeft = 0;
-    arrayCount(gQueueResults, (item) => { 
-      position++;
-      if (item.assignment_id === gAssignedHit) { positionFound = position; timeLeft = item.time_to_deadline_in_seconds; return true; } else return false;
-    }, true);
-    document.title = `(${positionFound}/${queueSize}) ${gDocTitle}`;
-    if (!older && (timeLeft < 7 || positionFound === 0)) { if ((gHitLost || queueSize === 0) && !$(`.pcm-expireHit`).length) hitExpired(); gHitLost = true; }
+    let queueSize = gQueueResults.length, timeLeft = findPosition(gAssignedHit);
+    document.title = `(${gThisPosition}/${queueSize}) ${gDocTitle}`;
+    if (!older && (timeLeft < 7 || gThisPosition === 0)) { if ((gHitLost || queueSize === 0) && !$(`.pcm-expireHit`).length) hitExpired(); gHitLost = true; }
     else { gHitLost = false; if ($(`.pcm-expireHit`).length) notExpired(); }
   } else { document.title = gDocTitle + ' - (NO PCM)'; notExpired(); }
 }
 /** Will find the next HIT not in other tabs, submitted, returned, current or almost expired from the queue.
  * @param  {string} [groupID] - Group ID to get next URL.
- * @return {string}       - The task URL of HIT or null if not found. */
+ * @return {string}           - The task URL of HIT or null if not found. */
 function nextHit() {
   let theIds = (Object.keys(gIdsSession).length) ? gIdsSession : (gIdsDone) ? gIds : null;
   if (theIds) {
@@ -164,22 +178,28 @@ function checkQueue(queueResults) {
   if (extensionLoad()) {
     if (gGotoHit && gGotoHit > 0 && queueResults.length >= gGotoHit) {
       chrome.storage.onChanged.removeListener(listenChanged);
-      window.location.replace('https://worker.mturk.com' + queueResults[gGotoHit-1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
+      goPosition(gGotoHit-1);
     } else if (!gAlreadyOpened && gOpenHits && gOpenHits > 1 && queueResults.length >= gOpenHits) {
       let hitPosition = 2, numOpenHits = gOpenHits; gAlreadyOpened = true;
       let nowOpenHits = () => {
         window.open('https://worker.mturk.com' + queueResults[hitPosition - 1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'), '_blank');
         hitPosition++; numOpenHits--;
         if (numOpenHits > 1) setTimeout(nowOpenHits, 1570);
-        else { window.location.replace('https://worker.mturk.com' + queueResults[0].task_url.replace('&ref=w_pl_prvw','&from_queue=true')); window.focus(); }
+        else { goPosition(0); window.focus(); }
       }
       nowOpenHits();
+    } else if (gNextHit && queueResults.length > 0) {
+      if (gPrevHit) {
+        findPosition(gPrevHit.assignmentId);
+        if (gThisPosition < queueResults.length) goPosition(gThisPosition);
+        else goPosition(0);
+      }
     } else if (gMonitorOn && queueResults.length > 0) {
       let task_url = nextHit();
       if (task_url) {
         chrome.runtime.sendMessage({'command':'monitorSpeech', 'data':{}});
         chrome.storage.onChanged.removeListener(listenChanged);
-        window.location.replace('https://worker.mturk.com' + task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
+        goPosition(0, task_url);
       }
     }
   }
@@ -404,15 +424,15 @@ function doAssignment() {
   }
   if (gOptions.tabUniqueHits && gIdsDone && gIds[gAssignedHit]) {
     let newUrl = nextHit(); gIds[gAssignedHit].count++;
-    if (newUrl) window.location.replace('https://worker.mturk.com' + newUrl);
-    else if (gSessionData.monitorNext) window.location.replace('https://worker.mturk.com/tasks?JRPC=monitornext');
-    else window.location.replace('https://worker.mturk.com/tasks');
+    if (newUrl) goPosition(0, 'https://worker.mturk.com' + newUrl);
+    else if (gSessionData.monitorNext) goPosition(0, 'https://worker.mturk.com/tasks?JRPC=monitornext');
+    else goPosition(0, 'https://worker.mturk.com/tasks');
   } else if (gSessionData.gidNext && gPrevHit && gGroupId !== gNextGID) {
     let newUrl = nextHit();
-    if (!newUrl) { resetIDNext(); window.location.replace('https://worker.mturk.com/tasks'); } else window.location.replace('https://worker.mturk.com' + newUrl);
+    if (!newUrl) { resetIDNext(); goPosition(0, 'https://worker.mturk.com/tasks'); } else goPosition(0, 'https://worker.mturk.com' + newUrl);
   } else if (gSessionData.ridNext && gPrevHit && gReqId !== gNextRID) {
     let newUrl = nextHit();
-    if (!newUrl) { resetIDNext(); window.location.replace('https://worker.mturk.com/tasks'); } else window.location.replace('https://worker.mturk.com' + newUrl);
+    if (!newUrl) { resetIDNext(); goPosition(0, 'https://worker.mturk.com/tasks'); } else goPosition(0, 'https://worker.mturk.com' + newUrl);
   } else {
     chrome.storage.local.set({[tabUnique]:{'unique':gTabUnique, 'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
     chrome.storage.local.set({[tabHit]:{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
@@ -434,7 +454,7 @@ function hitList() {
   $('.hit-set-table .hit-set-table-row').click( e => { setTimeout( () => { hitListButtons($(e.target).closest('.table-row')); }, 0); });
   $('.expand-projects-button').click( () => { setTimeout( () => { hitListButtons(); }, 0); });
   setHoldData();
-  if ((gHitSubmitted || gHitReturned) && gSessionData.monitorNext) window.location.replace('https://worker.mturk.com/tasks?JRPC=monitornext');
+  if ((gHitSubmitted || gHitReturned) && gSessionData.monitorNext) goPosition(0, 'https://worker.mturk.com/tasks?JRPC=monitornext');
 }
 /** Used when user goes to the monitor page and sets up the monitor queue text on page. */
 function monitorNext() { console.log('doing monitoring');
@@ -444,13 +464,16 @@ function monitorNext() { console.log('doing monitoring');
 /** Check if this page is a HIT list or some other page that is unknown. */
 function otherPage() { if ($('.projects-controls').length) hitList(); else { resetIDNext(); console.log('otherPage page'); } }
 /** Used when user goes to a queue page. Sets the return buttons on each HIT too. */
+function doNextHit() { checkQueue(gQueueResults); }
+/** Used when user goes to a queue page. Sets the return buttons on each HIT too. */
 function queuePage() { resetIDNext(); setReturnBtn(); }
 /** Works on old panda crazy pages to future use of importing data. */
 function oldPandaCrazy() { resetIDNext(); console.log('old pandacrazy page'); }
 
 /** Checks for special commands in URL and sets the global values. */
 if (/worker\.mturk\.com\/tasks.*$/.test(locationUrl)) { gQueuePage = true; }
-if (/worker\.mturk\.com\/tasks\?JRPC=(monitornext|nexthit)$/.test(locationUrl)) { gMonitorOn = true; }
+if (/worker\.mturk\.com\/tasks\?JRPC=monitornext$/.test(locationUrl)) { gMonitorOn = true; }
+else if (/worker\.mturk\.com\/tasks\?JRPC=nexthit$/.test(locationUrl)) { gNextHit = true; }
 else if (/worker\.mturk\.com\/tasks\?JRPC=gohit\d*$/.test(locationUrl)) gGotoHit = locationUrl.split('JRPC=gohit')[1];
 else if (/worker\.mturk\.com\/tasks\?JRPC=lasthit\d*$/.test(locationUrl)) gGotoHit = 26;
 else if (/worker\.mturk\.com\/tasks\?JRPC=openhits\d*$/.test(locationUrl)) gOpenHits = locationUrl.split('JRPC=openhits')[1];
@@ -473,7 +496,7 @@ chrome.storage.local.get('PCM_running', value => {
         /** Sort pages to relevant functions. */
         if (/worker\.mturk\.com([\/]|$)([\?]|$)(.*=.*|)$/.test(locationUrl)) hitList(); // Pages with HITs listed
         else if (/requesters\/.{0,2}PandaCrazy[^\/].*(JRGID|groupID)=.*(JRRName|requesterName)=/.test(locationUrl)) addCommands();
-        else if (gMonitorOn) monitorNext(); else if (gAssignmentPage) doAssignment();
+        else if (gMonitorOn) monitorNext(); else if (gAssignmentPage) doAssignment(); else if (gNextHit) doNextHit();
         else if (/projects\/[^\/]*\/tasks(\?|$)/.test(locationUrl)) doPreview();
         else if (/worker\.mturk\.com\/.*(PandaCrazy|pandacrazy).*(on|$)/.test(locationUrl)) oldPandaCrazy();
         else if (/worker\.mturk\.com\/overwatch.*$/.test(locationUrl)) addIframe();
@@ -498,7 +521,8 @@ chrome.runtime.onMessage.addListener( (request) => {
       gOptions = data;
       if (!gOptions.mturkPageButtons) $('.pcm-buttonZonePreview, .pcm-buttonZoneHits').remove();
       else { if (gPreviewPage) previewButtons(); else if (gAssignmentPage) assignmentButtons(); else if (gHitList) hitListButtons(); }
-    } else if (command === 'newUrl') window.location.replace(data.url);
+    } else if (command === 'newUrl') goPosition(0, data.url);
+    else if (command === 'goNext') goPosition( (gThisPosition < gQueueResults.length) ? gThisPosition : 0);
   }
 });
 

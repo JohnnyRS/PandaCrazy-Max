@@ -348,6 +348,7 @@ class PandaGOptions {
       sel.append($('<option>').attr('value','First').text('First'));
       for (let i=2; i<queueSize; i++) { sel.append($('<option>').attr('value',i).text(i)); }
       sel.append($('<option>').attr('value','Last').text('Last'));
+      $(`<a href='#' class='pcm-goNextHit'>Go To Next Hit</a>`).click( () => { helperSendCommands({}, 'goNext', popupSend); } ).appendTo(appendHere);
       gotoLink = null; sel = null;
     }
   }

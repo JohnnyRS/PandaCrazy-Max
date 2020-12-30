@@ -142,7 +142,7 @@ async function wipeData() {
 /** Sends commands to the current tab or sends a close popup command to popup page.
  * @param {object} options - Options Object  @param {string} comm - Command  @param {function} [popupSend] - Popup Send Function  */
 function helperSendCommands(options, comm, popupSend=null) {
-  if (comm === 'newUrl' && popupSend) popupSend(null, true);
+  if (comm === 'newUrl' || comm === 'goNext' && popupSend) popupSend(null, true);
   if (options && currentTab) { chrome.tabs.sendMessage(currentTab.id, {'command':comm, 'data':options}); }
 }
 /** Used when a user clicks on the extension icon to show popup. Handles options or update notice to show on popup.
