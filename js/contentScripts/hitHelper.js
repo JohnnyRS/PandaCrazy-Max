@@ -166,12 +166,11 @@ function checkQueue(queueResults) {
       chrome.storage.onChanged.removeListener(listenChanged);
       window.location.replace('https://worker.mturk.com' + queueResults[gGotoHit-1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'));
     } else if (!gAlreadyOpened && gOpenHits && gOpenHits > 1 && queueResults.length >= gOpenHits) {
-      console.log(`let's open up ${gOpenHits} hits in tabs now`);
       let hitPosition = 2, numOpenHits = gOpenHits; gAlreadyOpened = true;
       let nowOpenHits = () => {
         window.open('https://worker.mturk.com' + queueResults[hitPosition - 1].task_url.replace('&ref=w_pl_prvw','&from_queue=true'), '_blank');
         hitPosition++; numOpenHits--;
-        if (numOpenHits > 1) setTimeout(nowOpenHits, 1270);
+        if (numOpenHits > 1) setTimeout(nowOpenHits, 1570);
         else { window.location.replace('https://worker.mturk.com' + queueResults[0].task_url.replace('&ref=w_pl_prvw','&from_queue=true')); window.focus(); }
       }
       nowOpenHits();

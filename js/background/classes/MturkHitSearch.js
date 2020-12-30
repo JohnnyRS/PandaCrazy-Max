@@ -268,7 +268,7 @@ class MturkHitSearch extends MturkClass {
 				for (const dbId of Object.keys(this.autoTaskIds)) {
 					for (const taskId of this.autoTaskIds[dbId]) {
 						let count = arrayCount(results, item => { if (item.task_id === taskId) return true; else return false; }, true);
-						if (count === 0) flattenSortObject(this.autoTaskIds, dbId, taskId); this.triggers[dbId].auto--;
+						if (count === 0) { flattenSortObject(this.autoTaskIds, dbId, taskId); this.triggers[dbId].auto--; }
 					}
 				}
 			}

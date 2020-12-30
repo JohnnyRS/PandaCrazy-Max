@@ -24,7 +24,7 @@ class MturkPanda extends MturkClass {
 		this.queueAdds = {};										// Object of panda accepted HITs so it can limit number of accepts.
 		this.loggedOff = false;									// Are we logged off from MTURK?
 		this.resultsBack = true;								// Jobs using limits need to know when results come back from Mturk.
-		this.tempPaused = false;								// Used to pause timer if queue is maxxed or a MTURK problem.
+		this.tempPaused = false;								// Used to pause timer if queue is maxed or a MTURK problem.
 		this.skippedDoNext = false;							// Used when checking skipped jobs in a recursive function.
 		this.authenticityToken = null;					// The authenticity token from MTURK so HITs can be returned.
 		if (timer) {
@@ -220,7 +220,7 @@ class MturkPanda extends MturkClass {
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - Data Object  @param  {bool} status - Collection status.  @param {bool} [collected] - Collected Yet?  @param {string} [url] - URL String */
 	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, status, collected, url); }
-	/** Will add fetched to search jobs when seach class fetches a HIT list. */
+	/** Will add fetched to search jobs when search class fetches a HIT list. */
 	searchFetched() { for (const unique of this.searchesUniques) { if (extPandaUI.pandaStats[unique].doSearching()) extPandaUI.pandaStats[unique].addFetched(); }}
 	/** Stop searching for all search jobs.
 	 * @async - To wait for disabling searching. */
@@ -436,7 +436,7 @@ class MturkPanda extends MturkClass {
 		} else return false;
 }
 	/** Checks if this panda has any limits and returns any relevant info.
-	 * @param  {number} myId   - Unique ID  @param  {bool} accepted - Was a HIT accepted?  @param  {obejct} data - Data Object
+	 * @param  {number} myId   - Unique ID  @param  {bool} accepted - Was a HIT accepted?  @param  {object} data - Data Object
 	 * @return {string}				 - Reason for stopping as a string or null if not stopped. */
 	checkIfLimited(myId, accepted, data) {
 		let stopIt=null, stats = extPandaUI.pandaStats[myId];
@@ -484,7 +484,7 @@ class MturkPanda extends MturkClass {
 		if ((info.data.once || info.data.limitTotalQueue>0 || info.data.limitNumQueue > 0) && !this.resultsBack) resultsBack = false;
 		if (!this.checkQueueLimit(myId, info, info.data) && resultsBack) {
 			this.resultsBack = false;
-			if (this.dLog(4)) console.debug(`%cgoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
+			if (this.dLog(4)) console.debug(`%cGoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 			let result = await super.goFetch(objUrl);
 			if (!result) {
 				if (this.dError(1)) { console.error('Result from panda fetch was a null.', JSON.stringify(objUrl)); }
