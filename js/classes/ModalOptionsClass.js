@@ -90,7 +90,7 @@ class ModalOptionsClass {
         $(`#${idName} .pcm-inputError`).html('');
       }
       let df = document.createDocumentFragment();
-      $(`<div class='pcm-detailsEdit small'>The text box area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.</div>`).appendTo(df);
+      $(`<div class='pcm-detailsEdit small'>The text box area below shows the current theme that is added to pages. Any CSS styles below will<br>be added to the default CSS style. If it's blank then nothing is added and nothing will change.<br>After changing the theme you may have to reload the page especially if you changed CSS variables.</div>`).appendTo(df);
       let buttonGroup = $(`<div class='pcm-themeSelection'></div>`).appendTo(df);
       $(`<button class='btn btn-xs pcm-themeSelect0 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #1 as current theme and display the CSS styles in the textarea below for edit.'>Theme #1</button>`).data('index', 0).appendTo(buttonGroup);
       $(`<button class='btn btn-xs pcm-themeSelect1 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #2 as current theme and display the CSS styles in the textarea below for edit.'>Theme #2</button>`).data('index', 1).appendTo(buttonGroup);

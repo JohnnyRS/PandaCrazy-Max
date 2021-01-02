@@ -113,7 +113,11 @@ class PandaUI {
 		});
 	}
   /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
-	resetCSSValues() { this.cards.resetCSSValues(); this.pandaGStats.resetCSSValues(); menus.resetCSSValues(); this.logTabs.resetCSSValues(); }
+	resetCSSValues() {
+		this.cards.resetCSSValues(); this.pandaGStats.resetCSSValues();
+		for (const key of Object.keys(this.pandaStats)) { this.pandaStats[key].prepare(this.cards.acceptedStatusText, this.cards.fetchedStatusText); this.pandaStats[key].updateAllStats(); }
+		menus.resetCSSValues(); this.logTabs.resetCSSValues();
+	}
 	/** Will toggle the paused value or force the paused value to a given value.
 	 * @param {bool} [val] - Force Pause Value  */
 	pauseToggle(val=null) { if (bgPanda) { if (bgPanda.pauseToggle(val)) $('#pcm-bqPandaPause').html('Unpause'); else $('#pcm-bqPandaPause').html('Pause'); }}

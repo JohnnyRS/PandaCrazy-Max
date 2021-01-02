@@ -407,7 +407,7 @@ class MturkPanda extends MturkClass {
 			if (data.limitNumQueue > 0 && data.limitNumQueue <= hits) skipIt='HIT queue limit.';
 			if (data.limitTotalQueue > 0 && data.limitTotalQueue <= extPandaUI.getQueueTotal() ) skipIt='queue total limit.';
 			if (skipIt !== '') {
-				extPandaUI.cards.cardEffectPreviousColor(myId, true, '#ffa691');
+				extPandaUI.cards.cardEffectLimited(myId, true);
 				pandaTimer.hamOff(info.queueUnique); // Make sure go ham is off if this panda was going ham.
 				this.pandaSkipped.push(myId); info.skipped = true; this.pandaSkippedData[myId] = Object.assign({}, data);
 				pandaTimer.skipThis(info.queueUnique);
@@ -426,7 +426,7 @@ class MturkPanda extends MturkClass {
 		if (unskip && data.limitNumQueue > 0 && hits >= data.limitNumQueue) unskip=false;
 		if (!this.info[myId]) return true;
 		if (unskip) {
-			extPandaUI.cards.cardEffectPreviousColor(myId,false);
+			extPandaUI.cards.cardEffectLimited(myId);
 			pandaTimer.unSkipThis(this.info[myId].queueUnique); // Unskip this panda in timer.
 			if (this.pandaSkipped.includes(myId)) { this.pandaSkipped = arrayRemove(this.pandaSkipped, myId); delete this.pandaSkippedData[myId]; }
 			this.info[myId].skipped = false; // This HIT not skipped
@@ -503,10 +503,10 @@ class MturkPanda extends MturkClass {
 					else if (result.mode === 'mturkLimit') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.mturkLimit(); }
 					else if (result.mode === 'maxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
 					else if (result.mode === 'noMoreHits') { extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
-					else if (result.mode === 'noQual' && stopped===null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', '#DDA0DD'); }
-					else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', '#575b6f'); }
+					else if (result.mode === 'noQual' && stopped === null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', 'pcm-noQual'); }
+					else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', 'pcm-blocked'); }
 					else if (result.mode === 'notValid') {
-						console.info('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', '#575b6f');
+						console.info('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', 'pcm-notValid');
 						extPandaUI.pandaGStats.addTotalPandaErrors();
 					} else if (result.mode === 'unknown') { console.info('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors(); }
 					else if (result.mode === 'cookies.large') {

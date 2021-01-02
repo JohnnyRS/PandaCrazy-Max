@@ -8,6 +8,9 @@ class PandaCards {
     this.multiple = [];
     this.ctrlDelete = [];								// List of panda's selected for deletion by using ctrl key
     this.bgHighlighterDef = '#E6E6FA'; this.bgHighlighter = null;
+    this.bgLimitedColorDef = '#ffa691'; this.bgLimitedColor = null;
+    this.bgCollectedColorDef = '#ffff99'; this.bgCollectedColor = null;
+    this.bgStoppedColorDef = '#FFA691'; this.bgStoppedColor = null;
     this.collectTextDef = 'Collect'; this.collectText = null;
     this.goHamTextDef = 'GoHam'; this.goHamText = null;
     this.detailsTextDef = 'Details'; this.detailsText = null;
@@ -34,15 +37,16 @@ class PandaCards {
   getCSSValues() {
     this.collectText = getCSSVar('collectButton', this.collectTextDef); this.goHamText = getCSSVar('hamButton', this.goHamTextDef);
     this.detailsText = getCSSVar('detailsButton', this.detailsTextDef); this.deleteText = getCSSVar('deleteButton', this.deleteTextDef);
+    this.bgHighlighter = getCSSVar('bgHighlighter', this.bgHighlighterDef); this.bgLimitedColor = getCSSVar('bgLimitedColor', this.bgLimitedColorDef);
+    this.bgCollectedColor = getCSSVar('bgCollectedColor', this.bgCollectedColorDef); this.bgStoppedColor = getCSSVar('bgStoppedColor', this.bgStoppedColorDef);
     this.acceptedStatusText = getCSSVar('hitAccepted', this.acceptedStatusTextDef); this.fetchedStatusText = getCSSVar('hitFetched', this.fetchedStatusTextDef);
-    this.bgHighlighter = (highlighterBGColor) ? highlighterBGColor : this.bgHighlighterDef;
   }
   /** Prepare cards by getting CSS variable Values and assigning the tabs object.
    * @param  {object} tabs - The tab object with tab information. */
   prepare(tabs) { this.getCSSValues(); this.tabs = tabs; }
   /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
   resetCSSValues() {
-    highlighterBGColor = getCSSVar('bgHighlighter'); this.getCSSValues();
+    this.getCSSValues();
     $('.pcm-collectButton').html(this.collectText); $('.pcm-hamButton').html(this.goHamText);
     $('.pcm-detailsButton').html(this.detailsText); $('.pcm-deleteButton').html(this.deleteText);
     $('.pcm-hitAccepted').html(this.acceptedStatusText); $('.pcm-hitFetched').html(this.fetchedStatusTextDef);
@@ -172,25 +176,24 @@ class PandaCards {
   /** Highlight the panda card according to the action and duration.
    * @param  {number} myId - Unique ID @param  {string} [action] - Effect Action @param  {number} [duration] - Effect Duration */
   highlightEffect_card(myId, action='', duration=15000) {
-    let theColor = (action==='stop') ? '#FFA691' : '#ffff99';
-    $(`#pcm-pandaCard-${myId}`).stop(true,true).effect('highlight', {color:theColor}, duration);
+    let theColor = (action==='stop') ? this.bgStoppedColor : this.bgCollectedColor;
+    $(`#pcm-pandaCard-${myId}`).stop(true, true).effect('highlight', {'color':theColor}, duration);
   }
   /** Show that this panda is not collecting anymore and show effect or a new background color.
-   * @param  {number} myId - Unique ID  @param  {bool} [stopEffect] - Stop Effects?  @param  {string} [whyStop] - Stop Reason  @param  {string} [newBgColor] - Background color */
-  stopItNow(myId, stopEffect=false, whyStop=null, newBgColor='') {
+   * @param  {number} myId - Unique ID  @param  {bool} [stopEffect] - Stop Effects?  @param  {string} [whyStop] - Stop Reason  @param  {string} [addClass] - Class to Add */
+  stopItNow(myId, stopEffect=false, whyStop=null, addClass=null) {
     if (stopEffect) this.stopEffect_card(myId); 
-    if (newBgColor !== '') {
-      $(`#pcm-pandaCard-${myId}`).data('previousColor1', $(`#pcm-pandaCard-${myId}`).data('stopped',whyStop).css('background-color')).css('background-color', newBgColor);
-    }
+    if (addClass) { $(`#pcm-pandaCard-${myId}`).data('previousColor1', $(`#pcm-pandaCard-${myId}`).css('background-color')).data('stopped', whyStop).addClass(addClass); }
+    else $(`#pcm-pandaCard-${myId}`).removeClass('pcm-noQual pcm-blocked pcm-notValid');
     if (stopEffect) this.highlightEffect_card(myId, 'stop', 7500);
 		pandaUI.stopCollecting(myId, whyStop);
   }
   /** Either change background color to provided color and save the previous color or change the
 	 * background color to the previous color saved in data and remove the previous color data.
-   * @param  {number} myId - Unique ID  @param  {bool} addPrev - Add Previous Color  @param  {string} [bgColor] - New Background Color */
-  cardEffectPreviousColor(myId, addPrev, bgColor='') {
+   * @param  {number} myId - Unique ID  @param  {bool} [limited] - Card Limited? */
+  cardEffectLimited(myId, limited=false) {
     this.stopEffect_card(myId);
-    if (addPrev) $(`#pcm-pandaCard-${myId}`).data('previousColor', $(`#pcm-pandaCard-${myId}`).css('background-color')).css('background-color', bgColor);
+    if (limited) $(`#pcm-pandaCard-${myId}`).data('previousColor', $(`#pcm-pandaCard-${myId}`).css('background-color')).css('background-color', this.bgLimitedColor);
     else {
       const prevColor = $(`#pcm-pandaCard-${myId}`).data('previousColor');
       $(`#pcm-pandaCard-${myId}`).removeData('previousColor').animate({'backgroundColor':prevColor},{'duration':1000});
