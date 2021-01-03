@@ -150,7 +150,7 @@ class TabbedClass {
     else $(start).insertBefore($(`#${this.ulId}`).find(`.pcm-endTab`));
     let label = $(`<a class='pcm-tabTitle nav-link${activeText} small' id='${this.tabIds}${unique}Tab' data-toggle='tab' href='#${this.tabIds}${unique}Content' role='tab' aria-controls='${this.tabIds}${unique}Content' aria-selected='${(active) ? 'true' : 'false'}'></a>`).addClass('unSelectable').appendTo(start);
     if (this.renameTab) $(label).bind('contextmenu', e => {
-      if ($(e.target).closest('li').data('unique') !== 0) { // First tab can not be renamed ever.
+      if ($(e.target).closest('li').data('unique') !== 1) { // First tab can not be renamed ever.
         modal = new ModalClass();
         modal.showDialogModal('700px', 'Rename Tab Title', 'Type in the title of this tab you want renamed.', () => {
           const title = $('#pcm-formQuestion').val();
@@ -164,7 +164,7 @@ class TabbedClass {
       return false;
     });
     $(label).append($(`<span>${this.#dataTabs[unique].title}</span>`).addClass('unSelectable'));
-    if (unique !== 0 && this.deleteTab) $(label).append($(`<span class='pcm-tabDelete'>x</span>`).click( e => {
+    if (unique !== 1 && this.deleteTab) $(label).append($(`<span class='pcm-tabDelete'>x</span>`).click( e => {
       modal = new ModalClass();
       modal.showDialogModal('700px', 'Delete tab', 'Do you really want to delete this tab?', async () => {
         let unique = $(e.target).closest('li').data('unique'), counter = 0;
