@@ -84,7 +84,9 @@ function inputRange(appendTo, min, max, theValue, key, setValue, withText=true) 
   $(`<input class='pcm-inputRange' type='range' min='${min}' max='${max}' value='${theValue}'></input>`).on('input', e => {
     $(`#pcm-${key}Detail`).val(($(e.target).val())); setValue(Number($(e.target).val()));
   }).appendTo(appendTo);
-  if (withText) $(`<input class='pcm-inputRangeText' id='pcm-${key}Detail' type='text' value='${theValue}' size='2'></input>`).appendTo(appendTo);
+  function inputSetVal(e) { let newVal = $(e.target).val(); $(e.target).prev('input').val(newVal); setValue(Number(newVal)); }
+  if (withText) $(`<input class='pcm-inputRangeText' id='pcm-${key}Detail' type='text' value='${theValue}' size='2'></input>`).change( e => inputSetVal(e) )
+    .keypress( e => { if (e.keyCode === 13) { inputSetVal(e); return false; } }).appendTo(appendTo);
 }
 /** Limits a value to a low limit and hight limit.
  * @param  {number} val - The value  @param  {number} low  - The low limit  @param  {number} high - The high limit

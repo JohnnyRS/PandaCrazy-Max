@@ -173,6 +173,8 @@ html, body { height: 100%; }
 .pcm-goLink:hover { color: orangered; }
 .pcm-goLinkDiv { text-align: center; }
 .pcm-goSelectDiv { text-align: center; margin-top:2px; }
+.pcm-wikiLinks { color: aliceblue; margin-left: 25px; font-size: 0.9em; }
+.pcm-wikiLinks a { color: burlywood; text-decoration: underline; }
 
 /* PandaUI Targeted Styles. */
 #pcm-pandaUI .pcm-menuRow1 { line-height: 0px; }
