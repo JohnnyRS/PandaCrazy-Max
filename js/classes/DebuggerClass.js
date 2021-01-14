@@ -24,13 +24,13 @@ class DebuggerClass {
   /** Checks the error number, debug number and className for permission to display a message.
    * @param {number} eLevel - Level error number  @param {number} lLevel - Level logging number  @param {string} className - The name of the class logging
    * @return {bool}         - Returns true if good to show message. */
-  checkDebug( eLevel, lLevel, className ) { 
+  checkDebug( eLevel, lLevel, className ) {
     let returnValue = false;
     if (eLevel != -1 && this.errorLevel >= eLevel) returnValue = true; // Is error level number good to log?
     if (lLevel != -1 && this.logLevel >= lLevel) returnValue = true; // Is log level number good to log?
     if (returnValue && !this.classesLog.all) { // Check if className is permitted to log errors or log info?
-      if (className != '' && this.classesLog.hasOwnProperty(className) && this.classLog[className]) returnvalue=true;
-      else returnvalue=false;
+      if (className != '' && this.classesLog.hasOwnProperty(className) && this.classLog[className]) returnValue=true;
+      else returnValue=false;
     }
     return returnValue;
   }
