@@ -474,14 +474,17 @@ class MturkHitSearch extends MturkClass {
 		let gidFound = liveStr.includes(`[gid:${item.hit_set_id}]]`), ridFound = liveStr.includes(`[rid:${item.requester_id}]]`);
 		let titleDescription = item.title.toLowerCase() + ' , ' + item.description.toLowerCase(), termsFound = [];
 		if (this.searchGStats && this.searchGStats.isSearchOn() && Object.keys(this.liveTermData).length) {
-			for (const key of Object.keys(this.liveTermData)) { if (titleDescription.includes(key.toLowerCase())) termsFound.push(key); }
+			for (const key of Object.keys(this.liveTermData)) {
+				if (titleDescription.includes(key.toLowerCase())) { if (this.liveTermData[key][0].includes('true')) termsFound.unshift(key); else termsFound.push(key); }
+			}
 		}
 		if (gidFound || ridFound || termsFound.length) {
 			let key1 = (gidFound) ? 'gid' : (ridFound) ? 'rid' : 'terms', key2 = (gidFound) ? item.hit_set_id : item.requester_id;
 			if (key1 !== 'terms') termsFound = [key1];
 			for (const term of termsFound) {
-				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term] : [this.theDbId(key1, key2)];
-				for (const dbId of dbIdArr) {
+				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [this.theDbId(key1, key2)];
+				for (const theDbId of dbIdArr) {
+					let dbId = (theDbId.includes(',')) ? theDbId.split(',')[0] : theDbId; 
 					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false, doUpdate = false;
 					let options = await this.theData(dbId, 'options'), rules = await this.theData(dbId, 'rules');
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
@@ -524,12 +527,12 @@ class MturkHitSearch extends MturkClass {
 		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
 	}
 	/** Sets up the live terms data for faster searching of terms.
-	 * @param  {bool} enable - Enabled?  @param  {object} rules - Rules object  @param  {number} dbId - Database ID */
-	termData(enable, rules, dbId) {
+	 * @param  {bool} enable - Enabled?  @param  {object}  options - Options Object  @param  {object} rules - Rules Object  @param  {number} dbId - Database ID */
+	termData(enable, rules, options, dbId) {
 		if (rules.terms && rules.include.size) {
 			let thisTermStr = rules.include.values().next().value;
-			if (enable && thisTermStr) { buildSortObject(this.liveTermData, thisTermStr, dbId); }
-			else if (thisTermStr) flattenSortObject(this.liveTermData, thisTermStr, dbId);
+			if (enable && thisTermStr) { buildSortObject(this.liveTermData, thisTermStr, `${dbId},${options.auto}`); }
+			else if (thisTermStr) flattenSortObject(this.liveTermData, thisTermStr, `${dbId},${options.auto}`);
 		}
 	}
 	/** Sets the disabled status of trigger and does the live string again if needed.
@@ -537,8 +540,8 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} type - Type of trigger  @param  {string} value  - Group ID or requester ID  @param  {bool} disabled - Disabled?
 	 * @param  {bool} [sUI]  - Search UI?       @param  {bool} [remove] - Remove Live Trigger?  */
 	async setDisabled(type, value, disabled, sUI=true, remove=true) {
-		let dbId = this.theDbId(type, value), rules = await this.theData(dbId, 'rules');
-		if (type === 'custom') this.termData(!disabled, rules, dbId);
+		let dbId = this.theDbId(type, value), rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options');
+		if (type === 'custom') this.termData(!disabled, rules, options, dbId);
 		else this.liveString(type, value, !disabled, sUI, remove);
 		if (this.searchGStats && this.searchGStats.isSearchOn()) { if (this.liveCounter === 0 && this.termCounter === 0) this.stopSearching(); }
 		else if (this.liveCounter > 0) this.startSearching();
@@ -711,15 +714,16 @@ class MturkHitSearch extends MturkClass {
 					} else {
 						this.searchGStats.addTotalSearchResults(result.data.total_num_results);
 						let i = 0, thisItem = {}, hitPosId = null, tempString = '', tempNewHits = {}, rewardSort = {};
-						do {
+						while (i < result.data.results.length) {
 							thisItem = result.data.results[i++];
+							if (!thisItem) break;
 							hitPosId = new Date(thisItem.creation_time).getTime() + '' +  thisItem.hit_set_id;
 							tempString += `[[${hitPosId}]]`;
 							if (!this.searchesString.includes(`[[${hitPosId}]]`)) {
 								let dO = hitObject(thisItem.hit_set_id, thisItem.description, thisItem.title, thisItem.requester_id, thisItem.requester_name, thisItem.monetary_reward.amount_in_dollars, thisItem.assignable_hits_count, thisItem.assignment_duration_in_seconds, thisItem.latest_expiration_time);
 								tempNewHits[dO.groupId] = dO; rewardSort[thisItem.monetary_reward.amount_in_dollars] = thisItem;
 							}
-						} while (i < result.data.results.length);
+						}
 						let sortArray = Object.keys(rewardSort).sort((a,b) => b - a), started = true;
 						for (const key of sortArray) { if (this.liveCounter || this.termCounter) started = this.checkTriggers(rewardSort[key], started); }
 						myHistory.fillInHistory(tempNewHits, 'searchResults');

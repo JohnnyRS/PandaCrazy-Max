@@ -74,6 +74,7 @@ class PandaGOptions {
       'SlackButtons':true,
       'mturkPageButtons':true,
       'tabUniqueHits':true,
+      'titleQueueDisplay':true,
     }
     this.search = {}
     this.searchDefault = {
@@ -313,6 +314,9 @@ class PandaGOptions {
     });
     createCheckBox(appendHere, 'Unique Tab Hits Restriction', 'pcm-restrictTabUnique', this.helpers.tabUniqueHits, this.helpers.tabUniqueHits, ' pcm-tooltipData', ' pcm-tooltipData', 'Allow only unique HITs in each tab.', () => {
       this.helpers.tabUniqueHits = !this.helpers.tabUniqueHits; this.update(false); helperSendCommands(this.helpers, 'globalOptions');
+    });
+    createCheckBox(appendHere, `Display Queue #'s in Title`, 'pcm-displayQueueTitle', this.helpers.titleQueueDisplay, this.helpers.titleQueueDisplay, ' pcm-tooltipData', ' pcm-tooltipData', `Show Hit position in queue and total HITs in queue in tab title.`, () => {
+      this.helpers.titleQueueDisplay = !this.helpers.titleQueueDisplay; this.update(false); helperSendCommands(this.helpers, 'globalOptions');
     });
     $(`<hr class='pcm-sessionVarsSplit'><div class='pcm-sessionOptText'>Session Options:</div>`).appendTo(appendHere);
     createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext, ' pcm-tooltipData', ' pcm-tooltipData', 'Monitor Queue automatically once you finish HITs in your queue.', () => {

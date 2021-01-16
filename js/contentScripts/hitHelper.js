@@ -3,7 +3,7 @@ let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = f
 let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMyInterval = null, gMonitorOn = false, returnBtn = false, gSessionData = {};
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null, gNextHit = null;
 let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false, gThisPosition = null; 
-let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true};
+let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true, 'titleQueueDisplay':true};
 let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [], gExtVerified = false;
 let secure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enableSgroup', 'disableSgroup', 'getJobs', 'getTriggers', 'removeJob', 'removeTrigger', 'getGroups', 'getSGroups', 'pause', 'unpause', 'enableTrigger', 'disableTrigger', 'startSearching', 'stopSearching', 'getStats'];
 
@@ -139,7 +139,7 @@ function goPosition(position, goUrl=null) {
 function resetTitle(older=false) {
   if (gPcmRunning && extensionLoad()) {
     let queueSize = gQueueResults.length, timeLeft = findPosition(gAssignedHit);
-    document.title = `(${gThisPosition}/${queueSize}) ${gDocTitle}`;
+    if (gOptions.titleQueueDisplay) document.title = `(${gThisPosition}/${queueSize}) ${gDocTitle}`;
     if (!older && (timeLeft < 7 || gThisPosition === 0)) { if ((gHitLost || queueSize === 0) && !$(`.pcm-expireHit`).length) hitExpired(); gHitLost = true; }
     else { gHitLost = false; if ($(`.pcm-expireHit`).length) notExpired(); }
   } else { document.title = gDocTitle + ' - (NO PCM)'; notExpired(); }
@@ -345,11 +345,11 @@ function oldPCRemoval() {
 }
 /** Sets up any return buttons on the page so the script can detect a return HIT even when a return prompt script is installed. */
 function setReturnBtn() {
-  $(`.btn-secondary:contains('Return')`).unbind('click').bind( 'click', e => {
+  $(`.btn-warning:contains('Return'), .btn:contains('Return')`).unbind('click').bind( 'click', e => { console.log('return button');
     let theIndex = (Object.keys(gHitData).length) ? -1 : $(e.target).closest('.table-row').index(), theHit = (theIndex !== -1) ? gQueueResults[theIndex-1] : gHitData;
     if (theHit) { if (extensionLoad()) { chrome.storage.local.set({'PCM_returnClicked':{'assignmentId':theHit.assignment_id, 'unique':new Date().getTime()}}); returnBtn = true; }}
   });
-  $(`.btn-secondary:contains('Return')`).unbind('blur').bind( 'blur', () => { if (returnBtn) returnBtn = false; });
+  $(`.btn-warning:contains('Return'), .btn:contains('Return')`).unbind('blur').bind( 'blur', () => { if (returnBtn) returnBtn = false; });
   $('.expand-projects-button').unbind('click').bind( 'click', () => { setTimeout( () => { setReturnBtn(); }, 0); });
 }
 /** Sets up a listener for unloading page so it can remove old local chrome storage variables. Detects returned HITs here also. */
@@ -370,7 +370,7 @@ function setBeforeUnload() {
 /** Makes sure extension is still loaded and if not then it removes script changes. */
 function checkExtension() {
   let gInterval = setInterval( () => {
-    if (!extensionLoad()) { resetTitle(); clearInterval(gInterval); $(`.btn-secondary:contains('Return')`).unbind('click blur'); };
+    if (!extensionLoad()) { resetTitle(); clearInterval(gInterval); $(`.btn-warning:contains('Return'), .btn:contains('Return')`).unbind('click blur'); };
   }, 8000);
 }
 /** Grabs group ID, task ID and assigned ID quickly from the current URL. */
@@ -401,8 +401,8 @@ function doPreview() {
 }
 /** Adds buttons to the assignment page making sure to remove any other buttons added before. */
 function assignmentButtons() {
-  $('.pcm-buttonZonePreview').remove();
-  let detailArea = $('.project-detail-bar:first .col-md-5:first .row:first > div:nth-child(2)'), buttons = addButtons();
+  $('.pcm-buttonZoneHits').remove();
+  let detailArea = $('.project-detail-bar:first .row:first .col-xs-6.col-xl-5:first'), buttons = addButtons();
   if (detailArea.find('div').length === 0) detailArea.append(buttons);
   else $('.navbar-content:first .navbar-nav:first').append($(`<li class='nav-item' style='margin-left:0; margin-top:5px'></li>`).append(buttons.css('margin-top', '5px')));
   detailArea = null; buttons = null;
@@ -445,7 +445,7 @@ function doAssignment() {
 function hitListButtons(element=null) {
   if (element === null) element = $('body');
   if (element.find('.JR_PandaCrazy').length > 0) { element.find('.JR_PandaCrazy:first').remove(); }
-  if (element.find('.pcm-buttonZoneHits').length === 0) { element.find('.p-b-md').append(addButtons()); }
+  if (element.find('.pcm-buttonZoneHits:not(.mturk-alert-content .pcm-buttonZoneHits)').length === 0) { element.find('.p-b-md').append(addButtons()); }
 }
 /** Adds buttons to the HITs listed pages. Removes any old buttons too. */
 function hitList() {
@@ -518,9 +518,9 @@ chrome.runtime.onMessage.addListener( (request) => {
       sessionStorage.setItem('PCM_sessionValues', JSON.stringify(data)); gSessionData = data;
       sessionStorage.setItem('PCM_nextGroupID', gGroupId); sessionStorage.setItem('PCM_nextReqID', gReqId);
     } else if (command === 'globalOptions') {
-      gOptions = data;
-      if (!gOptions.mturkPageButtons) $('.pcm-buttonZonePreview, .pcm-buttonZoneHits').remove();
-      else { if (gPreviewPage) previewButtons(); else if (gAssignmentPage) assignmentButtons(); else if (gHitList) hitListButtons(); }
+      let buttonOptionChanged = (gOptions.mturkPageButtons !== data.mturkPageButtons); gOptions = data;
+      if (buttonOptionChanged && !gOptions.mturkPageButtons) $('.pcm-buttonZonePreview, .pcm-buttonZoneHits').remove();
+      else if (buttonOptionChanged) { if (gPreviewPage) previewButtons(); else if (gAssignmentPage) assignmentButtons(); else if (gHitList) hitListButtons(); }
     } else if (command === 'newUrl') goPosition(0, data.url);
     else if (command === 'goNext') goPosition( (gThisPosition < gQueueResults.length) ? gThisPosition : 0);
   }

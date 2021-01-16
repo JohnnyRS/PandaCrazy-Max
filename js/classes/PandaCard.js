@@ -284,7 +284,8 @@ class PandaCards {
 			let theButton = $(e.target).closest('.pcm-hitButton'), myId = $(e.target).closest('.card').data('myId');
 			let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId); theButton.data('longClicked', true);
 			if (theButton.hasClass('pcm-delayedHam')) { theButton.removeClass('pcm-delayedHam').addClass('pcm-noDelay'); info.autoTGoHam = (data.autoGoHam) ? 'disable' : 'off'; }
-			else { info.autoTGoHam = 'on'; theButton.removeClass('pcm-noDelay').addClass('pcm-delayedHam'); }
+      else { info.autoTGoHam = 'on'; theButton.removeClass('pcm-noDelay').addClass('pcm-delayedHam'); }
+      if (!pandaUI.pandaStats[myId].collecting) pandaUI.startCollecting(myId, false, 0);
 			e.preventDefault(); e.stopPropagation(); theButton = null; return false;
 		});
 		$(`.pcm-deleteButton, .pcm-deleteButton1`).unbind('click').click( e => {
