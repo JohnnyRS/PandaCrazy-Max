@@ -482,7 +482,7 @@ class MturkHitSearch extends MturkClass {
 			let key1 = (gidFound) ? 'gid' : (ridFound) ? 'rid' : 'terms', key2 = (gidFound) ? item.hit_set_id : item.requester_id;
 			if (key1 !== 'terms') termsFound = [key1];
 			for (const term of termsFound) {
-				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [this.theDbId(key1, key2)];
+				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [`${this.theDbId(key1, key2)}`];
 				for (const theDbId of dbIdArr) {
 					let dbId = (theDbId.includes(',')) ? theDbId.split(',')[0] : theDbId; 
 					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false, doUpdate = false;
