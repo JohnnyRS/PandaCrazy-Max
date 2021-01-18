@@ -373,7 +373,7 @@ class MturkHitSearch extends MturkClass {
 		});
 		await MYDB.getFromDB('searching', 'history', dbId,_, 'dbId', true).then( async historyNum => {
 			this.data[dbId].numHits = historyNum; if (doUpdate) this.updateToDB(_, this.data[dbId]);
-			extSearchUI.updateStats(this.triggers[dbId].count, this.data[dbId]);
+			if (extSearchUI) extSearchUI.updateStats(this.triggers[dbId].count, this.data[dbId]);
 		});
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.

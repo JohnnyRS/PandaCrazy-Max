@@ -80,7 +80,7 @@ class LogTabsClass {
           }).then( async res => {
             await res.text();
             if (this.dLog(1)) console.info(`%cReturned HIT status: ${res.status} : ${res.url}`,CONSOLE_INFO);
-            if (res.status === 200 && res.statusText === 'OK') { this.removeFromQueue(taskID); setTimeout(() => { modal.closeModal(); }, 400); }
+            if (res.status === 200 && res.statusText === 'OK') { this.removeFromQueue(taskID); setTimeout(() => { if (modal) modal.closeModal(); }, 400); }
             else modal.closeModal();
           }).catch( error => { if (this.dError(2)) console.error(`Returned HIT error: ${error}`); });
         }, true, true);
