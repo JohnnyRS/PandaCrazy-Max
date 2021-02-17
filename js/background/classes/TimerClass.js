@@ -32,19 +32,19 @@ class TimerClass {
 	/** Setters and getters to change the private properties and send back info */
 	/** Passes back the running status of the timer.
 	 * @return {bool} - True if timer is running. */
-	get running() { return this._running; } 
+	get running() { return this._running; }
 	/** Sets the running status of the timer.
-	 * @param {bool} v - Set timer as running or not. */											
+	 * @param {bool} v - Set timer as running or not. */
 	set running(v) { if (v != this._running) { this._running = v; this.sendBackInfo(); } }
 	/** Passes back the status of going ham.
 	 * @return {bool} - True if timer is going ham. */
-	get goingHam() { return this._goingHam; } 										
+	get goingHam() { return this._goingHam; }
 	/** Sets the going ham status for this timer.
-	 * @param {bool} v - Set timer as going ham or not. */											
-	set goingHam(v) { if (v != this._goingHam) { this._goingHam = v; this.sendBackInfo(); } }	
+	 * @param {bool} v - Set timer as going ham or not. */
+	set goingHam(v) { if (v != this._goingHam) { this._goingHam = v; this.sendBackInfo(); } }
 	/** Passes back the status of timer being paused.
 	 * @return {bool} - True if timer is paused. */
-	get paused() { return this._paused; } 												
+	get paused() { return this._paused; }
 	/** Sets the status of being paused for this timer.
 	 * @param  {bool} v - Set timer as paused or not.
 	 * @return {bool}   - Returns pause status. */
@@ -98,7 +98,7 @@ class TimerClass {
 	/** Set a new ham time for this timer.
 	 * @param  {number} timer - The time for hamming that this timer should run at.
 	 * @return {number}				- Returns the new ham time. */
-	theHamTimer(timer=null) { 
+	theHamTimer(timer=null) {
 		if (timer >= this.min) { this.hamTimer = timer; return this.hamTimer; }
 		else if (timer === null) return this.hamTimer;
 		else { if (this.dError(2)) console.error('New ham timer would be too low!'); return null; }
@@ -168,7 +168,7 @@ class TimerClass {
 	/** Removes the unique number from the skipped queue.
 	 * @param  {number} queueUnique - Unique number for job to remove from skipped queue. */
 	removeFromQueueSkipped(queueUnique) {
-		if (this.queueSkipped.includes(queueUnique)) { 
+		if (this.queueSkipped.includes(queueUnique)) {
 			this.queueSkipped = arrayRemove(this.queueSkipped, queueUnique);
 			if (this.dLog(3)) console.log(`[${this.timerName}] unique: ${queueUnique} is removed from skipped queue - ${this.queueSkipped}`);
 		} else if (this.dLog(3)) console.log(`[${this.timerName}] unique: ${queueUnique} not in skipped queue`);
@@ -235,7 +235,7 @@ class TimerClass {
 	 * @param  {number} queueUnique - Unique number of job to be skipped. */
 	skipThis(queueUnique) {
 		if (this.queue.includes(queueUnique)) {
-			if (this.goingHam = queueUnique) this.hamOff(queueUnique); // Turn off ham if this item was going ham.
+			if (this.goingHam === queueUnique) this.hamOff(queueUnique); // Turn off ham if this item was going ham.
 			this.removeFromQueue(queueUnique); this.queueSkipped.push(queueUnique); // Move to queueSkipped.
 			this.queueObject[queueUnique].skipped = true; // Set flag to show it is skipped in object data.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is trying to skip: ${queueUnique}`);

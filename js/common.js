@@ -227,11 +227,11 @@ function markInPlace(findThis, fromHere) {
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null, theData=null, data2=null) {
   let row = null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '';
   if (horizontal) { row = $(`<tr${trClass}${trId}></tr>`).hide(); if (theData) row.data('theData', theData); if (data2) row.data('data2', data2); }
-  for (const element of thisArrayObject) { 
+  for (const element of thisArrayObject) {
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
     if (element.skip === true || !useObject || (element.ifNot && useObject[element.ifNot])) continue;
     if (element.keyCheckNot && useObject[element.keyCheck] === element.keyCheckNot) continue;
-    let textColor = '', valueCol = null, textBorder = 'pcm-bottomDotted'; 
+    let textColor = '', valueCol = null, textBorder = 'pcm-bottomDotted';
     let theValue = (element.orKey && useObject[element.orKey] !== '') ? useObject[element.orKey] : ((element.key && element.type !== 'string') ? ((element.andKey) ? `${useObject[element.key]} - ${useObject[element.andKey]}` : useObject[element.key]) : (element.string) ? element.string : '');
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
@@ -242,7 +242,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
     if (element.minMax) { element.min = element.minMax.min; element.max = element.minMax.max; }
-    if (table & !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
+    if (table && !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
     const pre = (element.pre) ? element.pre : '', addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '', tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
@@ -251,7 +251,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     const addTip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData${(element.notHelper) ? '' : ' pcm-tooltipHelper'}`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
-    else if (table & !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addTip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
+    else if (table && !horizontal) row = $(`<tr class='d-flex'></tr>`).append($(`<td class='col-5 unSelectable'></td>`).append($(`<span${addTip} class='pcm-eleLabel${toolTipClass}' id='pcm-tdLabel-${element.key}'>${element.label}</span>`).data('range',element.minMax).data('key',element.key)));
     valueCol = $(`<td class='${tdCol}pcm-textInfo text-truncate${toolTipClass}${tdClass}'${tdStyle}${addTip}>${addSpan}</td>`).data('unique',element.unique);
     if (element.type !== 'hr') valueCol.appendTo(row);
     if (element.type === 'range') {
@@ -400,7 +400,7 @@ function hConverterObject(data) {
 /** Delays the script for certain amount of milliseconds.
  * @param  {number} ms - The milliseconds to delay script for. */
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
-/** If the version1 is older than version2 then returns true otherwise false. 
+/** If the version1 is older than version2 then returns true otherwise false.
  * @param  {string} version1 - Older version  @param {string} version2 - Newer Version
  * @return {bool}            - Returns if first is older than second. */
 function compareVersion(version1, version2) {

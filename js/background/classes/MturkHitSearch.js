@@ -235,7 +235,7 @@ class MturkHitSearch extends MturkClass {
 	 * @return {object} - Returns an object with all data. */
 	async exportTriggers() {
 		let exportThis = {}, setArray = Array.from(this.fromSearch);
-		for (const dbId of setArray) { 
+		for (const dbId of setArray) {
 			let fullRules = await this.getFromDB('rulesets', dbId), theHistory = await this.getFromDB('history', dbId, 'dbId'), options = await this.getFromDB('options', dbId);
 			let theData = Object.assign({}, this.data[dbId]), theOptions = Object.assign({}, options);
 			for (const ruleSet of fullRules.rules) {
@@ -447,7 +447,7 @@ class MturkHitSearch extends MturkClass {
 	isTermCheck(rules, searchStr, orLogic=true) {
 		let good = (orLogic) ? false : true;
 		if (rules.include.size === 0) good = true;
-		else for (const term of rules.include) { if (searchStr.includes(term)) good = (orLogic) ? true : good & true; else if (!orLogic) good = false; }
+		else for (const term of rules.include) { if (searchStr.includes(term)) good = (orLogic) ? true : good && true; else if (!orLogic) good = false; }
 		if (rules.exclude.size > 0 && good) for (const term of rules.exclude) { if (searchStr.includes(term)) good = false; }
 		return good;
 	}
@@ -484,11 +484,11 @@ class MturkHitSearch extends MturkClass {
 			for (const term of termsFound) {
 				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [`${this.theDbId(key1, key2)}`];
 				for (const theDbId of dbIdArr) {
-					let dbId = (theDbId.includes(',')) ? theDbId.split(',')[0] : theDbId; 
+					let dbId = (theDbId.includes(',')) ? theDbId.split(',')[0] : theDbId;
 					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false, doUpdate = false;
 					let options = await this.theData(dbId, 'options'), rules = await this.theData(dbId, 'rules');
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
-					if (rules.terms) triggered = triggered & this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
+					if (rules.terms) triggered = triggered && this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
 					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(gId)) {
 						console.info(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
 						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime();
@@ -507,7 +507,7 @@ class MturkHitSearch extends MturkClass {
 						}
 						this.maintainGidHistory(dbId, gId, true, doUpdate);
 						break;
-					}	
+					}
 				}
 			}
 			return started;
@@ -595,7 +595,7 @@ class MturkHitSearch extends MturkClass {
 		await this.updateToDB(_, data, false);
 		if (multiple) {
 			for (let i = 0, len = data.length; i < len; i++) {
-				options[i].dbId = data[i].id; rules[i].dbId = data[i].id; if (prevId) prevId[i].newId = data[i].id; 
+				options[i].dbId = data[i].id; rules[i].dbId = data[i].id; if (prevId) prevId[i].newId = data[i].id;
 				if (history && history[i]) {
 					for (const key of Object.keys(history[i])) { history[i][key].dbId = data[i].id; }
 					await this.updateToDB('history', Object.values(history[i]), !multiple);
@@ -641,7 +641,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} type	  - Type          @param  {object} info	     - Info object     @param  {object} options	- Options object
 	 * @param  {object} [rules] - Rules object  @param  {object} [history] - History object  @param  {bool} [sUI]     - From searchUI?
 	 * @return {number}				  - Returns the unique id of this trigger. */
-	async addTrigger(type, info, options, rules={}, history={}, sUI=true) { 
+	async addTrigger(type, info, options, rules={}, history={}, sUI=true) {
 		let key2 = (type === 'rid') ? info.reqId : (info.idNum) ? info.idNum : info.groupId, valueString = `${type}:${key2}:${sUI}`;
 		if (!key2 && type !== 'custom') return null; // No value set for search type.
 		if (type === 'custom' && !this.uniqueName(info.name)) return null; // No value set for search type.
