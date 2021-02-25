@@ -484,11 +484,11 @@ class MturkHitSearch extends MturkClass {
 			for (const term of termsFound) {
 				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [`${this.theDbId(key1, key2)}`];
 				for (const theDbId of dbIdArr) {
-					let dbId = (theDbId.includes(',')) ? theDbId.split(',')[0] : theDbId;
+					let dbId = (theDbId.includes(',')) ? Number(theDbId.split(',')[0]) : Number(theDbId);
 					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false, doUpdate = false;
 					let options = await this.theData(dbId, 'options'), rules = await this.theData(dbId, 'rules');
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
-					if (rules.terms) triggered = triggered && this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
+					if (rules.include.size || rules.exclude.size) triggered = triggered && this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
 					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(gId)) {
 						console.info(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
 						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime();

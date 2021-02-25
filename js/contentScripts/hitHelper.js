@@ -424,7 +424,7 @@ function doAssignment() {
   }
   if (gOptions.tabUniqueHits && gIdsDone && gIds[gAssignedHit]) {
     let newUrl = nextHit(); gIds[gAssignedHit].count++;
-    if (newUrl) goPosition(0, 'https://worker.mturk.com' + newUrl);
+    if (newUrl) setTimeout(() => { goPosition(0, 'https://worker.mturk.com' + newUrl); }, 800);
     else if (gSessionData.monitorNext) goPosition(0, 'https://worker.mturk.com/tasks?JRPC=monitornext');
     else goPosition(0, 'https://worker.mturk.com/tasks');
   } else if (gSessionData.gidNext && gPrevHit && gGroupId !== gNextGID) {

@@ -1,5 +1,6 @@
 chrome.runtime.getBackgroundPage( async (backgroundPage) => {
   bgPage = backgroundPage;
+  $('.pcm-versionNumber').html(`Current Extension Version: ${localStorage.getItem('PCM_version')} (<a href='https://github.com/JohnnyRS/PandaCrazy-Max/wiki/Versions'>Version history page</a>)`);
   $('#pcm-resetMyData').click( () => {
     modal = new ModalClass();
     if (!bgPage.gGetPanda() && !bgPage.gGetSearch() && !bgPage.gGetHistory()) {
