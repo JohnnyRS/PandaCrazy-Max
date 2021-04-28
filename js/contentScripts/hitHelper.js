@@ -4,7 +4,7 @@ let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupI
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null, gNextHit = null;
 let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false, gThisPosition = null; 
 let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true, 'titleQueueDisplay':true};
-let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [], gExtVerified = false;
+let gPreviewPage = false, gAssignmentPage = false, gHitList = false, gNextGID = null, gNextRID = null, gSubmits = [], gReturns = [], gExtVerified = false, gRedirected = false;
 let secure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enableSgroup', 'disableSgroup', 'getJobs', 'getTriggers', 'removeJob', 'removeTrigger', 'getGroups', 'getSGroups', 'pause', 'unpause', 'enableTrigger', 'disableTrigger', 'startSearching', 'stopSearching', 'getStats'];
 
 /** Detects if the extension was restarted or uninstalled.
@@ -131,6 +131,7 @@ function goPosition(position, goUrl=null) {
   if (position < gQueueResults.length || goUrl) {
     let workerMturk = 'https://worker.mturk.com', fromQueue = '&from_queue=true', theUrl = (goUrl) ? goUrl : gQueueResults[position].task_url;
     let thePreUrl = (theUrl.includes(workerMturk)) ? theUrl : workerMturk + theUrl;
+    sessionStorage.setItem('PCM_Redirected', true);
     window.location.replace(thePreUrl.replace('&ref=w_pl_prvw',fromQueue));
   }
 }
@@ -236,7 +237,7 @@ function listenChanged(changes, name) {
           let thisAssignedID = newVal.assignmentId;
           if (thisAssignedID && thisAssignedID === gAssignedHit) { if (returnBtn) { setTimeout( () => { returnBtn = false; }, 1000); }}
         }}
-      else if (key === 'PCM_returnedHit') { if (newVal) { setRememberIds('return', newVal.assignmentId); }}
+      else if (key === 'PCM_returnedHit') { gHitReturned = true; if (newVal) { setRememberIds('return', newVal.assignmentId); }}
       else if (key.includes('PCM_t_')) {
         if (!newVal && oldVal) doIds(oldVal.assignmentId, oldVal.unique, true); else if (newVal) doIds(newVal.assignmentId, newVal.unique); }
     }
@@ -254,6 +255,7 @@ function loadSessionData() {
   gTabUnique = sessionStorage.getItem('PCM_sessionTabID') || new Date().getTime().toString(); sessionStorage.setItem('PCM_sessionTabID', gTabUnique);
   gNextGID = sessionStorage.getItem('PCM_nextGroupID') || null; gNextRID = sessionStorage.getItem('PCM_nextReqID') || null;
   gSubmits = JSON.parse(sessionStorage.getItem('PCM_hitSubmits')) || []; gReturns = JSON.parse(sessionStorage.getItem('PCM_hitReturns')) || [];
+  gRedirected = JSON.parse(sessionStorage.getItem('PCM_Redirected')) || false; sessionStorage.removeItem('PCM_Redirected');
   if (gQueuePage && gSessionData.monitorNext) gMonitorOn = true;
   chrome.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData}, data => { gOptions = data; });
 }
@@ -322,7 +324,7 @@ function addButtons(className='pcm-buttonZoneHits', classButton='pcm-buttonHits'
 /** Checks for any message that a HIT was submitted and then uses the previous HIT data saved to send message to extension and set local chrome storage submittedHit variable. */
 function checkSubmitted() {
   let submitText1 = `The HIT has been successfully submitted`, submitText2 = `HIT Submitted`, alertContent = $(`.mturk-alert-content`).text();
-  if (gPrevHit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) {
+  if (!gRedirected && gPrevHit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) {
     gHitSubmitted = true; setRememberIds('submit', gPrevHit.assignmentId);
     chrome.storage.local.set({'PCM_submittedHit':{'assignmentId':gPrevHit.assignmentId, 'groupId':gPrevHit.groupId, 'taskId':gPrevHit.taskId, 'unique':new Date().getTime()}});
     sendToExt('submitted', gPrevHit, true, gPrevHit.groupId,_,_,_,_, gPrevHit.pay,_,_, gPrevHit.assignmentId, gPrevHit.taskId);
@@ -424,9 +426,9 @@ function doAssignment() {
   }
   if (gOptions.tabUniqueHits && gIdsDone && gIds[gAssignedHit]) {
     let newUrl = nextHit(); gIds[gAssignedHit].count++;
-    if (newUrl) setTimeout(() => { goPosition(0, 'https://worker.mturk.com' + newUrl); }, 800);
-    else if (gSessionData.monitorNext) goPosition(0, 'https://worker.mturk.com/tasks?JRPC=monitornext');
-    else goPosition(0, 'https://worker.mturk.com/tasks');
+    if (newUrl) setTimeout(() => { goPosition(0, 'https://worker.mturk.com' + newUrl); }, 400);
+    else if (gSessionData.monitorNext) setTimeout(() => { goPosition(0, 'https://worker.mturk.com/tasks?JRPC=monitornext'); }, 400);
+    else setTimeout(() => { goPosition(0, 'https://worker.mturk.com/tasks'); }, 400);
   } else if (gSessionData.gidNext && gPrevHit && gGroupId !== gNextGID) {
     let newUrl = nextHit();
     if (!newUrl) { resetIDNext(); goPosition(0, 'https://worker.mturk.com/tasks'); } else goPosition(0, 'https://worker.mturk.com' + newUrl);

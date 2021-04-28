@@ -71,6 +71,7 @@ class ModalAlarmClass {
       modalBody.find('.pcm-muteMe').click( e => {
         let btn = $(e.target), mute = alarms.muteToggle(btn.closest('div').data('snd'));
         if (mute) btn.addClass('btn-mutted'); else btn.removeClass('btn-mutted');
+        pandaUI.queueAlertUpdate();
         btn.blur(); btn = null;
       });
       modalBody.find('.pcm-ttsMe').click( e => {

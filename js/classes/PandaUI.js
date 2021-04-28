@@ -470,4 +470,5 @@ class PandaUI {
 	/** New version detected so send a notification to user.
 	 * @param  {string} version - New Version Number */
 	newVersionAvailable(version) { if (notify) notify.showNewVersion(version); }
+	queueAlertUpdate() { this.logTabs.queueAlertUpdate(); }
 }

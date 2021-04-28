@@ -219,7 +219,7 @@ class MturkPanda extends MturkClass {
 	nowLoggedOn() { this.unPauseTimer(); this.loggedOff = false; if (extPandaUI) extPandaUI.nowLoggedOn(); }
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - Data Object  @param  {bool} status - Collection status.  @param {bool} [collected] - Collected Yet?  @param {string} [url] - URL String */
-	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, status, collected, url); }
+	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, data.reqId, status, collected, url); }
 	/** Will add fetched to search jobs when search class fetches a HIT list. */
 	searchFetched() { for (const unique of this.searchesUniques) { if (extPandaUI.pandaStats[unique].doSearching()) extPandaUI.pandaStats[unique].addFetched(); }}
 	/** Stop searching for all search jobs.
@@ -295,7 +295,7 @@ class MturkPanda extends MturkClass {
 		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
 		if (search) { if (['once','Daily Accept Limit','Fetched Limit','manual','noQual','blocked'].includes(whyStop)) { this.disableSearching(myId, hitData); }}
-		this.sendStatusToSearch(hitData, false);
+		this.sendStatusToSearch(hitData, false, (whyStop === 'once') ? true : false);
 	}
 	/** Sorts group ID and requester ID's into objects for search jobs so it makes it easier to find.
 	 * @param  {number} myId - myId.  @param  {string} groupId - Group ID  @param  {string} reqId	- Requester ID  @param  {string} search	- Search type */

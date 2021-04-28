@@ -13,6 +13,7 @@ class ModalOptionsClass {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
+      pandaUI.queueAlertUpdate();
       $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
       modal.closeModal();
     });

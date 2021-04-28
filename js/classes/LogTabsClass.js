@@ -241,7 +241,8 @@ class LogTabsClass {
     else if (gId === '') total = arrayCount(this.payRate, item => { return item; }, false).toFixed(2);
     return total;
   }
-	/** Checks if this error is allowed to show depending on user options and class name.
+  queueAlertUpdate() { this.tabs.updateMuteAlarm(); }
+ 	/** Checks if this error is allowed to show depending on user options and class name.
 	 * (0)-fatal = Errors that can crash or stall program.
    * (1)-error = Errors that shouldn't be happening but may not be fatal.
    * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.

@@ -177,6 +177,7 @@ html, body { height: 100%; }
 .pcm-wikiLinks a { color: burlywood; text-decoration: underline; }
 .pcm-versionNumber { text-align: center; color: chartreuse; margin-bottom:3px; }
 .pcm-versionNumber a { text-decoration: underline; color:beige; }
+.pcm-strikeThrough { text-decoration: line-through; }
 
 /* PandaUI Targeted Styles. */
 #pcm-pandaUI .pcm-menuRow1 { line-height: 0px; }
@@ -253,6 +254,8 @@ html, body { height: 100%; }
 .pcm-pandaCard.pcm-blocked { background-color: #575b6f; }
 .pcm-pandaCard.pcm-notValid { background-color: #575b6f; }
 .pcm-pandaCard.pcm-cardLimited { background-color: #ffa691; }
+.pcm-muteAlarm { margin-top: 2px; margin-right: 3px; height: 11px; }
+.pcm-muteAlarmLabel { font-size: 10px; padding-right:5px; padding-top: 1px; margin: 0; }
 
 /* SearchUI Targeted Styles. */
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }

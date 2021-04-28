@@ -31,7 +31,7 @@ class MturkHitSearch extends MturkClass {
 		this.fromSearch = new Set();
 		this.pausedPandaUI = false;
 		this.pausedSearchUI = false;
-		this.tempBlockGid = new Set(); this.blockedRids = null; this.blockedGids = null; this.customGidSkip = [];
+		this.tempBlockGid = new Set(); this.tempBlockRidGid = new Set(); this.blockedRids = null; this.blockedGids = null; this.customGidSkip = [];
     this.sort = 'updated_desc';     					// Sort by updated_desc by default.
     this.pandaDur = {'min':0, 'max':60} 		  // Limits for the panda duration in minutes.
 		this.loaded = false;											// Has data been loaded from database?
@@ -202,8 +202,8 @@ class MturkHitSearch extends MturkClass {
 	/** Removes all data from class to clear out memory as much as possible on exit. */
 	removeAll() {
 		this.searchesString = ''; this.livePandaUIStr = ''; this.liveSearchUIStr = ''; this.liveCounter = 0; this.pandaCollecting = [];
-		this.searchGStats = null; this.options = {}; this.data = {}; this.rules = {}; this.dbIds.pDbId = {}; this.termCounter = 0;
-		this.fromPanda.clear(); this.fromSearch.clear(); this.tempBlockGid.clear(); this.dbIds.values = {}; this.dbIds.unique = {}; this.loaded = false;
+		this.searchGStats = null; this.options = {}; this.data = {}; this.rules = {}; this.dbIds.pDbId = {}; this.termCounter = 0; this.fromPanda.clear();
+		this.fromSearch.clear(); this.tempBlockGid.clear(); this.tempBlockRidGid.clear(); this.dbIds.values = {}; this.dbIds.unique = {}; this.loaded = false;
 	}
 	/** Add database ID to a queue of data allowed in memory. Deletes data which isn't used much.
 	 * @param  {number} item - Database ID */
@@ -332,16 +332,25 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Gets the status from panda UI of this particular panda job.
 	 * @async								- To wait for data to be loaded from the database if needed.
-	 * @param  {string} gId	- The group ID  @param  {bool} status - Job Status  @param  {bool} [collected] - Collected Yet?  @param  {string} [url] - Panda URL */
-	async pandaStatus(gId, status, collected=false, url='') {
+	 * @param  {string} gId	- The Group ID  @param  {string} rId	- The Requester ID  @param  {bool} status - Job Status  @param  {bool} [collected] - Collected Yet?
+	 * @param  {string} [url] - Panda URL */
+	async pandaStatus(gId, rId, status, collected=false, url='') {
 		if (!extSearchUI) this.autoTaskIds = {};
 		else {
+			if (this.tempBlockRidGid.has(gId)) {
+				let ridDbId = this.theDbId('rid', rId), ridTrigger = this.triggers[ridDbId];
+				if (collected && ridDbId) {
+					ridTrigger.collected.add(gId);
+					this.setTempBlockGid(gId, false, true);
+					setTimeout( (dbId, gId) => { this.triggers[dbId].collected.delete(gId); }, 900000, ridDbId, gId );
+				} else if (!status) this.setTempBlockGid(gId, false, true);
+			}
 			let autoGid = this.autoGids.hasOwnProperty(gId), disabled = false;
 			let dbId = (this.isAll('gid', gId)) ? this.theDbId('gid', gId) : (autoGid) ? this.autoGids[gId] : null, trigger = this.triggers[dbId];
 			if (dbId) {
 				if (collected && !autoGid) {
 					let options = await this.theData(dbId, 'options'), unique = trigger.count;
-					if (options.once) { this.toggleTrigger(unique); disabled = true; if (extSearchUI) extSearchUI.statusMe(unique, trigger.status); }
+					if (options.once) { this.toggleTrigger(unique,_, false); disabled = true; if (extSearchUI) extSearchUI.statusMe(unique, trigger.status); }
 				} else if (collected && autoGid) {
 					let taskId = url.match(/\/projects\/.*\/tasks[\/?]([^\/?]*)/)[1]; buildSortObject(this.autoTaskIds, dbId, taskId); this.autoCollected.push(gId);
 				}
@@ -378,10 +387,11 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
 	 * @param  {string} gId - Blocked group ID  @param  {bool} [block] - Block This? */
-	setTempBlockGid(gId, block=null) {
-		let blocked = (this.tempBlockGid.has(gId));
+	setTempBlockGid(gId, block=null, rIdBlock=false) {
+		let blockVar = (rIdBlock) ? 'tempBlockRidGid' : 'tempBlockGid';
+		let blocked = (this[blockVar].has(gId));
 		if (block === null) block = !blocked;
-		if ((block && !blocked) || (!block && blocked)) { if (block) this.tempBlockGid.add(gId); else this.tempBlockGid.delete(gId); }
+		if ((block && !blocked) || (!block && blocked)) { if (block) this[blockVar].add(gId); else this[blockVar].delete(gId); }
 	}
 	/** Sets it so a group ID is skipped from a custom trigger.
 	 * @param {string} gId - Group ID  @param {bool} skip - Skip This? */
@@ -431,7 +441,7 @@ class MturkHitSearch extends MturkClass {
 	 * @return {bool}				- True if blocked and false if not. */
 	isIdsBlocked(gId, rId) {
 		this.checkBlocked();
-		if (this.tempBlockGid.has(gId) || this.blockedGids.includes(`|${gId}|`) || this.blockedRids.includes(`|${rId}|`)) return true; else return false;
+		if (this.tempBlockGid.has(gId) || this.tempBlockRidGid.has(gId) || this.blockedGids.includes(`|${gId}|`) || this.blockedRids.includes(`|${rId}|`)) return true; else return false;
 	}
 	/** Does this HIT have a pay rate in the triggers pay range rules?
 	 * @param  {object} rules - The rules object from a trigger.  @param  {number} pay   - The pay rate of the HIT to check.
@@ -466,12 +476,12 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Check all live triggers for this item.
 	 * @async 							 - To wait for The data from the database to be loaded if needed.
-	 * @param  {object} item - The HIT Item   @param {bool} [started] - Started to Collect?
+	 * @param  {object} item - The HIT Item   @param {bool} [started] - Started to Collect?  @param {string} [checkRid] - Rid to Search For
 	 * @return {bool}        - If collection has been started. */
-	async checkTriggers(item, started=true) {
+	async checkTriggers(item, started=true, checkRid=null) {
 		let liveStr = ((!this.pausedPandaUI) ? this.livePandaUIStr : '') + ((this.searchGStats.isSearchOn() && !this.pausedSearchUI) ? this.liveSearchUIStr : '');
 		if (this.isIdsBlocked(item.hit_set_id, item.requester_id)) return;
-		let gidFound = liveStr.includes(`[gid:${item.hit_set_id}]]`), ridFound = liveStr.includes(`[rid:${item.requester_id}]]`);
+		let gidFound = liveStr.includes(`[[gid:${item.hit_set_id}]]`), ridFound = liveStr.includes(`[[rid:${item.requester_id}]]`) || (checkRid === item.requester_id);
 		let titleDescription = item.title.toLowerCase() + ' , ' + item.description.toLowerCase(), termsFound = [];
 		if (this.searchGStats && this.searchGStats.isSearchOn() && Object.keys(this.liveTermData).length) {
 			for (const key of Object.keys(this.liveTermData)) {
@@ -492,10 +502,10 @@ class MturkHitSearch extends MturkClass {
 					if (triggered && !thisTrigger.tempDisabled && !this.pandaCollecting.includes(gId)) {
 						console.info(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
 						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime();
-						if ((key1 === 'rid' && !rules.blockGid.has(gId)) || key1 === 'gid') {
+						if ((key1 === 'rid' && !thisTrigger.collected.has(gId) && !rules.blockGid.has(gId)) || key1 === 'gid') {
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
+							if (options.once && key1 === 'rid') this.setTempBlockGid(gId, true, true);
 							this.sendToPanda(item, dbId, key1);
-							if (options.once && key1 === 'rid') this.setTempBlockGid(gId, true);
 							if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
 							doUpdate = true;
 						} else if (key1 === 'terms' && !this.customGidSkip.includes(gId)) {
@@ -611,7 +621,8 @@ class MturkHitSearch extends MturkClass {
 	fillInObjects(count, dbId, data, status, valueString, sUI) {
 		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
-		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false, 'auto': 0};
+		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false,
+			'auto': 0, 'collected': new Set()};
 		if (data.pDbId !== -1) this.dbIds.pDbId[data.pDbId] = dbId; this.dbIds.values[valueString] = dbId; this.dbIds.unique[count] = dbId;
 		this.addToQueueMem(dbId);
 		if (extSearchUI && sUI) {
@@ -743,7 +754,8 @@ class MturkHitSearch extends MturkClass {
 							if (!lookGid) {
 								let sortArray = Object.keys(rewardSort).sort((a,b) => b - a), requesterName = $(result.data).find('h1.m-b-md').text(), started = true;
 								if (requesterName !== '') myPanda.updateReqName(_, requesterName, this.triggers[dbId].pDbId);
-								for (const key of sortArray) { started = this.checkTriggers(rewardSort[key], started); }
+								sortArray.slice(0,4);
+								for (const key of sortArray) { started = this.checkTriggers(rewardSort[key], started, rewardSort[key].requester_id); }
 							} else if (foundData) this.sendToPanda(foundData, dbId, lookGid);
 						}
 						hitsData = null;
