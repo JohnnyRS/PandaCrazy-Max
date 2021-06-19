@@ -457,8 +457,8 @@ class MturkHitSearch extends MturkClass {
 	isTermCheck(rules, searchStr, orLogic=true) {
 		let good = (orLogic) ? false : true;
 		if (rules.include.size === 0) good = true;
-		else for (const term of rules.include) { if (searchStr.includes(term)) good = (orLogic) ? true : good && true; else if (!orLogic) good = false; }
-		if (rules.exclude.size > 0 && good) for (const term of rules.exclude) { if (searchStr.includes(term)) good = false; }
+		else for (const term of rules.include) { if (searchStr.includes(term.toLowerCase())) good = (orLogic) ? true : good && true; else if (!orLogic) good = false; }
+		if (rules.exclude.size > 0 && good) for (const term of rules.exclude) { if (searchStr.includes(term.toLowerCase())) good = false; }
 		return good;
 	}
 	/** Send the panda information to panda UI for collecting with a duration, fetches, once and go ham duration in data.
@@ -466,6 +466,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {object} item     - HIT item         @param  {number} dbId         - Database ID   @param  {object} [type] - Trigger type  @param  {object} [useOnce] - Only Once?
 	 * @param  {number} [useDur] - Duration to use  @param  {number} [useFetches] - Fetches Limit */
 	async sendToPanda(item, dbId, type='', useOnce=null, useDur=null, useFetches=null) {
+		myPanda.fetchFromSearch(item.hit_set_id, useOnce);
 		let info = this.triggers[dbId], options = await this.theData(dbId, 'options');
 		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.duration >= 0) ? options.duration : MyOptions.doSearch().defaultDur;
 		if (tempDur < 0 || tempDur > 3600000) { tempDur = options.duration = MyOptions.doSearch().defaultDur; this.updateToDB('options', options, false); }
@@ -503,14 +504,14 @@ class MturkHitSearch extends MturkClass {
 						console.info(`Found a trigger: ${this.data[dbId].name} - ${item.assignable_hits_count} - ${gId} - ${item.monetary_reward.amount_in_dollars}`);
 						this.data[dbId].numFound++; this.data[dbId].lastFound = new Date().getTime();
 						if ((key1 === 'rid' && !thisTrigger.collected.has(gId) && !rules.blockGid.has(gId)) || key1 === 'gid') {
+							this.sendToPanda(item, dbId, key1, options.once);
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
 							if (options.once && key1 === 'rid') this.setTempBlockGid(gId, true, true);
-							this.sendToPanda(item, dbId, key1);
 							if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
 							doUpdate = true;
 						} else if (key1 === 'terms' && !this.customGidSkip.includes(gId)) {
 							if (options.auto && this.autoAllow && thisTrigger.auto < options.autoLimit) {
-								thisTrigger.auto++; this.autoGids[gId] = dbId; auto = true; this.sendToPanda(item, dbId, key1, true, 10000); this.setTempBlockGid(gId, true);
+								this.sendToPanda(item, dbId, key1, true, 10000); thisTrigger.auto++; this.autoGids[gId] = dbId; auto = true; this.setTempBlockGid(gId, true);
 							}
 							if (extSearchUI) extSearchUI.triggeredHit(thisTrigger.count, this.data[dbId], item, term, started, auto);
 							this.setCustomGidSkip(gId, true); started = false; doUpdate = true;

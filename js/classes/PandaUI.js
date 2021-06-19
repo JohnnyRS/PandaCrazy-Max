@@ -346,13 +346,15 @@ class PandaUI {
 	 * @param  {number}	[seconds]	- Seconds         @param  {number}	[accepts] - Accepted        @param  {number} [searchType] - Search Type
 	 * @param  {string} [from]    - from which UI? */
 	async addPanda(d={}, opt={}, add=false, run=false, ext=false, tDur=0, tGoH=0, loaded=false, addDate=null, seconds=0, accepts=0, searchType='', from='fromPanda') {
-		let dated = (addDate) ? addDate : new Date().getTime(), gidFound = bgPanda.checkExisting(d.groupId, searchType, from);
+		let dated = (addDate) ? addDate : new Date().getTime(), gidFound = bgPanda.checkExisting(d.groupId, searchType);
 		if (ext && gidFound !== null && !opt.search) {
 			let info = bgPanda.options(gidFound);
 			if (!info.data) await bgPanda.getDbData(gidFound);
-			info.data.hitsAvailable = d.hitsAvailable; info.data.reqName = d.reqName; info.data.reqId = d.reqId;
-			info.data.title = d.title; info.data.description = d.description; info.data.price = d.price;
-			this.runThisPanda(gidFound, tDur, tGoH);
+			if (!info.data.once || (info.data.once && this.pandaStats[gidFound].accepted.value === 0)) {
+				info.data.hitsAvailable = d.hitsAvailable; info.data.reqName = d.reqName; info.data.reqId = d.reqId;
+				info.data.title = d.title; info.data.description = d.description; info.data.price = d.price;
+				this.runThisPanda(gidFound, tDur, tGoH);
+			}
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
 			let dbInfo = {...d, ...opt, 'dateAdded': dated, 'totalSeconds':seconds, 'totalAccepted':accepts}, newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};

@@ -24,6 +24,7 @@ class MturkPanda extends MturkClass {
 		this.queueAdds = {};										// Object of panda accepted HITs so it can limit number of accepts.
 		this.loggedOff = false;									// Are we logged off from MTURK?
 		this.resultsBack = true;								// Jobs using limits need to know when results come back from Mturk.
+		this.skipError = false;									// Used to skip displaying error when fetching twice for speed.
 		this.tempPaused = false;								// Used to pause timer if queue is maxed or a MTURK problem.
 		this.skippedDoNext = false;							// Used when checking skipped jobs in a recursive function.
 		this.authenticityToken = null;					// The authenticity token from MTURK so HITs can be returned.
@@ -256,6 +257,13 @@ class MturkPanda extends MturkClass {
 		else if (pGid) return this.pandaGroupIds[gid][0];
 		else return null;
 	}
+	/** Fetch panda url from a search trigger before trying to add a panda job to grab a HIT as fast as possible.
+	 * @param  {string} thisGroupID - Group ID to use for url. @param  {boolean} useOnce - Should it only accept one HIT? */
+	fetchFromSearch(thisGroupID, useOnce=null) {
+		const pandaUrl = this.createPandaUrl(thisGroupID), thisUrl = new UrlClass(pandaUrl + '?format=json');
+		const idFound = this.checkExisting(thisGroupID, 'gid');
+		if (idFound && !this.info[idFound].disabled && (!useOnce || (useOnce && extPandaUI.pandaStats[idFound].accepted.value === 0))) this.goFetch(thisUrl, -1, 0, idFound, thisGroupID);
+	}
 	/** Starts collecting the panda with the unique ID and send info to the panda timer.
 	 * @async												    - To wait for the data to be loaded for this job.
 	 * @param  {number} myId				    - Unique ID             @param  {bool} goHamStart - Go ham at start?  @param  {number} tempDuration - Temporary duration
@@ -402,6 +410,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId - Unique ID  @param  {number} info - HIT Info Object  @param  {number} data - HIT Data Object
 	 * @return {bool} 			 - True if there is a number HIT or total queue restriction. */
 	checkQueueLimit(myId, info, data) {
+		if (myId === null) return false;
 		if (!info.skipped) {
 			let hits = extPandaUI.totalResults(data.groupId), skipIt='';
 			if (data.limitNumQueue > 0 && data.limitNumQueue <= hits) skipIt='HIT queue limit.';
@@ -477,50 +486,56 @@ class MturkPanda extends MturkClass {
 	}
 	/** Fetches the url for this panda after timer class tells it to do so and handles MTURK results.
 	 * @async									 - To wait for the fetch to get back the result from url.
-	 * @param  {object} objUrl - Url object  @param  {number} queueUnique - Unique number  @param  {number} elapsed - Elapsed Time @param  {number} myId - The unique ID */
-	async goFetch(objUrl, queueUnique, elapsed, myId) {
+	 * @param  {object} objUrl - Url object  @param  {number} queueUnique - Unique number  @param  {number} elapsed - Elapsed Time @param  {number} myId - The unique ID
+	 * @param  {string} gId    - Group Id Number */
+	async goFetch(objUrl, queueUnique, elapsed, myId, gId=null) {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
-		let resultsBack = true, info = this.info[myId];
-		if ((info.data.once || info.data.limitTotalQueue>0 || info.data.limitNumQueue > 0) && !this.resultsBack) resultsBack = false;
+		let resultsBack = true, info = this.info[myId] || {};
+		if (myId !== null && info && !info.data) info.data = await this.dataObj(myId);
+		if (myId !== null && (info.data.once || info.data.limitTotalQueue > 0 || info.data.limitNumQueue > 0) && !this.resultsBack) resultsBack = false;
 		if (!this.checkQueueLimit(myId, info, info.data) && resultsBack) {
+			if (gId !== null) this.skipError = true;
 			this.resultsBack = false;
 			if (this.dLog(4)) console.debug(`%cGoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
 			let result = await super.goFetch(objUrl);
 			if (!result) {
 				if (this.dError(1)) { console.error('Result from panda fetch was a null.', JSON.stringify(objUrl)); }
-			} else if (extPandaUI !== null && info.data !== null) {
+			} else if (extPandaUI !== null && (info.data !== null || myId === null)) {
+				if (gId !== null) { myId = this.checkExisting(gId, 'gid'); if (myId !== null) { info = this.info[myId]; info.data = await this.dataObj(myId); } }
 				let dateNow = new Date();
 				info.lastElapsed = (info.lastTime) ? dateNow - info.lastTime : 0;
 				info.lastTime = dateNow;
-				extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
-				extPandaUI.cards.highlightEffect_gid(myId);
-				if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
-					this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
-				} else {
-					let stopped = this.checkIfLimited(myId, false, info.data);
-					if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
-					else if (result.mode === 'pre') { extPandaUI.pandaGStats.addPandaPRE(); }
-					else if (result.mode === 'mturkLimit') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.mturkLimit(); }
-					else if (result.mode === 'maxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
-					else if (result.mode === 'noMoreHits') { extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
-					else if (result.mode === 'noQual' && stopped === null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', 'pcm-noQual'); }
-					else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', 'pcm-blocked'); }
-					else if (result.mode === 'notValid') {
-						console.info('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', 'pcm-notValid');
-						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.mode === 'unknown') { console.info('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors(); }
-					else if (result.mode === 'cookies.large') {
-						console.info('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
-						extPandaUI.pandaGStats.addTotalPandaErrors();
-					} else if (result.type === 'ok.text') { extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert(); console.info('captcha found'); globalOpt.resetCaptcha(); }
+				if (myId !== null) {
+					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
+					extPandaUI.cards.highlightEffect_gid(myId);
+					if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
+						this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
+					} else {
+						let stopped = this.checkIfLimited(myId, false, info.data);
+						if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
+						else if (result.mode === 'pre') { extPandaUI.pandaGStats.addPandaPRE(); }
+						else if (result.mode === 'mturkLimit') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.mturkLimit(); }
+						else if (result.mode === 'maxedOut') { this.tempPaused = true; pandaTimer.paused = true; extPandaUI.soundAlarm('Full'); }
+						else if (result.mode === 'noMoreHits') { extPandaUI.pandaGStats.addTotalNoMore(); extPandaUI.pandaStats[myId].addNoMore(); }
+						else if (result.mode === 'noQual' && stopped === null) { console.info('Not qualified'); extPandaUI.cards.stopItNow(myId, true, 'noQual', 'pcm-noQual'); }
+						else if (result.mode === 'blocked') { console.info('You are blocked'); extPandaUI.cards.stopItNow(myId, true, 'blocked', 'pcm-blocked'); }
+						else if (result.mode === 'notValid') {
+							console.info('Group ID not found'); extPandaUI.cards.stopItNow(myId, true, 'notValid', 'pcm-notValid');
+							extPandaUI.pandaGStats.addTotalPandaErrors();
+						} else if (result.mode === 'unknown') { console.info('unknown message: ',result.data.message); extPandaUI.pandaGStats.addTotalPandaErrors(); }
+						else if (result.mode === 'cookies.large') {
+							console.info('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
+							extPandaUI.pandaGStats.addTotalPandaErrors();
+						} else if (result.type === 'ok.text') { extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert(); console.info('captcha found'); globalOpt.resetCaptcha(); }
+					}
+					extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 				}
-				extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 			}
-			this.resultsBack = true; result = null;
-		} else if (!resultsBack) {
+			this.resultsBack = true; result = null; this.skipError = false;
+		} else if (!this.skipError && !resultsBack) {
 			if (this.dLog(2)) console.debug(`%cNo results from last fetch for job only accepting one HIT.`,CONSOLE_WARN);
 		}
-}
+	}
 	/** Checks if this error is allowed to show depending on user options and class name.
 	 * (0)-fatal = Errors that can crash or stall program.
    * (1)-error = Errors that shouldn't be happening but may not be fatal.

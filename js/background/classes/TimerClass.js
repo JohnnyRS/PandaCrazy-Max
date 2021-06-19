@@ -195,7 +195,7 @@ class TimerClass {
 	 * If ham time is higher than last time elapsed then take the difference and use it to complete the time needed.
 	 * @param  {number} queueUnique - Unique number for job to go ham.  @param  {number} [dGoHam] - Temporary duration to go ham. */
 	goHam(queueUnique, dGoHam=0) {
-		if (this.goingHam === null) { // If it's already going ham then do nothing.
+		if (this.goingHam === null && this.queueObject[queueUnique]) { // If it's already going ham then do nothing.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is now going ham for ${queueUnique}: ${this.hamTimer} for ${dGoHam}`);
 			this.queueObject[queueUnique].dGoHam = dGoHam;
 			this.goingHam = queueUnique; this.adjustTimer(this.hamTimer);
