@@ -808,7 +808,7 @@ class MturkHitSearch extends MturkClass {
 					if (this.triggers[dbId].setName === 'fromSearch' || !this.triggers[dbId].reqSearch) {
 						searchTimer.deleteFromQueue(queueUnique); this.triggers[dbId].status = 'searching';
 						await this.setDisabled(type, value, false, sUI);
-						if (!lookGid && !this.timerUnique) this.startSearching(dbId);
+						if (!lookGid && !this.timerUnique && this.searchGStats.isSearchOn()) this.startSearching(dbId);
 					}
 				}
 			}
