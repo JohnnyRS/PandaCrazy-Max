@@ -10,7 +10,7 @@ chrome.runtime.getBackgroundPage( async (backgroundPage) => {
         modal.closeModal();
       }, true, true);
     } else {
-      modal.showDialogModal('700px', 'Please Close the Panda Crazy Max Page!', 'You must close the Panda Crazy Max page first before wiping all the data.', null , false, false);
+      modal.showDialogModal('700px', 'Please Close the Panda Crazy Max Page!', 'You must close the Panda Crazy Max page first before wiping all the data.', null, false, false);
     }
   });
 });

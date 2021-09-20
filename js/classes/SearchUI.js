@@ -106,6 +106,7 @@ class SearchUI {
 		this.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
     let [, err] = await this.tabs.prepare();
     if (!err) {
+			let approvalRateDisplay = (globalOpt.doSearch().displayApproval) ? ' display:table-cell;' : ' display:none;';
 			this.ridTab = await this.tabs.addTab('Requester ID', true);
 			this.gidTab = await this.tabs.addTab('Group ID');
 			this.customTab = await this.tabs.addTab('Custom Search');
@@ -116,7 +117,7 @@ class SearchUI {
 			this.triggeredContent = $(`<div class='pcm-triggeredHits card-deck'></div>`).appendTo(`#${this.triggeredTab.tabContent}`);
 			this.triggeredContent.hover( (e) => { this.hitsTabInactive = false; }, (e) => { this.hitsTabInactive = true; this.displayTriggeredHits(); } );
 			$(`<table class='table table-dark table-sm table-moreCondensed pcm-foundHitsTable table-bordered w-100'></table>`)
-				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td>Title</td><td style='width:45px; max-width:45px;'>Pays</td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
+				.append(`<thead><tr><td style='width:25px; max-width:25px;'></td><td style='width:120px; max-width:120px;'>Requester Name</td><td class='pcm-approvalRateCol' style='width:32px; max-width:32px;${approvalRateDisplay}'>Rate</td></td><td>Title</td><td style='width:45px; max-width:45px;'>Pays</td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td><td style='width:16px; max-width:16px;'></td></tr></thead>`).append($(`<tbody></tbody>`)).appendTo(this.triggeredContent);
 		}
 	}
 	/** Informs the searchUI that the theme has changed on pandaUI so needs to change the theme here too. */
@@ -268,13 +269,16 @@ class SearchUI {
 			let found = this.triggeredHits.pop(), hitData = found.hit, df = document.createDocumentFragment();
 			let markedTitle = (term) ? markInPlace(term, hitData.title) : hitData.title, priceFloat = hitData.monetary_reward.amount_in_dollars.toFixed(2);
 			if (term) markedTitle = `<small>[${term}]</small> ` + markedTitle;
-			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':markedTitle, 'price':`$${priceFloat}`};
-			let rInfo = hitData.requesterInfo, unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
+			let rInfo = hitData.requesterInfo, cellRate = rInfo.taskApprovalRate.match(/\d+/);
+			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':markedTitle, 'price':`$${priceFloat}`, 'approval':(cellRate) ? cellRate + '%' : '--'};
+			let unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
 			let trClass = (auto) ? 'pcm-autoHit' : 'pcm-triggeredhit';
+			let trRate = (globalOpt.doSearch().displayApproval) ? 'table-cell' : 'none;';
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm-tvLink', 'tooltip':`Turkerview Requester Link`},
 				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`, 'notHelper':true},
-				{'type':'keyValue', 'key':'title', 'maxWidth':'460px', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
+				{'type':'keyValue', 'key':'approval', 'addTdClass':' pcm-approvalRateCol', 'maxWidth':'25px', 'tooltip':`See`, 'styleDisplay':trRate},
+				{'type':'keyValue', 'key':'title', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
 				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount HIT pays.`},
 				{'type':'button', 'btnLabel':'P', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
 				{'type':'button', 'btnLabel':'O', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customOnce', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},

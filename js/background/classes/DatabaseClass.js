@@ -215,7 +215,7 @@ class DatabaseClass {
         } else {
           let request = (key !== null && !allKey) ? using.get(key) : (count) ? using.count(allKey) : using.getAll(allKey);
           request.onsuccess = () => { resolve(request.result); };
-          request.onabort = () => { reject(new Error(`Get from: ${storeName} error: ${request.error.message}`)); };
+          request.onabort = () => { reject(`Get from: ${storeName} error: ${request.error.message}`); };
         }
       } else {
         for (const thisKey of keys) { filledData[thisKey] = null; store.get(thisKey).onsuccess = e => { filledData[thisKey] = e.target.result; } }
@@ -237,11 +237,11 @@ class DatabaseClass {
         let count = store.count(key); count.onsuccess = () => { // Get number of items with Key
           if (count.result > 0 && key !== null) { const request = store.delete(key); request.onsuccess = () => { completed = true; } }
           else if (key === null) { store.clear(); completed = true; }
-          else { error = `Key: [${key}] not found in ${storeName}`; } // Error if key not found.
+          else { error = `KEY: [${key}] not found in ${storeName}`; } // Error if key not found.
         }
       }
-      tx.onabort = () => { reject(new Error(`Del from: ${storeName} error: ${tx.error.message}`)); }
-      tx.oncomplete = () => { if (completed) resolve(key); else reject(new Error(`Del from: ${storeName} error: ${error}`)); }
+      tx.onabort = () => { reject(`DEL from: ${storeName} error: ${tx.error.message}`); }
+      tx.oncomplete = () => { if (completed) resolve(key); else reject(`Del from: ${storeName} error: ${error}`); }
     });
   }
   /** Clear the data from a store name in this database.

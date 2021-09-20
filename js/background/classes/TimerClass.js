@@ -20,7 +20,7 @@ class TimerClass {
 		this.queue = [];								// The main queue holding all jobs to cycle through.
 		this.queueObject = {};					// All the jobs data information in an object.
 		this.queueSkipped = [];					// An array with all the jobs being skipped over.
-		this.unique = 1;								// A unique value for job in the timer queue.
+		this.unique = 1;								// A unique value for job in the timer queue. Starts at 1.
 		this._running = false;					// Is this timer running or not?
 		this._goingHam = null;					// The queue unique number that is going ham right now.
 		this._paused = false;						// Is this timer paused?

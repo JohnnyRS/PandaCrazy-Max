@@ -16,7 +16,7 @@ class HistoryClass {
 	maintenance() {
 		let beforeDate = new Date(), dayLimit = MyOptions.doGeneral().historyDays; beforeDate.setDate( beforeDate.getDate() - dayLimit );
 		let keyRange = IDBKeyRange.bound(['searchResults',0], ['searchResults',beforeDate.getTime()]);
-		MYDB.deleteFromDB('history',_, keyRange, 'searchDate').then( null, (rejected) => console.error(rejected));
+		MYDB.deleteFromDB('history',_, keyRange, 'searchDate').then( null, (rejected) => console.log(rejected));
 	}
 	/** Updates the database with new data.
 	 * @async											 - To wait for the database to be updated.

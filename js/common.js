@@ -225,7 +225,7 @@ function markInPlace(findThis, fromHere) {
  * @param  {string} [addClass]     - Class to be Added  @param  {string} [addId]      - ID to be added  @param  {object} [theData]  - Data to Save
  * @param  {object} [theData]      - Second Data to Save */
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null, theData=null, data2=null) {
-  let row = null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '';
+  let row = null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '', styleAdd = '';
   if (horizontal) { row = $(`<tr${trClass}${trId}></tr>`).hide(); if (theData) row.data('theData', theData); if (data2) row.data('data2', data2); }
   for (const element of thisArrayObject) {
     let useObject = (element.key1) ? thisObject[element.key1] : thisObject;
@@ -243,10 +243,11 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
     if (element.minMax) { element.min = element.minMax.min; element.max = element.minMax.max; }
     if (table && !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
+    if ('styleDisplay' in element) styleAdd = ` display:${element.styleDisplay};`; else styleAdd = '';
     const pre = (element.pre) ? element.pre : '', addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '', tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
-    const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}'`, tdClass = (element.addTdClass) ? ` ${element.addTdClass}` : '';
+    const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}${styleAdd}'`, tdClass = (element.addTdClass) ? ` ${element.addTdClass}` : '';
     const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
     const addTip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData${(element.notHelper) ? '' : ' pcm-tooltipHelper'}`: '';

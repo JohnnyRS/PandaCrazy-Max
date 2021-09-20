@@ -71,6 +71,11 @@ class MturkPanda extends MturkClass {
 	/** Sets the status of the searchUI on PandaUI so it can display searchUI move buttons.
 	 * @param {bool} status - SearchUI Connected? */
 	searchUIConnect(status=true) { if (extPandaUI) extPandaUI.searchUIConnect(status); }
+	/** Toggle the ReqSearch value of a panda job trigger so it does a requester search.
+	 * @async 							 - Because toggleReqSearch from search returns a promise so this must return a promise also.
+	 * @param  {number} myId - The unique ID for a panda job.
+	 * @return {number}			 - Was panda job trigger found and toggled? */
+	async toggleReqSearch(myId) { return mySearch.toggleReqSearch(this.info[myId].dbId); }
 	/** Tests if the database can be opened and has all the storage created.
 	 * @async 				- To wait for the results of the database testing of the storage in the database.
 	 * @return {bool} - True if database is all ready. */
@@ -266,11 +271,11 @@ class MturkPanda extends MturkClass {
 	}
 	/** Starts collecting the panda with the unique ID and send info to the panda timer.
 	 * @async												    - To wait for the data to be loaded for this job.
-	 * @param  {number} myId				    - Unique ID             @param  {bool} goHamStart - Go ham at start?  @param  {number} tempDuration - Temporary duration
-	 * @param  {number} [goHamDuration]	- Temp go ham duration
+	 * @param  {number} myId				    - Unique ID             @param  {bool} goHamStart - Go ham at start?  @param  {number} [tempDuration] - Temporary duration
+	 * @param  {number} [goHamDuration]	- Temp go ham duration  @param  {number} [tF]     - Temporary Fetches
 	 * @return {bool}									  - True if collection has started. */
-	async startCollecting(myId, goHamStart, tempDuration, goHamDuration) {
-		let hitInfo = this.info[myId], data = await this.dataObj(myId);
+	async startCollecting(myId, goHamStart, tempDuration=0, goHamDuration=0, tF=0) {
+		let hitInfo = this.info[myId], data = await this.dataObj(myId); hitInfo.tempFetches = tF; hitInfo.tFCounter = 0;
 		let stopReason = this.checkIfLimited(myId, false, data), disabled = (hitInfo.disabled) ? hitInfo.disabled : false;
 		if (disabled) stopReason = 'Job is disabled.';
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
@@ -280,9 +285,9 @@ class MturkPanda extends MturkClass {
 				const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 				if (extPandaUI) {
 					let accepted = extPandaUI.pandaStats[myId].accepted.value;
-					let searching = (this.info[myId].search!==null && ((data.once && accepted === 0) || !data.once));
+					let searching = (this.info[myId].search !== null && ((data.once && accepted === 0) || !data.once));
 					await extPandaUI.stopCollecting(myId, null, false, searching); // Do after when timer is removed from queue.
-					if (searching) this.doSearching(myId, data, tempDuration, goHamDuration);
+					if (searching) this.doSearching(myId, data);
 					else this.info[myId].data = null;
 				}
 			}, goHamStart, data.duration, tempDuration, goHamDuration, this.info[myId].skipped);
@@ -300,7 +305,7 @@ class MturkPanda extends MturkClass {
 	/** Stops collecting this panda with this unique ID.
 	 * @param  {number} myId - Unique ID  @param  {number} hitData	- Data Object  @param  {string} [whyStop] - Reason why collecting is stopping. */
 	stopCollecting(myId, hitData, whyStop=null) {
-		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search;
+		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search; this.info[myId].tempFetches = 0; this.info[myId].tFCounter = 0;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
 		if (search) { if (['once','Daily Accept Limit','Fetched Limit','manual','noQual','blocked'].includes(whyStop)) { this.disableSearching(myId, hitData); }}
 		this.sendStatusToSearch(hitData, false, (whyStop === 'once') ? true : false);
@@ -320,7 +325,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} [run]  - Run it now	 @param  {number} [sDur]    - Duration     @param  {number} [sGD]   - Goham duration
 	 * @param  {bool} [sUI]  - SearchUI?   @param  {bool} [fragments] - Should searchUI append fragments? */
 	async sendToSearch(myId, dbData, rules={}, history={}, run=false, sDur=0, sGD=0, sUI=false, fragments=false) {
-		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':(dbData.disabled) ? 'disabled' : 'searching', 'pandaId':myId, 'pDbId':dbData.id};
+		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':'disabled', 'pandaId':myId, 'pDbId':dbData.id};
 		let tempOptions = {'duration':sDur, 'once':dbData.once, 'limitNumQueue':dbData.limitNumQueue, 'limitTotalQueue':dbData.limitTotalQueue, 'limitFetches':dbData.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0, 'auto': false, 'autoLimit': 2};
 		if (run) await mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
 		else mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
@@ -337,18 +342,18 @@ class MturkPanda extends MturkClass {
 		this.sortUniqueIds(myId, dbData.groupId, dbData.reqId, dbData.search);
 		if (!dbData.hasOwnProperty('id')) await this.addToDB(dbData); // Add to database if it has no database key.
 		this.dbIds[dbData.id] = myId;
-		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbData.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbData, 'lastTime':null, 'lastElapsed':0, 'search':dbData.search, 'disabled':dbData.disabled};
+		this.info[myId] = {'queueUnique':null, 'autoAdded':autoAdded, 'dbId':dbData.id, 'skipped':false, 'autoTGoHam':'off', 'data':dbData, 'lastTime':null, 'lastElapsed':0, 'search':dbData.search, 'disabled':dbData.disabled, 'tempFetches':dbData.tF, 'tFCounter':0};
 		const pandaUrl = this.createPandaUrl(dbData.groupId), reqUrl = this.createRequesterUrl(dbData.reqId);
 		if (dbData.search) await this.sendToSearch(myId, dbData, rules, history, passInfo.run, sDur, sGD);
 		this.pandaUrls[myId] = {'preview': this.createPreviewUrl(dbData.groupId), 'accept': pandaUrl, 'reqUrl': reqUrl, 'urlObj': new UrlClass(pandaUrl + '?format=json')};
 		myHistory.fillInHistory({[dbData.groupId]:dbData}, 'pandas', loaded);
-		if (extPandaUI && !loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded);
+		if (extPandaUI && !loaded) extPandaUI.addPandaToUI(myId, this.info[myId], passInfo, loaded,_, dbData.tF);
 	}
 	/** Creates a search trigger from a panda job.
 	 * @async								- To wait for sending to Search UI
 	 * @param {number} myId - Unique ID  @param {string} type - Search Type */
 	async createSearchTrigger(myId, type) {
-		let theInfo = this.info[myId];	if (!theInfo) return false;
+		let theInfo = this.info[myId]; if (!theInfo) return false;
 		let copiedData = Object.assign({}, theInfo.data); copiedData.search = type;
 		await this.sendToSearch(myId, copiedData,_,_, true,_,_, true, true);
 	}
@@ -357,7 +362,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} copyId - Unique ID  @param {string} search - Search Type
 	 * @return {bool}					 - Results of copying to a search job. */
 	async copyToSearchJob(copyId, search) {
-		let theInfo = this.info[copyId];if (!theInfo) return false;
+		let theInfo = this.info[copyId]; if (!theInfo) return false;
 		let copiedData = Object.assign({}, theInfo.data); copiedData.dateAdded = new Date().getTime(); copiedData.search = search; delete copiedData.id;
 		if (extPandaUI) await extPandaUI.addPandaDB(copiedData, false);
 		return true;
@@ -448,12 +453,13 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId   - Unique ID  @param  {bool} accepted - Was a HIT accepted?  @param  {object} data - Data Object
 	 * @return {string}				 - Reason for stopping as a string or null if not stopped. */
 	checkIfLimited(myId, accepted, data) {
-		let stopIt=null, stats = extPandaUI.pandaStats[myId];
+		let stopIt=null, stats = extPandaUI.pandaStats[myId], thisInfo = this.info[myId];
 		if (accepted && data.once) stopIt = 'once'; // Panda is limited to collecting only once so stop it.
-		else if (accepted && this.info[myId].autoAdded && data.hitsAvailable === 1) stopIt = 'One HIT Available';
+		else if (accepted && thisInfo.autoAdded && data.hitsAvailable === 1) stopIt = 'One HIT Available';
 		else if (data.acceptLimit > 0 && data.acceptLimit <= stats.getDailyAccepted()) stopIt = 'Daily Accept Limit';
 		else if (data.limitFetches > 0 && data.limitFetches <= stats.getFetchedSession()) stopIt = 'Fetched Limit';
-		else { if (this.info[myId].skipped) this.checkSkipped(myId); else this.checkQueueLimit(myId, this.info[myId], data); }
+		else if (thisInfo.tempFetches && thisInfo.tempFetches > 0 && thisInfo.tempFetches <= thisInfo.tFCounter) { stopIt = 'Fetched Limit'; thisInfo.tFCounter = 0; }
+		else { if (thisInfo.skipped) this.checkSkipped(myId); else this.checkQueueLimit(myId, this.info[myId], data); }
 		if (stopIt !== null) { extPandaUI.cards.stopItNow(myId, false, stopIt); extPandaUI.cards.collectTipChange(myId, `<br><strong>Stopped for ${stopIt}</strong>`, true); }
 		return stopIt;
 	}
@@ -508,8 +514,12 @@ class MturkPanda extends MturkClass {
 				if (myId !== null) {
 					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 					extPandaUI.cards.highlightEffect_gid(myId);
-					if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
-						this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
+					if (info.tempFetches > 0) info.tFCounter++;
+					if (result.type === 'ok.text') {
+						if (result.url.includes('assignment_id=')) {
+							this.sendStatusToSearch(info.data, true, true, result.url);
+							extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
+						} else { globalOpt.resetCaptcha(); extPandaUI.captchaFound(objUrl.url); }
 					} else {
 						let stopped = this.checkIfLimited(myId, false, info.data);
 						if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
@@ -526,7 +536,7 @@ class MturkPanda extends MturkClass {
 						else if (result.mode === 'cookies.large') {
 							console.info('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
 							extPandaUI.pandaGStats.addTotalPandaErrors();
-						} else if (result.type === 'ok.text') { extPandaUI.soundAlarm('Captcha'); extPandaUI.captchaAlert(); console.info('captcha found'); globalOpt.resetCaptcha(); }
+						}
 					}
 					extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 				}

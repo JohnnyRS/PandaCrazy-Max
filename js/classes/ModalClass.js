@@ -14,6 +14,7 @@ class ModalClass {
     this.classNoButton = 'pcm-modalNo';           // The class name for the no button of modal.
     this.classCancelButton = 'pcm-modalCancel';   // The class name for the cancel button of modal.
     this.modalLoggedOff = 0;                      // A counter for how many logged off modals are opened.
+    this.modalCaptcha = 0;                        // A counter for how many Captcha Found modals are opened.
     this.popup = null;                            // A window object of the popup window opened from a modal.
     this.tempObject =  [];                        // A place to keep data changes before the save button clicked.
   }
@@ -103,6 +104,26 @@ class ModalClass {
         e.preventDefault();
         this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
         setTimeout(this.isPopup.bind(this), 500); // check if popup is null continuously
+      });
+    }
+  }
+  /** Shows a modal informing user that a captcha was found and displays a link for user to clear the captcha.
+   * @param  {function} [afterClose] - Function to call after close animation is completed. */
+   showCaptchaModal(afterClose=null, url='') {
+    if (this.modalCaptcha === 0) {
+      this.modalCaptcha++;
+      let theUrl = (url) ? url : 'https://worker.mturk.com/';
+      const idName = this.prepareModal(null, '600px', 'pcm-captchaModal', 'pcm-warning', `Program Paused!`, `<h3>Found a possible Captcha!</h3><h4>Please clear it by clicking link below.</h4><h5><a href='${theUrl}' target='_blank' title='${theUrl}' class='pcm-mturkLink'>${theUrl}</a></h5>`, 'pcm-warning', 'pcm-warning');
+      this.showModal(null, null, () => {
+        this.modalCaptcha = 0;
+        if (afterClose) afterClose();
+        else if (this && this.modals.length < 2) modal = null;
+      });
+      $(`#${idName} .pcm-mturkLink`).click( {'popup':this.popup, 'idName':idName}, e => {
+        e.preventDefault();
+        this.popup = window.open( $(e.target).attr('href'), '_blank', 'width=1000,height=800,scrollbars=yes,toolbar=yes,menubar=yes,location=yes' );
+        let checkPopup = () => { if (!this.popup.closed) { setTimeout( () => { checkPopup(); }, 500); } else modal.closeModal(); }
+        checkPopup(); // check if popup is still opened until it is closed.
       });
     }
   }

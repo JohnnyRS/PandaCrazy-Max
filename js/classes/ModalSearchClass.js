@@ -31,7 +31,7 @@ class ModalSearchClass {
       let groupVal = $('#pcm-formAddGroupID').val(), trigName = $('#pcm-formTriggerName').val(), minPay = parseFloat($('#pcm-formMinPay').val());
       if (doCustom && groupVal.length <= 3) wrongInput(modalBody, 'All custom Triggers MUST have a word or phrase to search for with more than 3 characters!', $(`label[for='pcm-formAddGroupID']`));
       else if (doCustom && trigName.length <= 3) wrongInput(modalBody, 'You must fill in a Unique Trigger Name with more than 3 letters!', $(`label[for='pcm-formTriggerName']`));
-      else if (doCustom && (isNaN(minPay) || minPay === 0)) wrongInput(modalBody, 'All custom Triggers need to have a minimum pay rate at $0.01 or above!', $(`label[for='pcm-formMinPay']`));
+      else if (doCustom && (isNaN(minPay))) wrongInput(modalBody, 'All custom Triggers need to have a minimum pay filled in with numbers and a decimal only!', $(`label[for='pcm-formMinPay']`));
       else if ((doCustom) || testGidRid(groupVal)) {
         let groupId = null, reqId = null;
         if (!doCustom) { if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal); else if (groupVal.match(/^[^Aa]/)) groupId = groupVal; else { reqId = groupVal;} }
@@ -49,7 +49,7 @@ class ModalSearchClass {
     }
     if (!modal) modal = new ModalClass();
     let df = document.createDocumentFragment(), input1Text = '* Enter info for new Job: ', searchOpt = globalOpt.doSearch();
-    let data = {'reqName':'', 'hitTitle':'', 'price':0, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':(doCustom) ? searchOpt.defaultCustDur : searchOpt.defaultDur, 'limitFetches':(doCustom) ? searchOpt.defaultCustFetches : searchOpt.defaultFetches, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0};
+    let data = {'reqName':'', 'hitTitle':'', 'price':0.01, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':(doCustom) ? searchOpt.defaultCustDur : searchOpt.defaultDur, 'limitFetches':(doCustom) ? searchOpt.defaultCustFetches : searchOpt.defaultFetches, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0};
     let idName = modal.prepareModal(null, '920px', 'pcm-addTriggersModal', 'modal-lg', 'Add new Search Trigger', '<h4>Enter New Search Trigger Information.</h4>', 'pcm-searchModal', '', 'visible btn-sm', 'Add new Search Trigger', async () => { await checkTrigger(doCustom, idName, data); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     modal.showModal(null, () => {
       let example1Text = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', example2Text = 'example: Mechanical Turk receipts';
@@ -59,7 +59,7 @@ class ModalSearchClass {
       } else $(`<div><div class='pcm-checkStatus pcm-inputError'></div><div class='pcm-modalInfo'>Enter a Group ID, Requester ID, Preview URL or accept URL.</div></div>`).appendTo(df);
       createInput(df, ' pcm-inputDiv-url', 'pcm-formAddGroupID', input1Text, example1Text,_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Group ID, Requester ID, Preview URL or Accept URL. This is a required input.');
       createInput(df, ' pcm-inputDiv-name', 'pcm-formTriggerName', `${(doCustom) ? '* ' : ''}Name of the Trigger: `, example2Text,_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Enter in a unique name of the trigger. This is a required input.');
-      if (doCustom) createInput(df, ' pcm-inputDiv-pay', 'pcm-formMinPay', '* Pay Min Amount: ', 'example: 1.00',_, ' pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Enter in the minimum pay amount for this trigger. This is a required input.');
+      if (doCustom) createInput(df, ' pcm-inputDiv-pay', 'pcm-formMinPay', '* Pay Min Amount: ', 'example: 1.00',_, ' pcm-tooltipData pcm-tooltipHelper', data.price,_,_,_, 'Enter in the minimum pay amount for this trigger. This is a required input. Default is at 0.01 and can be set at 0.00 but Search Main Option for minReward must be set to 0.00 also for it to work.');
       createCheckBox(df, 'Enabled: ', 'pcm-triggerEnabled', '', true,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Set trigger as enabled after it is added.');
       createCheckBox(df, 'Collect Only One HIT', 'pcm-onlyOnce', '',_,_,_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Any Panda jobs created will only accept one HIT and then stop.');
       $(`<div class='pcm-horizontalRow'></div>`).appendTo(df);
@@ -154,7 +154,7 @@ class ModalSearchClass {
   /** Appends the option editing info for a search trigger or search job.
    * @param {object} appendHere - Jquery Object  @param {object} changes - Trigger Data Object  @param {bool} [searchUI] - SearchUI? */
   triggerOptions(appendHere, changes, searchUI=true) {
-    $(`<div class='pcm-detailsHeading unSelectable'>Options: Click on the details or buttons to edit.</div>`).appendTo(appendHere);
+    $(`<div class='pcm-detailsHeading unSelectable'>Options: Click on the details or buttons to edit.</div><div class='pcm-editTrigWarning'></div>`).appendTo(appendHere);
     let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).appendTo(appendHere), prependOpt = [], customOpt = [];
     let bGStr = this.rulesToStr(changes.rules.blockGid), eTStr = this.rulesToStr(changes.rules.exclude), iTStr = this.rulesToStr(changes.rules.include);
     if (searchUI) {
@@ -215,16 +215,22 @@ class ModalSearchClass {
    * @param {number} unique - Trigger Unique Number  @param {function} [afterClose] - After Close Function  */
   async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass();
-    let dbId = bgSearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId);
+    let dbId = bgSearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
     let idName = modal.prepareModal(sChanges, '700px', 'pcm-triggerDetailsModal', 'modal-lg', 'Details for a Trigger', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
       $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError');
+      if (!changes.options.autoGoHam) changes.options.tempGoHam = 0; else if (changes.options.tempGoHam === 0) changes.options.tempGoHam = globalOpt.doSearch().defaultHamDur;
+      changes.options.goHamDuration = changes.options.tempGoHam;
       if (changes.details.type === 'custom' && changes.rules.include.size === 0) {
         $(`#${idName} .pcm-checkStatus.pcm-inputError`).html('Custom searches MUST have 1 Accepted word or phrase!');
         $(`#pcm-tdLabel-acceptWords1, #pcm-tdLabel-acceptWords2`).addClass('pcm-optionLabelError');
       } else {
-        await bgSearch.optionsChanged(changes, changes.searchDbId);
-        $(`#pcm-triggerName-${unique}`).html(changes.details.name);
-        modal.closeModal();
+        let closeDetailsModal = async () => {
+          await bgSearch.optionsChanged(changes, changes.searchDbId);
+          $(`#pcm-triggerName-${unique}`).html(changes.details.name);
+          modal.closeModal();
+        }
+        if (changes.rules.minPay === 0.00 && (oldMinPay !== changes.rules.minPay) && globalOpt.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeDetailsModal(); });
+        else closeDetailsModal();
       }
     }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     modal.showModal(null, async () => {
@@ -234,10 +240,12 @@ class ModalSearchClass {
       if (!err) {
         let optionTab = await detailsTabs.addTab(`Trigger Options`, true), optionsContents = $(`<div class='pcm-optionCont card-deck'></div>`).appendTo(`#${optionTab.tabContent}`);
         let detailTab = await detailsTabs.addTab(`Panda Job Options`), detailsContents = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${detailTab.tabContent}`);
-        let df = document.createDocumentFragment(), df2 = document.createDocumentFragment();
-        this.triggerOptions(df, modal.tempObject[idName]); optionsContents.append(df);
-        this.triggerPandaOptions(df2, modal.tempObject[idName]); detailsContents.append(df2);
-        optionTab = null; optionsContents = null; detailTab = null; detailsContents = null; df = null; df2 = null;
+        let df1 = document.createDocumentFragment(), df2 = document.createDocumentFragment();
+        this.triggerOptions(df1, modal.tempObject[idName]);  this.triggerPandaOptions(df2, modal.tempObject[idName]); optionsContents.append(df1); detailsContents.append(df2);
+        if (sChanges.rules.minPay === 0.00) {
+          if (globalOpt.doSearch().minReward !== 0) $('.pcm-editTrigWarning').html('The minPay at $0.00 will only work if the main search option minPay is at $0.00 also.');
+        }
+        optionTab = null; optionsContents = null; detailTab = null; detailsContents = null; df1 = null; df2 = null;
       }
       search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       detailsDiv = null; detailsTabs = null;
@@ -296,10 +304,16 @@ class ModalSearchClass {
   /** Shows a modal with all search options that can be changed by the user.
    * @param {function} [afterClose] - After Close Function */
   showSearchOptions(afterClose=null) {
+    let searchOptions = globalOpt.doSearch(), oldMinReward = searchOptions.minReward;
     let saveFunction = (changes) => {
-      globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false); globalOpt.doGeneral(changes.general);
-      globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer);
-      modal.closeModal();
+      let closeAndSave = async () => {
+        globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false); globalOpt.doGeneral(changes.general);
+        globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer); bgSearch.prepareSearch();
+        if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
+        setTimeout( () => modal.closeModal(), 0);
+      }
+      if (changes.options.minReward === 0 && oldMinReward !== changes.options.minReward) modal.showDialogModal('700px', 'Minimum Reward at $0.00 Warning.', 'When setting Minimum Reward for MTURK search page to $0.00 there may be better HITs missed if there are a lot of HITs at $0.00.', null, false, false,_,_,_,_, () => { closeAndSave(); } );
+      else closeAndSave();
     }
     if (!modal) modal = new ModalClass();
     let theData = {'toSearchUI':globalOpt.theToSearchUI(), 'searchTimer':globalOpt.theSearchTimer(), 'options':globalOpt.doSearch(), 'general':globalOpt.doGeneral()};
@@ -307,6 +321,7 @@ class ModalSearchClass {
     modal.showModal(() => {}, async () => {
       let df = document.createDocumentFragment();
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
+      if (searchOptions.minReward === 0) $(`<div class='pcm-optionEditWarning'>Having the Minimum Reward at $0.00 may cause better HITs to slip by if there are many HITs at $0.00.</div>`).appendTo(df);
       displayObjectData( [
         {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
@@ -318,6 +333,8 @@ class ModalSearchClass {
         {'label':'Default Custom Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs.`, 'minMax':this.hamDur},
         {'label':'Default Custom Limit Fetches:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The default number of fetches for new custom triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
         {'label':'Page Size for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of HITs used on MTURK first search page. The higher the number can slow searching but also can give a better chance of finding HITs you want.`, 'minMax':this.pageSize},
+        {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
+        {'label':'Display MTURK Approval Rate For Requesters:', 'type':'trueFalse', 'key1':'options', 'key':'displayApproval', 'tooltip':`Should Approval Rate from MTURK be shown on the Custom Triggered Hits Tab or only shown on mouse over requester name?`},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
@@ -508,7 +525,7 @@ class ModalSearchClass {
   triggersFilter(search, modalControl) {
     let newArray = [];
     for (const dbId of bgSearch.getFrom('Search')) {
-      let good = false, data = bgSearch.getData(dbId);
+      let good = false, data = bgSearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
       const radioChecked = $(modalControl).find(`input[name='theTriggers']:checked`).val();
       if (radioChecked === '0') good = true;
       else if (radioChecked === '1' && !data.disabled) good = true;
@@ -516,7 +533,7 @@ class ModalSearchClass {
       else if (radioChecked === '3' && data.type === 'rid') good = true;
       else if (radioChecked === '4' && data.type === 'gid') good = true;
       else if (radioChecked === '5' && data.type === 'custom') good = true;
-      if (good && search !== '' && data.name.toLowerCase().includes(search)) good = true;
+      if (good && search !== '' && (data.name.toLowerCase().includes(search) || theValue.toLowerCase().includes(search))) good = true;
       else if (good && search !== '') good = false;
       if (good) newArray.push(dbId);
     }
@@ -548,7 +565,7 @@ class ModalSearchClass {
       let inputControl = createInput(modalControl, ' pcm-searchInputDiv', 'pcm-searchinput', 'Search phrase: ', 'example: receipts', e => {
         $(e.target).closest('.pcm-modalControl').find('.pcm-searchingTriggers').click();
       }, 'pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Enter text in the input field to search for in the requester name or HIT title.');
-      $(`<button class='btn btn-xxs pcm-searchingTriggers pcm-tooltipData pcm-tooltipHelper' data-original-title='Display only the triggers in the list below with the input text in the trigger name.'>Search</button>`).on( 'click', async () => {
+      $(`<button class='btn btn-xxs pcm-searchingTriggers pcm-tooltipData pcm-tooltipHelper' data-original-title='Display only the triggers in the list below with the input text in the trigger name or trigger ID.'>Search</button>`).on( 'click', async () => {
         let theDialog = $(`#${idName} .${modal.classModalDialog}:first`); $(theDialog).find('.pcm-jobTable').remove();
         let filtered = this.triggersFilter($('#pcm-searchinput').val().toLowerCase(), $(theDialog).find(`.pcm-modalJobControl:first`));
         await this.showTriggersTable(theDialog.find(`.${modal.classModalBody}:first`), filtered, checkFunc, () => {}); if (afterShow) afterShow(this);

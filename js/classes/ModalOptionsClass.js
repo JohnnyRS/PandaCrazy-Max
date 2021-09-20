@@ -15,6 +15,7 @@ class ModalOptionsClass {
       globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
       pandaUI.queueAlertUpdate();
       $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
+      if (changes.advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
       modal.closeModal();
     });
     modal.showModal(_, () => {
@@ -33,6 +34,7 @@ class ModalOptionsClass {
         {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`}, 
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
         {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?'}, 
+        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'}, 
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);

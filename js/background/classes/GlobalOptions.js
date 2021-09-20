@@ -4,7 +4,7 @@
 class PandaGOptions {
   constructor() {
     this.general = {};              // The general object used in script from database or default values.
-    this.generalDefault = {         // Default values used at first run or default buttons.
+    this.generalDefault = {         // Default values used at first run or default values for general options.
       'category':'general',         // Object category used for database saving and loading.
       'showHelpTooltips':true,      // Should help tooltips be shown or just info tips?
       'disableCaptchaAlert':false,  // Should captcha alerts and notifications be disabled?
@@ -20,18 +20,19 @@ class PandaGOptions {
       'toSearchUI':false,           // Should search jobs go directly to search UI?
       'fetchHighlight':true,        // Highlight the groupID when script tries to fetch it.
       'debugger':0,                 // Main debugger level.
-      'disableMonitorAlert':false,
-      'volHorizontal':false,
-      'tabLogHeight':0,
-      'historyDays':15,
-      'themeIndex':0,
-      'theme0': '',
-      'theme1': '',
-      'theme2': '',
-      'theme3': '',
+      'disableMonitorAlert':false,  // Disable the alert when hits are about to expire from the queue watch.
+      'volHorizontal':false,        // Change the volume level to horizontal instead of vertical.
+      'tabLogHeight':0,             // The height size of the log tab on bottom when user changes it with mouse.
+      'historyDays':15,             // How many days should the main history be kept?
+      'themeIndex':0,               // The index for the theme being used now.
+      'theme0': '',                 // String to keep theme0 css code.
+      'theme1': '',                 // String to keep theme1 css code.
+      'theme2': '',                 // String to keep theme2 css code.
+      'theme3': '',                 // String to keep theme3 css code.
+      'advancedSearchJobs':false,   // Allows user to force a search job to use requester search like old script.
     };
     this.timers = {};               // The timers object used in script from database or default values.
-    this.timersDefault = {          // Default values used at first run or default buttons.
+    this.timersDefault = {          // Default values used at first run or default values for timer options.
       'category':'timers',          // Object category used for database saving and loading.
       'mainTimer':1000,             // The time for the main timer.
       'secondTimer':1400,           // The time for the second timer.
@@ -43,59 +44,61 @@ class PandaGOptions {
       'timerIncrease':10,           // Time in milliseconds used for the timer increase button.
       'timerDecrease':10,           // Time in milliseconds used for the timer decrease button.
       'timerAddMore':650,           // Time in milliseconds used for the timer add more button.
-      'timerAutoIncrease':10,
-      'stopAutoSlow':false,
-      'autoSlowDown':false,
-      'timerUsed':'mainTimer',
-      'searchDuration':12000
+      'timerAutoIncrease':10,       // Not used anymore but was the milliseconds increase when auto increase when a lot of PRE's detected.
+      'stopAutoSlow':false,         // Not used anymore but was a toggle for stopping auto slow down when a lot of PRE's detected.
+      'autoSlowDown':false,         // Not used anymore but was a toggle for allowing slow down when a lot of PRE's detected.
+      'timerUsed':'mainTimer',      // Default value for which timer is being used.
+      'searchDuration':12000        // The time in milliseconds by default to use for panda found by a search job.
     };
     this.timerRange = {'min':750, 'max':15000};   // The limits for the timer in milliseconds when editing.
     this.timerHamDur = {'min':1000, 'max':30000}  // The limits for the ham duration in milliseconds.
     this.timerQueue = {'min':1000, 'max':60000};  // The limits for the timer queue in milliseconds when editing.
     this.timerSearch = {'min':800, 'max':30000};  // The limits for the timer queue in milliseconds when editing.
     this.timerChange = {'min':5, 'max':2000};     // The limits for the timer change buttons in milliseconds when editing.
-    this.alarms = {};
-    this.alarmsDefault = {
-      'category':'alarms',
-      'volume':80,
-      'showAlertNotify':true,
-      'ttsName':'',
-      'unfocusDeThrottle':false,
+    this.alarms = {};               // The alarms object used in script from database or default values.
+    this.alarmsDefault = {          // Default values used at first run or default for alarms.
+      'category':'alarms',          // Object category used for database saving and loading.
+      'volume':80,                  // Default value used for the alarm volume.
+      'showAlertNotify':true,       // Default value used to show alert notifications in windows.
+      'ttsName':'',                 // Default value used for the 'text to speech' voice name.
+      'unfocusDeThrottle':false,    // Not used anymore but was used to have browser stay focused so timers would not be throttled.
     };
-    this.helpers = {};
-    this.helpersDefault = {
-      'category':'helpers',
-      'forumButtons':true,
-      'TVButtons':true,
-      'MTCButtons':true,
-      'MTFButtons':true,
-      'OHSButtons':true,
-      'DiscordButtons':true,
-      'SlackButtons':true,
-      'mturkPageButtons':true,
-      'tabUniqueHits':true,
-      'titleQueueDisplay':true,
+    this.helpers = {};              // The helpers object used in script from database or default values.
+    this.helpersDefault = {         // Default values used at first run or default for helpers option.
+      'category':'helpers',         // Object category used for database saving and loading.
+      'forumButtons':true,          // Default value to show buttons in forums or not.
+      'TVButtons':true,             // Default value to show buttons on turkerview forum.
+      'MTCButtons':true,            // Default value to show buttons on Mturkcrowd forum.
+      'MTFButtons':true,            // Default value to show buttons on Mturkforum forum.
+      'OHSButtons':true,            // Default value to show buttons on ourhitstop forum.
+      'DiscordButtons':true,        // Default value to show buttons on discord forum.
+      'SlackButtons':true,          // Default value to show buttons on slack forum.
+      'mturkPageButtons':true,      // Default value to show buttons on the MTURK pages.
+      'tabUniqueHits':true,         // Default value to only allow unique HITs in multi tabs so each tab has a unique HIT loaded from the queue.
+      'titleQueueDisplay':true,     // Default value to display the queue size and current HIT # in the title display.
     }
-    this.search = {}
-    this.searchDefault = {
-      'category':'search',
-      'pageSize':45,
-      'queueSize':30,
-      'defaultDur':18000,
-      'defaultFetches':0,
-      'defaultHamDur':6000,
-      'defaultCustDur':0,
-      'defaultCustFetches':120,
-      'defaultCustHamDur':10000,
-      'customHistDays':10,
-      'triggerHistDays':45,
-      'blockedGids':'',
-      'blockedRids':'',
+    this.search = {}                // The search object used in script from database or default values.
+    this.searchDefault = {          // Default values used at first run or default for helpers option.
+      'category':'search',          // Object category used for database saving and loading.
+      'pageSize':45,                // Default value used for the number of HITs to display on each search page on MTURK
+      'queueSize':30,               // Default value used for the amount of trigger data to be kept in memory to save memory if needed.
+      'defaultDur':18000,           // Default value used for the time in milliseconds to use for a panda duration when a HIT is found by search triggers.
+      'defaultFetches':0,           // Default value used for the number of fetches to use for panda when a HIT is found by search triggers.
+      'defaultHamDur':6000,         // Default value used for the time in milliseconds to use for ham duration when a HIT is found by search triggers.
+      'defaultCustDur':0,           // Default value used for the time in milliseconds to use for panda duration when a HIT is found by custom search triggers.
+      'defaultCustFetches':120,     // Default value used for the number of fetches to use for a panda when a HIT is found by custom search triggers.
+      'defaultCustHamDur':10000,    // Default value used for the time in milliseconds to use for ham duration when a HIT is found by custom search triggers.
+      'customHistDays':10,          // Default value used for the number of days to keep the HITs found by custom search triggers to save database memory.
+      'triggerHistDays':45,         // Default value used for the number of days to keep the HITs found by search triggers to save database memory.
+      'blockedGids':'',             // Default string to hold all the blocked group ID's.
+      'blockedRids':'',             // Default string to hold all the blocked requester ID's
+      'minReward':'0.01',           // Default value used for the minimum reward to use when using the MTURK search page.
+      'displayApproval':true,       // Default value used to show the approval rate from MTURK on the custom triggered HITs tab.
     }
-    this.sessionQueue = {};
-    this.captchaCounter = 0;
-    this.lastQueueAlert = -1;
-    this.timerUsed = 'mainTimer';
+    this.sessionQueue = {};         // Used to hold all the session variables used with the helpers on MTURK page.
+    this.captchaCounter = 0;        // Used to track how many HITs seen since last captcha has been seen.
+    this.lastQueueAlert = -1;       // Used to keep track the time the queue alert alarm was used so it won't keep on alerting every second of a minute.
+    this.timerUsed = 'mainTimer';   // Used to keep track of the timer that is used currently.
   }
   /** Changes the option with the option name and changes object. Will update database if update is true.
    * @param {string} optionName - Option Name  @param {object} changes - Object Changes  @param {bool} [update] - Update Database? */

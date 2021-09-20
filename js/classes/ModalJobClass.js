@@ -129,17 +129,22 @@ class ModalJobClass {
    * @param  {number} myId - Unique ID  @param  {function} [successFunc] - Save Function  @param  {function} [afterClose]  - After Close function */
   async showDetailsModal(myId, successFunc=null, afterClose=null) {
     await bgPanda.getDbData(myId);
-    let hitInfo = bgPanda.options(myId), searchChanges = {};
+    let hitInfo = bgPanda.options(myId), searchChanges = null, oldMinPay = -1;
     let saveFunction = async changes => {
-      if (!hitInfo.data) { await bgPanda.getDbData(myId); }
-      if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
-      changes.mute = hitInfo.data.mute; changes.disabled = (changes.disabled) ? changes.disabled : false;
-      hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
-      await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
-      pandaUI.cards.updateAllCardInfo(myId, hitInfo); pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data); modal.closeModal();
-      if (hitInfo.skipped) bgPanda.checkSkipped(myId, hitInfo.data);
-      if (!pandaUI.pandaStats[myId].collecting) hitInfo.data = null;
-      if (successFunc!==null) successFunc(changes);
+      let closeSaveModal = async () => {
+        if (!hitInfo.data) { await bgPanda.getDbData(myId); }
+        if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
+        changes.mute = hitInfo.data.mute; changes.disabled = (changes.disabled) ? changes.disabled : false;
+        if (!changes.autoGoHam) changes.hamDuration = 0; else if (changes.hamDuration === 0) changes.hamDuration = globalOpt.getHamDelayTimer();
+        hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
+        await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
+        pandaUI.cards.updateAllCardInfo(myId, hitInfo); pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data); modal.closeModal();
+        if (hitInfo.skipped) bgPanda.checkSkipped(myId, hitInfo.data);
+        if (!pandaUI.pandaStats[myId].collecting) hitInfo.data = null;
+        if (successFunc!==null) successFunc(changes);
+      }
+      if (searchChanges.rules.minPay === 0.00 && (oldMinPay !== searchChanges.rules.minPay) && globalOpt.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 on the Panda Crazy Search page so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeSaveModal(); });
+      else closeSaveModal();
     }
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(hitInfo.data, '800px', 'pcm-jobDetailsModal', 'modal-lg', 'Details for a HIT', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => { saveFunction(changes); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
@@ -153,7 +158,7 @@ class ModalJobClass {
         let optionsContents = $(`<div class='pcm-optionCont card-deck'></div>`).appendTo(`#${optionTab.tabContent}`);
         if (hitInfo.search) {
           let optionTab1 = await detailsTabs.addTab(`Panda Job Options`), optionContents1 = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${optionTab1.tabContent}`);
-          this.modalSearch = new ModalSearchClass(); searchChanges = await this.modalSearch.fillInData(null, hitInfo.data.id);
+          this.modalSearch = new ModalSearchClass(); searchChanges = await this.modalSearch.fillInData(null, hitInfo.data.id); oldMinPay = searchChanges.rules.minPay;
           this.modalSearch.triggerOptions(df, searchChanges, false); ridDisabled = true;
           this.modalSearch.triggerPandaOptions(df2, searchChanges, false); optionContents1.append(df2);
           optionTab1 = null;
@@ -174,6 +179,9 @@ class ModalJobClass {
           detailsDiv.find(`input[name='toUI']`).on('change', () => { this.recheckButtons($(`#${idName} .${modal.classModalBody}`), hitInfo.data); });
           radioGroup = null;
         } else {
+          if (searchChanges.rules.minPay === 0.00) {
+            if (globalOpt.doSearch().minReward !== 0) $('.pcm-editTrigWarning').html('The minPay at $0.00 will only work if the main search option minPay is at $0.00 also.');
+          }
           let value = (hitInfo.search === 'gid') ? hitInfo.data.groupId : hitInfo.data.reqId;
           $(`<div class='pcm-detailsBtnArea2 w-100'></div>`).append($(`<button class='btn btn-xs pcm-toSearchUI'>Move to searchUI and create search trigger</button>`)
             .data('search',hitInfo.search).data('value',value)).appendTo(detailsDiv);

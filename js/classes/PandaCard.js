@@ -14,6 +14,7 @@ class PandaCards {
     this.collectTextDef = 'Collect'; this.collectText = null;
     this.goHamTextDef = 'GoHam'; this.goHamText = null;
     this.detailsTextDef = 'Details'; this.detailsText = null;
+    this.requesterTextDef = 'R'; this.requesterText = null;
     this.deleteTextDef = 'X'; this.deleteText = null;
     this.acceptedStatusTextDef = 'Acc'; this.acceptedStatusText = null;
     this.fetchedStatusTextDef = 'Fetched'; this.fetchedStatusText = null;
@@ -30,6 +31,7 @@ class PandaCards {
       'collectBtn':{'class':'.pcm-collectButton'},
       'collectTip':'Start Collecting this Panda HIT',
       'details':'Display and edit all options for this Panda.',
+      'requester':'Toggle requester search for search jobs so it will search for all HITs from requester available instead of only new HITs.',
       'delete':'Delete this Panda HIT. [CTRL] click cards to delete multiple HITs.',
       'hamTip':'Collect HITs from this Panda only! Delayed ham mode can be turned on by clicking and holding this button.'
     }
@@ -40,6 +42,7 @@ class PandaCards {
     this.bgHighlighter = getCSSVar('bgHighlighter', this.bgHighlighterDef); this.bgLimitedColor = getCSSVar('bgLimitedColor', this.bgLimitedColorDef);
     this.bgCollectedColor = getCSSVar('bgCollectedColor', this.bgCollectedColorDef); this.bgStoppedColor = getCSSVar('bgStoppedColor', this.bgStoppedColorDef);
     this.acceptedStatusText = getCSSVar('hitAccepted', this.acceptedStatusTextDef); this.fetchedStatusText = getCSSVar('hitFetched', this.fetchedStatusTextDef);
+    this.requesterText = getCSSVar('requesterButton', this.requesterTextDef);
   }
   /** Prepare cards by getting CSS variable Values and assigning the tabs object.
    * @param  {object} tabs - The tab object with tab information. */
@@ -96,6 +99,7 @@ class PandaCards {
     group += `<button class='pcm-hitButton pcm-collectButton pcm-tooltipData pcm-buttonOff' id='pcm-collectButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.collectTip}'><span>${textCollect}</span></button>`;
     if (!info.search) group += `<button class='pcm-hitButton pcm-hamButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-hamButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-long-press-delay='600' data-original-title='${this.values.hamTip}'><span>${this.goHamText}</span></button>`;
     group += `<button class='pcm-hitButton pcm-detailsButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-detailsButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.details}'><span>${this.detailsText}</span></button>`;
+    if (info.search) group += `<button class='pcm-hitButton pcm-requesterButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' style='display:none;' id='pcm-requesterButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.requester}'><span>${this.requesterText}</span></button>`;
     group += `<button class='pcm-hitButton pcm-deleteButton pcm-tooltipData pcm-tooltipHelper pcm-buttonOff' id='pcm-deleteButton-${myId}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${this.values.delete}'><span>${this.deleteText}</span></button>`;
     group += `</div>`;
     return group;
@@ -219,7 +223,7 @@ class PandaCards {
    * @param  {number} myId - The unique ID for a panda job. */
   async pandaEnabled(myId) {
     this.cards[myId].pandaEnabled(this.values); let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
-    info.disabled = false; data.disabled = false; bgPanda.updateDbData(null, data);
+    info.disabled = false; data.disabled = false; bgPanda.sendStatusToSearch(data, false); bgPanda.updateDbData(null, data);
   }
   /** Mutes this panda with the unique number.
    * @param {number} myId - Unique Number  @param {bool} value - Mute Status */
@@ -229,7 +233,7 @@ class PandaCards {
    * @param  {number} myId - The unique ID for a panda job. */
   async pandaDisabled(myId) {
     this.cards[myId].pandaDisabled(this.values); let info = bgPanda.options(myId), data = await bgPanda.dataObj(myId);
-    info.disabled = true; data.disabled = true; bgPanda.updateDbData(null, data);
+    info.disabled = true; data.disabled = true; bgPanda.sendStatusToSearch(data, true); bgPanda.updateDbData(null, data);
   }
 	/** Binds events to all cards on page. Will unbind any events too so won't do double events. */
 	cardButtons() {
@@ -323,6 +327,13 @@ class PandaCards {
       let myId = $(e.target).closest('.card').data('myId'), reqName = $(`#pcm-hitReqName1-${myId}`), stats = $(`#pcm-hitStats1-${myId}`);
       if (reqName.is(':visible')) { reqName.hide(); stats.show(); } else { stats.hide(); reqName.show(); }
     });
+    $('.pcm-requesterButton').unbind('click').click( e => {
+      let myId = $(e.target).closest('.card').data('myId'); bgPanda.toggleReqSearch(myId).then( toggled => {
+        if (toggled) $(e.target).closest('.pcm-hitButton').removeClass('pcm-buttonOff').addClass('pcm-buttonOn');
+        else $(e.target).closest('.pcm-hitButton').removeClass('pcm-buttonOn').addClass('pcm-buttonOff');
+      });
+    });
+    if (globalOpt.doGeneral().advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
 	}
 }
 /** This class deals with showing panda information on a card and sorts them in the panda area.
