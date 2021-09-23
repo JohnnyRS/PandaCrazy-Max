@@ -89,7 +89,7 @@ class ModalSearchClass {
       $('#pcm-triggerEnabled').click( () => $('#pcm-formAddGroupID').focus() );
       $('#pcm-onlyOnce').click( () => $('#pcm-formAddGroupID').focus() );
       $('#pcm-formAddGroupID').focus();
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; searchOpt = null; table2 = null; modalBody = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -147,7 +147,7 @@ class ModalSearchClass {
       }).appendTo(df);
       $(`#${idName} .${modal.classModalBody}`).append(df);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunc(); });
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; form = null; selectBox = null;
     }, () => { });
   }
@@ -247,7 +247,7 @@ class ModalSearchClass {
         }
         optionTab = null; optionsContents = null; detailTab = null; detailsContents = null; df1 = null; df2 = null;
       }
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       detailsDiv = null; detailsTabs = null;
     }, () => { modal = null; sChanges = null; if (afterClose) afterClose(); });
   }
@@ -297,7 +297,7 @@ class ModalSearchClass {
         this.showTriggeredHit(cData, () => {},_, false);
       });
       $(`#${idName} .${modal.classModalBody}`).append(df);
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       groupHist = null; df = null; gidsHistory = null; theTable = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -306,7 +306,7 @@ class ModalSearchClass {
   showSearchOptions(afterClose=null) {
     let searchOptions = globalOpt.doSearch(), oldMinReward = searchOptions.minReward;
     let saveFunction = (changes) => {
-      let closeAndSave = async () => {
+      let closeAndSave = () => {
         globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false); globalOpt.doGeneral(changes.general);
         globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer); bgSearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
@@ -338,7 +338,7 @@ class ModalSearchClass {
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       theData = null; df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -359,7 +359,7 @@ class ModalSearchClass {
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -450,7 +450,7 @@ class ModalSearchClass {
         gidContents.find('input').focus();
         df = null; df2 = null; gidContents = null; ridContents = null; thisFrag = null; gidsHistory = null; ridsHistory = null; values = null;
       }
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       blockingDiv = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -485,7 +485,7 @@ class ModalSearchClass {
         })).appendTo(df);
       }
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; blocked = null;
     }, () => { if (afterClose) afterClose(); else modal = null; });
   }
@@ -520,9 +520,9 @@ class ModalSearchClass {
     divContainer = null;
   }
   /** Filters out jobs with the search term, collecting radio, search mode and once options.
-   * @param  {string} search - Search Term  @param  {object} modalControl - Jquery element
+   * @param  {string} searchTerm - Search Term  @param  {object} modalControl - Jquery element
    * @return {array}         - Array of job ID's filtered. */
-  triggersFilter(search, modalControl) {
+  triggersFilter(searchTerm, modalControl) {
     let newArray = [];
     for (const dbId of bgSearch.getFrom('Search')) {
       let good = false, data = bgSearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
@@ -533,8 +533,8 @@ class ModalSearchClass {
       else if (radioChecked === '3' && data.type === 'rid') good = true;
       else if (radioChecked === '4' && data.type === 'gid') good = true;
       else if (radioChecked === '5' && data.type === 'custom') good = true;
-      if (good && search !== '' && (data.name.toLowerCase().includes(search) || theValue.toLowerCase().includes(search))) good = true;
-      else if (good && search !== '') good = false;
+      if (good && searchTerm !== '' && (data.name.toLowerCase().includes(searchTerm) || theValue.toLowerCase().includes(searchTerm))) good = true;
+      else if (good && searchTerm !== '') good = false;
       if (good) newArray.push(dbId);
     }
     return newArray;
@@ -589,7 +589,7 @@ class ModalSearchClass {
         else if ($('#pcm-endHours').val() === '0' && $('#pcm-endMinutes').val() === '0') $('#pcm-endMinutes').val('30');
       });
       $('#pcm-clearTInput').on('click', () => { $('#pcm-timepicker1').val(''); $('#pcm-endHours').val('0'); $('#pcm-endMinutes').val('0'); });
-      search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       if (afterShow) afterShow(this);
       df = null; df2 = null; modalControl = null; radioGroup = null; inputControl = null; filtered = null;
     }, () => { if (afterClose) afterClose(); else modal = null; });

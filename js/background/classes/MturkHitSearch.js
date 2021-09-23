@@ -217,7 +217,7 @@ class MturkHitSearch extends MturkClass {
 		pageSize = (savedOptions) ? savedOptions.pageSize : pageSize; minReward = (savedOptions) ? savedOptions.minReward : minReward;
 		const formatJson = (json) ? '&format=json' : ''; // add format json or not?
 		this.searchUrl = new UrlClass(`https://worker.mturk.com/?page_size=${pageSize}&filters%5Bqualified%5D=${onlyQual}&filters%5Bmasters%5D=${onlyMasters}&sort=${this.sort}&filters%5Bmin_reward%5D=${minReward}${formatJson}`);
-		this.searchGStats =  new SearchGStats();
+		if (!this.searchGStats) this.searchGStats = new SearchGStats();
 	}
 	/** Sets the timer value with the number given or returns the current value of search timer.
 	 * @param  {number} [timer] - Timer Value for Search Timer
@@ -580,13 +580,14 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {string} type - Type of trigger  @param  {string} value  - Group ID or requester ID  @param  {bool} disabled - Disabled?
 	 * @param  {bool} [sUI]  - Search UI?       @param  {bool} [remove] - Remove Live Trigger?  */
 	async setDisabled(type, value, disabled, sUI=true, remove=true) {
-		let dbId = this.theDbId(type, value); if (!dbId) return;
+		let dbId = this.theDbId(type, value, false, sUI); if (!dbId) return;
 		let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options'); 
 		if (type === 'custom') this.termData(!disabled, rules, options, dbId);
 		else this.liveString(type, value, !disabled, sUI, remove);
 		if (disabled && this.triggers[dbId].reqSearch) {
 			searchTimer.deleteFromQueue(this.triggers[dbId].timerUnique); this.triggers[dbId].status = 'disabled'; this.triggers[dbId].reqSLastCreated = null;
 		}
+		else if (!sUI && disabled) this.triggers[dbId].status = 'disabled';
 		if (this.searchGStats && this.searchGStats.isSearchOn()) { if (this.liveCounter === 0 && this.termCounter === 0) this.stopSearching(); }
 		else if (this.liveCounter > 0 && !sUI) this.startSearching();
 		else if (this.liveCounter === 0) this.stopSearching();

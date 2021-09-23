@@ -5,36 +5,45 @@ class ModalOptionsClass {
 	constructor() {
     this.defDur = {'min':0, 'max':120000};
     this.historyRange = {'min':3, 'max':90};
+    this.minPayRange = {'min':0.00, 'max':300.00};
     this.reader = new FileReader();
   }
   /** Shows the general options in a modal for changes.
    * @param  {function} [afterClose] - After Close Function */
   showGeneralOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(globalOpt.doGeneral(), '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
-      globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes));
-      pandaUI.queueAlertUpdate();
-      $('.pcm-volumeHorizGroup').css('display',(changes.volHorizontal) ? 'block' : 'none'); $('.pcm-volumeVertGroup').css('display',(changes.volHorizontal) ? 'none': 'flex');
-      if (changes.advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
-      modal.closeModal();
+    let theseOptions = {'general': globalOpt.doGeneral(), 'search': globalOpt.doSearch()}, oldMinReward = theseOptions.search.minReward;
+    const idName = modal.prepareModal(theseOptions, '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
+      let closeAndSave = () => {
+        globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes.general)); globalOpt.doSearch(Object.assign(globalOpt.doSearch(), changes.search));
+        pandaUI.queueAlertUpdate();
+        $('.pcm-volumeHorizGroup').css('display',(changes.general.volHorizontal) ? 'block' : 'none');
+        $('.pcm-volumeVertGroup').css('display',(changes.general.volHorizontal) ? 'none': 'flex');
+        if (changes.general.advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
+        setTimeout( () => modal.closeModal(), 0);
+      }
+      if (changes.search.minReward === 0 && oldMinReward !== changes.search.minReward) modal.showDialogModal('700px', 'Minimum Reward at $0.00 Warning.', 'When setting Minimum Reward for MTURK search page to $0.00 there may be better HITs missed if there are a lot of HITs at $0.00.', null, false, false,_,_,_,_, () => { closeAndSave(); } );
+      else closeAndSave();
     });
     modal.showModal(_, () => {
       let df = document.createDocumentFragment();
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
+      if (theseOptions.search.minReward === 0) $(`<div class='pcm-optionEditWarning'>Having the Minimum Reward at $0.00 may cause better HITs to slip by if there are many HITs at $0.00.</div>`).appendTo(df);
       displayObjectData([
-        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-        {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for HITs nearing the expiration time.'}, 
-        {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for HITs nearing the expiration time.'}, 
-        {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting HITs or warnings.'}, 
-        {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
-        {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
-        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
-        {'label':'Days to keep History:', 'type':'number', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange}, 
-        {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
-        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`}, 
-        {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?'}, 
-        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'}, 
+        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
+        {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for HITs nearing the expiration time.'}, 
+        {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for HITs nearing the expiration time.'}, 
+        {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key1':'general', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting HITs or warnings.'}, 
+        {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key1':'general', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
+        {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key1':'general', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
+        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key1':'general', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+        {'label':'Days to keep History:', 'type':'number', 'key1':'general', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange}, 
+        {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
+        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`}, 
+        {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key1':'general', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
+        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key1':'general', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?'}, 
+        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key1':'general', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'}, 
+        {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'search', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);

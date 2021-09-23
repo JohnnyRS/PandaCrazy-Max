@@ -16,11 +16,11 @@ class DatabasesClass {
       this.panda.db = new DatabaseClass(this.panda.dbName, 1);
       this.panda.db.openDB( del, e => {
         if (e.oldVersion === 0) {
-          e.target.result.createObjectStore(this.panda.storeName, {'keyPath':'id', 'autoIncrement':'true'}).createIndex('groupId', 'groupId', {'unique':false});
-          e.target.result.createObjectStore(this.panda.tabs, {'keyPath':'id', 'autoIncrement':'true'}).createIndex('position', 'position', {'unique':false});
+          e.target.result.createObjectStore(this.panda.storeName, {'keyPath':'id', 'autoIncrement':true}).createIndex('groupId', 'groupId', {'unique':false});
+          e.target.result.createObjectStore(this.panda.tabs, {'keyPath':'id', 'autoIncrement':true}).createIndex('position', 'position', {'unique':false});
           e.target.result.createObjectStore(this.panda.options, {'keyPath':'category'});
-          e.target.result.createObjectStore(this.panda.alarms, {'keyPath':'id', 'autoIncrement':'true'}).createIndex('name', 'name', {'unique':false});
-          e.target.result.createObjectStore(this.panda.grouping, {'keyPath':'id', 'autoIncrement':'true'});
+          e.target.result.createObjectStore(this.panda.alarms, {'keyPath':'id', 'autoIncrement':true}).createIndex('name', 'name', {'unique':false});
+          e.target.result.createObjectStore(this.panda.grouping, {'keyPath':'id', 'autoIncrement':true});
           this.panda.default = true;
         }
       }).then( response => { if (response === 'OPENED') resolve(this.panda.db); }, rejected => { console.error(rejected); reject(rejected); });
@@ -34,7 +34,7 @@ class DatabasesClass {
       this.history.db = new DatabaseClass(this.history.dbName, 1);
 			this.history.db.openDB( del, e => {
 				if (e.oldVersion === 0) {
-          let store1 = e.target.result.createObjectStore(this.history.storeName, {'keyPath':'theId', 'autoIncrement':'false'});
+          let store1 = e.target.result.createObjectStore(this.history.storeName, {'keyPath':'theId', 'autoIncrement':false});
           store1.createIndex('reqId', 'reqId', {'unique':false}); store1.createIndex('pay', 'pay', {'unique':false});
           store1.createIndex('from', 'from', {'unique':false}); store1.createIndex('date', 'date', {'unique':false});
           store1.createIndex('updated', 'updated', {'unique':false}); store1.createIndex('searchDate', ['from', 'updated'], {'unique':false});
@@ -53,14 +53,14 @@ class DatabasesClass {
 				if (e.oldVersion < 3) {
           let db = e.target.result;
           if (!db.objectStoreNames.contains(this.searching.storeName)) {
-            let store1 = db.createObjectStore(this.searching.storeName, {'keyPath':'id', 'autoIncrement':'true'});
+            let store1 = db.createObjectStore(this.searching.storeName, {'keyPath':'id', 'autoIncrement':true});
             store1.createIndex('type', 'type', {'unique':false}); store1.createIndex('value', 'value', {'unique':false}); store1.createIndex('unique', ['type', 'value'], {'unique':false});
           }
-          if (!db.objectStoreNames.contains(this.searching.options)) { db.createObjectStore(this.searching.options, {'keyPath':'dbId', 'autoIncrement':'false'}); }
-          if (!db.objectStoreNames.contains(this.searching.rules)) { db.createObjectStore(this.searching.rules, {'keyPath':'dbId', 'autoIncrement':'false'}); }
-          if (!db.objectStoreNames.contains(this.searching.grouping)) { db.createObjectStore(this.searching.grouping, {'keyPath':'id', 'autoIncrement':'true'}); }
+          if (!db.objectStoreNames.contains(this.searching.options)) { db.createObjectStore(this.searching.options, {'keyPath':'dbId', 'autoIncrement':false}); }
+          if (!db.objectStoreNames.contains(this.searching.rules)) { db.createObjectStore(this.searching.rules, {'keyPath':'dbId', 'autoIncrement':false}); }
+          if (!db.objectStoreNames.contains(this.searching.grouping)) { db.createObjectStore(this.searching.grouping, {'keyPath':'id', 'autoIncrement':true}); }
           if (db.objectStoreNames.contains(this.searching.history)) db.deleteObjectStore(this.searching.history);
-          let store2 = db.createObjectStore(this.searching.history, {'keyPath':'id', 'autoIncrement':'true'});
+          let store2 = db.createObjectStore(this.searching.history, {'keyPath':'id', 'autoIncrement':true});
           store2.createIndex('dbId', 'dbId', {'unique':false}); store2.createIndex('gid', 'gid', {'unique':false}); store2.createIndex('date', 'date', {'unique':false});
           store2.createIndex('dbIdDate', ['dbId', 'date'], {'unique':false}); store2.createIndex('dbIdGid', ['dbId', 'gid'], {'unique':false});
           this.searching.default = true;
@@ -76,8 +76,8 @@ class DatabasesClass {
 			this.stats.db = new DatabaseClass(this.stats.dbName, 1);
     	this.stats.db.openDB( del, e => {
 				if (e.oldVersion === 0) { // Had no database so let's initialize it.
-					e.target.result.createObjectStore(this.stats.storeName, {'keyPath':'id', 'autoIncrement':'true'}).createIndex('dbId', 'dbId', {'unique':false});
-					let objStore = e.target.result.createObjectStore(this.stats.accepted, {'keyPath':'id', 'autoIncrement':'true'});
+					e.target.result.createObjectStore(this.stats.storeName, {'keyPath':'id', 'autoIncrement':true}).createIndex('dbId', 'dbId', {'unique':false});
+					let objStore = e.target.result.createObjectStore(this.stats.accepted, {'keyPath':'id', 'autoIncrement':true});
 					objStore.createIndex('dbId', 'dbId', {'unique':false}); objStore.createIndex('gid', 'gid', {'unique':false}); objStore.createIndex('rid', 'rid', {'unique':false});
           this.stats.default = true;
 				}
@@ -148,7 +148,7 @@ class DatabaseClass {
   }
   /** Deletes this database with all data with it.
    * @return {promise} - 'SUCCESS' in resolve or Errors in reject. */
-  deleteDB() { 
+  deleteDB() {
     return new Promise( (resolve, reject) => {
       let deleteRequest = this.indexedDB.deleteDatabase(this.dbName);
       deleteRequest.onerror = () => { reject(new Error(`Delete: ${this.dbName} error: ${deleteRequest.error.message}`)); }
@@ -168,7 +168,7 @@ class DatabaseClass {
         openRequest.onsuccess = () => { this.db = openRequest.result; resolve('OPENED'); } // set database pointer
         openRequest.onerror = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
         openRequest.onabort = () => { reject(new Error(`Open: ${this.dbName} error: ${openRequest.error.message}`)); }
-      }  
+      }
     });
   }
   /** Adds data to database with a key in data or next key available. Can add Multiple or save only new. Can use a function when data gets updated.
@@ -181,7 +181,7 @@ class DatabaseClass {
       for (const data of datas) {
         let countRequest = storage.count(key);
         countRequest.onsuccess = e => {
-          if ( (onlyNew && e.target.result === 0) || !onlyNew) { 
+          if ( (onlyNew && e.target.result === 0) || !onlyNew) {
             storage.put(data).onsuccess = e => { let mainKey = e.target.source.keyPath; data[mainKey] = newId = e.target.result; };
           } else if (updateFunc) {
             storage.get(key).onsuccess = e => { if (updateFunc(e.target.result)) storage.put(e.target.result); };
