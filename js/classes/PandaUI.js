@@ -189,8 +189,10 @@ class PandaUI {
 	 * @param  {bool} [searching]	- Job Search? */
 	async stopCollecting(myId, whyStop=null, deleteData=true, searching=false) {
 		if (!bgPanda.checkUnique(myId)) return;
-		let info = bgPanda.options(myId), classToo = '', pandaStat = this.pandaStats[myId];
+		let pandaStat = this.pandaStats[myId];
 		if (pandaStat.collecting || pandaStat.searching) {
+			let info = bgPanda.options(myId), classToo = ''; 
+			if (!info.data) await bgPanda.getDbData(myId);
 			if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
 			if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
 			let theStats = pandaStat.stopCollecting(); this.pandaGStats.collectingOff();
@@ -355,14 +357,14 @@ class PandaUI {
 	 * @param  {number}	[seconds]	- Seconds         @param  {number} [accepts] - Accepted        @param  {number} [searchType] - Search Type
 	 * @param  {string} [from]    - from which UI?  @param  {number} [tF]      - Temp fetches */
 	async addPanda(d={}, opt={}, add=false, run=false, ext=false, tDur=0, tGoH=0, loaded=false, addDate=null, seconds=0, accepts=0, searchType='', from='fromPanda', tF=0) {
-		let dated = (addDate) ? addDate : new Date().getTime(), gidFound = bgPanda.checkExisting(d.groupId, searchType);
-		if (ext && gidFound !== null && !opt.search) {
-			let info = bgPanda.options(gidFound);
-			if (!info.data) await bgPanda.getDbData(gidFound);
-			if (!info.data.once || (info.data.once && this.pandaStats[gidFound].accepted.value === 0)) {
+		let dated = (addDate) ? addDate : new Date().getTime(), myIdFound = bgPanda.checkExisting(d.groupId, searchType);
+		if (ext && myIdFound !== null && !opt.search) {
+			let info = bgPanda.options(myIdFound);
+			if (!info.data) await bgPanda.getDbData(myIdFound);
+			if (!info.data.once || (info.data.once && this.pandaStats[myIdFound].accepted.value === 0)) {
 				info.data.hitsAvailable = d.hitsAvailable; info.data.reqName = d.reqName; info.data.reqId = d.reqId;
 				info.data.title = d.title; info.data.description = d.description; info.data.price = d.price;
-				this.runThisPanda(gidFound, tDur, tGoH, tF);
+				this.runThisPanda(myIdFound, tDur, tGoH, tF);
 			}
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;

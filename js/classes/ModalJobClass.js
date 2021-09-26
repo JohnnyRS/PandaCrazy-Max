@@ -143,7 +143,7 @@ class ModalJobClass {
         if (!pandaUI.pandaStats[myId].collecting) hitInfo.data = null;
         if (successFunc!==null) successFunc(changes);
       }
-      if (searchChanges.rules.minPay === 0.00 && (oldMinPay !== searchChanges.rules.minPay) && globalOpt.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 on the Panda Crazy Search page so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeSaveModal(); });
+      if (searchChanges && searchChanges.rules.minPay === 0.00 && (oldMinPay !== searchChanges.rules.minPay) && globalOpt.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 on the Panda Crazy Search page so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeSaveModal(); });
       else closeSaveModal();
     }
     if (!modal) modal = new ModalClass();

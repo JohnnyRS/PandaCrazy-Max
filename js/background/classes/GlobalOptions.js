@@ -50,10 +50,10 @@ class PandaGOptions {
       'timerUsed':'mainTimer',      // Default value for which timer is being used.
       'searchDuration':12000        // The time in milliseconds by default to use for panda found by a search job.
     };
-    this.timerRange = {'min':750, 'max':15000};   // The limits for the timer in milliseconds when editing.
+    this.timerRange = {'min':700, 'max':15000};   // The limits for the timer in milliseconds when editing.
     this.timerHamDur = {'min':1000, 'max':30000}  // The limits for the ham duration in milliseconds.
     this.timerQueue = {'min':1000, 'max':60000};  // The limits for the timer queue in milliseconds when editing.
-    this.timerSearch = {'min':800, 'max':30000};  // The limits for the timer queue in milliseconds when editing.
+    this.timerSearch = {'min':750, 'max':30000};  // The limits for the timer queue in milliseconds when editing.
     this.timerChange = {'min':5, 'max':2000};     // The limits for the timer change buttons in milliseconds when editing.
     this.alarms = {};               // The alarms object used in script from database or default values.
     this.alarmsDefault = {          // Default values used at first run or default for alarms.
