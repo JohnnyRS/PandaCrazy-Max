@@ -515,11 +515,8 @@ class MturkPanda extends MturkClass {
 					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
 					extPandaUI.cards.highlightEffect_gid(myId);
 					if (info.tempFetches > 0) info.tFCounter++;
-					if (result.type === 'ok.text') {
-						if (result.url.includes('assignment_id=')) {
-							this.sendStatusToSearch(info.data, true, true, result.url);
-							extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
-						} else { globalOpt.resetCaptcha(); extPandaUI.captchaFound(objUrl.url); }
+					if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
+						this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
 					} else {
 						let stopped = this.checkIfLimited(myId, false, info.data);
 						if (result.mode === 'logged out' && queueUnique !== null) { this.nowLoggedOff(); }
@@ -537,6 +534,7 @@ class MturkPanda extends MturkClass {
 							console.info('cookie large problem'); this.tempPaused = true; pandaTimer.paused = true;
 							extPandaUI.pandaGStats.addTotalPandaErrors();
 						}
+						else if (result.type === 'ok.text' || result.mode === 'captcha') { extPandaUI.captchaFound(objUrl.url); }
 					}
 					extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 				}

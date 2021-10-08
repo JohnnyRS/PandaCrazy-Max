@@ -43,7 +43,7 @@ class MturkHitSearch extends MturkClass {
 		this.autoTaskIds = {}, this.autoGids = {}, this.autoCollected = [], this.autoAllow = false;
     this.sorting = ['updated_desc', 'updated_asc', 'reward_asc', 'reward_desc', 'hits_asc', 'hits_desc'];
 		this.dbIds = {'pDbId':{}, 'values':{}, 'unique':{}};
-		this.optionDef = {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':MyOptions.doSearch().defaultHamDur, 'tempGoHam':MyOptions.doSearch().defaultHamDur, 'acceptLimit':0, 'auto': false, 'autoLimit': 2};
+		this.optionDef = {'duration': 0, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':MyOptions.doSearch().defaultHamDur, 'tempGoHam':MyOptions.doSearch().defaultHamDur, 'acceptLimit':0, 'auto': false, 'autoLimit': 2, 'tempDuration': MyOptions.doSearch().defaultDur, 'tempFetches': MyOptions.doSearch().defaultFetches};
 		this.ruleSet = {'blockGid': new Set(), 'blockRid': new Set(), 'onlyGid': new Set(), 'terms': false, 'exclude': new Set(), 'include': new Set(), 'payRange': false, 'minPay': 0, 'maxPay': 0};
 		if (timer) this.prepareSearch();						// Prepare all the search data.
 	}
@@ -180,8 +180,9 @@ class MturkHitSearch extends MturkClass {
 		}, rejected => err = rejected );
 		this.loaded = true;
 		if (MYDB.useDefault('searching')) {
-			await this.addTrigger('rid', {'name':'Ibotta, Inc. Requester Trigger', 'reqId':'AGVV5AWLJY7H2', 'groupId':'', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':this.optionDef.goHamDuration, 'tempGoHam':this.optionDef.tempGoHam, 'acceptLimit':0});
-			await this.addTrigger('gid', {'name':'Ibotta, Inc. GroupID Trigger', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Ibotta, Inc.', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 12000, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':this.optionDef.goHamDuration, 'tempGoHam':this.optionDef.tempGoHam, 'acceptLimit':0});
+			await this.addTrigger('rid', {'name':'Receipt Processing Requester Trigger', 'reqId':'AGVV5AWLJY7H2', 'groupId':'', 'title':'', 'reqName':'Receipt Processing', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 0, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':this.optionDef.goHamDuration, 'tempGoHam':this.optionDef.tempGoHam, 'acceptLimit':0, 'auto':false, 'autoLimit':2, 'tempDuration':this.optionDef.tempDuration, 'tempFetches':this.optionDef.tempFetches});
+			await this.addTrigger('gid', {'name':'Receipt Processing GroupID Trigger', 'reqId':'', 'groupId':'30B721SJLR5BYYBNQJ0CVKKCWQZ0OI', 'title':'', 'reqName':'Receipt Processing', 'pay':0.01, 'duration':'6 minutes', 'status':'disabled'}, {'duration': 0, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':false, 'goHamDuration':this.optionDef.goHamDuration, 'tempGoHam':this.optionDef.tempGoHam, 'acceptLimit':0, 'auto':false, 'autoLimit':2, 'tempDuration':this.optionDef.tempDuration, 'tempFetches':this.optionDef.tempFetches});
+			await this.addTrigger('custom', {'name':'Surveys higher than $1.00', 'reqId':null, 'groupId':null, 'title':'', 'reqName':'', 'pay':1.00, status: 'disabled'}, {'duration': 0, 'once':false, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'goHamDuration':this.optionDef.goHamDuration, 'tempGoHam':this.optionDef.tempGoHam, 'acceptLimit':0, 'auto':false, 'autoLimit':2, 'tempDuration':MyOptions.doSearch().defaultCustDur, 'tempFetches':MyOptions.doSearch().defaultCustFetches}, {'terms':true, 'include':new Set(['survey']), 'payRange': true, 'minPay':1.00});
 		}
 		if (optionsUpdated.length) { this.updateToDB('options', optionsUpdated); }
 		if (triggersUpdated.length) { this.updateToDB(_, triggersUpdated); }
@@ -218,6 +219,8 @@ class MturkHitSearch extends MturkClass {
 		const formatJson = (json) ? '&format=json' : ''; // add format json or not?
 		this.searchUrl = new UrlClass(`https://worker.mturk.com/?page_size=${pageSize}&filters%5Bqualified%5D=${onlyQual}&filters%5Bmasters%5D=${onlyMasters}&sort=${this.sort}&filters%5Bmin_reward%5D=${minReward}${formatJson}`);
 		if (!this.searchGStats) this.searchGStats = new SearchGStats();
+		this.optionDef.goHamDuration = MyOptions.doSearch().defaultHamDur; this.optionDef.tempGoHam = MyOptions.doSearch().defaultHamDur;
+		this.optionDef.tempDuration = MyOptions.doSearch().defaultDur; this.optionDef.tempFetches = MyOptions.doSearch().defaultFetches;
 	}
 	/** Sets the timer value with the number given or returns the current value of search timer.
 	 * @param  {number} [timer] - Timer Value for Search Timer
@@ -379,7 +382,7 @@ class MturkHitSearch extends MturkClass {
 				if (collected && !autoGid) {
 					let options = await this.theData(dbId, 'options'), unique = trigger.count;
 					if (options.once) { this.toggleTrigger(unique,_, false); disabled = true; if (extSearchUI) extSearchUI.statusMe(unique, trigger.status); }
-				} else if (collected && autoGid) {
+				} else if (collected && autoGid && url !== '') {
 					let taskId = url.match(/\/projects\/.*\/tasks[\/?]([^\/?]*)/)[1]; buildSortObject(this.autoTaskIds, dbId, taskId); this.autoCollected.push(gId);
 				}
 				if (status && !autoGid) { this.pandaCollecting.push(gId); if (dbId && trigger.status === 'disabled' && !disabled) trigger.status = 'collecting'; }
@@ -496,12 +499,13 @@ class MturkHitSearch extends MturkClass {
 	async sendToPanda(item, dbId, type='', useOnce=null, useDur=null, useFetches=null) {
 		myPanda.fetchFromSearch(item.hit_set_id, useOnce);
 		let info = this.triggers[dbId], options = await this.theData(dbId, 'options');
-		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.duration >= 0) ? options.duration : MyOptions.doSearch().defaultDur;
-		if (tempDur < 0 || tempDur > 3600000) { tempDur = options.duration = MyOptions.doSearch().defaultDur; this.updateToDB('options', options, false); }
+		let pandaId = myPanda.getMyId(info.pDbId), tempDur = (options.tempDuration >= 0) ? options.tempDuration : MyOptions.doSearch().defaultDur;
+		if (tempDur < 0 || tempDur > 3600000) { tempDur = options.tempDuration = MyOptions.doSearch().defaultDur; this.updateToDB('options', options, false); }
 		if (options.goHamDuration === 0 && options.autoGoHam) options.goHamDuration = (options.tempGoHam) ? options.tempGoHam : this.optionDef.goHamDuration;
-		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, useFetch = (useFetches !== null) ? useFetches : options.limitFetches;
+		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, useFetch = (useFetches !== null) ? useFetches : options.tempFetches;
+		if (goDur === 0 && useFetch === 0) goDur = MyOptions.doSearch().defaultDur || 12000;
 		let dO = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count);
-		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue,_,_, options.autoGoHam, options.goHamDuration);
+		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, options.limitFetches, options.duration, options.autoGoHam, options.goHamDuration);
 		if (extPandaUI) extPandaUI.addFromSearch(dO, oO, true, true, true, goDur, (options.autoGoHam) ? options.tempGoHam : 0, type, pandaId, info.setName, useFetch);
 	}
 	/** Check all live triggers for this item.
@@ -699,6 +703,7 @@ class MturkHitSearch extends MturkClass {
 		if (type === 'custom' && !info.idNum) { key2 = this.triggersAdded; valueString = `${type}:${key2}:${sUI}`; }
 		let theObject = {'type':type, 'value':key2, 'pDbId':info.pDbId, 'searchUI':sUI, 'name':info.name, 'disabled':(info.status === 'disabled'), 'numFound':0, 'added':new Date().getTime(), 'lastFound':null, 'numHits':0};
 		let theOptions = Object.assign({}, this.optionDef, options), theRule = Object.assign({}, this.ruleSet, rules), theRules = {'rules':[theRule], 'ruleSet':0};
+		if (type === 'custom') { theOptions.tempDuration = MyOptions.doSearch().defaultCustDur; theOptions.tempFetches = MyOptions.doSearch().defaultCustFetches; }
 		let theHistory = history; theObject.numHits = Object.keys(theHistory).length;
 		await this.saveToDatabase(theObject, theOptions, theRules,_, false);
 		let dbId = theObject.id; this.data[dbId] = theObject;
@@ -770,7 +775,7 @@ class MturkHitSearch extends MturkClass {
 							tempString += `[[${hitPosId}]]`;
 							if (!this.searchesString.includes(`[[${hitPosId}]]`)) {
 								let dO = hitObject(thisItem.hit_set_id, thisItem.description, thisItem.title, thisItem.requester_id, thisItem.requester_name, thisItem.monetary_reward.amount_in_dollars, thisItem.assignable_hits_count, thisItem.assignment_duration_in_seconds, thisItem.latest_expiration_time);
-								tempNewHits[dO.groupId] = dO; rewardSort[thisItem.monetary_reward.amount_in_dollars] = thisItem;
+								tempNewHits[dO.groupId] = dO; rewardSort[thisItem.monetary_reward.amount_in_dollars + '-' + i] = thisItem;
 							}
 						}
 						let sortArray = Object.keys(rewardSort).sort((a,b) => b - a), started = true;

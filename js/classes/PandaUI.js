@@ -130,7 +130,8 @@ class PandaUI {
 	/** Shows the Captcha Found Modal and after it will unpause the timers.
 	 * @param {string} [url] - Url of panda to use to fill in captcha. */
 	captchaFound(url='') {
-		this.pauseToggle(true); document.title = 'Captcha Found - Panda Crazy Max'; this.captchaAlert(); this.soundAlarm('Captcha'); console.info('captcha found');
+		globalOpt.resetCaptcha(); this.pauseToggle(true); document.title = 'Captcha Found - Panda Crazy Max'; this.captchaAlert();
+		this.soundAlarm('Captcha'); console.info('captcha found');
 		if (!modal) modal = new ModalClass(); modal.showCaptchaModal( () => {
 			if (modal.modals.length < 2) modal = null; this.pauseToggle(false); document.title = 'Panda Crazy Max';
 		}, url.replace('?format=json',''));
