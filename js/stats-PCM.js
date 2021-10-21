@@ -5,6 +5,11 @@ $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'del
 function getBgPage() {
   chrome.runtime.getBackgroundPage( backgroundPage => {
     bgPage = backgroundPage;
+    bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB();
+
+    $('#pcm-theStatMaker').click( (e) => {
+      bgHistory.testing();
+    });
   });
 }
 

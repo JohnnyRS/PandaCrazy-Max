@@ -3,10 +3,10 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalSearchClass {
 	constructor() {
-    this.pandaDur = {'min':0, 'max':3600};
-    this.defaultPandaDur = {'min':0, 'max':3600};
-    this.hamDur = {'min':0, 'max':120};
-    this.fetchesDur = {'min':0, 'max':3600};
+    this.pandaDur = {'min':0, 'max':120};            // The minimum and maximum duration for panda jobs in minutes. (2 hours max)
+    this.pandaDurSeconds = {'min':0, 'max':3600};    // The minimum and maximum duration for panda jobs in seconds. (1 hour max)
+    this.hamDur = {'min':0, 'max':120};              // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
+    this.fetchesDur = {'min':0, 'max':3600};         // The minimum and maximum number of fetches allowed.
     this.pageSize = {'min':20, 'max':100};
     this.queueSize = {'min':20, 'max':600};
     this.triggerHistDays = {'min':2, 'max':120};
@@ -40,7 +40,7 @@ class ModalSearchClass {
           let type = (reqId) ? 'rid' : (groupId) ? 'gid' : 'custom', enabled = ($('#pcm-triggerEnabled').is(':checked') ? 'searching' : 'disabled');
           let theName = (trigName) ? trigName : (reqId) ? reqId : groupId;
           let theRules = (doCustom) ? {'terms':true, 'include':new Set([groupVal]), 'payRange': true, 'minPay':minPay} : {};
-          let addSuccess = await bgSearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'duration': data.duration, 'once':$('#pcm-onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'limitFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit, 'auto':data.auto}, theRules);
+          let addSuccess = await bgSearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'tempDuration': data.duration, 'once':$('#pcm-onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'tempFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit, 'auto':data.auto}, theRules);
           if (addSuccess) { search.appendFragments(); modal.closeModal(); }
           else wrongInput(modalBody, 'There is already a trigger with this name. Sorry. Please try again.', $(`label[for='pcm-formTriggerName']`));
           theRules = null;
@@ -49,7 +49,7 @@ class ModalSearchClass {
     }
     if (!modal) modal = new ModalClass();
     let df = document.createDocumentFragment(), input1Text = '* Enter info for new Job: ', searchOpt = globalOpt.doSearch();
-    let data = {'reqName':'', 'hitTitle':'', 'price':0.01, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':0, 'limitFetches':0, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0, 'auto':false};
+    let data = {'reqName':'', 'hitTitle':'', 'price':0.01, 'limitNumQueue':0, 'limitTotalQueue':0, 'duration':searchOpt.defaultDur, 'limitFetches':searchOpt.defaultFetches, 'autoGoHam':true, 'hamDuration':(doCustom) ? searchOpt.defaultCustHamDur : searchOpt.defaultHamDur, 'acceptLimit':0, 'auto':false};
     let idName = modal.prepareModal(null, '920px', 'pcm-addTriggersModal', 'modal-lg', 'Add new Search Trigger', '<h4>Enter New Search Trigger Information.</h4>', 'pcm-searchModal', '', 'visible btn-sm', 'Add new Search Trigger', async () => { await checkTrigger(doCustom, idName, data); }, 'invisible', 'No', null, 'visible btn-sm', 'Cancel');
     modal.showModal(null, () => {
       let example1Text = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', example2Text = 'example: Mechanical Turk receipts';
@@ -77,8 +77,8 @@ class ModalSearchClass {
       displayObjectData([
         {'label':'Limit # of GroupID in Queue:', 'type':'range', 'key':'limitNumQueue', 'tooltip':'Optional Field. Limit number of HITs in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
         {'label':'Limit # of Total HITs in Queue:', 'type':'range', 'key':'limitTotalQueue', 'tooltip':'Optional Field. Limit number of HITs allowed in queue. Good when you want to leave room in queue for better HITs.', 'minMax':{'min':0, 'max':24}},
-        {'label':'Stop Collecting After (Seconds):', 'type':'number', 'key':'duration', 'seconds':true, 'default':data.duration, 'tooltip':'Optional Field. The number of seconds for this job to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDur},
-        {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key':'limitFetches', 'default':data.limitFetches, 'tooltip':'Optional Field. Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
+        {'label':'Temporary Duration (Seconds):', 'type':'number', 'key':'tempDuration', 'seconds':true, 'default':data.duration, 'tooltip':'Optional Field. The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDurSeconds},
+        {'label':'Temporary Number of Fetches:', 'type':'number', 'key':'tempFetches', 'default':data.limitFetches, 'tooltip':'Optional Field. Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
         {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'tooltip':'Optional Field. Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
         {'label':'Force Delayed Ham Duration (Seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':data.hamDuration, 'tooltip':'Optional Field. The duration in seconds to use to go in ham mode after collecting a HIT and then go back to normal collecting mode.', 'minMax':this.hamDur},
         {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'tooltip':'Optional Field. How many HITs a day should be accepted for this job?'},
@@ -205,7 +205,7 @@ class ModalSearchClass {
       {'label':'Limit # of Total HITs in Queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'tooltip':'Limit number of HITs allowed in queue. Good when you want to leave room in queue for better HITs.', 'minMax':{'min':0, 'max':24}},
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key1':'options', 'key':'once', 'tooltip':'Should only one HIT be accepted and then stop collecting? Great for surveys.'},
       {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many HITs a day should be accepted for this job?'},
-      {'label':'Stop Collecting After (Seconds):', 'type':'number', 'key1':'options', 'key':'duration', 'seconds':true, 'default':0, 'tooltip':'The number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDur},
+      {'label':'Stop Collecting After (Minutes):', 'type':'number', 'key1':'options', 'key':'duration', 'minutes':true, 'default':0, 'tooltip':'The number of minutes for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDur},
       {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
       {'label':'Temporary Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempDuration', 'seconds':true, 'default':0, 'tooltip':'The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.hamDur},
@@ -329,10 +329,10 @@ class ModalSearchClass {
         {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':globalOpt.getTimerSearch()},
-        {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs.`, 'minMax':this.defaultPandaDur},
+        {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs.`, 'minMax':this.pandaDurSeconds},
         {'label':'Default Trigger Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultFetches', 'tooltip':`The TEMPORARY default number of fetches for new triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
         {'label':'Default Trigger Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultHamDur', 'tooltip':`The default ham duration for new triggers to use on panda jobs.`, 'minMax':this.hamDur},
-        {'label':'Default Custom Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The TEMPORARY default duration for new custom triggers to use on panda jobs.`, 'minMax':this.pandaDur},
+        {'label':'Default Custom Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The TEMPORARY default duration for new custom triggers to use on panda jobs.`, 'minMax':this.pandaDurSeconds},
         {'label':'Default Custom Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The TEMPORARY default number of fetches for new custom triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
         {'label':'Default Custom Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs.`, 'minMax':this.hamDur},
         {'label':'Page Size for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of HITs used on MTURK first search page. The higher the number can slow searching but also can give a better chance of finding HITs you want.`, 'minMax':this.pageSize},

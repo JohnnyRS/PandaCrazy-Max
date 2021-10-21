@@ -3,7 +3,8 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
 	constructor() {
-    this.pandaDur = {'min':0, 'max':120} // Limits for the panda duration in minutes.
+    this.pandaDur = {'min':0, 'max':120}       // Limits for the panda duration in minutes. (2 hours max)
+    this.fetchesDur = {'min':0, 'max':3600};   // The minimum and maximum number of fetches allowed.
     this.modalSearch = null;
   }
   /** Will create a table with the panda options ready to be changed by user.
@@ -17,7 +18,7 @@ class ModalJobClass {
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key':'once', 'ifNot':'search', 'tooltip':'Should only one HIT be accepted and then stop collecting? Great for surveys.'},
       {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'ifNot':'search', 'tooltip':'How many HITs a day should be accepted for this job?'},
       {'label':'Stop Collecting After (Minutes):', 'type':'number', 'key':'duration', 'minutes':true, 'default':0, 'ifNot':'search', 'tooltip':'The number of minutes for this job to collect before stopping. Resets Time if a HIT Gets Collected.', 'minMax':this.pandaDur},
-      {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key':'limitFetches', 'default':0, 'ifNot':'search', 'tooltip':'Number of tries to catch a HIT to do before stopping.'},
+      {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key':'limitFetches', 'default':0, 'ifNot':'search', 'tooltip':'Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'ifNot':'search', 'tooltip':'Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
       {'label':'Force Delayed Ham Duration (Seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':0, 'ifNot':'search', 'tooltip':'The duration in seconds to use to go in ham mode after collecting a HIT and then go back to normal collecting mode.', 'minMax':this.pandaDur},
       {'label':'Friendly Requester Name:', 'type':'text', 'key':'friendlyReqName', 'tooltip':'A user created requester name to make the name shorter or easier to remember.'},

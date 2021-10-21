@@ -1,5 +1,5 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newVersion = null;
-let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null;
+let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, localVersion = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null;
 chrome.storage.local.set({'PCM_running':false});
 
@@ -89,7 +89,7 @@ async function gCheckPandaDB() {
  * @async - To wait for databases to be opened and data loaded.
  * @param  {bool} [panda] - Should panda be prepared?  @param  {bool} [search] - Should search be prepared?  @param  {string} [version] - Extension Version */
 async function prepareToOpen(panda=null, search=null, version=null) {
-  let historyWipe = false; if (compareVersion(version, '0.8.7')) historyWipe = true; // For older versions of history.
+  let historyWipe = false; localVersion = version; if (compareVersion(version, '0.8.7')) historyWipe = true; // For older versions of history.
   if (!panda && !search) return; else if (panda) pandaOpening = true; else if (search) searchOpening = true;
   if (panda && searchOpening) await delay(1500); else if (search && pandaOpening) await delay(1500);
   if (!MYDB) MYDB = new DatabasesClass();

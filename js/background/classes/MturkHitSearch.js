@@ -146,7 +146,7 @@ class MturkHitSearch extends MturkClass {
 	/** Loads data from database into memory using restrictions and adds to UI.
 	 * @async  - So the data can be loaded into memory. */
 	async loadFromDB() {
-		let success = [], err = null, optionsUpdated = [], triggersUpdated = [];
+		let success = [], err = null, optionsUpdated = [], triggersUpdated = [], updateOptions = false;
 		await MYDB.getFromDB('searching').then( async result => {
 			for (const trigger of result) {
 				let dbId = trigger.id, status = (trigger.disabled || !trigger.searchUI) ? 'disabled' : 'searching';
@@ -157,14 +157,15 @@ class MturkHitSearch extends MturkClass {
 								extSearchUI.addToUI(trigger, status, trigger.name, this.triggers[dbId].count);
 								if (!trigger.disabled) this.setDisabled(trigger.type, trigger.value, false, trigger.searchUI, false);
 							} else if (!this.loaded) {
-								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`;
+								let valueString = `${trigger.type}:${trigger.value}:${trigger.searchUI}`; updateOptions = false;
 								if (!this.dbIds.values.hasOwnProperty(valueString)) {
 									let numHits = historyNum, stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null},trigger); stats.numHits = numHits;
 									if (!options.autoGoHam) options.tempGoHam = 0; else if (options.tempGoHam === 0) options.tempGoHam = this.optionDef.goHamDuration;
 									options.goHamDuration = options.tempGoHam;
+									if (compareVersion(localVersion, '0.9.38')) { options.duration = 0; options.limitFetches = 0; updateOptions = true; }
 									this.options[dbId] = Object.assign({}, this.optionDef, options);
 									this.data[dbId] = {...trigger, ...stats}; this.rules[dbId] = ruleData.rules[ruleData.ruleSet];
-									if (!options.hasOwnProperty('autoLimit')) optionsUpdated.push(this.options[dbId]);
+									if (!options.hasOwnProperty('autoLimit') || updateOptions) optionsUpdated.push(this.options[dbId]);
 									if (!trigger.hasOwnProperty('numHits') || trigger.numHits !== stats.numHits) triggersUpdated.push(this.data[dbId]);
 									this.fillInObjects(this.triggersAdded++, dbId, this.data[dbId], status, valueString, this.data[dbId].searchUI); stats = {};
 								}

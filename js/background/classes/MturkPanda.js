@@ -455,7 +455,7 @@ class MturkPanda extends MturkClass {
 	checkIfLimited(myId, accepted, data) {
 		let stopIt=null, stats = extPandaUI.pandaStats[myId], thisInfo = this.info[myId];
 		if (accepted && data.once) stopIt = 'once'; // Panda is limited to collecting only once so stop it.
-		else if (accepted && thisInfo.autoAdded && data.hitsAvailable === 1) stopIt = 'One HIT Available';
+		// else if (accepted && thisInfo.autoAdded && data.hitsAvailable === 1) stopIt = 'One HIT Available';
 		else if (data.acceptLimit > 0 && data.acceptLimit <= stats.getDailyAccepted()) stopIt = 'Daily Accept Limit';
 		else if (data.limitFetches > 0 && data.limitFetches <= stats.getFetchedSession()) stopIt = 'Fetched Limit';
 		else if (thisInfo.tempFetches && thisInfo.tempFetches > 0 && thisInfo.tempFetches <= thisInfo.tFCounter) { stopIt = 'Fetched Limit'; thisInfo.tFCounter = 0; }
