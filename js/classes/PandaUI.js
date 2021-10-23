@@ -124,7 +124,7 @@ class PandaUI {
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); });
-		if (!bgPanda.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		if (!bgPanda.isLoggedOff()) { theAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 		dashboard.nowLoggedOff();
 	}
 	/** Shows the Captcha Found Modal and after it will unpause the timers.
@@ -415,7 +415,7 @@ class PandaUI {
 		this.logTabs.addIntoQueue(hitDetails, pandaInfo.data, url.replace('https://worker.mturk.com',''));
 		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data);
 		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
-		if (!pandaInfo.data.mute) alarms.doAlarms(pandaInfo.data);
+		if (!pandaInfo.data.mute) theAlarms.doAlarms(pandaInfo.data);
 		bgPanda.checkIfLimited(myId, true, pandaInfo.data);
 		targetDiv = null; rawProps = null; formInfo = null; hitDetails = null;
 	}
@@ -441,7 +441,7 @@ class PandaUI {
 	totalResults(gId='') { return this.logTabs.totalResults(gId); }
 	/** Sounds an alarm by the name parameter. Will check if the name is correct before calling alarm function.
 	 * @param  {string} name - The name of an alarm to sound. */
-	soundAlarm(name) { if (['Captcha','Queue','Full'].includes(name)) alarms[`do${name}Alarm`](); }
+	soundAlarm(name) { if (['Captcha','Queue','Full'].includes(name)) theAlarms[`do${name}Alarm`](); }
 	/** Notifies the user that a captcha has been found. */
 	captchaAlert() { if (globalOpt.isNotifications() && globalOpt.isCaptchaAlert()) notify.showCaptchaAlert(); }
 	/** Notifies the user that they can't accept any more HITs for today. */

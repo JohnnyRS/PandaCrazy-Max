@@ -1,6 +1,8 @@
-let bgPage = null, search = null, pandaUI = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
-let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
+let bgPage = null, search = null, pandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
+
+const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
 
 /** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
 function getBgPage() {
@@ -21,7 +23,7 @@ function modalLoadingData() {
 async function prepare() {
   await bgPage.prepareToOpen(_, true, localVersion).then( () => {
     search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); globalOpt = bgPage.gGetOptions();
-    themes = new ThemesClass(); alarms = bgPage.gGetAlarms(new MyAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+    themes = new ThemesClass(); theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
@@ -51,5 +53,5 @@ getBgPage(); // Grabs the background page, detects if another UI is opened and t
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', () => {
   if (bgSearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
-  globalOpt = null; alarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null; bgQueue = null; bgHistory = null; themes = null; MYDB = null;
+  globalOpt = null; theAlarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null; bgQueue = null; bgHistory = null; themes = null; MYDB = null;
 });

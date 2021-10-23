@@ -47,7 +47,7 @@ class SearchUI {
   /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
-		if (!bgSearch.isLoggedOff()) { alarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		if (!bgSearch.isLoggedOff()) { theAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
@@ -301,7 +301,7 @@ class SearchUI {
 		$(`#pcm-triggerCard-${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm-triggerStats-${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
 		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term, auto);
-		if (term && started) alarms.playSound('triggeredAlarm');
+		if (term && started) theAlarms.playSound('triggeredAlarm');
 	}
 	/** Shows the add search trigger modal for normal and custom triggers.
 	 * @param  {bool} [doCustom] - Adding Custom Trigger? */

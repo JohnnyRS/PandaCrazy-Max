@@ -18,7 +18,7 @@ class ModalAlarmClass {
    * @param  {string} name - The name of the alarm to add.
    * @return {object}      - Jquery object of the div element created. */
   addDivAlarms(name) {
-    let data = alarms.getData(name), statusM = (data.mute) ? 'btn-mutted' : '', colorT = (data.tts) ? 'btn-doTTS' : '', desc = data.desc, pay = data.pay, lessThanStr = ``;
+    let data = theAlarms.getData(name), statusM = (data.mute) ? 'btn-mutted' : '', colorT = (data.tts) ? 'btn-doTTS' : '', desc = data.desc, pay = data.pay, lessThanStr = ``;
     let lessThan = (data.lessThan) ? data.lessThan : '', payStr = (pay) ? ` <span class='pcm-alarmsPay pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than pay rate.'>$${pay}</span>` : '';
     if (lessThan > 0 && name !== 'queueAlert') lessThanStr = ` with a short timer less than <span class='pcm-alarmsMinutes pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
     else if (name === 'queueAlert') lessThanStr = ` <span class='pcm-alarmsMinutes pcm-tooltipData pcm-tooltipHelper' data-original-title='Change the less than minute(s).'>${lessThan}</span> minute(s)`;
@@ -31,7 +31,7 @@ class ModalAlarmClass {
     $('.pcm-saveAudio').click( () => {
       $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
       if (this.audio) this.audio.load();
-      alarms.getData(name).audio = this.audio; alarms.saveAlarm(name); this.audio = null;
+      theAlarms.getData(name).audio = this.audio; theAlarms.saveAlarm(name); this.audio = null;
     });
   }
   /** Shows the modal for the alarms so users can change alarm options.
@@ -49,39 +49,39 @@ class ModalAlarmClass {
         this.addDivAlarms('more15').appendTo(df); this.addDivAlarms('queueFull').appendTo(df); this.addDivAlarms('queueAlert').appendTo(df);
         this.addDivAlarms('loggedOut').appendTo(df); this.addDivAlarms('captchaAlarm').appendTo(df);
       }
-      $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(alarms.voicesOption())).appendTo(df);
+      $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(theAlarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
       let resetTipsClass = (pandaUI) ? pandaUI : search;
       if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
-        alarms.theVoiceIndex(index); alarms.theVoiceName(name);
+        theAlarms.theVoiceIndex(index); theAlarms.theVoiceName(name);
       });
       modalBody.find('.pcm-playMe').click( e => {
         let wasPlaying = $(e.target).hasClass('pcm-playing');
         $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
-        alarms.stopSound(); if (this.audio) this.audio.load();
+        theAlarms.stopSound(); if (this.audio) this.audio.load();
         if (!wasPlaying) {
           $(e.target).addClass('pcm-playing');
-          alarms.playSound($(e.target).closest('div').data('snd'), true,_, () => {
+          theAlarms.playSound($(e.target).closest('div').data('snd'), true,_, () => {
             $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
           });
         }
       });
       modalBody.find('.pcm-muteMe').click( e => {
-        let btn = $(e.target), mute = alarms.muteToggle(btn.closest('div').data('snd'));
+        let btn = $(e.target), mute = theAlarms.muteToggle(btn.closest('div').data('snd'));
         if (mute) btn.addClass('btn-mutted'); else btn.removeClass('btn-mutted');
         pandaUI.queueAlertUpdate();
         btn.blur(); btn = null;
       });
       modalBody.find('.pcm-ttsMe').click( e => {
-        let btn = $(e.target), tts = alarms.ttsToggle(btn.closest('div').data('snd'));
+        let btn = $(e.target), tts = theAlarms.ttsToggle(btn.closest('div').data('snd'));
         if (tts) btn.addClass('btn-doTTS'); else btn.removeClass('btn-doTTS');
         btn.blur(); btn = null
       });
       modalBody.find('.pcm-newSnd').click( e => {
         $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
-        alarms.stopSound(); if (this.audio) this.audio.load();
+        theAlarms.stopSound(); if (this.audio) this.audio.load();
         let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd'), resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : search;
         $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
         if (prevSnd !== soundName) {
@@ -102,8 +102,8 @@ class ModalAlarmClass {
             }
           });
           $('.pcm-defaultAudio').click( () => {
-            let data = alarms.getData(soundName);
-            this.audio = new Audio(); this.audio.src = chrome.runtime.getURL(`${alarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
+            let data = theAlarms.getData(soundName);
+            this.audio = new Audio(); this.audio.src = chrome.runtime.getURL(`${theAlarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
           });
           if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
         }
@@ -115,11 +115,11 @@ class ModalAlarmClass {
           if (!isNaN(newValue)) {
             newValue = Number(newValue).toFixed(2);
             if (newValue < 20) {
-              alarms.setPayRate(soundName, newValue); $(e.target).html('$' + newValue); modal.closeModal();
+              theAlarms.setPayRate(soundName, newValue); $(e.target).html('$' + newValue); modal.closeModal();
             } else $('.pcm-inputDiv-question:first .inputError').html('Must be a decimal less than 20!');
           } else $('.pcm-inputDiv-question:first .inputError').html('Must be a number!');
         }, true, true, 'Pay rate: ', $(e.target).text().replace('$',''), 10,_, () => {}, 'Change', 'Default Value' ,() => {
-          $(e.target).html('$' + alarms.setPayDef(soundName));
+          $(e.target).html('$' + theAlarms.setPayDef(soundName));
         });
       });
       modalBody.find('.pcm-alarmsMinutes').click( e => {
@@ -127,14 +127,14 @@ class ModalAlarmClass {
         modal.showDialogModal('700px', 'Change New Less Than Minutes.', 'Enter the minutes that this alarm will sound if the duration is less than this:', () => {
           let newValue = $('#pcm-formQuestion').val();
           if (!isNaN(newValue)) {
-            alarms.setLessThan(soundName, newValue); $(e.target).html(newValue); modal.closeModal();
+            theAlarms.setLessThan(soundName, newValue); $(e.target).html(newValue); modal.closeModal();
           } else $('.pcm-inputDiv-question:first .inputError').html('Must be a number!');
         }, true, true, 'Minutes: ', $(e.target).text(), 10,_, () => {}, 'Change', 'Default Value' ,() => {
-          $(e.target).html(alarms.setLessThanDef(soundName));
+          $(e.target).html(theAlarms.setLessThanDef(soundName));
         });
       });
       modalBody = null; df = null;
-    }, () => { alarms.stopSound(); if (this.audio) this.audio.load(); this.audio = null; modal = null; if (afterClose) afterClose(); });
+    }, () => { theAlarms.stopSound(); if (this.audio) this.audio.load(); this.audio = null; modal = null; if (afterClose) afterClose(); });
   }
   /** Reads a file, sets up the audio and plays the audio to user.
    * @param  {string} name - Alarm Name  @param  {string} type - Audio Type */

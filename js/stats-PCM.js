@@ -1,4 +1,4 @@
-let bgPage = null, search = null, pandaUI = null, alarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let bgPage = null, search = null, pandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 

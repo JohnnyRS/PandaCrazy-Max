@@ -77,7 +77,7 @@ class TabbedClass {
     } else if (this.ulId === 'pcm-tabbedlogs') {
       $(`<li class='pcm-endTab'></li><li class='pcm-captchaText'></li><input class='pcm-muteAlarm ml-auto' type='checkbox' title='Mute Alarm' name='muteAlarm'><label class='pcm-muteAlarmLabel' for='muteAlarm'>Mute Alarm</label>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       this.updateMuteAlarm();
-      $(`input.pcm-muteAlarm`).click( () => { alarms.muteToggle('queueAlert'); this.updateMuteAlarm(); } )
+      $(`input.pcm-muteAlarm`).click( () => { theAlarms.muteToggle('queueAlert'); this.updateMuteAlarm(); } )
       success = 'Added all log tabs.';
     } else {
       $(`<li class='pcm-endTab'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
@@ -255,7 +255,7 @@ class TabbedClass {
     if (!globalOpt.isQueueAlarm()) { $(`input.pcm-muteAlarm`).prop('disabled', true); $(`label.pcm-muteAlarmLabel`).addClass('pcm-strikeThrough'); }
     else {
       $(`input.pcm-muteAlarm`).prop('disabled', false); $(`label.pcm-muteAlarmLabel`).removeClass('pcm-strikeThrough');
-      if (alarms.getMute('queueAlert')) $(`input.pcm-muteAlarm`).prop('checked', true); else $(`input.pcm-muteAlarm`).prop('checked', false);
+      if (theAlarms.getMute('queueAlert')) $(`input.pcm-muteAlarm`).prop('checked', true); else $(`input.pcm-muteAlarm`).prop('checked', false);
     }
   }
 }

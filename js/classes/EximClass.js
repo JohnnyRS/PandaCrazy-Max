@@ -40,7 +40,7 @@ class EximClass {
   /** Export only alarms to an export file.
    * @param {function} doneFunc - Do After Function */
   exportOnlyAlarms(doneFunc=null) {
-    let exportAlarms = alarms.exportAlarms(true, true);
+    let exportAlarms = theAlarms.exportAlarms(true, true);
     saveToFile({'pre':this.exportPre, 'Alarms':exportAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });
   }
   /** Export all the data to a file with alarms or not.
@@ -52,7 +52,7 @@ class EximClass {
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups();
-    exportAlarms = alarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
+    exportAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
     this.exportPre.jobs = exportJobs.length; 
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
       'SearchGroupings':exportSearchGroups, 'SoundOptions':exportAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
@@ -100,8 +100,8 @@ class EximClass {
    * @param  {bool} [onlyAlarms] - Should alarm sounds only get imported? */
   async startImporting(onlyAlarms=false) {
     if (onlyAlarms || this.alarmsOnly) {
-      await alarms.clearAlarms();
-      await alarms.prepareAlarms(Object.values(this.importAlarmsData), false);
+      await theAlarms.clearAlarms();
+      await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
     } else {
       if (!Object.keys(this.importTabsData).length) this.importTabsData = Object.assign({}, this.importJobsTabs);
       let counters = 0, tabDbId = 1, mInfo = [], mData = []; this.tabPosition = 0;
@@ -111,7 +111,7 @@ class EximClass {
         bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
         await bgPanda.recreateDB(); // Recreate database and stores.
         await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
-        await alarms.prepareAlarms(Object.values(this.importAlarmsData), false);
+        await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
         await groupings.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
         $('.pcm-importButton:first').append('.');
         globalOpt.importOptions(this.importOptions);
@@ -385,11 +385,11 @@ class EximClass {
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
   theSoundOptions(rData) {
     if (rData.captchaAlarm) {
-      let defaultAlarms = alarms.theDefaultAlarms();
+      let defaultAlarms = theAlarms.theDefaultAlarms();
       for (const key of Object.keys(rData)) {
         this.importAlarmsData[key] = Object.assign(defaultAlarms[key], rData[key]);
         if (!rData[key].obj) {
-          let audio = alarms.theAlarms(key).audio;
+          let audio = theAlarms.theAlarms(key).audio;
           if (audio === null) this.importAlarmsData[key].obj = null;
           else if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
         } else if (rData[key].obj.substr(0,4) === 'data') this.importAlarmsData[key].obj = rData[key].obj;

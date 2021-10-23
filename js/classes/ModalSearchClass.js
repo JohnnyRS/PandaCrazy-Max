@@ -6,13 +6,13 @@ class ModalSearchClass {
     this.pandaDur = {'min':0, 'max':120};            // The minimum and maximum duration for panda jobs in minutes. (2 hours max)
     this.pandaDurSeconds = {'min':0, 'max':3600};    // The minimum and maximum duration for panda jobs in seconds. (1 hour max)
     this.hamDur = {'min':0, 'max':120};              // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
-    this.fetchesDur = {'min':0, 'max':3600};         // The minimum and maximum number of fetches allowed.
-    this.pageSize = {'min':20, 'max':100};
-    this.queueSize = {'min':20, 'max':600};
-    this.triggerHistDays = {'min':2, 'max':120};
-    this.customHistDays = {'min':2, 'max':60};
-    this.autoRange = {'min':1, 'max':5};
-    this.minPayRange = {'min':0.00, 'max':300.00};
+    this.fetchesDur = {'min':0, 'max':3600};         // The minimum and maximum number of fetches allowed. (1 hour max approximately)
+    this.pageSize = {'min':20, 'max':100};           // The minimum and maximum amount of HITs for MTURK to show on one search page.
+    this.queueSize = {'min':20, 'max':600};          // The minimum and maximum amount of triggers to keep in memory for faster operation vs larger memory used.
+    this.triggerHistDays = {'min':2, 'max':120};     // The minimum and maximum amount of days allowed to keep HIT and requester info in database.
+    this.customHistDays = {'min':2, 'max':60};       // The minimum and maximum amount of days allowed to keep HIT and requester info in database from custom triggers.
+    this.autoRange = {'min':1, 'max':5};             // The minimum and maximum amount of panda's to try to grab from an automatic custom trigger.
+    this.minPayRange = {'min':0.00, 'max':300.00};   // The minimum and maximum amount of pay for MTURK to filter on the search page.
   }
   /** Shows a modal for adding panda or search jobs.
    * @param  {function} [afterClose] - After Function  @param {bool} [doCustom] - Custom Trigger? */
@@ -208,8 +208,8 @@ class ModalSearchClass {
       {'label':'Stop Collecting After (Minutes):', 'type':'number', 'key1':'options', 'key':'duration', 'minutes':true, 'default':0, 'tooltip':'The number of minutes for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDur},
       {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Temporary Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempDuration', 'seconds':true, 'default':0, 'tooltip':'The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.hamDur},
-      {'label':'Temporary Number of Fetches:', 'type':'number', 'key1':'options', 'key':'tempFetches', 'default':0, 'tooltip':'The TEMPORARY Number of tries to catch a HIT to do before stopping.', 'minMax':this.hamDur},
+      {'label':'Temporary Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempDuration', 'seconds':true, 'default':0, 'tooltip':'The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDurSeconds},
+      {'label':'Temporary Number of Fetches:', 'type':'number', 'key1':'options', 'key':'tempFetches', 'default':0, 'tooltip':'The TEMPORARY Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Temporary Start Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':0, 'tooltip':'The TEMPORARY duration in seconds to use to go in ham mode after starting to collect a HIT and then go back to normal collecting mode.', 'minMax':this.hamDur},
     ], theTable, changes, true);
     theTable = null;

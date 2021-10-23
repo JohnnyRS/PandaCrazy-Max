@@ -1,8 +1,13 @@
 let bgPage = null; // Get the background page object for easier access.
-let globalOpt = null, notify = null, alarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
+let globalOpt = null, notify = null, theAlarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
 let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, search = null;
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
+let pcmRunning = JSON.parse(localStorage.getItem('PCM_running'));
+
+const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
+const search_channel = new BroadcastChannel('PCM_ksearch_band');
+
 if (gManifestData.version !== localVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gManifestData.version);
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
@@ -26,7 +31,7 @@ function modalLoadingData() {
 async function prepare() {
   await bgPage.prepareToOpen(true,_, localVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
-    globalOpt = bgPage.gGetOptions(); alarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    globalOpt = bgPage.gGetOptions(); theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new TheGroupings(); sGroupings = new TheGroupings('searching'); pandaUI = new PandaUI(); menus = new MenuClass(); dashboard = bgPage.gGetDash();
     themes = new ThemesClass();
     startPandaCrazy();
@@ -69,7 +74,7 @@ getBgPage(); // Grabs the background page, detects if another UI is opened and t
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', async () => {
   if (bgPanda) { bgPage.gSetPandaUI(null); groupings.removeAll(); sGroupings.removeAll(); }
-  globalOpt = null; notify = null; alarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
+  globalOpt = null; notify = null; theAlarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
   bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
 });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */

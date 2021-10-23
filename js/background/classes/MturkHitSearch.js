@@ -354,7 +354,7 @@ class MturkHitSearch extends MturkClass {
 			this.setDisabled(type, value, true, sUI); this.triggers[dbId].tempDisabled = false;
 		}
 	}
-	/** This method will stop the searching of the MTURK queue. */
+	/** This method will stop the searching of the MTURK search page. */
 	stopSearching() {
 		this.liveCounter = this.livePandaUIStr.length + ((this.searchGStats && this.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
 		if (this.timerUnique && this.liveCounter === 0) { if (searchTimer) searchTimer.deleteFromQueue(this.timerUnique); this.timerUnique = null; }

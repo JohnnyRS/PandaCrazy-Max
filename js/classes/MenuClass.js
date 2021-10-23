@@ -77,10 +77,10 @@ class MenuClass {
     let topMenu = $(`<div class='btn-group pcm-btnGroup' role='group'></div>`).appendTo($(`.${this.topMenuRow1}:first`));
     let vol = globalOpt.theVolume(), volumeHoriz = globalOpt.theVolDir();
     let volumeSlider = $(`<span class='pcm-volumeHorizGroup'>Vol: </span>`).css('display',(volumeHoriz) ? 'block' : 'none').appendTo(topMenu);
-    inputRange(volumeSlider, 0, 100, vol, 'vol', (value) => { alarms.setVolume(value); }, false);
+    inputRange(volumeSlider, 0, 100, vol, 'vol', (value) => { theAlarms.setVolume(value); }, false);
     this.addSubMenu(topMenu, 'Vol: ', 'pcm-btn-dropDown', 'pcm-volumeVertGroup', '', [
       {'type':'rangeMax', 'label':'100'},
-      {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (_, ui) => { $(ui.handle).text(ui.value); alarms.setVolume(ui.value); }, 'createFunc': (e) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
+      {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (_, ui) => { $(ui.handle).text(ui.value); theAlarms.setVolume(ui.value); }, 'createFunc': (e) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
       {'type':'rangeMin', 'label':'0'}
     ], 'Change the global volume level for alarms.', 'pcm-volumeDropDownBtn', 'pcm-dropdownVolume', true, () => {});
     topMenu.find('.pcm-volumeVertGroup').css('display',(volumeHoriz) ? 'none' : 'flex')

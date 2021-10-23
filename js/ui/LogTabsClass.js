@@ -180,7 +180,7 @@ class LogTabsClass {
           else if (firstOne) {
             if (globalOpt.checkQueueAlert(newInfo[taskId].secondsLeft)) {
               if (globalOpt.isQueueAlert()) this.queueContent.closest('.tab-pane').stop(true,true).effect( 'highlight', {color:this.bgLowTimeHighlighter}, 3600 );
-              if (globalOpt.isQueueAlarm()) alarms.doQueueAlarm(globalOpt.lastQueueAlert);
+              if (globalOpt.isQueueAlarm()) theAlarms.doQueueAlarm(globalOpt.lastQueueAlert);
             }
             firstOne = false;
           }
