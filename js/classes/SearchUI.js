@@ -15,6 +15,7 @@ class SearchUI {
 		this.gidContent = {};
 		this.customContent = {};
 		this.triggeredContent = {};
+		this.searchGStats = null;
 		this.modalSearch = null;
 		this.modalAlarms = null;
 		this.ctrlDelete = [];
@@ -36,18 +37,21 @@ class SearchUI {
 	showModalMessage(theTitle, theMessage) { if (!modal) modal = new ModalClass(); modal.showDialogModal('700px', theTitle, theMessage, null , false, false, '', '', null ); }
   /** Stops the searching process. */
   stopSearching() {
-		if (bgSearch.searchGStats.isSearchOn()) bgSearch.searchGStats.searchingOff();
+		if (this.searchGStats.isSearchOn()) this.searchGStats.searchingOff();
 		bgSearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
 	}
   /** Starts the searching process. */
   startSearching() {
-		if (bgSearch.startSearching()) { bgSearch.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
+		if (bgSearch.startSearching()) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
 	}
-  /** Shows logged off modal and will unpause the timer when logged off modal closes. */
+	/** Will toggle the paused value or force the paused value to a given value.
+	 * @param {bool} [val] - Force Pause Value  */
+	pauseToggle(val=null) { if (bgSearch) { bgSearch.pauseToggle(val); }}
+	 /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
-		if (!bgSearch.isLoggedOff()) { theAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		if (!bgSearch.isLoggedOff()) { MyAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
@@ -102,7 +106,7 @@ class SearchUI {
   /** Prepare the search page with button events and set up the columns for triggers to use.
 	 * @async - To wait for tabs to be created. */
 	async prepareSearch() {
-		bgSearch.prepareSearch(); menus.createSearchTopMenu();
+		this.searchGStats = new SearchGStats(); bgSearch.prepareSearch(); menus.createSearchTopMenu();
 		this.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
     let [, err] = await this.tabs.prepare();
     if (!err) {
@@ -125,7 +129,7 @@ class SearchUI {
 		themes.prepareThemes(); menus.resetCSSValues();
 		let setTempStr = (statObj) => { statObj.tempStr = getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string); this.updateStatNav(statObj); }
 		let properties = ['searchElapsed', 'totalSearchFetched', 'totalSearchPREs', 'totalSearchHits', 'totalSearchResults'];
-		for (const prop of properties) { setTempStr(bgSearch.searchGStats[prop]); }
+		for (const prop of properties) { setTempStr(this.searchGStats[prop]); }
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} thetrigger - Jquery element  @param {string} [theStatus] - Status  @param  {bool} [tempDisabled] - Only Temporary? */
@@ -257,7 +261,7 @@ class SearchUI {
 		if (unique) {
 			search.appendFragments();
 			bgSearch.doRidSearch(rId, async (timerUnique, elapsed, rId) => {
-				await bgSearch.goFetch(bgSearch.createReqUrl(rId), timerUnique, elapsed, rId, bgSearch.uniqueToDbId(unique), 'gid', gId, true, gId);
+				await bgSearch.goFetch(bgSearch.createReqUrl(rId), timerUnique, elapsed, bgSearch.uniqueToDbId(unique), 'gid', gId, true, gId);
 			});
 		}
 	}
@@ -301,7 +305,7 @@ class SearchUI {
 		$(`#pcm-triggerCard-${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm-triggerStats-${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
 		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term, auto);
-		if (term && started) theAlarms.playSound('triggeredAlarm');
+		if (term && started) MyAlarms.playSound('triggeredAlarm');
 	}
 	/** Shows the add search trigger modal for normal and custom triggers.
 	 * @param  {bool} [doCustom] - Adding Custom Trigger? */

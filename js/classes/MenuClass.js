@@ -77,10 +77,10 @@ class MenuClass {
     let topMenu = $(`<div class='btn-group pcm-btnGroup' role='group'></div>`).appendTo($(`.${this.topMenuRow1}:first`));
     let vol = globalOpt.theVolume(), volumeHoriz = globalOpt.theVolDir();
     let volumeSlider = $(`<span class='pcm-volumeHorizGroup'>Vol: </span>`).css('display',(volumeHoriz) ? 'block' : 'none').appendTo(topMenu);
-    inputRange(volumeSlider, 0, 100, vol, 'vol', (value) => { theAlarms.setVolume(value); }, false);
+    inputRange(volumeSlider, 0, 100, vol, 'vol', (value) => { MyAlarms.setVolume(value); }, false);
     this.addSubMenu(topMenu, 'Vol: ', 'pcm-btn-dropDown', 'pcm-volumeVertGroup', '', [
       {'type':'rangeMax', 'label':'100'},
-      {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (_, ui) => { $(ui.handle).text(ui.value); theAlarms.setVolume(ui.value); }, 'createFunc': (e) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
+      {'type':'slider', id:'pcm-volumeVertical', 'min':0, 'max':100, 'value':vol, 'step':5, 'slideFunc': (_, ui) => { $(ui.handle).text(ui.value); MyAlarms.setVolume(ui.value); }, 'createFunc': (e) => { $(e.target).find('.ui-slider-handle').text(vol).css({'left': '-0.6em', 'width': '25px', 'fontSize':'12px', 'lineHeight':'1', 'height':'18px', 'paddingTop':'2px'}); }},
       {'type':'rangeMin', 'label':'0'}
     ], 'Change the global volume level for alarms.', 'pcm-volumeDropDownBtn', 'pcm-dropdownVolume', true, () => {});
     topMenu.find('.pcm-volumeVertGroup').css('display',(volumeHoriz) ? 'none' : 'flex')
@@ -157,7 +157,7 @@ class MenuClass {
   createSearchTopMenu() {
 		let topBar = $(`.pcm-menuRow1:first`);
     this.addMenu(topBar, ' ', e => {
-			if (bgSearch.searchGStats.isSearchOn()) search.stopSearching();
+			if (search.searchGStats.isSearchOn()) search.stopSearching();
 			else if (bgSearch.isPandaUI()) {
 				if (!search.startSearching()) search.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
 			} else search.showModalMessage('Open PandaCrazyMax First', 'PandaCrazyMax must be opened before search triggers can start collecting HITs.');
@@ -180,11 +180,11 @@ class MenuClass {
         if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
 				}, class:'pcm-searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
 		], '', 'pcm-bSearchOptions-dropdown');
-		let stats = $(`<span id='pcm-searchStats'></span>`).appendTo(topBar);
-		stats.append(` - [ <small class='pcm-elapsedStat'><span id='pcm-searchElapsed'></span></small> | `);
-		stats.append(`<small class='pcm-fetchedStat'><span id='pcm-searchTotalFetched'></span></small> | `);
-		stats.append(`<small class='pcm-searchPreStat'><span id='pcm-totalSearchPREs'></span></small> | `);
-		stats.append(`<small class='pcm-hitsAvailableStat'><span id='pcm-searchResults'></span></small> ]`);
+		let stats = $(`<small class='pcm-searchStats'></span>`).appendTo(topBar);
+		stats.append(` - [ <span id='pcm-timerStats' class='toggle'></span> | `);
+		stats.append(`<span id='pcm-searchTotalFetched'></span> | `);
+		stats.append(`<span id='pcm-totalSearchPREs'></span> | `);
+		stats.append(`<span id='pcm-searchResults'></span> ]`);
 		let controls = $('.pcm-menuRow2:first');
 		controls.append(`<span class='pcm-text-triggers'></span>`);
     this.addMenu(controls, 'List', () => {
@@ -221,7 +221,7 @@ class MenuClass {
 			let autoAllow = bgSearch.autoHitsAllow(!bgSearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
 			$(e.target).html(buttonText).removeClass('pcm-autoOn pcm-autoOff').addClass((autoAllow) ? 'pcm-autoOn' : 'pcm-autoOff'); $(e.target).blur();
 		}, 'Should triggers be allowed to automatically collect found HITs?', 'pcm-btn-menu pcm-btn-toggle pcm-autoOff', 'pcm-bAutoAllow');
-		bgSearch.searchGStats.prepare();
+		if (search) search.searchGStats.prepare();
 		topBar = null, options = null, stats = null, controls = null, groupDrop = null, filters = null, sorting = null;
   }
 }

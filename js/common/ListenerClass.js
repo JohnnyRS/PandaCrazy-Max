@@ -34,7 +34,7 @@ class ListenerClass {
           else if (command === 'unpause') { if (pandaUI) pandaUI.pauseToggle(false); }
           else if (command === 'forumOptions') { if (pandaUI && globalOpt) sendResponse(globalOpt.theHelperOptions()); }
           else if (command === 'queueOptions') { if (pandaUI && globalOpt) globalOpt.theSessionQueue(data); if (sendResponse) sendResponse(globalOpt.theHelperOptions()); }
-          else if (command === 'monitorSpeech') { if (pandaUI && !globalOpt.doGeneral().disableMonitorAlert) theAlarms.speakThisNow('HITs in Queue. Going to first.'); }
+          else if (command === 'monitorSpeech') { if (pandaUI && !globalOpt.doGeneral().disableMonitorAlert) MyAlarms.speakThisNow('HITs in Queue. Going to first.'); }
           else console.info(JSON.stringify(request), sender);
         }
       }

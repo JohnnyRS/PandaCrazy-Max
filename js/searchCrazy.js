@@ -1,5 +1,5 @@
 let bgPage = null, search = null, pandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
-let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null;
+let gLocalVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null, MyAlarms = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
@@ -21,9 +21,9 @@ function modalLoadingData() {
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
-  await bgPage.prepareToOpen(_, true, localVersion).then( () => {
-    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); globalOpt = bgPage.gGetOptions();
-    themes = new ThemesClass(); theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'search'); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+  await bgPage.prepareToOpen(_, true, gLocalVersion).then( () => {
+    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); MyOptions = globalOpt = bgPage.gGetOptions();
+    themes = new ThemesClass(); MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
@@ -53,5 +53,13 @@ getBgPage(); // Grabs the background page, detects if another UI is opened and t
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', () => {
   if (bgSearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
-  globalOpt = null; theAlarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null; bgQueue = null; bgHistory = null; themes = null; MYDB = null;
+  globalOpt = null; MyOptions = null; MyAlarms = null; theAlarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null;
+  bgQueue = null; bgHistory = null; themes = null; MYDB = null;
 });
+
+pcm_channel.onmessage = async (e) => {
+  if (e.data) {
+    const data = e.data;
+    alarmsListener(data);
+  }
+}  

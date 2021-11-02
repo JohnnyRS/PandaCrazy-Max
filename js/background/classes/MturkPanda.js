@@ -23,11 +23,11 @@ class MturkPanda extends MturkClass {
 		this.pandaSkippedData = {};							// List of all panda data which are being skipped.
 		this.queueAdds = {};										// Object of panda accepted HITs so it can limit number of accepts.
 		this.loggedOff = false;									// Are we logged off from MTURK?
-		this.resultsBack = true;								// Jobs using limits need to know when results come back from Mturk.
 		this.skipError = false;									// Used to skip displaying error when fetching twice for speed.
 		this.tempPaused = false;								// Used to pause timer if queue is maxed or a MTURK problem.
 		this.skippedDoNext = false;							// Used when checking skipped jobs in a recursive function.
 		this.authenticityToken = null;					// The authenticity token from MTURK so HITs can be returned.
+		this.resultsBack = {'status':true, 'elapsed':null, 'parsedTime':null, 'lastParsed':null};	// Records status and times of results returned from MTURK including parsed times.
 		if (timer) {
 			pandaTimer.setMyClass(this, true);			// Tell timer what class is using it so it can send information back.
 			pandaTimer.theTimer(timer);         		// Set timer for this timer.
@@ -498,12 +498,12 @@ class MturkPanda extends MturkClass {
 		extPandaUI.pandaGStats.setPandaElapsed(elapsed);
 		let resultsBack = true, info = this.info[myId] || {};
 		if (myId !== null && info && !info.data) info.data = await this.dataObj(myId);
-		if (myId !== null && (info.data.once || info.data.limitTotalQueue > 0 || info.data.limitNumQueue > 0) && !this.resultsBack) resultsBack = false;
+		if (myId !== null && (info.data.once || info.data.limitTotalQueue > 0 || info.data.limitNumQueue > 0) && !this.resultsBack.status) resultsBack = false;
 		if (!this.checkQueueLimit(myId, info, info.data) && resultsBack) {
 			if (gId !== null) this.skipError = true;
-			this.resultsBack = false;
+			this.resultsBack.status = false;
 			if (this.dLog(4)) console.debug(`%cGoing to fetch ${JSON.stringify(objUrl)}`,CONSOLE_DEBUG);
-			let result = await super.goFetch(objUrl);
+			let result = await super.goFetch(objUrl, this.resultsBack);
 			if (!result) {
 				if (this.dError(1)) { console.error('Result from panda fetch was a null.', JSON.stringify(objUrl)); }
 			} else if (extPandaUI !== null && (info.data !== null || myId === null)) {
@@ -512,8 +512,8 @@ class MturkPanda extends MturkClass {
 				info.lastElapsed = (info.lastTime) ? dateNow - info.lastTime : 0;
 				info.lastTime = dateNow;
 				if (myId !== null) {
-					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched();
-					extPandaUI.cards.highlightEffect_gid(myId);
+					extPandaUI.pandaStats[myId].addFetched(); extPandaUI.pandaGStats.addTotalFetched(); extPandaUI.pandaGStats.addFetchedElapsed(this.resultsBack.elapsed);
+					extPandaUI.cards.highlightEffect_gid(myId); this.resultsBack.elapsed = 0;
 					if (info.tempFetches > 0) info.tFCounter++;
 					if (result.type === 'ok.text' && result.url.includes('assignment_id=')) {
 						this.sendStatusToSearch(info.data, true, true, result.url); extPandaUI.hitAccepted(myId, queueUnique, result.data, result.url);
@@ -539,7 +539,7 @@ class MturkPanda extends MturkClass {
 					extPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 				}
 			}
-			this.resultsBack = true; result = null; this.skipError = false;
+			result = null; this.skipError = false;
 		} else if (!this.skipError && !resultsBack) {
 			if (this.dLog(2)) console.debug(`%cNo results from last fetch for job only accepting one HIT.`,CONSOLE_WARN);
 		}

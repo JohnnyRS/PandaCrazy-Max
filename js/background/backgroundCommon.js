@@ -1,5 +1,5 @@
-let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newVersion = null;
-let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, localVersion = null;
+let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newUpdatedVersion = null;
+let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, gLocalVersion = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null;
 chrome.storage.local.set({'PCM_running':false});
 
@@ -89,7 +89,7 @@ async function gCheckPandaDB() {
  * @async - To wait for databases to be opened and data loaded.
  * @param  {bool} [panda] - Should panda be prepared?  @param  {bool} [search] - Should search be prepared?  @param  {string} [version] - Extension Version */
 async function prepareToOpen(panda=null, search=null, version=null) {
-  let historyWipe = false; localVersion = version; if (compareVersion(version, '0.8.7')) historyWipe = true; // For older versions of history.
+  let historyWipe = false; gLocalVersion = version; if (compareVersion(version, '0.8.7')) historyWipe = true; // For older versions of history.
   if (!panda && !search) return; else if (panda) pandaOpening = true; else if (search) searchOpening = true;
   if (panda && searchOpening) await delay(1500); else if (search && pandaOpening) await delay(1500);
   if (!MYDB) MYDB = new DatabasesClass();
@@ -153,26 +153,27 @@ function popupOpened(tab, popupSend) {
   if (currentTab.url && /^(?!.*chrome-extension:\/\/|.*chrome:\/\/).*$/.test(currentTab.url)) {
     if (currentTab.title && !currentTab.title.includes('NO PCM')) {
       let helperOptions = (MyOptions) ? MyOptions.helperOptions(currentTab.url, myQueue.getQueueSize(), popupSend) : $(document.createDocumentFragment());
-      if (newVersion) {
-        let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${newVersion} is detected.<br></div>`).appendTo(helperOptions.append('<hr>'));
-        $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
-          let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
-          if (result === true) { chrome.runtime.reload(); }
-          else { alert('OK. Extension update will happen after next chrome start.'); newVersion = null; popupSend(null, true); }
-        }).appendTo(versionUpdate);
-        versionUpdate = null;
-      }
-      popupSend(helperOptions);
-      helperOptions = null;
+      popupSend(helperOptions); helperOptions = null;
     }
+  }
+  if (newUpdatedVersion) {
+    let newUpdateOptions = $(document.createDocumentFragment());
+    let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${newUpdatedVersion} is detected.<br></div>`).appendTo(newUpdateOptions);
+    $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
+      let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
+      if (result === true) { chrome.runtime.reload(); }
+      else { alert('OK. Extension update will happen after next chrome start.'); newUpdatedVersion = null; popupSend(null, true); }
+    }).appendTo(versionUpdate);
+    versionUpdate = null;
+    popupSend(newUpdateOptions); newUpdateOptions = null;
   }
 }
 
 /** Clean any local storage when first starting up. */
 cleanLocalStorage();
 
-/** Sets the newVersion variable so next time user clicks on the extension icon it can show a notice of a new update. Also will show a notification to user. */
+/** Sets the newUpdatedVersion variable so next time user clicks on the extension icon it can show a notice of a new update. Also will show a notification to user. */
 chrome.runtime.onUpdateAvailable.addListener( details => {
-  newVersion = details.version;
-  if (extPandaUI) { extPandaUI.newVersionAvailable(newVersion); }
+  newUpdatedVersion = details.version;
+  if (extPandaUI) { extPandaUI.newVersionAvailable(newUpdatedVersion); }
 });

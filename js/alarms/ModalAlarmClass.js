@@ -31,14 +31,14 @@ class ModalAlarmClass {
     $('.pcm-saveAudio').click( () => {
       $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
       if (this.audio) this.audio.load();
-      theAlarms.getData(name).audio = this.audio; theAlarms.saveAlarm(name); this.audio = null;
+      theAlarms.setAlarmAudio(name, this.audio); this.audio = null;
     });
   }
   /** Shows the modal for the alarms so users can change alarm options.
-   * @param  {function} [afterClose] - After Close Function  @param  {bool}  [onlySearch] - Only SearchUI? */
+   * @param  {function} [afterClose] - After Close Function  @param  {bool} [onlySearch] - Only SearchUI? */
   async showAlarmsModal(afterClose=null, onlySearch=false) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(this.alarms, '900px', 'pcm-alarmsModal', 'modal-lg', 'Alarm Options', '', '', '');
+    const idName = modal.prepareModal(null, '900px', 'pcm-alarmsModal', 'modal-lg', 'Alarm Options', '', '', '');
     modal.showModal(_, () => {
       let df = document.createDocumentFragment(), modalBody = $(`#${idName} .${modal.classModalBody}`);
       $(`<div class='pcm-alarmEdit'>You can mute and change an individual alarm sound here. Click the change button and pick your own sound from your computer. It must be less than 6MB and less than 30 seconds. You can also load in the default alarm sounds if you need to. The TTS button will have the script use a text to speech computerized voice instead of the alarm sound.</div>`).appendTo(df);
@@ -55,7 +55,7 @@ class ModalAlarmClass {
       if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
-        theAlarms.theVoiceIndex(index); theAlarms.theVoiceName(name);
+        theAlarms.theVoiceIndex(index, name);
       });
       modalBody.find('.pcm-playMe').click( e => {
         let wasPlaying = $(e.target).hasClass('pcm-playing');
@@ -64,7 +64,7 @@ class ModalAlarmClass {
         if (!wasPlaying) {
           $(e.target).addClass('pcm-playing');
           theAlarms.playSound($(e.target).closest('div').data('snd'), true,_, () => {
-            $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
+            if (modal) $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
           });
         }
       });

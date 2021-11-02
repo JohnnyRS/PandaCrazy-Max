@@ -125,9 +125,9 @@ class TimerClass {
 				if (thisItem.timeRestarted === null) thisItem.timeRestarted = end;
 				if (thisItem.duration > 0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
 				if (thisItem.tDuration > 0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
-				if (thisItem.dGoHam > 0) { // Is this just a temporary go ham job and item just started then init hamstarted
-					if (thisItem.hamstarted === null) thisItem.hamstarted = end;
-					else if ((end - thisItem.hamstarted) > thisItem.dGoHam) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamstarted = null; }
+				if (thisItem.dGoHam > 0) { // Is this just a temporary go ham job and item just started then init hamStarted
+					if (thisItem.hamStarted === null) thisItem.hamStarted = end;
+					else if ((end - thisItem.hamStarted) > thisItem.dGoHam) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamStarted = null; }
 				}
 				if (!stopFor && this.goingHam === null) this.queue.push(queueUnique);
 				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
@@ -269,7 +269,7 @@ class TimerClass {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item
 		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
 		tDuration = (duration > 0 && tDuration > duration) ? 0 : tDuration;
-		this.queueObject[thisUnique] = { 'theFunction':doFunc, 'funcAfter':funcAfter, 'myId':myId, 'duration':duration, 'tDuration':tDuration, 'dGoHam':dGoHam, 'timeStarted':null, 'timeRestarted':null, 'hamstarted':null, 'skipped':skipped };
+		this.queueObject[thisUnique] = { 'theFunction':doFunc, 'funcAfter':funcAfter, 'myId':myId, 'duration':duration, 'tDuration':tDuration, 'dGoHam':dGoHam, 'timeStarted':null, 'timeRestarted':null, 'hamStarted':null, 'skipped':skipped };
 		if ( (dGoHam > 0 || goHamStart) && this.goingHam === null) { this.goHam(thisUnique, dGoHam); }
 		if (skipped) this.skipThis(thisUnique);
 		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} dGoHam: ${dGoHam}`, CONSOLE_INFO);
@@ -287,6 +287,12 @@ class TimerClass {
 			if (this.dLog(3)) console.info(`%c[${this.timerName}] is trying to delete from queue: ${queueUnique}`, CONSOLE_INFO);
 			if (this.queue.length === 0) this.running = false;
 			else this.sendBackInfo();
+		}
+	}
+	frontOfQueue(queueUnique) {
+		if (this.queueObject.hasOwnProperty(queueUnique)) {
+			this.removeFromQueue(queueUnique);
+			this.queue.unshift(queueUnique);
 		}
 	}
 	/** Checks if this error is allowed to show depending on user options and class name.

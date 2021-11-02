@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "PandaCrazy Max",
   "short_name": "PC Max",
-  "version": "0.9.39.0",
+  "version": "0.9.40.0",
   "author": "JohnnyRS",
   "description": "Extension for Mturk.com to Collect HIT's for you at a set time value. Lot of organizing of panda's for easier use.",
 
@@ -16,7 +16,7 @@
   "background": {
     "persistent": false,
     "scripts": [
-      "js/jquery-3.4.1.min.js",
+      "lib/jquery-3.4.1.min.js",
       "js/moment.js",
       "js/common.js",
       "js/data/DatabaseClass.js",
@@ -24,10 +24,9 @@
       "js/timers/TimerClass.js",
       "js/common/UrlClass.js",
       "js/mturk/MturkClass.js",
-      "js/background/classes/SearchGStats.js",
       "js/data/HistoryClass.js",
       "js/alarms/AlarmsClass.js",
-      "js/background/classes/GlobalOptions.js",
+      "js/options/GlobalOptions.js",
       "js/mturk/MturkQueue.js",
       "js/mturk/MturkDashboard.js",
       "js/background/classes/MturkPanda.js",
@@ -48,7 +47,7 @@
       ],
       "css": ["css/PCM-Content-Script.css"],
       "js":[
-        "js/jquery-3.4.1.min.js",
+        "lib/jquery-3.4.1.min.js",
         "js/common.js",
         "js/contentScripts/hitHelper.js"
       ],
@@ -65,7 +64,7 @@
       ],
       "css": ["css/PCM-Content-Script.css"],
       "js": [
-        "js/jquery-3.4.1.min.js",
+        "lib/jquery-3.4.1.min.js",
         "js/contentScripts/forumHelper.js"
       ],
       "all_frames": true

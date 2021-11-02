@@ -25,10 +25,7 @@ class NotificationsClass {
     this.lastGroupId = groupId;
     let iconUrl = '/img/Messaging-Online-icon.png';
     if (alertIcon) iconUrl = '/img/Messaging-Alert-Icon.png';
-    const n = ( this.isReady() ) ? new Notification(title, {
-      body: message, icon: iconUrl,
-      tag: tag+this.tagNumber
-    }) : null;
+    if (this.isReady()) new Notification(title, { 'body': message, 'icon': iconUrl, 'tag': tag+this.tagNumber });
   }
   /** Shows a notification with the hit data when accepted.
    * @param {object} hitData - Hit Data */
@@ -52,6 +49,6 @@ class NotificationsClass {
   /** Shows a new version notification.
    * @param {string} version - New Version Number */
   showNewVersion(version) {
-    this.show('ALERT: New Version Available', `There is a new version: ${version}! \nYour current version is ${localVersion}!`, 'newVersion', '3alert3', true);
+    this.show('ALERT: New Version Available', `There is a new version: ${version}! \nYour current version is ${gCurrentVersion}!`, 'newVersion', '3alert3', true);
   }
 }

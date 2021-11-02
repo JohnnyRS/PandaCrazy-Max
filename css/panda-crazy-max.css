@@ -281,6 +281,7 @@ html, body { height: 100%; }
 .pcm-triggerCard .card-body { padding: 0; }
 .pcm-triggerGroup { padding: 3px 0 0 0; margin: 0; line-height: 1.0; font-weight: 400; font-size: 0.8em; }
 .pcm-triggerName, .pcm-triggerStats { padding: 2px 0 4px 0; cursor: default; margin-right: auto; margin-left: auto; }
+.pcm-searchStats { cursor:default; }
 .pcm-text-triggers { font-size: 0.75rem; padding-left: 3px; }
 .pcm-foundHitsButton { margin-top: -2px; line-height: 0.3; border: 0; background-color: #f8f9fa; padding: 0.25rem 0.3rem; font-size: 0.775rem;}
 .pcm-foundHitsTable { background-color: darkslategray; color: white; }

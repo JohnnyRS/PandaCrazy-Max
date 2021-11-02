@@ -20,6 +20,7 @@ class UrlClass {
 			if (response.ok || response.status === 422 || response.status === 429 || response.status === 400 || response.status === 503) {
 				const type = response.headers.get('Content-Type');
 				if (response.status === 400 || response.status === 503 ) thisResult = 'bad.request';
+				if (response.status === 429) thisResult = 'PRE';
 				if (type.includes('application/json')) { theData = await response.json(); dataType = 'json'; }
 				else { theData = await response.text(); dataType = 'text'; }
 				returnValue = {'type': `${thisResult}.${dataType}`, 'url': response.url, 'status': response.status, 'data': theData};

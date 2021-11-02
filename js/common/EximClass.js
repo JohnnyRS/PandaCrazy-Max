@@ -40,22 +40,22 @@ class EximClass {
   /** Export only alarms to an export file.
    * @param {function} doneFunc - Do After Function */
   exportOnlyAlarms(doneFunc=null) {
-    let exportAlarms = theAlarms.exportAlarms(true, true);
-    saveToFile({'pre':this.exportPre, 'Alarms':exportAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });
+    let exportedAlarms = theAlarms.exportAlarms(true);
+    saveToFile({'pre':this.exportPre, 'Alarms':exportedAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });
   }
   /** Export all the data to a file with alarms or not.
    * @async                      - To wait for all panda job data to be loaded.
    * @param  {bool} [withAlarms] - Should alarm sounds be included?  @param  {function} [doneFunc] - The function to call after saving file to computer. */
   async exportData(withAlarms=false, doneFunc=null) {
-    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = {}, exportAlarms = [], exportTriggers = {}, exportSearchGroups = {};
+    let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = {}, exportedAlarms = [], exportTriggers = {}, exportSearchGroups = {};
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups();
-    exportAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
+    exportedAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
     this.exportPre.jobs = exportJobs.length; 
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
-      'SearchGroupings':exportSearchGroups, 'SoundOptions':exportAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
+      'SearchGroupings':exportSearchGroups, 'SoundOptions':exportedAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
       bgPanda.nullData(false); if (doneFunc) doneFunc();
     });
   }
@@ -389,7 +389,7 @@ class EximClass {
       for (const key of Object.keys(rData)) {
         this.importAlarmsData[key] = Object.assign(defaultAlarms[key], rData[key]);
         if (!rData[key].obj) {
-          let audio = theAlarms.theAlarms(key).audio;
+          let audio = theAlarms.allAlarms(key).audio;
           if (audio === null) this.importAlarmsData[key].obj = null;
           else if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
         } else if (rData[key].obj.substr(0,4) === 'data') this.importAlarmsData[key].obj = rData[key].obj;

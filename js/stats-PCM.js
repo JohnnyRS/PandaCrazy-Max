@@ -1,5 +1,5 @@
-let bgPage = null, search = null, pandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
-let localVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
+let bgPage = null, SearchUI = null, PandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let gLocalVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 function getBgPage() {
@@ -7,8 +7,16 @@ function getBgPage() {
     bgPage = backgroundPage;
     bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB();
 
-    $('#pcm-theStatMaker').click( (e) => {
-      bgHistory.testing();
+    $('#pcm-theStatMaker').click( async () => {
+      modal = new ModalClass();
+      modal.showDialogModal('700px', 'Loading Stats', 'Please Wait. Loading up stats to save to file.', null , false, false, '', '', null, async () => {
+        if (PandaUI) PandaUI.pauseToggle(true); if (SearchUI) SearchUI.pauseToggle(true);
+        let csvContents = await bgHistory.testing();
+        saveToFile(csvContents, 'PCM_stats_results_',_, () => {
+          if (PandaUI) PandaUI.pauseToggle(false); if (SearchUI) SearchUI.pauseToggle(false);
+          modal.closeModal('Loading Stats');
+        }, false);
+      });
     });
   });
 }

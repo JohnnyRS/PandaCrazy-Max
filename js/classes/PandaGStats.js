@@ -6,6 +6,7 @@ class PandaGStats {
 		this.collecting = {'value':false, 'id':'#pcm-collecting', 'disabled':false, 'type':'boolean', 'on':'pcm-span-on', 'off':'pcm-span-off', 'paused':'pcm-span-paused'};
 		this.collectingTotal = {'value':0, 'id':'#pcm-collectingTotal', 'disabled':false, 'type':'integer', 'string':'', 'post':''};
 		this.pandaElapsed = {'value':0, 'id':'#pcm-pandaElapsed', 'disabled':false, 'type':'integer', 'string':'Elapsed: ', 'post':'ms'};
+		this.fetchedElapsed = {'value':0, 'id':'#pcm-fetchedElapsed', 'disabled':true, 'type':'integer', 'string':'Fetched Elapsed: ', 'post':'ms'};
 		this.pandaTimer = {'value':0, 'id':'#pcm-pandaTimer', 'disabled':true, 'type':'integer', 'string':'Timer set at: ', 'post':'ms'};
 		this.pandaHamTimer = {'value':0, 'id':'#pcm-pandaHamTimer', 'disabled':true, 'type':'integer', 'string':'Ham Timer set at: ', 'post':'ms'};
 		this.searchTimer = {'value':0, 'id':'#pcm-searchTimer', 'disabled':true, 'type':'integer', 'string':'Search Timer set at: ', 'post':'ms'};
@@ -25,7 +26,7 @@ class PandaGStats {
 		this.totalEarned = {'value':'?.??', 'id':'#pcm-totalEarned', 'disabled':false, 'type':'price', 'string':'Total Earnings: $', 'post':'', 'updateEffect':true};
 		this.totalPotential = {'value':'?.??', 'id':'#pcm-totalPotential', 'disabled':true, 'type':'price', 'string':'Potential: $', 'post':'', 'updateEffect':true};
 		this.totalEarnedInQueue = {'value':'0.00', 'id':'#pcm-totalQueueEarnings', 'disabled':true, 'type':'price', 'string':'Queue Earnings: $', 'post':'', 'updateEffect':true};
-		this.timerStats = [this.pandaElapsed, this.pandaTimer, this.pandaHamTimer, this.searchTimer, this.queueTimer];
+		this.timerStats = [this.pandaElapsed, this.pandaTimer, this.pandaHamTimer, this.searchTimer, this.queueTimer, this.fetchedElapsed];
 		this.jobFetchStats = [this.totalAccepted, this.totalFetched, this.totalErrors];
 		this.preStats = [this.totalPandaPREs, this.totalSearchPREs, this.totalPREs];
 		this.jobStats = [this.totalPandas, this.totalSearches, this.totalSubmitted, this.totalReturned, this.totalAbandoned];
@@ -51,7 +52,7 @@ class PandaGStats {
 	}
 	/** Prepare the status bar with values and hide the disabled status values. */
 	prepare() {
-		$('#pcm-timerStats').append(`<span id='pcm-pandaElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took to grab pages from MTURK.'></span><span id='pcm-pandaTimer' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the panda timer.'></span><span id='pcm-pandaHamTimer' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the ham timer.'></span><span id='pcm-searchTimer' class='pcm-stat4 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the search timer.'></span><span id='pcm-queueTimer' class='pcm-stat5 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the Queue Timer.'></span>`).data('toggled', 1).data('max',5).data('array', 'timerStats');
+		$('#pcm-timerStats').append(`<span id='pcm-pandaElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for timer to send a fetch request to MTURK.'></span><span id='pcm-pandaTimer' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the panda timer.'></span><span id='pcm-pandaHamTimer' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the ham timer.'></span><span id='pcm-searchTimer' class='pcm-stat4 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the search timer.'></span><span id='pcm-queueTimer' class='pcm-stat5 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the Queue Timer.'></span><span id='pcm-fetchedElapsed' class='pcm-stat6 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time to get results back from MTURK page.'></span>`).data('toggled', 1).data('max',6).data('array', 'timerStats');
 		$('#pcm-jobFetchStats').append(`<span id='pcm-totalAccepted' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of accepted HITs since starting Panda Crazy Max.'></span><span id='pcm-totalFetched' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The total number of fetches from MTURK since starting Panda Crazy Max.'></span><span id='pcm-totalErrors' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='The total number of errors received from fetching MTURK pages.'></span>`).data('toggled', 1).data('max',3).data('array', 'jobFetchStats');
 		$('#pcm-preStats').append(`<span id='pcm-totalPandaPREs' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of PRE&apos;s received when fetching panda pages from MTURK.'></span><span id='pcm-totalSearchPREs' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of PRE&apos;s received when fetching search pages from MTURK.'></span><span id='pcm-totalPREs' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of PRE&apos;s received from any page fetched from MTURK.'></span>`).data('toggled', 1).data('max',3).data('array', 'preStats');
 		$('#pcm-jobStats').append(`<span id='pcm-totalPandas' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of panda jobs saved in extension.'></span><span id='pcm-totalSearches' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of search jobs saved in extension.'></span><span id='pcm-totalSubmitted' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of submitted HITs detected from user since starting Panda Crazy Max.'></span><span id='pcm-totalReturned' class='pcm-stat4 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of returned HITs detected from user since starting Panda Crazy Max.'></span><span id='pcm-totalAbandoned' class='pcm-stat5 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of abandoned HITs detected from user since starting Panda Crazy Max.'></span>`).data('toggled', 1).data('max',5).data('array', 'jobStats');
@@ -62,8 +63,9 @@ class PandaGStats {
 			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
 			if (theToggle.data('longClicked')) theToggle.removeData('longClicked');
 			else {
-				this[theArray][toggled-1].disabled = true; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);  this[theArray][toggled-1].disabled = false;
-				theToggle.find('span').hide(); theToggle.find(`.pcm-stat${toggled}`).show().stop(true,true).css('color','Tomato').animate({'color':'#f3fd7d'}, 3500);
+				this[theArray][toggled-1].disabled = true; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled); this[theArray][toggled-1].disabled = false;
+				let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true);
+				let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
 				this.updateStatNav(this[theArray][toggled-1]);
 			}
 		});
@@ -169,4 +171,5 @@ class PandaGStats {
 			sendResponse({'for':'getStats', 'response':statsReturned});
 		}
 	}
+	addFetchedElapsed(value) { this.fetchedElapsed.value = value; this.updateStatNav(this.fetchedElapsed); }
 }

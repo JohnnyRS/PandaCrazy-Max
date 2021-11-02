@@ -1,15 +1,15 @@
 let bgPage = null; // Get the background page object for easier access.
 let globalOpt = null, notify = null, theAlarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
-let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null;
-let localVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, search = null;
+let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, bgSearch = null, bgHistory = null, MYDB = null, MyAlarms = null;
+let gLocalVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, search = null;
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
-let pcmRunning = JSON.parse(localStorage.getItem('PCM_running'));
+let pcmRunning = JSON.parse(localStorage.getItem('PCM_running')), gCurrentVersion = gManifestData.version;
 
-const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
-const search_channel = new BroadcastChannel('PCM_ksearch_band');
+const pcm_channel = new BroadcastChannel('PCM_kpanda_band');      // Used for sending and receiving messages from search page.
+const search_channel = new BroadcastChannel('PCM_ksearch_band');  // Used specifically for promises so search page can wait for a response on search channel.
 
-if (gManifestData.version !== localVersion) gNewVersion = true;
-localStorage.setItem('PCM_version',gManifestData.version);
+if (gCurrentVersion !== gLocalVersion) gNewVersion = true;
+localStorage.setItem('PCM_version',gCurrentVersion);
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 /** Gets the background page and sets up a global variable for it. Then it runs the modal Loading function. Also detects if another UI is opened. */
@@ -29,9 +29,9 @@ function modalLoadingData() {
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
-  await bgPage.prepareToOpen(true,_, localVersion).then( () => {
+  await bgPage.prepareToOpen(true,_, gLocalVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); bgSearch = bgPage.gGetSearch();
-    globalOpt = bgPage.gGetOptions(); theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    globalOpt = bgPage.gGetOptions(); MyAlarms = theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new TheGroupings(); sGroupings = new TheGroupings('searching'); pandaUI = new PandaUI(); menus = new MenuClass(); dashboard = bgPage.gGetDash();
     themes = new ThemesClass();
     startPandaCrazy();
@@ -74,14 +74,22 @@ getBgPage(); // Grabs the background page, detects if another UI is opened and t
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', async () => {
   if (bgPanda) { bgPage.gSetPandaUI(null); groupings.removeAll(); sGroupings.removeAll(); }
-  globalOpt = null; notify = null; theAlarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
+  globalOpt = null; notify = null; theAlarms = null; MyAlarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
   bgSearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
 });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
-document.addEventListener('keydown', e => {
-  if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', true ).addClass('unSelectable'); }
-});
+document.addEventListener('keydown', e => { if (e.key === 'Control' || e.metaKey) { $('.ui-sortable').sortable('option', 'disabled', true).addClass('unSelectable'); }});
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. */
-document.addEventListener('keyup', e => {
-  if ((e.keyCode ? e.keyCode : e.which) === 17) { $('.ui-sortable').sortable( 'option', 'disabled', false ).addClass('unSelectable'); }
-});
+document.addEventListener('keyup', e => { if (e.key === 'Control' || e.metaKey) { $('.ui-sortable').sortable('option', 'disabled', false).addClass('unSelectable'); }});
+
+pcm_channel.onmessage = async (e) => {
+  if (e.data) {
+    const data = e.data;
+    if (data && data.object) {
+      if (data.msg === 'search: save alarm') { MyAlarms.setData(data.object.alarmSound, data.object.alarm); }
+    } else if (data.msg === 'search: prepare alarms') {
+      let alarmData = MyAlarms.getData('triggeredAlarm'), volume = MyAlarms.volume;
+      pcm_channel.postMessage({'msg':'search: alarm data', 'value':{'volume':volume, 'data':{'triggeredAlarm':alarmData}}});
+    }
+  }
+}  

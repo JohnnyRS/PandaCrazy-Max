@@ -302,9 +302,12 @@ function allTabs(search, doAfter) {
   });
 }
 /** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
- * @param  {object} theData - Export Data  @param  {string} [prefix] - File Prefix  @param {string} [suffix] - File Ending  @param  {string} [doneFunc] - After Save Function */
-function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null) {
-  let blob = new Blob( [JSON.stringify(theData)], {'type': 'text/plain'}), dl = document.createElement('A'), fileEnd = (suffix) ? suffix : '';
+ * @param  {object} theData    - Export Data          @param  {string} [prefix]      - File Prefix                     @param {string} [suffix] - File Ending
+ * @param  {string} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
+**/
+function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
+  let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;
+  let blob = new Blob( [dataToSave], {'type': 'text/plain'}), dl = document.createElement('A'), fileEnd = (suffix) ? suffix : '';
   dl.href = URL.createObjectURL(blob); dl.download = `${prefix}_${formatAMPM('short')}${fileEnd}.json`;
   document.body.appendChild(dl); dl.click();
   setTimeout( () => { dl.remove(); URL.revokeObjectURL(blob); if (doneFunc) doneFunc(); }, 0);
