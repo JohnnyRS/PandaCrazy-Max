@@ -3,10 +3,10 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalSearchClass {
 	constructor() {
-    this.pandaDur = {'min':0, 'max':120};            // The minimum and maximum duration for panda jobs in minutes. (2 hours max)
-    this.pandaDurSeconds = {'min':0, 'max':3600};    // The minimum and maximum duration for panda jobs in seconds. (1 hour max)
+    this.pandaDur = {'min':0, 'max':360};            // The minimum and maximum duration for panda jobs in minutes. (6 hours max)
+    this.pandaDurSeconds = {'min':0, 'max':21600};   // The minimum and maximum duration for panda jobs in seconds. (6 hours max)
     this.hamDur = {'min':0, 'max':120};              // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
-    this.fetchesDur = {'min':0, 'max':3600};         // The minimum and maximum number of fetches allowed. (1 hour max approximately)
+    this.fetchesDur = {'min':0, 'max':21600};        // The minimum and maximum number of fetches allowed. (6 hour max approximately)
     this.pageSize = {'min':20, 'max':100};           // The minimum and maximum amount of HITs for MTURK to show on one search page.
     this.queueSize = {'min':20, 'max':600};          // The minimum and maximum amount of triggers to keep in memory for faster operation vs larger memory used.
     this.triggerHistDays = {'min':2, 'max':120};     // The minimum and maximum amount of days allowed to keep HIT and requester info in database.
@@ -40,8 +40,8 @@ class ModalSearchClass {
           let type = (reqId) ? 'rid' : (groupId) ? 'gid' : 'custom', enabled = ($('#pcm-triggerEnabled').is(':checked') ? 'searching' : 'disabled');
           let theName = (trigName) ? trigName : (reqId) ? reqId : groupId;
           let theRules = (doCustom) ? {'terms':true, 'include':new Set([groupVal]), 'payRange': true, 'minPay':minPay} : {};
-          let addSuccess = await bgSearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'tempDuration': data.duration, 'once':$('#pcm-onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'tempFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit, 'auto':data.auto}, theRules);
-          if (addSuccess) { search.appendFragments(); modal.closeModal(); }
+          let addSuccess = await MySearch.addTrigger(type, {'name':theName, 'reqId':reqId, 'groupId':groupId, 'title':data.hitTitle, 'reqName':data.reqName, 'pay':data.price, 'status':enabled}, {'tempDuration': data.duration, 'once':$('#pcm-onlyOnce').is(':checked'), 'limitNumQueue':data.limitNumQueue, 'limitTotalQueue':data.limitTotalQueue, 'tempFetches':data.limitFetches, 'autoGoHam':data.autoGoHam, 'tempGoHam':data.hamDuration, 'acceptLimit':data.acceptLimit, 'auto':data.auto}, theRules);
+          if (addSuccess) { MySearchUI.appendFragments(); modal.closeModal(); }
           else wrongInput(modalBody, 'There is already a trigger with this name. Sorry. Please try again.', $(`label[for='pcm-formTriggerName']`));
           theRules = null;
         }
@@ -90,7 +90,7 @@ class ModalSearchClass {
       $('#pcm-triggerEnabled').click( () => $('#pcm-formAddGroupID').focus() );
       $('#pcm-onlyOnce').click( () => $('#pcm-formAddGroupID').focus() );
       $('#pcm-formAddGroupID').focus();
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; searchOpt = null; table2 = null; modalBody = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -109,11 +109,11 @@ class ModalSearchClass {
    * @return {object}      - Object with search data filled in. */
   async fillInData(dbId=null, pDbId=null) {
     if (dbId === null && pDbId === null) return null;
-    let searchDbId = (dbId !== null) ? dbId : bgSearch.pandaToDbId(pDbId);
-    let changes = {'details':Object.assign({}, bgSearch.getData(searchDbId)), 'rules':null, 'options':null, 'searchDbId':searchDbId}
+    let searchDbId = (dbId !== null) ? dbId : MySearch.pandaToDbId(pDbId);
+    let changes = {'details':Object.assign({}, MySearch.getData(searchDbId)), 'rules':null, 'options':null, 'searchDbId':searchDbId}
     if (typeof changes.details.disabled === 'undefined') changes.details.disabled = true;
     if (typeof changes.details.name === 'undefined') changes.details.name = changes.details.value;
-    changes.rules = await bgSearch.rulesCopy(changes.searchDbId); changes.options = await bgSearch.optionsCopy(changes.searchDbId);
+    changes.rules = await MySearch.rulesCopy(changes.searchDbId); changes.options = await MySearch.optionsCopy(changes.searchDbId);
     return changes;
   }
   /** Shows a modal to allow adding or removing values into a set with a select input box.
@@ -148,7 +148,7 @@ class ModalSearchClass {
       }).appendTo(df);
       $(`#${idName} .${modal.classModalBody}`).append(df);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunc(); });
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; form = null; selectBox = null;
     }, () => { });
   }
@@ -218,7 +218,7 @@ class ModalSearchClass {
    * @param {number} unique - Trigger Unique Number  @param {function} [afterClose] - After Close Function  */
   async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass();
-    let dbId = bgSearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
+    let dbId = MySearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
     let idName = modal.prepareModal(sChanges, '700px', 'pcm-triggerDetailsModal', 'modal-lg', 'Details for a Trigger', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
       $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError');
       if (!changes.options.autoGoHam) changes.options.tempGoHam = 0; else if (changes.options.tempGoHam === 0) changes.options.tempGoHam = globalOpt.doSearch().defaultHamDur;
@@ -228,7 +228,7 @@ class ModalSearchClass {
         $(`#pcm-tdLabel-acceptWords1, #pcm-tdLabel-acceptWords2`).addClass('pcm-optionLabelError');
       } else {
         let closeDetailsModal = async () => {
-          await bgSearch.optionsChanged(changes, changes.searchDbId);
+          await MySearch.optionsChanged(changes, changes.searchDbId);
           $(`#pcm-triggerName-${unique}`).html(changes.details.name);
           modal.closeModal();
         }
@@ -250,7 +250,7 @@ class ModalSearchClass {
         }
         optionTab = null; optionsContents = null; detailTab = null; detailsContents = null; df1 = null; df2 = null;
       }
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       detailsDiv = null; detailsTabs = null;
     }, () => { modal = null; sChanges = null; if (afterClose) afterClose(); });
   }
@@ -260,10 +260,10 @@ class ModalSearchClass {
   /** Shows a modal with all the found HITs in a table.
    * @param {number} unique - Trigger Unique  @param {function} [afterClose] After Close Function */
   showTriggerFound(unique, afterClose=null) {
-    if (!modal) modal = new ModalClass(); let dbId = bgSearch.uniqueToDbId(unique);
+    if (!modal) modal = new ModalClass(); let dbId = MySearch.uniqueToDbId(unique);
     const idName = modal.prepareModal(null, '860px', 'pcm-triggerFoundModal', 'modal-lg', 'Show HITs found by Trigger.', '', 'pcm-modalHitsFound', '', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(null, async () => {
-      let groupHist = await bgSearch.getFromDB('history', dbId, 'dbId', true, false, 80), rules = await bgSearch.theData(dbId, 'rules');
+      let groupHist = await MySearch.getFromDB('history', dbId, 'dbId', true, false, 80), rules = await MySearch.theData(dbId, 'rules');
       let gidsValues = [], gidsData = {}, blocked = rules.blockGid, df = document.createDocumentFragment();
       arrayCount(groupHist, (value) => { gidsValues.push(value.gid); gidsData[value.gid] = value; return true; }, true);
       let gidsHistory = await bgHistory.findValues(gidsValues);
@@ -286,7 +286,7 @@ class ModalSearchClass {
           {'label':'block', 'type':'button', 'btnLabel':btnLabel, 'addClass':` btn-xxs${statusClass}`, 'maxWidth':'70px', 'btnFunc': e => {
             if (blocked.has(key)) { blocked.delete(key); $(e.target).removeClass(`pcm-hitBlocked`).html('Block HIT'); }
             else { blocked.add(key); $(e.target).addClass(`pcm-hitBlocked`).html('Unblock'); }
-            rules.blockGid = blocked; bgSearch.theData(dbId, 'rules', rules)
+            rules.blockGid = blocked; MySearch.theData(dbId, 'rules', rules)
           }, 'idStart': 'pcm-blockThis', 'unique': key, 'tooltip': 'Block or unblock this HIT for this trigger ONLY.'}
         ], theTable.find(`tbody`), tempObj, true, true, true, 'pcm-modalTriggeredhit',_, gidsHistory[key], gidsData[key]);
         tempObj = null;
@@ -300,7 +300,7 @@ class ModalSearchClass {
         this.showTriggeredHit(cData, () => {},_, false);
       });
       $(`#${idName} .${modal.classModalBody}`).append(df);
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       groupHist = null; df = null; gidsHistory = null; theTable = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -311,7 +311,7 @@ class ModalSearchClass {
     let saveFunction = (changes) => {
       let closeAndSave = () => {
         globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false); globalOpt.doGeneral(changes.general);
-        globalOpt.doSearch(changes.options); bgSearch.timerChange(changes.searchTimer); bgSearch.prepareSearch();
+        globalOpt.doSearch(changes.options); MySearch.timerChange(changes.searchTimer); MySearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
         setTimeout( () => modal.closeModal(), 0);
       }
@@ -342,7 +342,7 @@ class ModalSearchClass {
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       theData = null; df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -363,7 +363,7 @@ class ModalSearchClass {
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -377,7 +377,7 @@ class ModalSearchClass {
       let blockTabs = new TabbedClass(blockingDiv, `pcm-blockingTabs`, `pcm-gidBlock`, `pcm-ridBlock`, false, 'Block');
       let [, err] = await blockTabs.prepare();
       if (!err) {
-        let gidvals = bgSearch.getBlocked(), ridvals = bgSearch.getBlocked(false);
+        let gidvals = MySearch.getBlocked(), ridvals = MySearch.getBlocked(false);
         /** Changes the status displayed to a given text and will change class if an error.
          * @param {string} tab - Tab Class Name  @param {String} [resultStr] - Html text  @param {bool} [error] - Error? */
         let statusInput = (tab, resultStr=null, error=true) => {
@@ -394,7 +394,7 @@ class ModalSearchClass {
           if (!value) { statusInput(thisTab, 'Enter in an ID in the input below.'); return; }
           else if (groupId && value.match(/^3[0-9a-zA-Z]{14,38}$/)) gid = value; else if (!groupId && value.match(/^[Aa][0-9a-zA-Z]{6,25}$/)) rid = value;
           if (gid || rid) {
-            theResult = bgSearch.theBlocked(gid, rid, !remove, remove);
+            theResult = MySearch.theBlocked(gid, rid, !remove, remove);
             if (theResult[(groupId) ? 0 : 1]) {
               statusInput(thisTab, `SUCCESS: ID ${(remove) ? 'Removed from' : 'added to'} blocked HITs.`, false);
               if (!remove) {
@@ -435,7 +435,7 @@ class ModalSearchClass {
             let isgid = $(e.target).data('gid'), valArray = (isgid) ? gidvals : ridvals, gid = null, rid = null;
             if (selected.length) {
               for (const ele of selected) {
-                let text = $(ele).text(), value = text.split(' ')[0]; if (isgid) gid = value; else rid = value; let theResult = bgSearch.theBlocked(gid, rid, false, true);
+                let text = $(ele).text(), value = text.split(' ')[0]; if (isgid) gid = value; else rid = value; let theResult = MySearch.theBlocked(gid, rid, false, true);
                 if (theResult[(isgid) ? 0 : 1]) valArray = arrayRemove(valArray, text); theResult = null;
               }
               this.selectBoxAdd(valArray, theBody.find(`.${thisTab} select`));
@@ -454,7 +454,7 @@ class ModalSearchClass {
         gidContents.find('input').focus();
         df = null; df2 = null; gidContents = null; ridContents = null; thisFrag = null; gidsHistory = null; ridsHistory = null; values = null;
       }
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       blockingDiv = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -463,12 +463,12 @@ class ModalSearchClass {
   showTriggeredHit(theData, afterClose=null, e=null, blocking=true) {
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(globalOpt.doSearch(), '860px', 'pcm-triggeredHitModal', 'modal-lg', 'Triggered HIT Details', '', '', '', 'visible btn-sm', 'Done', () => {
-      let check = bgSearch.theBlocked(theData.gid, theData.rid), tr = (e) ? $(e.target).closest('tr') : null;
+      let check = MySearch.theBlocked(theData.gid, theData.rid), tr = (e) ? $(e.target).closest('tr') : null;
       if (e && (check[0] || check[1])) tr.addClass('pcm-blockedHit'); else if (tr) tr.removeClass('pcm-blockedHit');
       modal.closeModal(); check = null; tr = null
     }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(() => {}, async () => {
-      let df = document.createDocumentFragment(), blocked = bgSearch.theBlocked(theData.hit_set_id, theData.requester_id);
+      let df = document.createDocumentFragment(), blocked = MySearch.theBlocked(theData.hit_set_id, theData.requester_id);
       $(`<div class='pcm-detailsEdit'>Details of this HIT:</div>`).appendTo(df);
       displayObjectData( [
         {'label':'Date Found:', 'type':'keyValue', 'key':'date', 'disable':true, 'format':'date', 'skip':(!theData.date), 'tooltip':`The date HIT was found last.`},
@@ -481,15 +481,15 @@ class ModalSearchClass {
       ], df, theData, true);
       if (blocking) {
         $(`<div class='pcm-buttonArea '></div>`).append($(`<button class='btn btn-xs pcm-blockGid pcm-tooltipData pcm-tooltipHelper' data-original-title='Block or unblock this Group ID globally.'>${(blocked[0]) ? 'UNBLOCK' : 'Block'} this Group ID</button>`).click( e => {
-          bgSearch.theBlocked(theData.hit_set_id, null, true, false, true); let check = bgSearch.theBlocked(theData.hit_set_id, null);
+          MySearch.theBlocked(theData.hit_set_id, null, true, false, true); let check = MySearch.theBlocked(theData.hit_set_id, null);
           $(e.target).text(`${(check[0]) ? 'UNBLOCK' : 'Block'} this Group ID`); check = null;
         })).append($(`<button class='btn btn-xs pcm-blockRid pcm-tooltipData pcm-tooltipHelper' data-original-title='Block or unblock this Requester ID globally.'>${(blocked[1]) ? 'UNBLOCK' : 'Block'} this Requester</button>`).click( e => {
-          bgSearch.theBlocked(null, theData.requester_id, true, false, true); let check = bgSearch.theBlocked(null, theData.requester_id);
+          MySearch.theBlocked(null, theData.requester_id, true, false, true); let check = MySearch.theBlocked(null, theData.requester_id);
           $(e.target).text(`${(check[1]) ? 'UNBLOCK' : 'Block'} this Requester`); check = null;
         })).appendTo(df);
       }
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       df = null; blocked = null;
     }, () => { if (afterClose) afterClose(); else modal = null; });
   }
@@ -504,7 +504,7 @@ class ModalSearchClass {
       {'string':'Status', 'type':'string'}
     ], divContainer, {}, true, true, true, 'pcm-triggeredhit');
     for (const dbId of triggers) {
-      let trigger = bgSearch.getTrigger(dbId), data = bgSearch.getData(dbId), rules = await bgSearch.theData(dbId, 'rules');
+      let trigger = MySearch.getTrigger(dbId), data = MySearch.getData(dbId), rules = await MySearch.theData(dbId, 'rules');
       let statusClass = (data.disabled) ? ' pcm-hitDisabled' : '';
       if (rules.terms) { data.term = rules.include.values().next().value; } else data.term = '';
       data.status = (data.disabled) ? 'Disabled' : 'Enabled&nbsp;';
@@ -514,8 +514,8 @@ class ModalSearchClass {
         {'string':'Trigger Name', 'type':'keyValue', 'key':'name', 'width':'420px', 'maxWidth':'420px', id:`pcm-TRN-${dbId}`},
         {'string':'Trigger ID or Term', 'type':'keyValue', 'key':'value', 'orKey': 'term', 'width':'350px', 'maxWidth':'350px', 'id':`pcm-TRID-${dbId}`},
         {'label':'Status', 'type':'button', 'btnLabel':data.status, 'addClass':` btn-xxs${statusClass}`, 'maxWidth':'70px', 'btnFunc': e => {
-          let dbId = e.data.unique, unique = bgSearch.getTrigger(dbId).count, data = bgSearch.getData(dbId);
-          search.updateTrigger($(`#pcm-triggerCard-${unique}`).closest('.card'));
+          let dbId = e.data.unique, unique = MySearch.getTrigger(dbId).count, data = MySearch.getData(dbId);
+          MySearchUI.updateTrigger($(`#pcm-triggerCard-${unique}`).closest('.card'));
           if (data.disabled) { $(e.target).addClass('pcm-hitDisabled'); $(e.target).html('Disabled'); }
           else { $(e.target).removeClass('pcm-hitDisabled'); $(e.target).html('Enabled&nbsp;'); }
         }, 'idStart': 'pcm-statusThis', 'unique': dbId, 'tooltip':'Enable or Disable this trigger.'}
@@ -528,8 +528,8 @@ class ModalSearchClass {
    * @return {array}         - Array of job ID's filtered. */
   triggersFilter(searchTerm, modalControl) {
     let newArray = [];
-    for (const dbId of bgSearch.getFrom('Search')) {
-      let good = false, data = bgSearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
+    for (const dbId of MySearch.getFrom('Search')) {
+      let good = false, data = MySearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
       const radioChecked = $(modalControl).find(`input[name='theTriggers']:checked`).val();
       if (radioChecked === '0') good = true;
       else if (radioChecked === '1' && !data.disabled) good = true;
@@ -577,8 +577,8 @@ class ModalSearchClass {
       }).appendTo(inputControl);
       if (type === 'triggers') $(`<button class='btn btn-xxs pcm-deleteSelected pcm-tooltipData pcm-tooltipHelper' data-original-title='Delete all the triggers which are selected in the list below.'>Delete Selected</button>`).click( async () => {
         let dbSelected = $(`#${idName} .${modal.classModalDialog}:first`).find('.pcm-checkbox:checked');
-        let selected = dbSelected.map((_,element) => { return Number(bgSearch.getTrigger($(element).val()).count); }).get();
-        if (selected.length) search.removeJobs(selected, async (response, unique) => {
+        let selected = dbSelected.map((_,element) => { return Number(MySearch.getTrigger($(element).val()).count); }).get();
+        if (selected.length) MySearchUI.removeJobs(selected, async (response, unique) => {
           if (response !== 'NO') $(`#pcm-jobRow-${unique}`).remove();
         }, () => { selected = null; }, 'Unselect All');
       }).appendTo(inputControl);
@@ -593,7 +593,7 @@ class ModalSearchClass {
         else if ($('#pcm-endHours').val() === '0' && $('#pcm-endMinutes').val() === '0') $('#pcm-endMinutes').val('30');
       });
       $('#pcm-clearTInput').on('click', () => { $('#pcm-timepicker1').val(''); $('#pcm-endHours').val('0'); $('#pcm-endMinutes').val('0'); });
-      if (search) search.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       if (afterShow) afterShow(this);
       df = null; df2 = null; modalControl = null; radioGroup = null; inputControl = null; filtered = null;
     }, () => { if (afterClose) afterClose(); else modal = null; });

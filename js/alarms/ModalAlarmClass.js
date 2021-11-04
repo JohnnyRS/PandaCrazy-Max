@@ -51,7 +51,7 @@ class ModalAlarmClass {
       }
       $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(theAlarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
-      let resetTipsClass = (pandaUI) ? pandaUI : search;
+      let resetTipsClass = (pandaUI) ? pandaUI : MySearchUI;
       if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
@@ -82,7 +82,7 @@ class ModalAlarmClass {
       modalBody.find('.pcm-newSnd').click( e => {
         $(`#${idName} .${modal.classModalBody}`).find('.pcm-playMe').removeClass('pcm-playing').blur();
         theAlarms.stopSound(); if (this.audio) this.audio.load();
-        let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd'), resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : search;
+        let prevSnd = $('.pcm-changeMe').data('snd'), soundName = $(e.target).closest('div').data('snd'), resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : MySearchUI;
         $('.pcm-changeMe').find('.pcm-tooltipHelper').tooltip('dispose'); $('.pcm-changeMe').remove();
         if (prevSnd !== soundName) {
           $(e.target).closest('div').after($(`<div class='pcm-changeMe'>Change sound to: </div>`).data('snd',soundName).append(`<span class='col-xs-12 pcm-fileInput'></span>`).append(createFileInput(_,'audio/*', 'Browse for an audio file on your computer to replace the alarm with.')).append($(`<span class='pcm-fileStatus'></span>`).append(this.btnStr('Default Audio', 'pcm-defaultAudio pcm-tooltipData pcm-tooltipHelper', '', 'Change alarm back to the default alarm sound.', 'xs'))));

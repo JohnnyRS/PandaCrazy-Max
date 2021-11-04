@@ -59,7 +59,7 @@ class ModalOptionsClass {
       if (errorsFound === 0) {
         globalOpt.doTimers(changes);
         bgPanda.timerChange(globalOpt.getCurrentTimer()); pandaUI.pandaGStats.setPandaTimer(globalOpt.getCurrentTimer()); bgPanda.hamTimerChange(changes.hamTimer);
-        pandaUI.pandaGStats.setHamTimer(changes.hamTimer); bgSearch.timerChange(changes.searchTimer); pandaUI.pandaGStats.setSearchTimer(changes.searchTimer);
+        pandaUI.pandaGStats.setHamTimer(changes.hamTimer); MySearch.timerChange(changes.searchTimer); pandaUI.pandaGStats.setSearchTimer(changes.searchTimer);
         bgQueue.timerChange(changes.queueTimer); pandaUI.pandaGStats.setQueueTimer(changes.queueTimer);
         menus.updateTimerMenu(changes.timerIncrease, changes.timerDecrease, changes.timerAddMore);
         modal.closeModal(); changes = null;

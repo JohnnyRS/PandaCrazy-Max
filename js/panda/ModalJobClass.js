@@ -65,12 +65,12 @@ class ModalJobClass {
   recheckButtons(modalB, data) {
     let toUI = Number(modalB.find(`input[name='toUI']:checked`).val());
     if (!data.groupId || (toUI === 0 && bgPanda.searchesGroupIds.hasOwnProperty(data.groupId)) ||
-      (toUI === 1 && (!bgSearch.isSearchUI() || bgSearch.is('gid', data.groupId, true)))) this.disableCreateButton(modalB.find(`.pcm-createGidJob`));
+      (toUI === 1 && (!MySearch.isSearchUI() || MySearch.is('gid', data.groupId, true)))) this.disableCreateButton(modalB.find(`.pcm-createGidJob`));
     else this.enableCreateButton(modalB.find(`.pcm-createGidJob`));
     if (!data.reqId || (toUI === 0 && bgPanda.searchesReqIds.hasOwnProperty(data.reqId)) ||
-      (toUI === 1 && (!bgSearch.isSearchUI() || bgSearch.is('rid', data.reqId, true)))) this.disableCreateButton(modalB.find(`.pcm-createRidJob`));
+      (toUI === 1 && (!MySearch.isSearchUI() || MySearch.is('rid', data.reqId, true)))) this.disableCreateButton(modalB.find(`.pcm-createRidJob`));
     else this.enableCreateButton(modalB.find(`.pcm-createRidJob`));
-    if (!bgSearch.isSearchUI()) { modalB.find(`.pcm-toPandaUI > input`).prop('checked', true); this.disableToSearchButton(modalB); } else this.enableToSearchButton(modalB);
+    if (!MySearch.isSearchUI()) { modalB.find(`.pcm-toPandaUI > input`).prop('checked', true); this.disableToSearchButton(modalB); } else this.enableToSearchButton(modalB);
   }
   /** This will create a search job and show a dialog to user if successful or show an error.
    * @async                 - To wait for creation of search job.
@@ -92,7 +92,7 @@ class ModalJobClass {
    * @param {object} modalB - Jquery Element */
   recheckSMoveButtons(modalB) {
     let button = modalB.find(`.pcm-toSearchUI`), search = button.data('search'), value = button.data('value');
-    if (!bgSearch.isSearchUI() || bgSearch.is(search, value, true)) this.disableCreateButton(modalB.find(`.pcm-toSearchUI`));
+    if (!MySearch.isSearchUI() || MySearch.is(search, value, true)) this.disableCreateButton(modalB.find(`.pcm-toSearchUI`));
     else this.enableCreateButton(modalB.find(`.pcm-toSearchUI`));
     button = null;
   }
@@ -103,7 +103,7 @@ class ModalJobClass {
     modal.showDialogModal('700px', 'Moving search job to search UI.', 'Do you really want to move this search job to a search trigger on search UI?<br>Any changes you made here for this job will not be saved.', async () => {
       let enabled = pandaUI.pandaStats[myId].searching || pandaUI.pandaStats[myId].collecting;
       await pandaUI.stopCollecting(myId, 'manual'); pandaUI.searchDisabled(myId); modal.closeModal();
-      let result = await bgSearch.moveToSearch(dbId, enabled);
+      let result = await MySearch.moveToSearch(dbId, enabled);
       if (result) {
         modal.closeModal();
         pandaUI.removeJob(myId, () => {
@@ -123,7 +123,7 @@ class ModalJobClass {
   async searchOptionsChanged(changes, sChanges) {
     let sOptions = sChanges.options;
     changes = Object.assign(changes, {'acceptLimit':sOptions.acceptLimit, 'autoGoHam':sOptions.autoGoHam, 'duration':sOptions.duration, 'limitFetches':sOptions.limitFetches, 'limitNumQueue':sOptions.limitNumQueue, 'limitTotalQueue':sOptions.limitTotalQueue, 'once':sOptions.once});
-    await bgSearch.optionsChanged(sChanges, sChanges.searchDbId); sOptions = null;
+    await MySearch.optionsChanged(sChanges, sChanges.searchDbId); sOptions = null;
   }
   /** Shows the modal for users to change the details of the HIT job with the unique ID.
    * @async                - To wait for the data to be loaded from the database.

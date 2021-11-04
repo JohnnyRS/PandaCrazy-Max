@@ -25,28 +25,17 @@ class SearchGStats {
 	isSearchNowOn() { return this.searchNow.value; }
 	/** Updates the given stat object on the status bar and pass a text to use too.
 	 * @param  {object} statObj   - The stat object  @param  {string} [text] - The text to use in the status bar for this stat object. */
-	updateStatNav(statObj, text='') {
-		if (text === '') {
-			if (statObj.disabled === null) statObj.disabled = ($(statObj.id).length) ? false : true;
-			if (statObj.disabled === true) return null;
-			let cssVar = (statObj.tempStr) ? statObj.tempStr : getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string), newValue = `${cssVar} ${statObj.value}`;
-			statObj.tempStr = cssVar; $(statObj.id).html(newValue);
-		} else if (text) $(statObj.id).html(text);
-		if (statObj.onClass && statObj.offClass && statObj.value) $(statObj.id).removeClass(statObj.offClass).addClass(statObj.onClass);
-		else if (statObj.onClass && statObj.offClass) $(statObj.id).removeClass(statObj.onClass).addClass(statObj.offClass);
+	updateStatNav(statObj, text='') { MySearchUI.updateStatNav(statObj, text); }
+	toggleStat(theToggle, toggled, max, theArray) {
+		this[theArray][toggled-1].disabled = true; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);  this[theArray][toggled-1].disabled = false;
+		let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true);
+		let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
+		this.updateStatNav(this[theArray][toggled-1]);
 	}
 	/** Set the searching value and searching now value to on and update stat in status bar. */
 	prepare() {
-		$('#pcm-timerStats').append(`<span id='pcm-searchElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for search timer to send a fetch request to MTURK.'></span><span id='pcm-fetchedElapsed' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time in ms for MTURK to respond to a search fetch request.'></span>`).data('toggled', 1).data('max',2).data('array', 'timerStats');
 		this.updateStatNav(this.timerStats[0]); this.updateStatNav(this.totalSearchFetched); this.updateStatNav(this.totalSearchPREs);
 		this.updateStatNav(this.totalSearchHits); this.updateStatNav(this.totalSearchResults); this.updateStatNav(this.fetchedElapsed);
-		$('.pcm-searchStats .toggle').click( e => {
-			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
-			this[theArray][toggled-1].disabled = true; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);  this[theArray][toggled-1].disabled = false;
-			let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true);
-			let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
-			this.updateStatNav(this[theArray][toggled-1]);
-		});
 	}
 	searchingOn() { this.searching.value = true; this.searchNow.value = true; this.updateStatNav(this.searching, null); this.updateStatNav(this.searchNow, null); }
 	/** Set the searching value to off and update stat in status bar. */

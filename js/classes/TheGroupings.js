@@ -87,7 +87,7 @@ class TheGroupings {
    * @param {bool} isPanda - Panda Groupings?  @param {string} [searchType] - Type to Filter.
    * @return {object}      - Filtered Jobs. */
   doInstantFilter(isPanda, searchType='isEnabled') {
-    let filtered = (isPanda) ? bgPanda.pandaUniques.filter((val) => pandaUI.pandaStats[val].collecting) : bgSearch.getFrom('Search').filter((val) => bgSearch[searchType](val));
+    let filtered = (isPanda) ? bgPanda.pandaUniques.filter((val) => pandaUI.pandaStats[val].collecting) : MySearch.getFrom('Search').filter((val) => MySearch[searchType](val));
     let collection = {};
     for (let i=0, len=filtered.length; i < len; i++) {
       if (isPanda) { let info =  bgPanda.options(filtered[i]); collection[info.dbId] = {'hamMode':info.autoTGoHam}; }
@@ -122,7 +122,7 @@ class TheGroupings {
       modal.showDialogModal('700px', 'Create Grouping Instantly', `You can only create an instant grouping if there are panda's collecting. Start collecting the panda's you want in the group or use the create by selection menu option.`, null , false, false);
     } else if (andEdit) {
       const unique = this.add(`Grouping #${this.unique}`, 'Instantly made so no description.', collection);
-      this.showgroupingEditModal(unique, () => { this.showGroupingsModal((isPanda) ? pandaUI : search); }, () => { this.delete(unique); }, () => { modal = null; });
+      this.showgroupingEditModal(unique, () => { this.showGroupingsModal((isPanda) ? pandaUI : MySearchUI); }, () => { this.delete(unique); }, () => { modal = null; });
     }
   }
   /** Delete this grouping with the unique number.
@@ -139,7 +139,7 @@ class TheGroupings {
       let panda = (this.type === 'panda'), dbKey = keys.shift(), myId = (panda) ? bgPanda.getMyId(dbKey) : dbKey, collecting = this.groupStatus[grouping].collecting;
       if (collecting && panda) pandaUI.startCollecting(myId);
       else if (!collecting && panda)pandaUI.stopCollecting(myId);
-      else if (!panda) { bgSearch.toggleTrigger(null, myId, collecting); search.statusMe(bgSearch.getTrigger(myId).count, (collecting) ? 'searching' : 'disabled'); }
+      else if (!panda) { MySearch.toggleTrigger(null, myId, collecting); MySearchUI.statusMe(MySearch.getTrigger(myId).count, (collecting) ? 'searching' : 'disabled'); }
       setTimeout( () => { this.delayedToggle(grouping, keys); }, 100 );
     }
   }
@@ -177,10 +177,10 @@ class TheGroupings {
     let oneCollecting = false, allCollecting = true, theGroup = this.groupStatus[grouping], panda = (this.type === 'panda')
     let type = (panda) ? 'pandas' : 'triggers', groups = this.groups[grouping][type], update = false;
     for (const key of Object.keys(groups)) {
-      let myId = (panda) ? bgPanda.getMyId(key) : (bgSearch.getTrigger(key)) ? key : undefined;
+      let myId = (panda) ? bgPanda.getMyId(key) : (MySearch.getTrigger(key)) ? key : undefined;
       if (myId === undefined) { update = true; delete groups[key]; }
       else if (doToggle) {
-        let collecting = (panda) ? pandaUI.pandaStats[myId].collecting : bgSearch.isEnabled(myId);
+        let collecting = (panda) ? pandaUI.pandaStats[myId].collecting : MySearch.isEnabled(myId);
         oneCollecting = (oneCollecting || collecting); allCollecting = (allCollecting && collecting);
       }
     }

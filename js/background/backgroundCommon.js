@@ -1,6 +1,7 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newUpdatedVersion = null;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, gLocalVersion = null;
-let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null;
+let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null, firstInstall = false;
+let MySearchUI = new ExtSearchUI(null);
 chrome.storage.local.set({'PCM_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
@@ -27,6 +28,7 @@ function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); 
 /** Returns the search UI class. Useful when detecting if the UI is already opened in another tab.
  * @return {class} - The Search UI Class. */
 function gGetSearchUI() { return extSearchUI; }
+function gGetMySearchUI() { return MySearchUI; }
 /** Function to set up a search UI variable for the background and returns search class.
  * @param {class} classUI - Object variable for the search UI or null if UI is closing.
  * @return {class}        - Returns the search class in background for easier access. */
@@ -47,7 +49,7 @@ function gSetPandaUI(classUI) {
   extPandaUI = classUI; checkUIConnects();
 }
 /** Theme has been changed so tell searchUI about it so it can change it's theme also. */
-function themeChanged() { if (extSearchUI) extSearchUI.themeChanged(true); }
+function themeChanged() { if (MySearchUI) MySearchUI.themeChanged(); }
 /** Sends back the panda class object so pages can use it easily.
  * @return {class} - Returns the panda class object from the external page. */
 function gGetPanda() { return myPanda; }
@@ -177,3 +179,19 @@ chrome.runtime.onUpdateAvailable.addListener( details => {
   newUpdatedVersion = details.version;
   if (extPandaUI) { extPandaUI.newVersionAvailable(newUpdatedVersion); }
 });
+
+chrome.runtime.onMessage.addListener( (request,_, sendResponse) => {
+  if (request.command === 'pcmStarting') {
+    chrome.storage.local.get('firstInstall', (result) => {
+      if (typeof result.firstInstall === 'undefined') firstInstall = true; else firstInstall = result.firstInstall;
+      chrome.storage.local.set({'firstInstall':false});
+    });
+    chrome.storage.local.get('startingUp', (result) => { // Find out if another page has tried to start up by checking the hold data.
+      if (typeof result.startingUp === 'undefined') chrome.storage.local.set({'startingUp':request.data.tabID}, () => { sendResponse(true); });
+      else sendResponse(false);
+    });
+    return true;
+  } else if (request.command === 'startDone') chrome.storage.local.remove('startingUp'); // Release hold on any other pages trying to start up at same time.
+});
+
+chrome.runtime.onInstalled.addListener( () => { chrome.storage.local.set({'firstInstall':true}); chrome.storage.local.remove('startingUp'); });

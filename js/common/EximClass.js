@@ -52,7 +52,7 @@ class EximClass {
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
     exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups();
-    exportedAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await bgSearch.exportTriggers(); exportSearchGroups = await bgSearch.exportSearchGroupings();
+    exportedAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await MySearch.exportTriggers(); exportSearchGroups = await MySearch.exportSearchGroupings();
     this.exportPre.jobs = exportJobs.length; 
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
       'SearchGroupings':exportSearchGroups, 'SoundOptions':exportedAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
@@ -107,8 +107,8 @@ class EximClass {
       let counters = 0, tabDbId = 1, mInfo = [], mData = []; this.tabPosition = 0;
       if (Object.keys(this.importTabsData).length > 0) {
         $('#pcm-tabbedPandas').hide(); $('.pcm-importButton:first').append('.');
-        bgPanda.removeAll(false); bgSearch.removeAll();
-        bgPanda.closeDB(); bgSearch.closeDB(); // Must close DB before deleting and recreating stores.
+        bgPanda.removeAll(false); MySearch.removeAll();
+        bgPanda.closeDB(); MySearch.closeDB(); // Must close DB before deleting and recreating stores.
         await bgPanda.recreateDB(); // Recreate database and stores.
         await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
         await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
@@ -150,7 +150,7 @@ class EximClass {
           if (value) {
             triggers.push({'type':mInfo[i].search, 'value':value, 'pDbId':mInfo[i].id, 'searchUI':false, 'pandaId':mInfo[i].myId, 'name':mInfo[i].reqName, 'disabled':true, 'numFound':0, 'added':addedTime + i, 'lastFound':null});
             options.push({'duration':0, 'once':mInfo[i].once, 'limitNumQueue':mInfo[i].limitNumQueue, 'limitTotalQueue':mInfo[i].limitTotalQueue, 'limitFetches':mInfo[i].limitFetches, 'autoGoHam':false, 'tempGoHam':0, 'acceptLimit':0});
-            let ruleSet = Object.assign({}, bgSearch.ruleSet, mData[i].rules)
+            let ruleSet = Object.assign({}, MySearch.ruleSet, mData[i].rules)
             rules.push({rules:[ruleSet], 'ruleSet':0});
           }
         }
@@ -161,7 +161,7 @@ class EximClass {
           else if (group.pandas && group.pandas.hasOwnProperty(mData[i].myId)) { group.pandas[mInfo[i].id] = group.pandas[mData[i].myId]; delete group.pandas[mData[i].myId]; }
         }
       }
-      if (triggers.length) await bgSearch.saveToDatabase(triggers, options, rules,_, true);
+      if (triggers.length) await MySearch.saveToDatabase(triggers, options, rules,_, true);
       let triggerData = this.importTriggersData, imTriggers = [], imOptions = [], imRules = [], imHistory = [], prevId = [], newIds = {}, counter = 1;
       if (triggerData.length) {
         for (const data of this.importTriggersData) {
@@ -177,7 +177,7 @@ class EximClass {
           if (numHits > 0) data.trigger.numHits = numHits;
           imTriggers.push(data.trigger); imOptions.push(data.options); imRules.push(data.rules); imHistory.push(data.history); counter++;
         }
-        await bgSearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true, prevId);
+        await MySearch.saveToDatabase(imTriggers, imOptions, imRules, imHistory, true, prevId);
         for (const theId of prevId) { newIds[theId.prevId] = theId.newId; }
         for (const group of this.importSGroupings) {
           let newTriggers = {};
@@ -213,7 +213,7 @@ class EximClass {
         });
         $('.pcm-importButton:first').on('click', async e => {
           if (!this.importCompleted) {
-            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); bgSearch.importing();
+            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); MySearch.importing();
             await this.startImporting($('#pcm-importAlarms').prop('checked'));
             await delay(100);
             $('.custom-file-input').off('change');
@@ -225,7 +225,7 @@ class EximClass {
         inputContainer = null;
       }
       df = null;
-    }, () => { modal = null; if (this.importCompleted) { bgSearch.importingDone(); window.location.reload(); } });
+    }, () => { modal = null; if (this.importCompleted) { MySearch.importingDone(); window.location.reload(); } });
   }
   /** Shows the export modal for user to choose to export alarm sounds or not. */
   exportModal() {

@@ -82,8 +82,9 @@ class ModalClass {
     $(`#${idName} .${this.classModalTitle}`).html(title);
     $(`#${idName} .${this.classModalBody}`).addClass(bodyClass).html(body);
     $(`#${idName} .${this.classModalFooter}`).addClass(footerClass);
-    $(`#${idName} .${this.classSaveButton}`).removeClass('invisible visible').addClass(saveButton).html(saveText).unbind('click').click( () => {
-      if (saveFunc!==null) saveFunc(this.tempObject[idName]);
+    $(`#${idName} .${this.classSaveButton}`).removeClass('invisible visible').addClass(saveButton).html(saveText).unbind('click').click( (e) => {
+      let theButton = $(e.target).closest('button');
+      if (saveFunc !== null) saveFunc(this.tempObject[idName], theButton);
     });
     $(`#${idName} .${this.classNoButton}`).removeClass('invisible visible').addClass(noButton).html(noText).unbind('click').click( () => { if (noFunc) noFunc(); });
     $(`#${idName} .${this.classCancelButton}`).removeClass('invisible visible').addClass(cancelButton).html(cancelText);

@@ -74,7 +74,7 @@ class PandaUI {
 			this.tabPandaHeight = $(`#pcm-pandaPanel`).height(); this.tabLogHeight = $(`#pcm-logPanel`).height(); this.windowHeight = window.innerHeight;
 			if (savedLogHeight < 10) { savedLogHeight = this.tabLogHeight; globalOpt.theTabLogHeight(this.tabLogHeight); }
 			this.pandaGStats.setPandaTimer(bgPanda.timerChange()); pandaUI.pandaGStats.setHamTimer(bgPanda.hamTimerChange());
-			pandaUI.pandaGStats.setSearchTimer(bgSearch.timerChange()); pandaUI.pandaGStats.setQueueTimer(bgQueue.timerChange());
+			pandaUI.pandaGStats.setSearchTimer(MySearch.timerChange()); pandaUI.pandaGStats.setQueueTimer(bgQueue.timerChange());
 			window.onresize = () => { this.resizeTabContents(); }
 			this.resizeObserver = new ResizeObserver((entries) => this.panelResized(entries));
 			let newPandaHeight = $(`#pcm-pandaUI`).innerHeight() - $(`.pcm-pandaTop:first`).outerHeight() - $(`.pcm-pandaQuickRow:first`).outerHeight() - savedLogHeight;
@@ -238,13 +238,15 @@ class PandaUI {
 		let hitsList = '';
 		for (const thisId of jobsArr) { hitsList += '( ' + $(`#pcm-hitReqName-${thisId}`).html() + ' ' + [$(`#pcm-hitPrice-${thisId}`).html()] + ' )<BR>'; }
 		if (!modal) modal = new ModalClass();
-		modal.showDeleteModal(hitsList, async () => {
+		modal.showDeleteModal(hitsList, async (saved, theButton) => {
+			$(theButton).prop('disabled', true);
 			for (const myId of jobsArr) {
 				let options = bgPanda.options(myId), info = bgPanda.options(myId);
 				await MYDB.getFromDB('panda',_, options.dbId).then( async r => {
 					info.data = r; await this.removeJob(myId, afterFunc,_,_, whyStop); await delay(15);
 				}, rejected => console.error(rejected));
 			}
+			$(theButton).prop('disabled', false);
 			modal.closeModal();
 		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}
@@ -320,7 +322,7 @@ class PandaUI {
 		if (myId === null) {
 			let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
 			let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-			if (search && globalOpt.theToSearchUI() && bgSearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
+			if (search && globalOpt.theToSearchUI() && MySearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
 			else this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
 		} else if (search === 'rid') this.doSearching(myId);
 		else this.startCollecting(myId)

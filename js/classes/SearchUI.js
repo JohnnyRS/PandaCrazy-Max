@@ -2,7 +2,7 @@
  * @class SearchUI ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class SearchUI {
-  constructor () {
+  constructor (searchStats) {
 		this.ridRow = null;
 		this.ridColumn1 = null;
 		this.ridListGroup1 = null;
@@ -15,7 +15,7 @@ class SearchUI {
 		this.gidContent = {};
 		this.customContent = {};
 		this.triggeredContent = {};
-		this.searchGStats = null;
+    this.searchGStats = searchStats;
 		this.modalSearch = null;
 		this.modalAlarms = null;
 		this.ctrlDelete = [];
@@ -38,20 +38,20 @@ class SearchUI {
   /** Stops the searching process. */
   stopSearching() {
 		if (this.searchGStats.isSearchOn()) this.searchGStats.searchingOff();
-		bgSearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
+		MySearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
 	}
   /** Starts the searching process. */
   startSearching() {
-		if (bgSearch.startSearching()) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
+		if (MySearch.startSearching()) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
 	}
 	/** Will toggle the paused value or force the paused value to a given value.
 	 * @param {bool} [val] - Force Pause Value  */
-	pauseToggle(val=null) { if (bgSearch) { bgSearch.pauseToggle(val); }}
+	pauseToggle(val=null) { if (MySearch) { MySearch.pauseToggle(val); }}
 	 /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
-		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; bgSearch.unPauseTimer(); });
-		if (!bgSearch.isLoggedOff()) { MyAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; MySearch.unPauseTimer(); });
+		if (!MySearch.isLoggedOff()) { MyAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
@@ -106,7 +106,13 @@ class SearchUI {
   /** Prepare the search page with button events and set up the columns for triggers to use.
 	 * @async - To wait for tabs to be created. */
 	async prepareSearch() {
-		this.searchGStats = new SearchGStats(); bgSearch.prepareSearch(); menus.createSearchTopMenu();
+		MySearch.prepareSearch(); menus.createSearchTopMenu();
+		$('#pcm-timerStats').append(`<span id='pcm-searchElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for search timer to send a fetch request to MTURK.'></span><span id='pcm-fetchedElapsed' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time in ms for MTURK to respond to a search fetch request.'></span>`).data('toggled', 1).data('max',2).data('array', 'timerStats');
+		$('.pcm-searchStats .toggle').click( e => { 
+			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
+			this.searchGStats.toggleStat(theToggle, toggled, max, theArray);
+		});
+		this.searchGStats.prepare();
 		this.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
     let [, err] = await this.tabs.prepare();
     if (!err) {
@@ -134,7 +140,7 @@ class SearchUI {
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} thetrigger - Jquery element  @param {string} [theStatus] - Status  @param  {bool} [tempDisabled] - Only Temporary? */
 	updateTrigger(thetrigger, theStatus=null, tempDisabled=false) {
-		let unique = $(thetrigger).data('unique'), newStatus = (theStatus !== null) ? theStatus : bgSearch.toggleTrigger(unique), info = bgSearch.getData(bgSearch.uniqueToDbId(unique));
+		let unique = $(thetrigger).data('unique'), newStatus = (theStatus !== null) ? theStatus : MySearch.toggleTrigger(unique), info = MySearch.getData(MySearch.uniqueToDbId(unique));
 		$(thetrigger).stop(true,true).data('status', newStatus);
 		if (newStatus === 'disabled') $(thetrigger).addClass('pcm-disabled'); else $(thetrigger).removeClass('pcm-disabled');
 		if (tempDisabled) $(thetrigger).addClass('pcm-tempDisabled'); else $(thetrigger).removeClass('pcm-tempDisabled');
@@ -145,7 +151,7 @@ class SearchUI {
 	statusMe(unique, theStatus=null) { this.updateTrigger($(`#pcm-triggerCard-${unique}`), theStatus); this.redoAllTabTitles(); }
 	/** Sets the trigger status to the provided status value when it comes from an external command.
 	 * @param {number} dbId - Unique ID  @param {bool} status - Status */
-	externalSet(dbId, status) { if (dbId) { let unique = bgSearch.getTrigger(dbId).count; bgSearch.toggleTrigger(_, dbId, status); this.statusMe(unique, (status) ? 'searching' : 'disabled') }}
+	externalSet(dbId, status) { if (dbId) { let unique = MySearch.getTrigger(dbId).count; MySearch.toggleTrigger(_, dbId, status); this.statusMe(unique, (status) ? 'searching' : 'disabled') }}
 	/** Set up the card events for a click.
 	 * @param  {object} [card] - Jquery element to find cards. */
 	cardEvents(card=null) {
@@ -161,9 +167,9 @@ class SearchUI {
 	sortCards(type) {
 		let sortBy = this.sortingValues[this.sorting];
 		$(this[`${type}Content`]).find('.card').sort( (a, b) => {
-			let unique1 = $(a).data('unique'), unique2 = $(b).data('unique'), dbId1 = bgSearch.uniqueToDbId(unique1), dbId2 = bgSearch.uniqueToDbId(unique2);
+			let unique1 = $(a).data('unique'), unique2 = $(b).data('unique'), dbId1 = MySearch.uniqueToDbId(unique1), dbId2 = MySearch.uniqueToDbId(unique2);
 			let compare = unique1 - unique2, temp = 0;
-			if (sortBy !== 'none') temp = bgSearch.data[dbId2][sortBy] - bgSearch.data[dbId1][sortBy];
+			if (sortBy !== 'none') temp = MySearch.data[dbId2][sortBy] - MySearch.data[dbId1][sortBy];
 			if (temp !== 0) compare = temp;
 			if (!this.sortAscending[this.sorting]) compare = compare * -1;
 			return compare;
@@ -256,12 +262,12 @@ class SearchUI {
 	 * @param {object} hitData - HIT Data  @param {bool} [once] - Only Accept Once? */
 	async addTrigger(hitData, once=true) {
 		let gId = hitData.hit_set_id, rId = hitData.requester_id;
-		bgSearch.setTempBlockGid(gId, true);
-		let unique = await bgSearch.addTrigger('gid', {'name':hitData.title, 'reqId':hitData.requester_id, 'groupId':gId, 'title':hitData.title, 'reqName':hitData.requester_name, 'pay':hitData.monetary_reward.amount_in_dollars, 'status':'finding'}, {'duration': 12000, 'once':once, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'tempGoHam':5000, 'acceptLimit':0});
+		MySearch.setTempBlockGid(gId, true);
+		let unique = await MySearch.addTrigger('gid', {'name':hitData.title, 'reqId':hitData.requester_id, 'groupId':gId, 'title':hitData.title, 'reqName':hitData.requester_name, 'pay':hitData.monetary_reward.amount_in_dollars, 'status':'finding'}, {'duration': 12000, 'once':once, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'tempGoHam':5000, 'acceptLimit':0});
 		if (unique) {
-			search.appendFragments();
-			bgSearch.doRidSearch(rId, async (timerUnique, elapsed, rId) => {
-				await bgSearch.goFetch(bgSearch.createReqUrl(rId), timerUnique, elapsed, bgSearch.uniqueToDbId(unique), 'gid', gId, true, gId);
+			this.appendFragments();
+			MySearch.doRidSearch(rId, async (timerUnique, elapsed, rId) => {
+				await MySearch.goFetch(MySearch.createReqUrl(rId), timerUnique, elapsed, MySearch.uniqueToDbId(unique), 'gid', gId, true, gId);
 			});
 		}
 	}
@@ -284,8 +290,8 @@ class SearchUI {
 				{'type':'keyValue', 'key':'approval', 'addTdClass':' pcm-approvalRateCol', 'maxWidth':'25px', 'tooltip':`See`, 'styleDisplay':trRate},
 				{'type':'keyValue', 'key':'title', 'tooltip':`${hitData.title.replace(/'/g, `&#39;`)}`},
 				{'type':'keyValue', 'key':'price', 'maxWidth':'45px', 'tooltip':`Amount HIT pays.`},
-				{'type':'button', 'btnLabel':'P', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
-				{'type':'button', 'btnLabel':'O', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customOnce', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { bgSearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
+				{'type':'button', 'btnLabel':'P', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customPanda', 'unique':unique, 'tooltip':`Collect panda on Panda UI page.`, 'btnFunc': () => { MySearch.sendToPanda(hitData, found.trigger.id,_,_, 0, 1400); }},
+				{'type':'button', 'btnLabel':'O', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customOnce', 'unique':unique, 'tooltip':`Collect Only ONE panda on Panda UI page.`, 'btnFunc': () => { MySearch.sendToPanda(hitData, found.trigger.id,_, true, 0, 1400); }},
 				{'type':'button', 'btnLabel':'S', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch1', 'unique':unique, 'tooltip':`Create search trigger to collect once for this HIT.`, 'btnFunc': e => { $(e.target).addClass('btn-pcmUsed'); this.addTrigger(hitData); }},
 				{'type':'button', 'btnLabel':'*', 'addClass':' btn-xxs', 'maxWidth':'18px', 'minWidth':'15px', 'idStart':'pcm-customSearch', 'unique':unique, 'tooltip':`Create search trigger for this HIT.`, 'btnFunc': e => { $(e.target).addClass('btn-pcmUsed'); this.addTrigger(hitData, false); }},
 			], df, foundData, true, true, true, trClass);
@@ -324,7 +330,9 @@ class SearchUI {
 		for (const thisId of jobsArr) { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; }
 		if (!modal) modal = new ModalClass();
 		modal.showDeleteModal(bodyText, async () => {
-			for (const unique of jobsArr) { await bgSearch.removeTrigger(_,_, unique, true, true); await afterFunc('YES', unique); }
+			$(theButton).prop('disabled', true);
+			for (const unique of jobsArr) { await MySearch.removeTrigger(_,_, unique, true, true); await afterFunc('YES', unique); }
+			$(theButton).prop('disabled', false);
 			modal.closeModal(); jobsArr.length = 0;
 		}, () => { if (afterFunc) afterFunc('NO'); }, () => { if (afterFunc) afterFunc('CANCEL'); }, () => { if (afterClose) afterClose(); else modal = null; }, cancelText);
 	}

@@ -1,6 +1,7 @@
 /** Class dealing with the handling of the databases using promises to wait for completion.
  * @class DatabasesClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class DatabasesClass {
   constructor() {
     this.history = {'dbName':'Pcm_History', 'storeName':'theHistory', 'db':null, 'default':false};
@@ -9,8 +10,9 @@ class DatabasesClass {
     this.searching = {'dbName':'Pcm_Searching', 'storeName':'searchTriggers', 'options':'searchOptions', 'rules':'searchRules', 'grouping':'searchGroups', 'history':'searchHistory', 'results':'searchResults', 'db':null, 'default':false};
   }
   /** This opens the main panda database and will delete first if needed. Restores the indexes after a delete.
-   * @param {bool} [del] - Delete from database?
-   * @return {promise} - 'OPENED' or rejected has any errors. */
+   * @param  {bool} [del] - Delete from database?
+   * @return {promise}    - 'OPENED' or rejected has any errors.
+  **/
   openPCM(del=false) {
     return new Promise( (resolve, reject) => {
       this.panda.db = new DatabaseClass(this.panda.dbName, 1);
@@ -27,8 +29,9 @@ class DatabasesClass {
     });
   }
   /** This opens the main history database and will delete first if needed. Restores the indexes after a delete.
-   * @param {bool} [del] - Delete from database?
-   * @return {promise} - 'OPENED' or rejected has any errors. */
+   * @param  {bool} [del] - Delete from database?
+   * @return {promise}    - 'OPENED' or rejected has any errors.
+  **/
   openHistory(del=false) {
 		return new Promise( (resolve, reject) => {
       this.history.db = new DatabaseClass(this.history.dbName, 1);
@@ -44,8 +47,9 @@ class DatabasesClass {
 		});
   }
   /** This opens the main search database and will delete first if needed. Restores the indexes after a delete.
-   * @param {bool} [del] - Delete from database?
-   * @return {promise} - 'OPENED' or rejected has any errors. */
+   * @param  {bool} [del] - Delete from database?
+   * @return {promise}    - 'OPENED' or rejected has any errors.
+  **/
   openSearching(del=false) {
 		return new Promise( (resolve, reject) => {
 			this.searching.db = new DatabaseClass(this.searching.dbName, 4);
@@ -75,8 +79,9 @@ class DatabasesClass {
 		});
   }
   /** This opens the main stats database and will delete first if needed. Restores the indexes after a delete.
-   * @param {bool} [del] - Delete from database?
-   * @return {promise} - 'OPENED' or rejected has any errors. */
+   * @param  {bool} [del] - Delete from database?
+   * @return {promise}    - 'OPENED' or rejected has any errors.
+  **/
   openStats(del=false) {
 		return new Promise( (resolve, reject) => {
 			this.stats.db = new DatabaseClass(this.stats.dbName, 1);
@@ -91,52 +96,60 @@ class DatabasesClass {
 		});
   }
   /** This will close the database with the target property for the database object name.
-   * @param {string} target - The property name of database to close. */
+   * @param  {string} target - The property name of database to close.
+  **/
   closeDB(target) { this[target].db.closeDB(); this[target].db = null; }
   /** This will delete the database with the target property for the database object name.
-   * @async                 - To wait for the database to be fully deleted.
-   * @param {string} target - The property name of database to delete. */
+   * @async                  - To wait for the database to be fully deleted.
+   * @param  {string} target - The property name of database to delete.
+  **/
   async deleteDB(target) { if (this[target].db !== null) this[target].db.closeDB(); await this[target].db.deleteDB(); this[target].db = null; }
   /** Returns if database is using default values.
-   * @param {string} target - The property name of database to return default value.
-   * @return {bool}         - Returns the value representing if database was set to default values. */
+   * @param  {string} target - The property name of database to return default value.
+   * @return {bool}          - Returns the value representing if database was set to default values.
+  **/
   useDefault(target) { return this[target].default; }
   /** Gets data from the database, store and keys provided. Can send back count number. Force to use cursor. Limit number of data returned and in what order with a start index.
-   * @param {string} target   - Database Name  @param {string} [store] - Store Name   @param {string} [key]  - Key Name     @param {array} [keys] - Key Names
-   * @param {string} [indexN] - Index Name     @param {bool} [count]   - Count Items  @param {bool} [cursor] - Use Cursor?  @param {bool} [asc]   - Ascending?
-   * @param {number} [limit]  - Limit Number   @param {number} [start] - Index to start at
-   * @return {promise}        - Array or object in resolve. Error object in reject. */
+   * @param  {string} target   - Database Name  @param  {string} [store] - Store Name   @param  {string} [key]  - Key Name     @param  {array} [keys] - Key Names
+   * @param  {string} [indexN] - Index Name     @param  {bool} [count]   - Count Items  @param  {bool} [cursor] - Use Cursor?  @param  {bool} [asc]   - Ascending?
+   * @param  {number} [limit]  - Limit Number   @param  {number} [start] - Index to start at
+   * @return {promise}         - Array or object in resolve. Error object in reject.
+  **/
   getFromDB(target, store='storeName', key=null, keys=null, indexN=null, count=null, cursor=false, asc=true, limit=0, start=0) {
 		return new Promise((resolve, reject) => { this[target].db.getFromDB(this[target][store], key, keys, indexN, count, cursor, asc, limit, start).then( r => resolve(r), e => reject(e) ); });
   }
   /** Adds data to database with a key in data or next key available. Can add Multiple or save only new. Can use a function when data gets updated.
-   * @param {string} target - Database Name  @param {string} [store]        - Store Name  @param {array} [mData] - Multiple Data  @param {bool} [onlyNew] Save New Only
-   * @param {string} [key]  - Key Name       @param {function} [updateFunc] - Function to call when updated.
-   * @return {promise}      - Database key or new key in resolve. Error object in reject. */
+   * @param  {string} target  - Database Name  @param  {string} [store] - Store Name  @param  {array} [mData]         - Multiple Data
+   * @param  {bool} [onlyNew] - Save New Only  @param  {string} [key]   - Key Name    @param  {function} [updateFunc] - Function to call when updated.
+   * @return {promise}        - Database key or new key in resolve. Error object in reject.
+  **/
   addToDB(target, store='storeName', mData=null, onlyNew=false, key=null, updateFunc=null) {
 		return new Promise((resolve, reject) => { this[target].db.addToDB(this[target][store], mData, onlyNew, key, updateFunc).then( r => resolve(r), e => reject(e) ); });
   }
   /** Deletes data from the database in the store name and the key. Can use an index name also.
-   * @param {string} target - Database Name  @param {string} [store] - Store Name  @param {string} [key] - Key Name  @param {string} [indexName] - Index Name
-   * @return {promise}      - Key in resolve. Error object in reject. */
+   * @param  {string} target - Database Name  @param  {string} [store] - Store Name  @param  {string} [key] - Key Name  @param  {string} [indexName] - Index Name
+   * @return {promise}       - Key in resolve. Error object in reject.
+  **/
   deleteFromDB(target, store='storeName', key=null, indexName=null) {
 		return new Promise((resolve, reject) => { this[target].db.deleteFromDB(this[target][store], key, indexName).then( r => resolve(r), e => reject(e) ); });
   }
   /** Tests the database to make sure it was created and can open correctly.
-   * @return {promise} - 'good' for test successful or bad in reject for errors. */
+   * @return {promise} - 'good' for test successful or bad in reject for errors.
+  **/
   testDB() { return new Promise( (resolve, reject) => { this.panda.db.testDB().then( r => resolve(r), e => reject(e) ); }); }
   /** Clears the store name given in the database provided.
-   * @param {string} target - Database Name  @param {string} store - Store Name */
+   * @param  {string} target - Database Name  @param  {string} [store] - Store Name
+  **/
   clearStore(target, store='storeName') { this[target].db.clearStore(this[target][store]); }
 }
 /** Class for using databases with promises for operations so it can wait for completion of function.
  * @class DatabaseClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class DatabaseClass {
   /**
-   * @param {string} dbName    - Name of the database to be used.
-   * @param {number} dbVersion - Version number for this database.
-   */
+   * @param  {string} dbName    - Name of the database to be used.  @param  {number} dbVersion - Version number for this database.
+  **/
   constructor(dbName, dbVersion) {
     this.db = null;                 // Database variable to the indexedDB object.
     this.dbName = dbName;           // Database name for the indexedDB object.
@@ -144,7 +157,8 @@ class DatabaseClass {
     this.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
   }
   /** Test the database to make sure there are stores available.
-   * @Return {promise} - Resolves with 'good' or rejects with 'bad'. */
+   * @Return {promise} - Resolves with 'good' or rejects with 'bad'.
+  **/
   testDB() {
     return new Promise( (resolve, reject) => {
       let request = this.indexedDB.open( this.dbName, this.dbVersion );
@@ -153,7 +167,8 @@ class DatabaseClass {
     });
   }
   /** Deletes this database with all data with it.
-   * @return {promise} - 'SUCCESS' in resolve or Errors in reject. */
+   * @return {promise} - 'SUCCESS' in resolve or Errors in reject.
+  **/
   deleteDB() {
     return new Promise( (resolve, reject) => {
       let deleteRequest = this.indexedDB.deleteDatabase(this.dbName);
@@ -162,8 +177,8 @@ class DatabaseClass {
     });
   }
   /** Opens this database using dbName and dbVersion properties of class. Assigns db property to opened database request.
-   * @param {bool} deleteFirst - Delete database @param {function} upgrade - Function to be used when upgrade is needed because newer version.
-   * @return {promise}         - Database version in resolve. Error object in reject. */
+   * @param  {bool} deleteFirst - Delete database  @param  {function} upgrade - Function to be used when upgrade is needed because newer version.
+   * @return {promise}          - Database version in resolve. Error object in reject. */
   openDB(deleteFirst, upgrade) {
     return new Promise( async (resolve, reject) => {
       if (!this.indexedDB) reject(new Error('indexedDB is Not supported'));
@@ -178,9 +193,10 @@ class DatabaseClass {
     });
   }
   /** Adds data to database with a key in data or next key available. Can add Multiple or save only new. Can use a function when data gets updated.
-   * @param {string} storeName - Store name  @param {object} mdata      - Multiple Data   @param {bool} [onlyNew] - True for only updating data that is new.
-   * @param {bool} [key]       - Key         @param {bool} [updateFunc] - Update function
-   * @return {promise}         - Database key or new key in resolve. Error object in reject. */
+   * @param  {string} storeName - Store name  @param  {object} mdata      - Multiple Data   @param  {bool} [onlyNew] - True for only updating data that is new.
+   * @param  {bool} [key]       - Key         @param  {bool} [updateFunc] - Update function
+   * @return {promise}          - Database key or new key in resolve. Error object in reject.
+  **/
   addToDB(storeName, mData, onlyNew=false, key=null, updateFunc=null) {
     return new Promise( (resolve, reject) => {
       let newId = null, tx = this.db.transaction( [storeName], 'readwrite' ), datas = (Array.isArray(mData)) ? mData : [mData], storage = tx.objectStore(storeName);
@@ -199,10 +215,11 @@ class DatabaseClass {
     });
   }
   /** Gets data from the database, store and keys provided. Can send back count number. Force to use cursor. Limit number of data returned and in what order with a start index.
-   * @param {string} storeName - Store name    @param  {string} [key]     - Key Name     @param  {array} [keys]     - Key Names  @param  {string} [indexName] - Index Name
-   * @param {bool} [count]     - Count Items?  @param  {bool} [useCursor] - Use Cursor?  @param  {bool} [ascending] - Ascending?
-   * @param {number} [limit]   - Limit Number  @param {number} [start]    - Index to start at
-   * @return {promise}         - Array or object in resolve. Error object in reject. */
+   * @param  {string} storeName - Store name    @param  {string} [key]     - Key Name        @param  {array} [keys]     - Key Names   @param  {string} [indexName] - Index Name
+   * @param  {bool} [count]     - Count Items?  @param  {bool} [useCursor] - Use Cursor?     @param  {bool} [ascending] - Ascending?
+   * @param  {number} [limit]   - Limit Number  @param  {number} [start]   - Starting index
+   * @return {promise}          - Array or object in resolve. Error object in reject.
+  **/
   getFromDB(storeName, key=null, keys=null, indexName=null, count=false, useCursor=false, ascending=true, limit=0, start=0) {
     return new Promise( (resolve, reject) => {
       let tx = this.db.transaction( [storeName], 'readonly' ), store = tx.objectStore(storeName), filledData = {}, direction = (ascending) ? 'next' : 'prev';
@@ -230,8 +247,9 @@ class DatabaseClass {
     });
   }
   /** Delete an item or items from a database with a key using an index if necessary.
-   * @param {string} storeName - Store name  @param {string} key - Key  @param {string} [indexName] - Index name
-   * @return {promise}         - Key in resolve. Error object in reject. */
+   * @param  {string} storeName - Store name  @param  {string} key - Key  @param  {string} [indexName] - Index name
+   * @return {promise}          - Key in resolve. Error object in reject.
+  **/
   deleteFromDB(storeName, key, indexName=null) {
     return new Promise( (resolve, reject) => {
       let completed = false, error = '', tx = this.db.transaction( [storeName], 'readwrite' ), store = tx.objectStore(storeName);
@@ -252,7 +270,8 @@ class DatabaseClass {
   }
   /** Clear the data from a store name in this database.
    * @param  {string} storeName - Store name to be used for adding data to.
-   * @return {promise}          - Key in resolve. Error object in reject. */
+   * @return {promise}          - Key in resolve. Error object in reject.
+  **/
   clearStore(storeName) {
     return new Promise( (resolve, reject) => {
       let tx = this.db.transaction( [storeName], 'readwrite' );

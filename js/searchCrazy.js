@@ -1,4 +1,4 @@
-let bgPage = null, search = null, pandaUI = null, theAlarms = null, bgQueue = null, bgSearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let bgPage = null, MySearchUI = null, pandaUI = null, theAlarms = null, bgQueue = null, MySearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let gLocalVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null, MyAlarms = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
@@ -22,8 +22,9 @@ function modalLoadingData() {
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
   await bgPage.prepareToOpen(_, true, gLocalVersion).then( () => {
-    search = new SearchUI(); bgSearch = bgPage.gSetSearchUI(search); bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); MyOptions = globalOpt = bgPage.gGetOptions();
-    themes = new ThemesClass(); MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+    MySearchUI = new SearchUI(bgPage.gGetMySearchUI().searchGStats); MySearch = bgPage.gSetSearchUI(MySearchUI)/*  new ExtHitSearch(pcm_channel, MySearchUI) */;
+    bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); MyOptions = globalOpt = bgPage.gGetOptions(); themes = new ThemesClass();
+    MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });
 }
@@ -31,9 +32,9 @@ async function prepare() {
  * @async - To wait for the classes to load and prepare their data. */
 async function startSearchCrazy() {
   themes.prepareThemes();
-  search.prepareSearch();
-  await bgSearch.loadFromDB();
-  search.appendFragments();
+  MySearchUI.prepareSearch();
+  await MySearch.loadFromDB();
+  MySearchUI.appendFragments();
   sGroupings.prepare(showMessages);
   modal.closeModal('Loading Data');
   bgPage.searchUILoaded();
@@ -47,19 +48,19 @@ function showMessages(good, bad) {
   }
 }
 /** ================ First lines executed when page is loaded. ============================ **/
+pcm_channel.postMessage({'msg':'search crazy starting'});
 getBgPage(); // Grabs the background page, detects if another UI is opened and then starts SearchUI.
-
+pcm_channel.onmessage = (e) => {
+  if (e.data) {
+    const data = e.data;
+    searchListener(data); alarmsListener(data);
+  }
+}  
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', () => {
-  if (bgSearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
-  globalOpt = null; MyOptions = null; MyAlarms = null; theAlarms = null; menus = null; modal = null; sGroupings = null; search = null; bgSearch = null;
+  if (MySearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
+  globalOpt = null; MyOptions = null; MyAlarms = null; theAlarms = null; menus = null; modal = null; sGroupings = null; MySearchUI = null; MySearch = null;
   bgQueue = null; bgHistory = null; themes = null; MYDB = null;
 });
 
-pcm_channel.onmessage = async (e) => {
-  if (e.data) {
-    const data = e.data;
-    alarmsListener(data);
-  }
-}  

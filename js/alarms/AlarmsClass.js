@@ -288,5 +288,9 @@ class AlarmsClass {
 function alarmsListener(data) {
   if (data && data.object && MyAlarms) {
     if (data.msg === 'search: save alarm') { MyAlarms.setData(data.object.alarmSound, data.object.alarm); }
+  } else if (data.msg === 'search: prepare alarms' && MyAlarms) {
+    let alarmData = MyAlarms.getData('triggeredAlarm'), volume = MyAlarms.volume;
+    pcm_channel.postMessage({'msg':'search: alarm data', 'value':{'volume':volume, 'data':{'triggeredAlarm':alarmData}}});
   }
 };
+

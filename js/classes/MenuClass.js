@@ -157,10 +157,10 @@ class MenuClass {
   createSearchTopMenu() {
 		let topBar = $(`.pcm-menuRow1:first`);
     this.addMenu(topBar, ' ', e => {
-			if (search.searchGStats.isSearchOn()) search.stopSearching();
-			else if (bgSearch.isPandaUI()) {
-				if (!search.startSearching()) search.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
-			} else search.showModalMessage('Open PandaCrazyMax First', 'PandaCrazyMax must be opened before search triggers can start collecting HITs.');
+			if (MySearchUI && MySearchUI.searchGStats.isSearchOn()) MySearchUI.stopSearching();
+			else if (MySearch.isPandaUI()) {
+				if (!MySearchUI.startSearching()) MySearchUI.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
+			} else MySearchUI.showModalMessage('Open PandaCrazyMax First', 'PandaCrazyMax must be opened before search triggers can start collecting HITs.');
 			$(e.target).blur();
 		}, 'Start searching for trigger jobs.', 'pcm-btn-toggle pcm-btn-menu pcm-searchingOff', 'pcm-searchNow');
 		topBar.append(` <small id='pcm-text-searchStatus'>[<span class='pcm-span-toggle pcm-span-off' id='pcm-searching'></span>]</small> `);
@@ -190,8 +190,8 @@ class MenuClass {
     this.addMenu(controls, 'List', () => {
       if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggersModal(_,_,_,_,_,_,_, () => this.modalSearch = null);
     }, 'List all search triggers.', 'pcm-btn-menu pcm-btn-listing', 'pcm-bListTriggers');
-    this.addMenu(controls, 'Add', () => { search.showSearchAddModal(); }, 'Add a GID or RID trigger.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggers');
-    this.addMenu(controls, 'Add Custom', () => { search.showSearchAddModal(true); }, 'Add a custom trigger with search terms.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggersC');
+    this.addMenu(controls, 'Add', () => { MySearchUI.showSearchAddModal(); }, 'Add a GID or RID trigger.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggers');
+    this.addMenu(controls, 'Add Custom', () => { MySearchUI.showSearchAddModal(true); }, 'Add a custom trigger with search terms.', 'pcm-btn-menu pcm-btn-addTo', 'pcm-bAddTriggersC');
 		controls.append(' | ');
     this.addMenu(controls, 'Groupings', () => { sGroupings.showGroupingsModal(); }, 'Start, stop or edit groups you created.', 'pcm-btn-menu', 'pcm-bSearchGroupings');
 		let groupDrop = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
@@ -204,24 +204,24 @@ class MenuClass {
 		controls.append(' |');
 		let filters = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
     this.addSubMenu(filters, 'Filters ', 'pcm-btn-dropDown pcm-btn-menu', '', 'pcm-filterDropDown', [
-			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': e => { search.filterMe(e, '', true); }, 'class':'pcm-subShowAll', 'tooltip':'Show all triggers in tabs below.'},
-			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': e => { search.filterMe(e, 'sEnabled'); }, 'class':'pcm-subShowEnabled', 'tooltip':'Show only the Enabled triggers in tabs below.'},
-			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': e => { search.filterMe(e, 'sDisabled'); }, 'class':'pcm-subShowDisabled', 'tooltip':'Show only the Disabled triggers in tabs below.'},
+			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show All`, 'menuFunc': e => { MySearchUI.filterMe(e, '', true); }, 'class':'pcm-subShowAll', 'tooltip':'Show all triggers in tabs below.'},
+			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Enabled`, 'menuFunc': e => { MySearchUI.filterMe(e, 'sEnabled'); }, 'class':'pcm-subShowEnabled', 'tooltip':'Show only the Enabled triggers in tabs below.'},
+			{'type':'item', 'label':`<i class='far fa-check-square'></i> Show Disabled`, 'menuFunc': e => { MySearchUI.filterMe(e, 'sDisabled'); }, 'class':'pcm-subShowDisabled', 'tooltip':'Show only the Disabled triggers in tabs below.'},
 		], 'Filter the triggers shown in the tabs below.', 'pcm-bSearchFilters');
 		let sorting = $(`<span class='pcm-dropDown-section'></span>`).appendTo(controls);
     this.addSubMenu(sorting, 'Sorting ', 'pcm-btn-dropDown pcm-btn-menu', '', 'pcm-sortingDropDown', [
-			{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': e => { search.sortMe(e, 0); }, 'class':'pcm-subSortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
-			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': e => { search.sortMe(e, 1); }, 'class':'pcm-subSortAdded', 'tooltip':'Sort by date added of triggers.'},
-			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found HITs`, 'menuFunc': e => { search.sortMe(e, 2); }, 'class':'pcm-subSortFound', 'tooltip':'Sort by Number of Found HITs.'},
-			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': e => { search.sortMe(e, 3); }, 'class':'pcm-subSortLast', 'tooltip':'Sort by Last Time HITs Found.'},
+			{'type':'item', 'label':`<span><i class='fas fa-minus'></i> None</span>`, 'menuFunc': e => { MySearchUI.sortMe(e, 0); }, 'class':'pcm-subSortNone', 'tooltip':'No Sorting. Uses unique Database ID to sort.'},
+			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Added`, 'menuFunc': e => { MySearchUI.sortMe(e, 1); }, 'class':'pcm-subSortAdded', 'tooltip':'Sort by date added of triggers.'},
+			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Found HITs`, 'menuFunc': e => { MySearchUI.sortMe(e, 2); }, 'class':'pcm-subSortFound', 'tooltip':'Sort by Number of Found HITs.'},
+			{'type':'item', 'label':`<i class='fas fa-sort-down'></i> Sort by Last Found`, 'menuFunc': e => { MySearchUI.sortMe(e, 3); }, 'class':'pcm-subSortLast', 'tooltip':'Sort by Last Time HITs Found.'},
 		], 'Sort the way the triggers are displayed in the tabs below.', 'pcm-bSearchSorting');
-		$(`#pcm-sortingDropDown .dropdown-item`).eq(search.sorting).addClass('pcm-selectedItem');
+		$(`#pcm-sortingDropDown .dropdown-item`).eq(MySearchUI.sorting).addClass('pcm-selectedItem');
 		controls.append(' | ');
     this.addMenu(controls, 'Allow Auto', e => {
-			let autoAllow = bgSearch.autoHitsAllow(!bgSearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
+			let autoAllow = MySearch.autoHitsAllow(!MySearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
 			$(e.target).html(buttonText).removeClass('pcm-autoOn pcm-autoOff').addClass((autoAllow) ? 'pcm-autoOn' : 'pcm-autoOff'); $(e.target).blur();
 		}, 'Should triggers be allowed to automatically collect found HITs?', 'pcm-btn-menu pcm-btn-toggle pcm-autoOff', 'pcm-bAutoAllow');
-		if (search) search.searchGStats.prepare();
+		if (MySearchUI) MySearchUI.searchGStats.prepare();
 		topBar = null, options = null, stats = null, controls = null, groupDrop = null, filters = null, sorting = null;
   }
 }

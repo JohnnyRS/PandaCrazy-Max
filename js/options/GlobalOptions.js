@@ -118,7 +118,7 @@ class PandaGOptions {
     if (changes) {
       this.doChanges('general', changes, update);
       if (extPandaUI) extPandaUI.resetToolTips(changes.showHelpTooltips);
-      if (extSearchUI) extSearchUI.resetToolTips(changes.showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(changes.showHelpTooltips);
     }
     else return this.general;
   }
@@ -202,10 +202,11 @@ class PandaGOptions {
     pcm_channel.postMessage({'msg':'global options', 'object':{'general':globalOpt.doGeneral(), 'search':globalOpt.doSearch(), 'timers':globalOpt.doTimers(), 'alarms':globalOpt.doAlarms(), 'ranges':globalOpt.getRanges()}});
   }
   /** Updates the global options and resets anything that is needed. */
-  update() {
+  update(toSearch=true) {
     if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
     MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
     MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
+    //if (toSearch) this.sendOptionsToSearch();
   }
   /** Import the options from an exported file.
    * @param  {object} newData - Data with the imported objects.
@@ -221,7 +222,7 @@ class PandaGOptions {
   /** Resets any tooltip helpers that should be disabled if helptooltips option is disabled or shown if enabled. */
   resetToolTips() {
     if (extPandaUI) extPandaUI.resetToolTips(this.general.showHelpTooltips);
-    if (extSearchUI) extSearchUI.resetToolTips(this.general.showHelpTooltips);
+    if (MySearchUI) MySearchUI.resetToolTips(this.general.showHelpTooltips);
   }
   /** Checks to see if it's OK to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
