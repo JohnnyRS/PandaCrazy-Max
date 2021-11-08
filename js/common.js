@@ -411,7 +411,7 @@ function compareVersion(version1, version2) {
   let result = false; if (!version1) return true;
   if (typeof version1 !== 'object'){ version1 = version1.toString().split('.'); }
   if (typeof version2 !== 'object'){ version2 = version2.toString().split('.'); }
-  for (var i=0; i < (Math.max(version1.length, version2.length)); i++){
+  for (let i=0; i < (Math.max(version1.length, version2.length)); i++){
     if (version1[i] === undefined) { version1[i] = 0; }
     if (version2[i] === undefined) { version2[i] = 0; }
     if (Number(version1[i]) < Number(version2[i])) { result = true; break; }

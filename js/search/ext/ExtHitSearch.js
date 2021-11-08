@@ -5,57 +5,59 @@ class ExtHitSearch {
     this.searchOn = false;
     this.loggedoff = false;
     this.theHitSearch = theHitSearch;
+    this.searchChannel = new BroadcastChannel('PCM_kSearch_band');
   }
-  async sendBroadcastMsg(msg, retMsg, value=null) {
-    const search_channel = new BroadcastChannel('PCM_ksearch_band');
+  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=500) {
+    const search2Channel = new BroadcastChannel('PCM_kSearch2_band');
     return new Promise( (resolve) => {
-      search_channel.postMessage({'msg':msg, 'value':value});
-      search_channel.onmessage = async (e) => { console.log(e.data);
+      search2Channel.postMessage({'msg':msg, 'value':value});
+      search2Channel.onmessage = async (e) => { console.log(e.data);
+        search2Channel.close();
         if (e.data.msg === retMsg && e.data.value) resolve(e.data.value);
         else resolve(false);
-        search_channel.close();
       }
+      setTimeout(() => { search2Channel.close(); resolve(timeoutVal); }, timeoutTime);
     });
   }
-  prepareSearch() {
-    this.searchGStats = {
-      'prepare': async () => { this.pcm_channel.postMessage({'msg':'search: prepare stats'}); },
-      'isSearchOn': () => { return this.searchOn; },
-      'searchingOff': () => {  },
-      'searchingOn': () => {  },
-    }
-    this.pcm_channel.postMessage({'msg':'search: prepare'});
-  }
-  resetSearch() { this.pcm_channel.postMessage({'msg':'search: reset now'}); }
-  timerChange() {}
-  addTrigger() {
-    // MySearch.setTempBlockGid(gId, true);
-		// let unique = await MySearch.addTrigger(gId, 'gid', {'name':hitData.title, 'reqId':hitData.requester_id, 'groupId':gId, 'title':hitData.title, 'reqName':hitData.requester_name, 'pay':hitData.monetary_reward.amount_in_dollars, 'status':'finding'}, {'duration': 12000, 'once':once, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'tempGoHam':5000, 'acceptLimit':0});
-  }
-  pandaToDbId() {}
-  getData() {}
-  optionsCopy() {}
-  stopSearching() { this.searchOn = false; this.pcm_channel.postMessage({'msg':'search: stop searching'}); }
-  async startSearching() { let result = await this.sendBroadcastMsg('search: start searching', 'result return'); if (result) this.searchOn = true; return result; }
-  isLoggedOff() { return this.loggedoff; }
-  unPauseTimer() { this.pcm_channel.postMessage({'msg':'search: unpause timer'}); }
-  toggleTrigger() {}
-  getData() {}
-  getTrigger() {}
-  uniqueToDbId() {}
-  data() {}
-  setTempBlockGid() {}
-  doRidSearch() {}
-  createReqUrl() {}
-  goFetch() {}
-  sendToPanda() {}
-  removeTrigger() {}
-  isPandaUI() { return true; }
-  loadFromDB() { if (this.theHitSearch) this.theHitSearch.loadFromDB(); }
+  timerChange(timer) { if (this.theHitSearch) return this.theHitSearch.timerChange(timer); }
+  pandaToDbId(pDbId) { if (this.theHitSearch) return this.theHitSearch.pandaToDbId(pDbId); }
+  getData(dbId) { if (this.theHitSearch) return this.theHitSearch.getData(dbId); }
+  uniqueToDbId(unique) { if (this.theHitSearch) return this.theHitSearch.uniqueToDbId(unique); }
+  setTempBlockGid(gId, block, rIdBlock) { if (this.theHitSearch) this.theHitSearch.setTempBlockGid(gId, block, rIdBlock) }
+  createReqUrl(rId) { if (this.theHitSearch) return this.theHitSearch.createReqUrl(rId); }
+  goFetch(objUrl, queueUnique, elapsed, dbId, type, value, sUI, lookGid) { if (this.theHitSearch) this.theHitSearch.goFetch(objUrl, queueUnique, elapsed, dbId, type, value, sUI, lookGid); }
+  isPandaUI() { if (this.theHitSearch) return this.theHitSearch.isPandaUI(); }
+  async loadFromDB() { if (this.theHitSearch) await this.theHitSearch.loadFromDB(); }
+	autoHitsAllow(status) { if (this.theHitSearch) return this.theHitSearch.autoHitsAllow(status); }
+	async optionsChanged(changes, dbId) { if (this.theHitSearch) await this.theHitSearch.optionsChanged(changes, dbId); }
+	async getFromDB(name, dbId, indexName, cursor, asc, limit) { if (this.theHitSearch) return await this.theHitSearch.getFromDB(name, dbId, indexName, cursor, asc, limit); }
+	async theData(dbId, name, changed) { if (this.theHitSearch) return await this.theHitSearch.theData(dbId, name, changed); }
+	getBlocked(gId) { if (this.theHitSearch) return this.theHitSearch.getBlocked(gId); }
+	theBlocked(gId, rId, add, remove, toggle) { if (this.theHitSearch) return this.theHitSearch.theBlocked(gId, rId, add, remove, toggle); }
+	getFrom(type) { if (this.theHitSearch) return this.theHitSearch.getFrom(type); }
+  async toggleTrigger(unique, passedDbId, forceEnabled) { if (this.theHitSearch) return this.theHitSearch.toggleTrigger(unique, passedDbId, forceEnabled); }
+  async getTrigger(dbId) { if (this.theHitSearch) return this.theHitSearch.getTrigger(dbId); }
+  
+  prepareSearch() { this.searchChannel.postMessage({'msg':'search: prepareSearch'}); }
+  stopSearching() { this.searchChannel.postMessage({'msg':'search: stopSearching'}); }
+  unPauseTimer() { this.searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
+  
+  async doRidSearch() { return await this.sendBroadcastMsg('search: doRidSearch', 'search: returning doRidSearch', null, false); }
+  async sendToPanda() { return await this.sendBroadcastMsg('search: sendToPanda', 'search: returning sendToPanda', null, false); }
+  async startSearching() { return await this.sendBroadcastMsg('search: startSearching', 'search: returning startSearching', null, false); }
+  async pauseToggle() { return await this.sendBroadcastMsg('search: pauseToggle', 'search: returning pauseToggle', [...arguments], null); }
+  async isEnabled() { return await this.sendBroadcastMsg('search: isEnabled', 'search: returning isEnabled', [...arguments], null); }
+  async optionsCopy() { return await this.sendBroadcastMsg('search: optionsCopy', 'search: returning optionsCopy', [...arguments], null); }
+	async rulesCopy() { return await this.sendBroadcastMsg('search: rulesCopy', 'search: returning rulesCopy', [...arguments], null); }
+  async addTrigger() { return await this.sendBroadcastMsg('search: addTrigger', 'search: returning addTrigger', [...arguments], null); }
+  async removeTrigger() { return await this.sendBroadcastMsg('search: removeTrigger', 'search: returning removeTrigger', [...arguments], null); }
 
   // Combo methods for specific multiple actions needed instead of sending multiple messages.
-  async updateTrigger(unique) { return await this.sendBroadcastMsg('search: update trigger', 'result return', unique); }
-  async menuStartButton() {}
+  async doFilterSearch() { return await this.sendBroadcastMsg('search: doFilterSearch', 'search: returning doFilterSearch', [...arguments], null); }
+  async getToggleTrigger() { return await this.sendBroadcastMsg('search: getToggleTrigger', 'search: returning getToggleTrigger', [...arguments], null); }
+  async getDataTrigger() { return await this.sendBroadcastMsg('search: getDataTrigger', 'search: returning getDataTrigger', [...arguments], null); }
+  async goCheckGroup() { return await this.sendBroadcastMsg('search: goCheckGroup', 'search: returning goCheckGroup', [...arguments], null); }
+  async sortingTriggers() { return await this.sendBroadcastMsg('search: sortingTriggers', 'search: returning sortingTriggers', [...arguments], null, 2000); }
 }
 
 function searchListener(data) {

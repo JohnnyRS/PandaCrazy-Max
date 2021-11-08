@@ -244,7 +244,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId - Unique Number  @param  {object} [hitData]	- Data Object. @param  {bool} [disableTrigger] - Trigger Disable? */
 	async disableSearching(myId, hitData=null, disableTrigger=true) {
 		let info = this.info[myId]; hitData = (hitData) ? hitData : await this.dataObj(myId);
-		if (disableTrigger) { let value = (info.search === 'gid') ? hitData.groupId : hitData.reqId; mySearch.doDisabled(info.search, value, false); }
+		if (disableTrigger) { let value = (info.search === 'gid') ? hitData.groupId : hitData.reqId; await mySearch.doDisabled(info.search, value, false); }
 		if (extPandaUI) extPandaUI.searchDisabled(myId); // Mark this search job as disabled here
 	}
 	/** Returns the first job using the groupID depending on if it's a search job.
@@ -280,7 +280,10 @@ class MturkPanda extends MturkClass {
 		if (disabled) stopReason = 'Job is disabled.';
 		if (stopReason === null) { // If there was a limit to stop then don't add to queue.
 			this.info[myId].queueUnique = pandaTimer.addToQueue(myId, (timerUnique, elapsed, myId) => {
-				if (this.info[myId] && this.info[myId].data) this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
+				if (this.info[myId]) {
+					if (this.info[myId].disabled) { pandaTimer.deleteFromQueue(timerUnique); } // If a job is stuck then delete from queue and do nothing.
+					else if (this.info[myId].data) this.goFetch(this.pandaUrls[myId].urlObj, timerUnique, elapsed, myId); // Do this function every cycle.
+				}
 			}, async myId => {
 				const tData = await this.dataObj(myId), data = Object.assign({}, tData);
 				if (extPandaUI) {
@@ -304,10 +307,10 @@ class MturkPanda extends MturkClass {
 	}
 	/** Stops collecting this panda with this unique ID.
 	 * @param  {number} myId - Unique ID  @param  {number} hitData	- Data Object  @param  {string} [whyStop] - Reason why collecting is stopping. */
-	stopCollecting(myId, hitData, whyStop=null) {
+	async stopCollecting(myId, hitData, whyStop=null) {
 		let queueUnique = this.info[myId].queueUnique, search = this.info[myId].search; this.info[myId].tempFetches = 0; this.info[myId].tFCounter = 0;
 		pandaTimer.deleteFromQueue(queueUnique); // delete from queue if it still has a timer
-		if (search) { if (['once','Daily Accept Limit','Fetched Limit','manual','noQual','blocked'].includes(whyStop)) { this.disableSearching(myId, hitData); }}
+		if (search) { if (['once','Daily Accept Limit','Fetched Limit','manual','noQual','blocked'].includes(whyStop)) { await this.disableSearching(myId, hitData); }}
 		this.sendStatusToSearch(hitData, false, (whyStop === 'once') ? true : false);
 	}
 	/** Sorts group ID and requester ID's into objects for search jobs so it makes it easier to find.
@@ -372,13 +375,12 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId	 - Unique ID.  @param  {bool} deleteDB - Should panda be deleted from database?  @param  {string} [whyStop] - Reason to Remove. */
 	async removePanda(myId, deleteDB, whyStop=null) {
 		const tData = await this.dataObj(myId), data = Object.assign({}, tData);
-		this.stopCollecting(myId, data, whyStop);
+		await this.stopCollecting(myId, data, whyStop);
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId); this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
 		if (data.search) {
 			if (data.search === 'gid') flattenSortObject(this.searchesGroupIds, data.groupId, myId);
 			if (data.search === 'rid') flattenSortObject(this.searchesReqIds, data.reqId, myId);
-			const value = (data.search === 'gid') ? data.groupId : data.reqId;
 			mySearch.removeTrigger(_, data.id,_, false, true);
 		}
 		if (deleteDB) this.deleteDbData(myId, data);

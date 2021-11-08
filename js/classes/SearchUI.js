@@ -31,6 +31,7 @@ class SearchUI {
 		this.hitsTabInactive = true;
 		this.triggeredHits = [];
 		this.triggeredUnique = 0;
+		this.triggersData = {};
 	}
 	/** Shows a message on a modal dialog with a title.
 	 * @param {string} theTitle - Title for Modal  @param {string} theMessage - Message to Show */
@@ -41,17 +42,17 @@ class SearchUI {
 		MySearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
 	}
   /** Starts the searching process. */
-  startSearching() {
-		if (MySearch.startSearching()) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
+  async startSearching() {
+		let doStart = await MySearch.startSearching();
+		if (doStart) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
 	}
 	/** Will toggle the paused value or force the paused value to a given value.
 	 * @param {bool} [val] - Force Pause Value  */
-	pauseToggle(val=null) { if (MySearch) { MySearch.pauseToggle(val); }}
+	async pauseToggle(val=null) { if (MySearch) { await MySearch.pauseToggle(val); }}
 	 /** Shows logged off modal and will unpause the timer when logged off modal closes. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal && modal.modals.length < 2) modal = null; MySearch.unPauseTimer(); });
-		if (!MySearch.isLoggedOff()) { MyAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
 	}
   /** Closes any loggedoff modal because it's now logged on. */
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
@@ -82,7 +83,7 @@ class SearchUI {
 	disableShowAll() { let allElem = $('#pcm-filterDropDown .pcm-subShowAll:first i'); allElem.removeClass('fa-check-square'); allElem.addClass('fa-square'); }
 	/** A method to set up the filters for triggers to show by the user.
 	 * @param {object} e - Target Event  @param {string} prop - Filter Property  @param {bool} [all] - Enable All? */
-	filterMe(e, prop, all=false) {
+	async filterMe(e, prop, all=false) {
 		if (all) this.enableShowAll();
 		else {
 			let icon = $(e.target).closest('a').find('i'), disabled = icon.hasClass('fa-square'); if (prop) this.filters[prop] = disabled;
@@ -90,23 +91,25 @@ class SearchUI {
 			if (this.filters.sEnabled && this.filters.sDisabled) this.enableShowAll(); else this.disableShowAll();
 			icon = null;
 		}
-		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments();
+		this.triggersData = await MySearch.sortingTriggers();
+		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments(false); this.triggersData = {};
 	}
 	/** This will sort the triggers according to the users input and also sets the direction for the sort.
 	 * @param {object} e - Target Event  @param {string} sorting - Sort Direction Data */
-	sortMe(e, sorting) {
+	async sortMe(e, sorting) {
 		let html = $(e.target).html();
 		if (sorting !== 0 && this.sorting === sorting) this.sortAscending[sorting] = !this.sortAscending[sorting];
 		else this.sortAscending[sorting] = true;
 		html = (this.sortAscending[sorting]) ? html.replace('sort-up', 'sort-down') : html.replace('sort-down', 'sort-up');
 		this.sorting = sorting; $(e.target).html(html);
 		$('#pcm-sortingDropDown .dropdown-item').removeClass('pcm-selectedItem'); $(e.target).closest('.dropdown-item').addClass('pcm-selectedItem');
-		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments(); html = null;
+		this.triggersData = await MySearch.sortingTriggers();
+		this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); this.appendFragments(false); html = null; this.triggersData = {};
 	}
   /** Prepare the search page with button events and set up the columns for triggers to use.
 	 * @async - To wait for tabs to be created. */
 	async prepareSearch() {
-		MySearch.prepareSearch(); menus.createSearchTopMenu();
+		await MySearch.prepareSearch(); menus.createSearchTopMenu();
 		$('#pcm-timerStats').append(`<span id='pcm-searchElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for search timer to send a fetch request to MTURK.'></span><span id='pcm-fetchedElapsed' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time in ms for MTURK to respond to a search fetch request.'></span>`).data('toggled', 1).data('max',2).data('array', 'timerStats');
 		$('.pcm-searchStats .toggle').click( e => { 
 			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
@@ -139,8 +142,8 @@ class SearchUI {
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} thetrigger - Jquery element  @param {string} [theStatus] - Status  @param  {bool} [tempDisabled] - Only Temporary? */
-	updateTrigger(thetrigger, theStatus=null, tempDisabled=false) {
-		let unique = $(thetrigger).data('unique'), newStatus = (theStatus !== null) ? theStatus : MySearch.toggleTrigger(unique), info = MySearch.getData(MySearch.uniqueToDbId(unique));
+	async updateTrigger(thetrigger, theStatus=null, tempDisabled=false) {
+		let unique = $(thetrigger).data('unique'), [info, newStatus] = await MySearch.getDataTrigger(unique, theStatus);
 		$(thetrigger).stop(true,true).data('status', newStatus);
 		if (newStatus === 'disabled') $(thetrigger).addClass('pcm-disabled'); else $(thetrigger).removeClass('pcm-disabled');
 		if (tempDisabled) $(thetrigger).addClass('pcm-tempDisabled'); else $(thetrigger).removeClass('pcm-tempDisabled');
@@ -151,7 +154,7 @@ class SearchUI {
 	statusMe(unique, theStatus=null) { this.updateTrigger($(`#pcm-triggerCard-${unique}`), theStatus); this.redoAllTabTitles(); }
 	/** Sets the trigger status to the provided status value when it comes from an external command.
 	 * @param {number} dbId - Unique ID  @param {bool} status - Status */
-	externalSet(dbId, status) { if (dbId) { let unique = MySearch.getTrigger(dbId).count; MySearch.toggleTrigger(_, dbId, status); this.statusMe(unique, (status) ? 'searching' : 'disabled') }}
+	async externalSet(dbId, status) { if (dbId) { let itemCount = await MySearch.getToggleTrigger(dbId, status); this.statusMe(itemCount, (status) ? 'searching' : 'disabled'); }}
 	/** Set up the card events for a click.
 	 * @param  {object} [card] - Jquery element to find cards. */
 	cardEvents(card=null) {
@@ -167,9 +170,9 @@ class SearchUI {
 	sortCards(type) {
 		let sortBy = this.sortingValues[this.sorting];
 		$(this[`${type}Content`]).find('.card').sort( (a, b) => {
-			let unique1 = $(a).data('unique'), unique2 = $(b).data('unique'), dbId1 = MySearch.uniqueToDbId(unique1), dbId2 = MySearch.uniqueToDbId(unique2);
+			let unique1 = $(a).data('unique'), unique2 = $(b).data('unique');
 			let compare = unique1 - unique2, temp = 0;
-			if (sortBy !== 'none') temp = MySearch.data[dbId2][sortBy] - MySearch.data[dbId1][sortBy];
+			if (sortBy !== 'none') temp = this.triggersData[unique2][sortBy] - this.triggersData[unique1][sortBy];
 			if (temp !== 0) compare = temp;
 			if (!this.sortAscending[this.sorting]) compare = compare * -1;
 			return compare;
@@ -228,8 +231,8 @@ class SearchUI {
 	}
 	/** Rechecks the filters for the triggers to show or hide.
 	 * @param {string} type - Trigger Type  @param {object} filter - Filter Data */
-	redoFilters(type, filter={}) {
-		let allCards = $(this[`${type}Content`]).find('.card'); this.totals[type] = allCards.length;
+	redoFilters(type, filter={}, tData=null) {
+		let allCards = $(this[`${type}Content`]).find('.card'); this.totals[type] = allCards.length; if (tData) this.triggersData = tData;
 		$(allCards).each( (_, ele) => {
 			let filteredOut = false, disabledStr = (!this.filters.sDisabled) ? 'disabled' : '', enabledStr = (!this.filters.sEnabled) ? 'searching' : '';
 			if (disabledStr && disabledStr === $(ele).data('status')) filteredOut = true;
@@ -248,28 +251,24 @@ class SearchUI {
 	/** Resets all the titles of the trigger type tabs. */
 	redoAllTabTitles() { this.redoTabTitle('gid'); this.redoTabTitle('rid'); this.redoTabTitle('custom'); }
 	/** Appends any cards created in the document fragment to the card deck to show cards faster. */
-	appendFragments() {
+	async appendFragments(filterRedo=true) {
+		if (!this.triggersData) this.triggersData = await MySearch.sortingTriggers();
 		for (const type of Object.keys(this.multiple)) {
 			let df = $(document.createDocumentFragment());
 			for (const card of this.multiple[type]) { df.append(card); }
 			$(this[`${type}Content`]).append(df); df = null; this.multiple[type] = [];
-			this.redoFilters(type); this.redoTabTitle(type);
+			if (filterRedo) { this.redoFilters(type); }
+			this.redoTabTitle(type);
 		}
-		this.cardEvents();
+		this.cardEvents(); this.triggersData = {};
 	}
 	/** Adds a trigger to the database and the UI.
 	 * @async 								 - To wait for triggers to be added and fetched.
 	 * @param {object} hitData - HIT Data  @param {bool} [once] - Only Accept Once? */
 	async addTrigger(hitData, once=true) {
 		let gId = hitData.hit_set_id, rId = hitData.requester_id;
-		MySearch.setTempBlockGid(gId, true);
 		let unique = await MySearch.addTrigger('gid', {'name':hitData.title, 'reqId':hitData.requester_id, 'groupId':gId, 'title':hitData.title, 'reqName':hitData.requester_name, 'pay':hitData.monetary_reward.amount_in_dollars, 'status':'finding'}, {'duration': 12000, 'once':once, 'limitNumQueue':0, 'limitTotalQueue':0, 'limitFetches':0, 'autoGoHam':true, 'tempGoHam':5000, 'acceptLimit':0});
-		if (unique) {
-			this.appendFragments();
-			MySearch.doRidSearch(rId, async (timerUnique, elapsed, rId) => {
-				await MySearch.goFetch(MySearch.createReqUrl(rId), timerUnique, elapsed, MySearch.uniqueToDbId(unique), 'gid', gId, true, gId);
-			});
-		}
+		if (unique) { this.appendFragments(); MySearch.doRidSearch(rId, unique, gId); }
 	}
 	/** This will display all the triggered HITs found in a modal dialog.
 	 * @param  {object} [trigger] - Trigger Data  @param  {object} [hit] - HIT Data  @param {string} [term] - Term Found  @param {bool} [auto] - Automatic Collected? */
@@ -329,7 +328,7 @@ class SearchUI {
 		let bodyText = '';
 		for (const thisId of jobsArr) { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; }
 		if (!modal) modal = new ModalClass();
-		modal.showDeleteModal(bodyText, async () => {
+		modal.showDeleteModal(bodyText, async (saved, theButton) => {
 			$(theButton).prop('disabled', true);
 			for (const unique of jobsArr) { await MySearch.removeTrigger(_,_, unique, true, true); await afterFunc('YES', unique); }
 			$(theButton).prop('disabled', false);

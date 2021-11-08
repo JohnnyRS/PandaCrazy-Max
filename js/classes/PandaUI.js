@@ -345,6 +345,7 @@ class PandaUI {
 		if (typeof r.dateAdded === 'string') { r.dateAdded = new Date(r.dateAdded).getTime(); update = true; }
 		if (!r.hasOwnProperty('mute')) { r.mute = false; update = true; }
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
+		if (r.duration < 60000 && r.duration !== 0) { r.duration = 0; update = true; }
 		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : r.hamDuration; if (r.hamDuration !== hamD) { update = true; r.hamDuration = hamD; }
 		let dO = dataObject(r.groupId, r.description, r.title, r.reqId, r.reqName, r.price, r.hitsAvailable, r.assignedTime, r.expires, r.friendlyTitle, r.friendlyReqName);
 		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone, r.disabled, r.mute);
@@ -372,7 +373,7 @@ class PandaUI {
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
 			let dbInfo = {...d, ...opt, 'dateAdded': dated, 'totalSeconds':seconds, 'totalAccepted':accepts, 'tF':tF}, newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};
-			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
+			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, 0, globalOpt.getHamDelayTimer());
 		}
 	}
 	/** Add this panda job to the panda UI with a card and stats.

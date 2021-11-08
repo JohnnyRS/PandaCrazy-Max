@@ -62,7 +62,7 @@ class HistoryClass {
 				this.updateToDB({'reqId':item.reqId, 'pay': pay, 'title': item.title, 'description':item.description, 'duration': duration, 'date': theDate, 'theId':key, 'from':from, 'updated':nowDate, 'filled':true}, passKey);
 			}
 			if (reqKey) this.updateToDB({'reqName':item.reqName, 'hits':hits, 'theId':item.reqId, 'from':from, 'updated':nowDate, 'filled':true}, (passKey) ? item.reqId : null);
-			if (from === 'searchResults') MYDB.addToDB('searching', 'results', {'gid':key, 'rid':item.reqId, 'hits':item.hitsAvailable, 'date':new Date().getTime(), 'expires':item.expires}, false).then(null, rejected => console.log(rejected));
+			// if (from === 'searchResults') MYDB.addToDB('searching', 'results', {'gid':key, 'rid':item.reqId, 'hits':item.hitsAvailable, 'date':new Date().getTime(), 'expires':item.expires}, false).then(null, rejected => console.log(rejected));
 		}
 	}
 	async testing() {

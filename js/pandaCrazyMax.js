@@ -8,7 +8,6 @@ let pcmRunning = JSON.parse(localStorage.getItem('PCM_running')), gCurrentVersio
 
 const pcm_startChannel = new BroadcastChannel('PCM_kpanda_band'); // Used for starter messages to discourage multiple pages running.
 const pcm_channel = new BroadcastChannel('PCM_kpanda_band');      // Used for sending and receiving messages from search page.
-const search_channel = new BroadcastChannel('PCM_ksearch_band');  // Used specifically for promises so search page can wait for a response on search channel.
 
 if (gCurrentVersion !== gLocalVersion) gNewVersion = true;
 localStorage.setItem('PCM_version',gCurrentVersion);

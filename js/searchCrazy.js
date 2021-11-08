@@ -1,5 +1,6 @@
 let bgPage = null, MySearchUI = null, pandaUI = null, theAlarms = null, bgQueue = null, MySearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
 let gLocalVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null, MyAlarms = null;
+let bgHitSearch = null;
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
 const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
@@ -22,8 +23,8 @@ function modalLoadingData() {
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
   await bgPage.prepareToOpen(_, true, gLocalVersion).then( () => {
-    MySearchUI = new SearchUI(bgPage.gGetMySearchUI().searchGStats); MySearch = bgPage.gSetSearchUI(MySearchUI)/*  new ExtHitSearch(pcm_channel, MySearchUI) */;
-    bgHistory = bgPage.gGetHistory(); MYDB = bgPage.gGetMYDB(); MyOptions = globalOpt = bgPage.gGetOptions(); themes = new ThemesClass();
+    MySearchUI = new SearchUI(bgPage.gGetMySearchUI().searchGStats); bgHitSearch = bgPage.gSetSearchUI(MySearchUI); MySearch = new ExtHitSearch(pcm_channel, bgHitSearch);
+    bgHistory = bgPage.gGetHistory(); MYDB = new ExtDBPanda(); MyOptions = globalOpt = bgPage.gGetOptions(); themes = new ThemesClass();
     MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
     startSearchCrazy();
   });

@@ -1,7 +1,7 @@
 let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newUpdatedVersion = null;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, gLocalVersion = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null, firstInstall = false;
-let MySearchUI = new ExtSearchUI(null);
+let MySearchUI = new ExtSearchUI(), pcm_searchOpened = true;
 chrome.storage.local.set({'PCM_running':false});
 
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */

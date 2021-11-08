@@ -229,7 +229,7 @@ class ModalJobClass {
           if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm-searchJob').is(':checked')) ? 'gid' : null);
           let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
-          let opt = optObject(once, search,_,_,_,_, (search === 'gid') ? globalOpt.theSearchDuration() : 0,_, (search) ? 0 : globalOpt.getHamDelayTimer());
+          let opt = optObject(once, search,_,_,_,_, 0,_, (search) ? 0 : globalOpt.getHamDelayTimer());
           pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer());
           modal.closeModal();
         } else {

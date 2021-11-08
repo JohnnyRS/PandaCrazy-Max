@@ -156,10 +156,11 @@ class MenuClass {
   /** Create the search top menu using addMenu and addSubMenu Methods. */
   createSearchTopMenu() {
 		let topBar = $(`.pcm-menuRow1:first`);
-    this.addMenu(topBar, ' ', e => {
+    this.addMenu(topBar, ' ', async (e) => {
 			if (MySearchUI && MySearchUI.searchGStats.isSearchOn()) MySearchUI.stopSearching();
 			else if (MySearch.isPandaUI()) {
-				if (!MySearchUI.startSearching()) MySearchUI.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
+        let doStart = await MySearchUI.startSearching();
+				if (!doStart) MySearchUI.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
 			} else MySearchUI.showModalMessage('Open PandaCrazyMax First', 'PandaCrazyMax must be opened before search triggers can start collecting HITs.');
 			$(e.target).blur();
 		}, 'Start searching for trigger jobs.', 'pcm-btn-toggle pcm-btn-menu pcm-searchingOff', 'pcm-searchNow');
