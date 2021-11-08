@@ -54,15 +54,26 @@ search2Channel.onmessage = async (e) => {
         await mySearch.sendToPanda(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('search: returning sendToPanda', null);
       } else if (data.msg === 'search: rulesCopy') {
         let retVal = await mySearch.rulesCopy(val[0]); sendToChannel('search: returning rulesCopy', retVal);
-      } else if (data.msg === 'search: isEnabled') {
-        let retVal = await mySearch.isEnabled(val[0]); sendToChannel('search: returning isEnabled', retVal);
       } else if (data.msg === 'search: pauseToggle') {
         let retVal = await mySearch.pauseToggle(val[0]); sendToChannel('search: returning pauseToggle', retVal);
+      } else if (data.msg === 'search: timerChange') {
+        let retVal = await mySearch.timerChange(val[0]); sendToChannel('search: returning timerChange', retVal);
+      } else if (data.msg === 'search: pandaToDbId') {
+        let retVal = await mySearch.pandaToDbId(val[0]); sendToChannel('search: returning pandaToDbId', retVal);
+      } else if (data.msg === 'search: getData') {
+        let retVal = await mySearch.getData(val[0]); sendToChannel('search: returning getData', retVal);
+      } else if (data.msg === 'search: uniqueToDbId') {
+        let retVal = await mySearch.uniqueToDbId(val[0]); sendToChannel('search: returning uniqueToDbId', retVal);
+
+        // ********** Start of multiple actions needed for search messages. ************
       } else if (data.msg === 'search: getToggleTrigger') {
         let item = mySearch.getTrigger(val[0]); mySearch.toggleTrigger(null, val[0], val[1]); sendToChannel('search: returning getToggleTrigger', item.count);
       } else if (data.msg === 'search: getDataTrigger') {
         let status = (val[1] !== null) ? val[1] : mySearch.toggleTrigger(val[0]), info = mySearch.getData(mySearch.uniqueToDbId(val[0]));
         sendToChannel('search: returning getDataTrigger', [info, status]);
+      } else if (data.msg === 'search: getTrigData') {
+        let trigger = mySearch.getTrigger(val[0]), gotData = mySearch.getData(val[0]), theData = (val[1]) ? await mySearch.theData(val[0], val[1]) : null;
+        sendToChannel('search: returning getTrigData', [trigger, gotData, theData]);
       } else if (data.msg === 'search: doRidSearch') {
         let timerUnique = mySearch.doRidSearch(val[0], async (timerUnique, elapsed, rId) => {
           await mySearch.goFetch(mySearch.createReqUrl(rId), timerUnique, elapsed, mySearch.uniqueToDbId(val[1]), 'gid', val[2], true, val[2]);

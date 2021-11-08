@@ -109,8 +109,8 @@ class ModalSearchClass {
    * @return {object}      - Object with search data filled in. */
   async fillInData(dbId=null, pDbId=null) {
     if (dbId === null && pDbId === null) return null;
-    let searchDbId = (dbId !== null) ? dbId : MySearch.pandaToDbId(pDbId);
-    let changes = {'details':Object.assign({}, MySearch.getData(searchDbId)), 'rules':null, 'options':null, 'searchDbId':searchDbId}
+    let searchDbId = (dbId !== null) ? dbId : await MySearch.pandaToDbId(pDbId), triggerData = await MySearch.getData(searchDbId);
+    let changes = {'details':Object.assign({}, triggerData), 'rules':null, 'options':null, 'searchDbId':searchDbId}
     if (typeof changes.details.disabled === 'undefined') changes.details.disabled = true;
     if (typeof changes.details.name === 'undefined') changes.details.name = changes.details.value;
     changes.rules = await MySearch.rulesCopy(changes.searchDbId); changes.options = await MySearch.optionsCopy(changes.searchDbId);
@@ -218,7 +218,7 @@ class ModalSearchClass {
    * @param {number} unique - Trigger Unique Number  @param {function} [afterClose] - After Close Function  */
   async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass();
-    let dbId = MySearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
+    let dbId = await MySearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
     let idName = modal.prepareModal(sChanges, '700px', 'pcm-triggerDetailsModal', 'modal-lg', 'Details for a Trigger', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
       $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError');
       if (!changes.options.autoGoHam) changes.options.tempGoHam = 0; else if (changes.options.tempGoHam === 0) changes.options.tempGoHam = globalOpt.doSearch().defaultHamDur;
@@ -259,8 +259,8 @@ class ModalSearchClass {
   selectBoxAdd(values, appendHere) { appendHere.html(''); for (let i=0, len=values.length; i < len; i++) { appendHere.append(`<option value='${i}'>${values[i]}</option>`); }}
   /** Shows a modal with all the found HITs in a table.
    * @param {number} unique - Trigger Unique  @param {function} [afterClose] After Close Function */
-  showTriggerFound(unique, afterClose=null) {
-    if (!modal) modal = new ModalClass(); let dbId = MySearch.uniqueToDbId(unique);
+  async showTriggerFound(unique, afterClose=null) {
+    if (!modal) modal = new ModalClass(); let dbId = await MySearch.uniqueToDbId(unique);
     const idName = modal.prepareModal(null, '860px', 'pcm-triggerFoundModal', 'modal-lg', 'Show HITs found by Trigger.', '', 'pcm-modalHitsFound', '', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(null, async () => {
       let groupHist = await MySearch.getFromDB('history', dbId, 'dbId', true, false, 80), rules = await MySearch.theData(dbId, 'rules');
@@ -309,9 +309,9 @@ class ModalSearchClass {
   showSearchOptions(afterClose=null) {
     let searchOptions = globalOpt.doSearch(), oldMinReward = searchOptions.minReward;
     let saveFunction = (changes) => {
-      let closeAndSave = () => {
+      let closeAndSave = async () => {
         globalOpt.theToSearchUI(changes.toSearchUI, false); globalOpt.theSearchTimer(changes.searchTimer, false); globalOpt.doGeneral(changes.general);
-        globalOpt.doSearch(changes.options); MySearch.timerChange(changes.searchTimer); MySearch.prepareSearch();
+        globalOpt.doSearch(changes.options); await MySearch.timerChange(changes.searchTimer); await MySearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
         setTimeout( () => modal.closeModal(), 0);
       }
@@ -504,7 +504,8 @@ class ModalSearchClass {
       {'string':'Status', 'type':'string'}
     ], divContainer, {}, true, true, true, 'pcm-triggeredhit');
     for (const dbId of triggers) {
-      let trigger = MySearch.getTrigger(dbId), data = MySearch.getData(dbId), rules = await MySearch.theData(dbId, 'rules');
+      let retVal = await MySearch.getTrigData(dbId, 'rules'); if (!retVal) continue;
+      let trigger = retVal[0], data = retVal[1], rules = retVal[2];
       let statusClass = (data.disabled) ? ' pcm-hitDisabled' : '';
       if (rules.terms) { data.term = rules.include.values().next().value; } else data.term = '';
       data.status = (data.disabled) ? 'Disabled' : 'Enabled&nbsp;';
@@ -513,11 +514,14 @@ class ModalSearchClass {
         {'string':'Trigger Type', 'type':'keyValue', 'key':'type', 'width':'50px', 'maxWidth':'50px', id:`pcm-TRT-${dbId}`},
         {'string':'Trigger Name', 'type':'keyValue', 'key':'name', 'width':'420px', 'maxWidth':'420px', id:`pcm-TRN-${dbId}`},
         {'string':'Trigger ID or Term', 'type':'keyValue', 'key':'value', 'orKey': 'term', 'width':'350px', 'maxWidth':'350px', 'id':`pcm-TRID-${dbId}`},
-        {'label':'Status', 'type':'button', 'btnLabel':data.status, 'addClass':` btn-xxs${statusClass}`, 'maxWidth':'70px', 'btnFunc': e => {
-          let dbId = e.data.unique, unique = MySearch.getTrigger(dbId).count, data = MySearch.getData(dbId);
-          MySearchUI.updateTrigger($(`#pcm-triggerCard-${unique}`).closest('.card'));
-          if (data.disabled) { $(e.target).addClass('pcm-hitDisabled'); $(e.target).html('Disabled'); }
-          else { $(e.target).removeClass('pcm-hitDisabled'); $(e.target).html('Enabled&nbsp;'); }
+        {'label':'Status', 'type':'button', 'btnLabel':data.status, 'addClass':` btn-xxs${statusClass}`, 'maxWidth':'70px', 'btnFunc': async (e) => {
+          let dbId = e.data.unique, retVal = await MySearch.getTrigData(dbId);
+          if (retVal) {
+            let unique = retVal[0].count, data = retVal[1];
+            let newStatus = await MySearchUI.updateTrigger($(`#pcm-triggerCard-${unique}`).closest('.card'));
+            if (newStatus === 'disabled') { $(e.target).addClass('pcm-hitDisabled'); $(e.target).html('Disabled'); }
+            else { $(e.target).removeClass('pcm-hitDisabled'); $(e.target).html('Enabled&nbsp;'); }
+          }
         }, 'idStart': 'pcm-statusThis', 'unique': dbId, 'tooltip':'Enable or Disable this trigger.'}
       ], divContainer, data, true, true,_,_, `pcm-jobRow-${trigger.count}`);
     }
@@ -526,10 +530,10 @@ class ModalSearchClass {
   /** Filters out jobs with the search term, collecting radio, search mode and once options.
    * @param  {string} searchTerm - Search Term  @param  {object} modalControl - Jquery element
    * @return {array}         - Array of job ID's filtered. */
-  triggersFilter(searchTerm, modalControl) {
-    let newArray = [];
-    for (const dbId of MySearch.getFrom('Search')) {
-      let good = false, data = MySearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
+  async triggersFilter(searchTerm, modalControl) {
+    let newArray = [], fromSearch = await MySearch.getFrom('Search');
+    for (const dbId of fromSearch) {
+      let good = false, data = await MySearch.getData(dbId), theValue = (data.type !== 'custom') ? data.value : '';
       const radioChecked = $(modalControl).find(`input[name='theTriggers']:checked`).val();
       if (radioChecked === '0') good = true;
       else if (radioChecked === '1' && !data.disabled) good = true;
@@ -571,7 +575,7 @@ class ModalSearchClass {
       }, 'pcm-tooltipData pcm-tooltipHelper',_,_,_,_, 'Enter text in the input field to search for in the requester name or HIT title.');
       $(`<button class='btn btn-xxs pcm-searchingTriggers pcm-tooltipData pcm-tooltipHelper' data-original-title='Display only the triggers in the list below with the input text in the trigger name or trigger ID.'>Search</button>`).on( 'click', async () => {
         let theDialog = $(`#${idName} .${modal.classModalDialog}:first`); $(theDialog).find('.pcm-jobTable').remove();
-        let filtered = this.triggersFilter($('#pcm-searchinput').val().toLowerCase(), $(theDialog).find(`.pcm-modalJobControl:first`));
+        let filtered = await this.triggersFilter($('#pcm-searchinput').val().toLowerCase(), $(theDialog).find(`.pcm-modalJobControl:first`));
         await this.showTriggersTable(theDialog.find(`.${modal.classModalBody}:first`), filtered, checkFunc, () => {}); if (afterShow) afterShow(this);
         theDialog = null;
       }).appendTo(inputControl);
@@ -582,7 +586,7 @@ class ModalSearchClass {
           if (response !== 'NO') $(`#pcm-jobRow-${unique}`).remove();
         }, () => { selected = null; }, 'Unselect All');
       }).appendTo(inputControl);
-      let df2 = document.createDocumentFragment(), filtered = this.triggersFilter('', modalControl);
+      let df2 = document.createDocumentFragment(), filtered = await this.triggersFilter('', modalControl);
       $(df).find(`input:radio[name='theTriggers']`).click( e => { $(e.target).closest('.pcm-modalControl').find('.pcm-searchingTriggers').click(); });
       $(`<div class='pcm-modalControl'></div>`).append(df).insertBefore($(`#${idName} .${modal.classModalBody}`));
       await this.showTriggersTable(df2, filtered, checkFunc, () => {});

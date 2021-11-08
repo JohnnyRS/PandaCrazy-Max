@@ -22,8 +22,8 @@ class ListenerClass {
           else if (command === 'startgroup' || command === 'stopgroup') { if (pandaUI && groupings && data.hasOwnProperty('id')) groupings.externalCommand(command, data.id); }
           else if (command === 'removeJob') { if (pandaUI && bgPanda && data.hasOwnProperty('id')) { pandaUI.extRemoveJob(data.id, sendResponse); }}
           else if (command === 'getTriggers') { if (MySearchUI && MySearch) MySearch.getAllTriggers(sendResponse); }
-          else if (command === 'startSearching') { if (MySearchUI && data.hasOwnProperty('id')) MySearchUI.startSearching(data.id); }
-          else if (command === 'stopSearching') { if (MySearchUI && data.hasOwnProperty('id')) MySearchUI.stopSearching(data.id); }
+          else if (command === 'startSearching') { if (MySearchUI && data.hasOwnProperty('id')) MySearchUI.startSearching(); }
+          else if (command === 'stopSearching') { if (MySearchUI && data.hasOwnProperty('id')) MySearchUI.stopSearching(); }
           else if (command === 'enableTrigger') { if (MySearchUI && MySearch && data.hasOwnProperty('id')) MySearchUI.externalSet(data.id, true) }
           else if (command === 'disableTrigger') { if (MySearchUI && MySearch && data.hasOwnProperty('id')) MySearchUI.externalSet(data.id, false); }
           else if (command === 'getSGroups') { if (MySearchUI && sGroupings) sendResponse({'for':'getSGroups', 'response':sGroupings.theGroups()}); }

@@ -147,7 +147,7 @@ class SearchUI {
 		$(thetrigger).stop(true,true).data('status', newStatus);
 		if (newStatus === 'disabled') $(thetrigger).addClass('pcm-disabled'); else $(thetrigger).removeClass('pcm-disabled');
 		if (tempDisabled) $(thetrigger).addClass('pcm-tempDisabled'); else $(thetrigger).removeClass('pcm-tempDisabled');
-		this.redoTabTitle(info.type);
+		this.redoTabTitle(info.type); return newStatus;
 	}
 	/** Changes the status of the trigger with the unique number.
 	 * @param {number} unique - Unique Number  @param {string} [theStatus] - Trigger Status */
