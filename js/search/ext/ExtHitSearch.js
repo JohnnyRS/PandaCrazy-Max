@@ -1,44 +1,39 @@
+const searchChannel = new BroadcastChannel('PCM_kSearch_band');      // Used for sending and receiving messages from search page.
 class ExtHitSearch {
-  constructor(pcm_channel, theHitSearch) {
-    this.pcm_channel = pcm_channel;
+  constructor() {
     this.searchGStats = {};
     this.searchOn = false;
     this.loggedoff = false;
-    this.theHitSearch = theHitSearch;
-    this.searchChannel = new BroadcastChannel('PCM_kSearch_band');
   }
-  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=500) {
-    const search2Channel = new BroadcastChannel('PCM_kSearch2_band');
+  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=2000) {
+    const s2Channel = new BroadcastChannel('PCM_kSearch2_band');
     return new Promise( (resolve) => {
-      search2Channel.postMessage({'msg':msg, 'value':value});
-      search2Channel.onmessage = async (e) => { //console.log(e.data);
-        search2Channel.close();
+      let thisTimeOut = null;
+      s2Channel.postMessage({'msg':msg, 'value':value});
+      s2Channel.onmessage = async (e) => {
+        s2Channel.close(); if (thisTimeOut) clearTimeout(thisTimeOut);
         if (e.data.msg === retMsg && e.data.value) resolve(e.data.value);
         else resolve(false);
       }
-      setTimeout(() => { search2Channel.close(); resolve(timeoutVal); }, timeoutTime);
+      thisTimeOut = setTimeout(() => { s2Channel.close(); resolve(timeoutVal); }, timeoutTime);
     });
   }
-  isPandaUI() { if (this.theHitSearch) return this.theHitSearch.isPandaUI(); }
-  async loadFromDB() { if (this.theHitSearch) await this.theHitSearch.loadFromDB(); }
-	autoHitsAllow(status) { if (this.theHitSearch) return this.theHitSearch.autoHitsAllow(status); }
-	async optionsChanged(changes, dbId) { if (this.theHitSearch) await this.theHitSearch.optionsChanged(changes, dbId); }
-	async getFromDB(name, dbId, indexName, cursor, asc, limit) { if (this.theHitSearch) return await this.theHitSearch.getFromDB(name, dbId, indexName, cursor, asc, limit); }
-	async theData(dbId, name, changed) { if (this.theHitSearch) return await this.theHitSearch.theData(dbId, name, changed); }
-	getBlocked(gId) { if (this.theHitSearch) return this.theHitSearch.getBlocked(gId); }
-	theBlocked(gId, rId, add, remove, toggle) { if (this.theHitSearch) return this.theHitSearch.theBlocked(gId, rId, add, remove, toggle); }
-	getFrom(type) { if (this.theHitSearch) return this.theHitSearch.getFrom(type); }
-  async getTrigger(dbId) { if (this.theHitSearch) return this.theHitSearch.getTrigger(dbId); }
+  isPandaUI() { return pcm_pandaOpened; }
   
   // Methods to send a message but doesn't have to wait for a response and no arguments to pass.
-  prepareSearch() { this.searchChannel.postMessage({'msg':'search: prepareSearch'}); }
-  stopSearching() { this.searchChannel.postMessage({'msg':'search: stopSearching'}); }
-  unPauseTimer() { this.searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
+  stopSearching() { searchChannel.postMessage({'msg':'search: stopSearching'}); }
+  unPauseTimer() { searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
   
   // Methods to send a message and wait for a response back and no arguments to pass.
+  async loadFromDB() { return await this.sendBroadcastMsg('search: loadFromDB', 'search: returning loadFromDB', null, false, 10000); }
   async startSearching() { return await this.sendBroadcastMsg('search: startSearching', 'search: returning startSearching', null, false); }
+  async prepareSearch() { return await this.sendBroadcastMsg('search: prepareSearch', 'search: returning prepareSearch', null, false, 10000); }
   
   // Methods to send a message and wait for a response back and with arguments to pass.
+	async getFrom() { return await this.sendBroadcastMsg('search: getFrom', 'search: returning getFrom', [...arguments], false); }
+	async theBlocked() { return await this.sendBroadcastMsg('search: theBlocked', 'search: returning theBlocked', [...arguments], false); }
+	async theData() { return await this.sendBroadcastMsg('search: theData', 'search: returning theData', [...arguments], false); }
+	async optionsChanged() { return await this.sendBroadcastMsg('search: optionsChanged', 'search: returning optionsChanged', [...arguments], false); }
   async uniqueToDbId() { return await this.sendBroadcastMsg('search: uniqueToDbId', 'search: returning uniqueToDbId', [...arguments], false); }
   async getData() { return await this.sendBroadcastMsg('search: getData', 'search: returning getData', [...arguments], false); }
   async sendToPanda() { return await this.sendBroadcastMsg('search: sendToPanda', 'search: returning sendToPanda', [...arguments], false); }
@@ -51,6 +46,7 @@ class ExtHitSearch {
   async removeTrigger() { return await this.sendBroadcastMsg('search: removeTrigger', 'search: returning removeTrigger', [...arguments], null); }
   
   // Combo methods for specific multiple actions needed instead of sending multiple messages.
+  async toggleAutoHits() { return await this.sendBroadcastMsg('search: toggleAutoHits', 'search: returning toggleAutoHits', null, false); }
   async doRidSearch() { return await this.sendBroadcastMsg('search: doRidSearch', 'search: returning doRidSearch', [...arguments], null); }
   async doFilterSearch() { return await this.sendBroadcastMsg('search: doFilterSearch', 'search: returning doFilterSearch', [...arguments], null); }
   async getToggleTrigger() { return await this.sendBroadcastMsg('search: getToggleTrigger', 'search: returning getToggleTrigger', [...arguments], null); }
@@ -58,32 +54,44 @@ class ExtHitSearch {
   async goCheckGroup() { return await this.sendBroadcastMsg('search: goCheckGroup', 'search: returning goCheckGroup', [...arguments], null); }
   async getTrigData() { return await this.sendBroadcastMsg('search: getTrigData', 'search: returning getTrigData', [...arguments], [null, null, null], 2000); }
   async sortingTriggers() { return await this.sendBroadcastMsg('search: sortingTriggers', 'search: returning sortingTriggers', [...arguments], null, 2000); }
+  async getFromDBData() { return await this.sendBroadcastMsg('search: getFromDBData', 'search: returning getFromDBData', [...arguments], null, 2000); }
+  async getBothBlocked() { return await this.sendBroadcastMsg('search: getBothBlocked', 'search: returning getBothBlocked', [...arguments], null, 2000); }
+  async getUniquesDbIds() { return await this.sendBroadcastMsg('search: getUniquesDbIds', 'search: returning getUniquesDbIds', [...arguments], null, 2000); }
 }
 
-function searchListener(data) {
-  if (data) {
-    let obj = data.object, value = data.value;
-    if (data.msg === 'search: go for start') { console.log('Go ahead and start search crazy'); startNow(); }
-    else if (data.msg === 'search: abort start') console.log('Do not start search crazy because of error.');
-    else if (data.msg === 'search: DB loaded') { MySearchUI.appendFragments(); setTimeout( () => { modal.closeModal('Loading Data'); }, 300); }
-    else if (data.msg === 'search: logged on') { MySearchUI.nowLoggedOn(); this.loggedon = true; }
-    else if (data.msg === 'search: logged off') { MySearchUI.nowLoggedOff(); this.loggedon = false; }
-    else if (data.msg === 'search: importing') { MySearchUI.importing(); }
-    else if (data.msg === 'search: importing done') { MySearchUI.importingDone(); }
-    else if (data.msg === 'search: stop searching') { MySearchUI.stopSearching(true); }
-    else if (data.msg === 'search: append fragments') { MySearchUI.appendFragments(); }
-    else if (value) {
-      if (data.msg === 'search: reset tooltips') { MySearchUI.resetToolTips(value); }
-      else if (data.msg === 'search: redo filters') { MySearchUI.redoFilters(value); }
-      else if (data.msg === 'search: remove trigger') { MySearchUI.removeTrigger(value); }
-    } else if (obj) {
-      if (data.msg === 'search: add to UI') { MySearchUI.addToUI(obj.trigger, obj.status, obj.name, obj.unique); }
-      else if (data.msg === 'search: update stats nav') { MySearchUI.updateStatNav(obj.statObj, obj.text); }
-      else if (data.msg === 'search: status me') { MySearchUI.statusMe(obj.unique, obj.status); }
-      else if (data.msg === 'search: update stats') { MySearchUI.updateStats(obj.count, obj.data); }
-      else if (data.msg === 'search: triggered hit') { MySearchUI.triggeredHit(obj.count, obj.data, obj.item, obj.term, obj.started, obj.auto); }
-      else if (data.msg === 'search: move to search') { MySearchUI.addToUI(obj.data, obj.status, obj.name, obj.count); MySearchUI.redoFilters(obj.type); MySearchUI.appendFragments(); }
+function sendToChannel(msg, value) { search2Channel.postMessage({'msg':msg, 'value':value}); }
+
+searchChannel.onmessage = async (e) => {
+  if (e.data && MySearchUI) {
+    const data = e.data, msg=data.msg, val = data.value, theObject = data.object;
+    if (msg === 'search: go for start') { startNow(); }
+    else if (msg === 'search: abort start') {  }
+    else if (msg === 'search: DB loaded') { MySearchUI.appendFragments(); setTimeout( () => { modal.closeModal('Loading Data'); }, 300); }
+    else if (msg === 'searchTo: nowLoggedOn') { MySearchUI.nowLoggedOn(); }
+    else if (msg === 'searchTo: nowLoggedOff') { MySearchUI.nowLoggedOff(); }
+    else if (msg === 'searchTo: stopSearching') { MySearchUI.stopSearching(); }
+    else if (msg === 'searchTo: importing') { MySearchUI.importing(); }
+    else if (msg === 'searchTo: importingDone') { MySearchUI.importingDone(); }
+    else if (msg === 'searchTo: importCompleted') { MySearchUI.importCompleted(); }
+    else if (msg === 'searchTo: goRestart') { MySearchUI.goRestart(); }
+    else if (msg === 'searchTo: themeChanged') { MySearchUI.themeChanged(); }
+    else if (msg === 'searchTo: startSearching') { await MySearchUI.startSearching(); }
+    else if (msg === 'searchTo: globalOptions' && theObject) {
+      MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
+      MyOptions.update(false);  
     }
-    console.log('got msg:', data.msg);
+    else if (val) {
+      if (msg === 'searchTo: resetToolTips') { MySearchUI.resetToolTips(val[0]); }
+      else if (msg === 'searchTo: statusMe') { MySearchUI.statusMe(val[0], val[1]); }
+      else if (msg === 'searchTo: updateStats') { MySearchUI.updateStats(val[0], val[1]); }
+      else if (msg === 'searchTo: triggeredHit') { MySearchUI.triggeredHit(val[0], val[1], val[2], val[3], val[4], val[5]); }
+      else if (msg === 'searchTo: addToUI') { MySearchUI.addToUI(val[0], val[1], val[2], val[3]); }
+      else if (msg === 'searchTo: redoFilters') { MySearchUI.redoFilters(val[0], val[1], val[2]); }
+      else if (msg === 'searchTo: removeTrigger') { MySearchUI.removeTrigger(val[0]); }
+      else if (msg === 'searchTo: updateStatNav') { MySearchUI.updateStatNav(val[0], val[1]); }
+      else if (msg === 'searchTo: appendFragments') { await MySearchUI.appendFragments(val[0]); }
+      else if (msg === 'searchTo: externalSet') { await MySearchUI.externalSet(val[0], val[1]); }
+      else if (msg === 'searchTo: updateTrigger') { await MySearchUI.updateTrigger(val[0], val[1], val[2]); }
+    }
   }
 };

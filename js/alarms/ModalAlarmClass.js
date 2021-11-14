@@ -52,7 +52,7 @@ class ModalAlarmClass {
       $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(theAlarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
       let resetTipsClass = (pandaUI) ? pandaUI : MySearchUI;
-      if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      if (resetTipsClass) resetTipsClass.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
         theAlarms.theVoiceIndex(index, name);
@@ -105,7 +105,7 @@ class ModalAlarmClass {
             let data = theAlarms.getData(soundName);
             this.audio = new Audio(); this.audio.src = chrome.runtime.getURL(`${theAlarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
           });
-          if (resetTipsClass) resetTipsClass.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+          if (resetTipsClass) resetTipsClass.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
         }
       });
       modalBody.find('.pcm-alarmsPay').click( e => {

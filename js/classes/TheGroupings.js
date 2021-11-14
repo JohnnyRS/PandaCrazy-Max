@@ -21,10 +21,10 @@ class TheGroupings {
   async prepare(afterFunc) {
     let success = [], err = null;
     this.groups = {}; this.groupStatus = {}; this.unique = 1; this.startTimes = {}; this.endTimes = {};
-    MYDB.getFromDB(this.type, 'grouping').then( result => {
+    MYDB.getFromDB(this.type, 'grouping').then( results => {
       let i = 1;
-      for (const value of result) this.groups[i++] = value;
-      this.unique = result.length + 1; this.resetTimes(true); success[0] = (this.type === 'panda') ? 'All Groupings have been loaded.' : 'All Search Groupings have been loaded.';
+      for (const value of results) this.groups[i++] = value;
+      this.unique = results.length + 1; this.resetTimes(true); success[0] = (this.type === 'panda') ? 'All Groupings have been loaded.' : 'All Search Groupings have been loaded.';
       afterFunc(success, err);
     }, (rejected) => { err = rejected; afterFunc(success, err); } );
   }
@@ -153,7 +153,7 @@ class TheGroupings {
       let panda = (this.type === 'panda'), dbKey = keys.shift(), myId = (panda) ? bgPanda.getMyId(dbKey) : dbKey, collecting = this.groupStatus[grouping].collecting;
       if (collecting && panda) pandaUI.startCollecting(myId);
       else if (!collecting && panda) pandaUI.stopCollecting(myId);
-      else if (!panda) { let itemCount = await MySearch.getToggleTrigger(myId, collecting); MySearchUI.statusMe(itemCount, (collecting) ? 'searching' : 'disabled'); }
+      else if (!panda) { let itemCount = await MySearch.getToggleTrigger(myId, collecting, false); MySearchUI.statusMe(itemCount, (collecting) ? 'searching' : 'disabled'); }
       setTimeout( () => { this.delayedToggle(grouping, keys); }, 100 );
     }
   }

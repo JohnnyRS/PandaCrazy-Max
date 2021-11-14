@@ -1,44 +1,44 @@
-let bgPage = null, MySearchUI = null, pandaUI = null, theAlarms = null, bgQueue = null, MySearch = null, modal = null, bgHistory = null, MYDB = null, globalOpt = null;
+let bgPage = null, MySearchUI = null, pandaUI = null, theAlarms = null, bgQueue = null, MySearch = null, modal = null, MyHistory = null, MYDB = null;
 let gLocalVersion = localStorage.getItem('PCM_version'), sGroupings = null, menus = null, themes = null, searchControl = null, MyOptions = null, MyAlarms = null;
-let bgHitSearch = null;
+let bgHitSearch = null, pcm_pandaOpened = false, pcm_searchOpened = false, pcm_otherRunning = 0, uniqueTabID = Math.random().toString(36).slice(2);
 $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'delay': {'show':1000}, 'trigger':'hover'});
 
+const pcm_startChannel = new BroadcastChannel('PCM_kpanda_band'); // Used for starter messages to discourage multiple pages running.
 const pcm_channel = new BroadcastChannel('PCM_kpanda_band');
 
 /** Gets the background page and sets up a global variable for it. Then it runs the prepare function. */
 function getBgPage() {
   chrome.runtime.getBackgroundPage( backgroundPage => {
     bgPage = backgroundPage;
-    if (!bgPage.gGetSearchUI()) modalLoadingData();
+    if (!bgPage.gGetSearchUI()) prepare();
     else haltScript(null, `You have SearchCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting SearchCrazy Max', true);
   });
 }
 /** Open a modal showing loading Data and then after it shows on screen go start Panda Crazy. */
-function modalLoadingData() {
+function modalLoadingData(doAfterShow) {
   modal = new ModalClass();
   modal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, () => prepare() ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, () => doAfterShow() ); // Calls startPandaCrazy after modal shown.
 }
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the preparetoopen function to finish opening up databases. */
 async function prepare() {
-  await bgPage.prepareToOpen(_, true, gLocalVersion).then( () => {
-    MySearchUI = new SearchUI(bgPage.gGetMySearchUI().searchGStats); bgHitSearch = bgPage.gSetSearchUI(MySearchUI); MySearch = new ExtHitSearch(pcm_channel, bgHitSearch);
-    bgHistory = bgPage.gGetHistory(); MYDB = new ExtDBPanda(); MyOptions = globalOpt = bgPage.gGetOptions(); themes = new ThemesClass();
-    MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
-    startSearchCrazy();
-  });
+  MySearchUI = new SearchUI(bgPage.gGetMySearchUI().searchGStats); bgHitSearch = bgPage.gSetSearchUI(true); MySearch = new ExtHitSearch();
+  MyHistory = new ExtHistory(); MYDB = new ExtDBPanda(); MyOptions = new SearchGOptions(pcm_channel); themes = new ThemesClass();
+  MyAlarms = theAlarms = new SearchAlarmsClass(pcm_channel); sGroupings = new TheGroupings('searching'); menus = new MenuClass();
+  startSearchCrazy();
 }
 /** Starts the search crazy UI and prepares all the search triggers.
  * @async - To wait for the classes to load and prepare their data. */
 async function startSearchCrazy() {
+  MyOptions.sendOptionsToSearch();
   themes.prepareThemes();
-  MySearchUI.prepareSearch();
+  await MySearchUI.prepareSearch();
   await MySearch.loadFromDB();
   MySearchUI.appendFragments();
   sGroupings.prepare(showMessages);
   modal.closeModal('Loading Data');
-  bgPage.searchUILoaded();
+  pcm_channel.postMessage({'msg':'search: openedSearchUI'});
 }
 /**  Shows good messages in loading modal and console. Shows error message on page and console before halting script.
  * @param {array} good - Array of good messages to display  @param {object} bad - If set then an error has happened so display it and stop script. */
@@ -49,19 +49,47 @@ function showMessages(good, bad) {
   }
 }
 /** ================ First lines executed when page is loaded. ============================ **/
-pcm_channel.postMessage({'msg':'search crazy starting'});
-getBgPage(); // Grabs the background page, detects if another UI is opened and then starts SearchUI.
-pcm_channel.onmessage = (e) => {
-  if (e.data) {
-    const data = e.data;
-    searchListener(data); alarmsListener(data);
-  }
-}  
+modalLoadingData( () => {
+  chrome.runtime.sendMessage({'command':'searchUI_starting', 'data':{'tabID':uniqueTabID}}, async (response) => {
+    if (response) {
+      pcm_startChannel.postMessage({'msg':'search crazy starting', 'value':uniqueTabID});
+    }
+    else haltScript(null, `You have SearchCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting SearchCrazy Max', true);
+  });
+});
+
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', () => {
-  if (MySearch) { bgPage.gSetSearchUI(null); sGroupings.removeAll(); }
-  globalOpt = null; MyOptions = null; MyAlarms = null; theAlarms = null; menus = null; modal = null; sGroupings = null; MySearchUI = null; MySearch = null;
-  bgQueue = null; bgHistory = null; themes = null; MYDB = null;
+  if (MySearch) { MySearchUI.stopSearching(); pcm_channel.postMessage({'msg':'search: closingSearchUI'}); sGroupings.removeAll(); }
+  pcm_searchOpened = false; chrome.runtime.sendMessage({'command':'searchUI_startDone', 'data':{}});
+  MyOptions = null; MyAlarms = null; theAlarms = null; menus = null; modal = null; sGroupings = null; MySearchUI = null; MySearch = null;
+  bgQueue = null; MyHistory = null; themes = null; MYDB = null;
 });
 
+pcm_channel.onmessage = (e) => {
+  if (e.data) {
+    const data = e.data;
+    if (data.msg === 'search crazy starting' && data.value) { // SearchUI trying to start so send details of this page to all other pages on channel.
+      pcm_otherRunning = 0; pcm_startChannel.postMessage({'msg':'search crazy responding', 'object':{'sender':data.value, 'tabId':uniqueTabID, 'status':pcm_searchOpened}});
+    } else if (data.msg === 'search crazy responding' && data.object && data.object.sender === uniqueTabID) { // Got a SearchUI response so collect stats on other pages running currently.
+      if (uniqueTabID !== data.object.tabId) { if (data.object.status) pcm_otherRunning++; } // Count panda pages actually running.
+      else if (!pcm_searchOpened) { // Make sure current panda page isn't running already.
+        setTimeout(() => { // Sets a timeout so it can get ALL responses from other pages to know if this page should start running.
+          chrome.runtime.sendMessage({'command':'searchUI_startDone', 'data':{}}); // Releases hold when multiple pages try to start all at once.
+          if (pcm_otherRunning === 0) {  // No other pages are running so get started.
+            if (pcm_pandaOpened) { pcm_searchOpened = true; getBgPage(); }
+            else haltScript(null, `PandaCrazy page must be opened and running first before you can run the search page.`, null, 'Error starting SearchCrazy Max', true);
+          }
+          else haltScript(null, `You have SearchCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting SearchCrazy Max', true);
+        }, 200);
+      }
+    } else if (data.msg === 'panda crazy responding' && data.object) { if (data.object.status) pcm_pandaOpened = true; }
+    else if (data.msg === 'panda crazy Loaded') { pcm_pandaOpened = true; if (MySearchUI) MySearchUI.goRestart(); }
+    else if (data.msg === 'panda crazy closing') {
+      chrome.runtime.sendMessage({'command':'searchUI_closed', 'data':{}});
+      pcm_pandaOpened = false; pcm_searchOpened = false; if (MySearchUI) MySearchUI.lostPandaUI();
+    }
+    alarmsListener(data);
+  }
+}  

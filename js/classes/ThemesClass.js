@@ -20,7 +20,7 @@ class ThemesClass {
   /** Loads the new CSS style theme and resets the default theme. Also will reset the CSS values from CSS variables.
    * @param {bool} [reset] - Reset Default Theme? */
   prepareThemes(reset=false) {
-    this.themeIndex = globalOpt.theThemeIndex(); this.theStyle = globalOpt.theThemes();
+    this.themeIndex = MyOptions.theThemeIndex(); this.theStyle = MyOptions.theThemes();
     this.loadCSS(this.theStyle);
     if (reset) {
       document.getElementById('pcm-stylesheet').setAttribute('href', '');

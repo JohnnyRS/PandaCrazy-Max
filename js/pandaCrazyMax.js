@@ -1,7 +1,7 @@
 let bgPage = null; // Get the background page object for easier access.
-let globalOpt = null, notify = null, theAlarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
+let notify = null, theAlarms = null, menus = null, modal = null, groupings = null, sGroupings = null, pandaUI = null, history = null, myAudio = null;
 let goodDB = false, errorObject = null, gNewVersion = false, bgPanda = null, bgQueue = null, MySearch = null, bgHistory = null, MYDB = null, MyAlarms = null;
-let gLocalVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, MySearchUI = null;
+let gLocalVersion = localStorage.getItem('PCM_version'), dashboard = null, themes = null, MySearchUI = null, MyOptions = null;
 let pcm_pandaOpened = false, pcm_searchOpened = false, pcm_otherRunning = 0, uniqueTabID = Math.random().toString(36).slice(2);
 let gManifestData = chrome.runtime.getManifest(), highlighterBGColor = getCSSVar('bgHighlighter');
 let pcmRunning = JSON.parse(localStorage.getItem('PCM_running')), gCurrentVersion = gManifestData.version;
@@ -32,7 +32,7 @@ function modalLoadingData() {
 async function prepare() {
   await bgPage.prepareToOpen(true,_, gLocalVersion).then( () => {
     bgPanda = bgPage.gGetPanda(); bgQueue = bgPage.gGetQueue(); bgHistory = bgPage.gGetHistory(); MySearch = bgPage.gGetSearch(); MySearchUI = bgPage.gGetMySearchUI();
-    globalOpt = bgPage.gGetOptions(); MyAlarms = theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
+    MyOptions = bgPage.gGetOptions(); MyAlarms = theAlarms = bgPage.gGetAlarms(new MyAudioClass(), 'panda'); notify = new NotificationsClass(); MYDB = bgPage.gGetMYDB();
     groupings = new TheGroupings(); sGroupings = new TheGroupings('searching'); pandaUI = new PandaUI(); menus = new MenuClass(); dashboard = bgPage.gGetDash();
     themes = new ThemesClass();
     startPandaCrazy();
@@ -54,7 +54,8 @@ async function startPandaCrazy() {
     showMessages(['Finished loading all!'], null, 'Main'); // Show last Message that all should be good.
     setTimeout( () => {
       modal.closeModal('Loading Data');
-      bgQueue.startQueueMonitor(); bgPage.pandaUILoaded(); dashboard.doDashEarns();
+      bgQueue.startQueueMonitor(); dashboard.doDashEarns();
+      pcm_channel.postMessage({'msg':'panda crazy Loaded'});
     }, 300); // Just a small delay so messages can be read by user.
   } else { haltScript(errorObject, errorObject.message, 'Problem with Database.', 'Error opening database:'); }
 }
@@ -69,10 +70,9 @@ function showMessages(good, bad) {
 }
 
 /** ================ First lines executed when page is loaded. ============================ **/
-chrome.runtime.sendMessage({'command':'pcmStarting', 'data':{'tabID':uniqueTabID}}, async (response) => {
+chrome.runtime.sendMessage({'command':'pandaUI_starting', 'data':{'tabID':uniqueTabID}}, async (response) => {
   if (response) {
     pcm_startChannel.postMessage({'msg':'panda crazy starting', 'value':uniqueTabID});
-    chrome.runtime.sendMessage({'command':'PCM: try start', 'data':{'tabID':uniqueTabID}});
   }
   else haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
 });
@@ -80,10 +80,11 @@ chrome.runtime.sendMessage({'command':'pcmStarting', 'data':{'tabID':uniqueTabID
 /** ================ EventListener Section =============================================== **/
 /** Detect when user closes page so background page can remove anything it doesn't need without the panda UI. **/
 window.addEventListener('beforeunload', async () => {
-  if (bgPanda) { bgPage.gSetPandaUI(null); groupings.removeAll(); sGroupings.removeAll(); }
-  pcm_pandaOpened = false; chrome.runtime.sendMessage({'command':'startDone', 'data':{}});
-  globalOpt = null; notify = null; theAlarms = null; MyAlarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
-  MySearch = null; MySearchUI = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
+  if (bgPanda) { bgPage.gSetPandaUI(null); groupings.removeAll(); sGroupings.removeAll(); pcm_channel.postMessage({'msg':'panda crazy closing'}); }
+  pcm_pandaOpened = false; chrome.runtime.sendMessage({'command':'pandaUI_startDone', 'data':{}});
+  notify = null; theAlarms = null; MyAlarms = null; menus = null; modal = null; groupings = null; sGroupings = null; errorObject = null; bgPanda = null; myAudio = null;
+  MySearch = null; bgQueue = null; bgHistory = null; pandaUI = null; goodDB = false; gNewVersion = false; dashboard = null; themes = null; history = null; MYDB = null;
+  MyOptions = null;
 });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. */
 document.addEventListener('keydown', e => { if (e.key === 'Control' || e.metaKey) { $('.ui-sortable').sortable('option', 'disabled', true).addClass('unSelectable'); }});
@@ -93,17 +94,25 @@ document.addEventListener('keyup', e => { if (e.key === 'Control' || e.metaKey) 
 pcm_channel.onmessage = async (e) => {
   if (e.data) {
     const data = e.data;
-    if (data.msg === 'panda crazy starting' && data.value) { // PCM trying to start so send details of this page to all other pages on channel.
+    if ((data.msg === 'panda crazy starting' || data.msg === 'search crazy starting') && data.value) { // PCM trying to start so send details of this page to all other pages on channel.
       pcm_otherRunning = 0; pcm_startChannel.postMessage({'msg':'panda crazy responding', 'object':{'sender':data.value, 'tabId':uniqueTabID, 'status':pcm_pandaOpened}});
     } else if (data.msg === 'panda crazy responding' && data.object && data.object.sender === uniqueTabID) { // Got a PCM response so collect stats on other pages running currently.
       if (uniqueTabID !== data.object.tabId) { if (data.object.status) pcm_otherRunning++; } // Count panda pages actually running.
       else if (!pcm_pandaOpened) { // Make sure current panda page isn't running already.
         setTimeout(() => { // Sets a timeout so it can get ALL responses from other pages to know if this page should start running.
-          chrome.runtime.sendMessage({'command':'startDone', 'data':{}}); // Releases hold when multiple pages try to start all at once.
+          chrome.runtime.sendMessage({'command':'pandaUI_startDone', 'data':{}}); // Releases hold when multiple pages try to start all at once.
           if (pcm_otherRunning === 0) { pcm_pandaOpened = true; getBgPage(); } // No other pages are running so get started.
           else haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
         }, 200);
       }
+    } else if (data.msg === 'search: closingSearchUI') {
+      pandaUI.searchUIConnect(false); bgPage.gSetSearchUI(false);
+    } else if (data.msg === 'search: openedSearchUI') {      
+    } else if (data.msg === 'search: sendOptionsToSearch') { MyOptions.sendOptionsToSearch(); }
+    else if (data.msg === 'search: updateOptions' && data.object) {
+      let theObject = data.object;
+      MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
+      MyOptions.update(false);
     }
     alarmsListener(data);
   }

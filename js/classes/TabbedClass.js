@@ -236,7 +236,7 @@ class TabbedClass {
   /** Updates the captcha number in the bottom area of the page.
    * @param  {number} captchaCount - The captcha counter that needs to be updated on page. */
   updateCaptcha(captchaCount) {
-    if (globalOpt.general.captchaCountText) $(`#${this.ulId} .pcm-captchaText:first`).html(`Captcha Count: ${captchaCount}`);
+    if (MyOptions.general.captchaCountText) $(`#${this.ulId} .pcm-captchaText:first`).html(`Captcha Count: ${captchaCount}`);
     else $(`#${this.ulId} .pcm-captchaText:first`).html('');
   }
   /** Sets the panda with the unique ID to the tab unique ID and then saves to database.
@@ -252,7 +252,7 @@ class TabbedClass {
     MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
   }
   updateMuteAlarm() {
-    if (!globalOpt.isQueueAlarm()) { $(`input.pcm-muteAlarm`).prop('disabled', true); $(`label.pcm-muteAlarmLabel`).addClass('pcm-strikeThrough'); }
+    if (!MyOptions.isQueueAlarm()) { $(`input.pcm-muteAlarm`).prop('disabled', true); $(`label.pcm-muteAlarmLabel`).addClass('pcm-strikeThrough'); }
     else {
       $(`input.pcm-muteAlarm`).prop('disabled', false); $(`label.pcm-muteAlarmLabel`).removeClass('pcm-strikeThrough');
       if (MyAlarms.getMute('queueAlert')) $(`input.pcm-muteAlarm`).prop('checked', true); else $(`input.pcm-muteAlarm`).prop('checked', false);

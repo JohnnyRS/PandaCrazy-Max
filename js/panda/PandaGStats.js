@@ -84,7 +84,8 @@ class PandaGStats {
 		}
 	}
   /** Add 1 to the PRE counter and update status bar. */
-	addPandaPRE() { this.totalPandaPREs.value++; this.updateStatNav(this.totalPandaPREs); }
+	addPandaPRE() { this.totalPandaPREs.value++; this.totalPREs.value++; this.updateStatNav(this.totalPandaPREs); this.updateStatNav(this.totalPREs); }
+	addSearchPRE() { this.totalSearchPREs.value++; this.totalPREs.value++; this.updateStatNav(this.totalSearchPREs); this.updateStatNav(this.totalPREs); }
   /** Add 1 to the total panda's fetched counter and update status bar. */
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
   /** Add 1 to the total no more counter and update status bar. */

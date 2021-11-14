@@ -12,10 +12,10 @@ class ModalOptionsClass {
    * @param  {function} [afterClose] - After Close Function */
   showGeneralOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    let theseOptions = {'general': globalOpt.doGeneral(), 'search': globalOpt.doSearch()}, oldMinReward = theseOptions.search.minReward;
+    let theseOptions = {'general': MyOptions.doGeneral(), 'search': MyOptions.doSearch()}, oldMinReward = theseOptions.search.minReward;
     const idName = modal.prepareModal(theseOptions, '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
       let closeAndSave = () => {
-        globalOpt.doGeneral(Object.assign(globalOpt.doGeneral(), changes.general)); globalOpt.doSearch(Object.assign(globalOpt.doSearch(), changes.search));
+        MyOptions.doGeneral(Object.assign(MyOptions.doGeneral(), changes.general)); MyOptions.doSearch(Object.assign(MyOptions.doSearch(), changes.search));
         pandaUI.queueAlertUpdate();
         $('.pcm-volumeHorizGroup').css('display',(changes.general.volHorizontal) ? 'block' : 'none');
         $('.pcm-volumeVertGroup').css('display',(changes.general.volHorizontal) ? 'none': 'flex');
@@ -46,7 +46,7 @@ class ModalOptionsClass {
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'search', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      pandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
@@ -54,11 +54,11 @@ class ModalOptionsClass {
    * @param  {function} [afterClose] - After Close Function */
   showTimerOptions(afterClose=null) {
     if (!modal) modal = new ModalClass();
-    const idName = modal.prepareModal(globalOpt.doTimers(), '850px', 'pcm-timerOptModal', 'modal-lg', 'Timer Options', '', '', '', 'visible btn-sm', 'Save Timer Options', changes => {
+    const idName = modal.prepareModal(MyOptions.doTimers(), '850px', 'pcm-timerOptModal', 'modal-lg', 'Timer Options', '', '', '', 'visible btn-sm', 'Save Timer Options', changes => {
       let errorsFound = $('.pcm-eleLabel.pcm-optionLimited').length;
       if (errorsFound === 0) {
-        globalOpt.doTimers(changes);
-        bgPanda.timerChange(globalOpt.getCurrentTimer()); pandaUI.pandaGStats.setPandaTimer(globalOpt.getCurrentTimer()); bgPanda.hamTimerChange(changes.hamTimer);
+        MyOptions.doTimers(changes);
+        bgPanda.timerChange(MyOptions.getCurrentTimer()); pandaUI.pandaGStats.setPandaTimer(MyOptions.getCurrentTimer()); bgPanda.hamTimerChange(changes.hamTimer);
         pandaUI.pandaGStats.setHamTimer(changes.hamTimer); MySearch.timerChange(changes.searchTimer); pandaUI.pandaGStats.setSearchTimer(changes.searchTimer);
         bgQueue.timerChange(changes.queueTimer); pandaUI.pandaGStats.setQueueTimer(changes.queueTimer);
         menus.updateTimerMenu(changes.timerIncrease, changes.timerDecrease, changes.timerAddMore);
@@ -66,8 +66,8 @@ class ModalOptionsClass {
       }
     });
     modal.showModal(_, () => {
-      let df = document.createDocumentFragment(), timerRange = globalOpt.getTimerRange(), timerChange = globalOpt.getTimerChange();
-      let searchRange = globalOpt.getTimerSearch(), queueRange = globalOpt.getTimerQueue();
+      let df = document.createDocumentFragment(), timerRange = MyOptions.getTimerRange(), timerChange = MyOptions.getTimerChange();
+      let searchRange = MyOptions.getTimerSearch(), queueRange = MyOptions.getTimerQueue();
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:<br><span class='small pcm-modalInfo'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
       displayObjectData([
         {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds.`, 'minMax':timerRange}, 
@@ -83,16 +83,16 @@ class ModalOptionsClass {
         {'label':'Default Search Panda Durations (Seconds):', 'type':'number', 'key':'searchDuration', 'seconds':true, 'tooltip':'The duration temporarily used for any HITs found from search jobs.', 'minMax':this.defDur}
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      pandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       df = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
   showThemeModal(afterClose=null) {
-    let currentThemeIndex = globalOpt.theThemeIndex(), currentThemeCSS = globalOpt.theThemes();
+    let currentThemeIndex = MyOptions.theThemeIndex(), currentThemeCSS = MyOptions.theThemes();
     if (!modal) modal = new ModalClass();
     const idName = modal.prepareModal(null, '900px', 'pcm-themesModal', 'modal-lg', 'Change your themes', '', '', '', 'visible btn-sm', 'Use Current Theme', () => {
-      globalOpt.theThemeIndex(currentThemeIndex); globalOpt.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
-      themes.theStyle = globalOpt.theThemes(); themes.themeIndex = currentThemeIndex; themes.prepareThemes(true);
+      MyOptions.theThemeIndex(currentThemeIndex); MyOptions.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
+      themes.theStyle = MyOptions.theThemes(); themes.themeIndex = currentThemeIndex; themes.prepareThemes(true);
       modal.closeModal();
     });
     modal.showModal(_, () => {
@@ -110,8 +110,8 @@ class ModalOptionsClass {
       $(`<button class='btn btn-xs pcm-themeSelect3 pcm-buttonOff pcm-tooltipData pcm-tooltipHelper' data-original-title='Click to select theme #4 as current theme and display the CSS styles in the textarea below for edit.'>Theme #4</button>`).data('index', 3).appendTo(buttonGroup);
       buttonGroup.find('.btn').on( 'click', e => {
         let theBody = $(`#${idName} .${modal.classModalBody}`);
-        globalOpt.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
-        currentThemeIndex = $(e.target).data('index'); currentThemeCSS = globalOpt.theThemes(currentThemeIndex); $(`#pcm-themeTextArea`).val(currentThemeCSS);
+        MyOptions.theThemes(currentThemeIndex, $(`#pcm-themeTextArea`).val());
+        currentThemeIndex = $(e.target).data('index'); currentThemeCSS = MyOptions.theThemes(currentThemeIndex); $(`#pcm-themeTextArea`).val(currentThemeCSS);
         theBody.find(`.pcm-themeSelection .btn`).removeClass('pcm-buttonOn').addClass('pcm-buttonOff');
         theBody.find(`.pcm-themeSelect${currentThemeIndex}`).removeClass('pcm-buttonOff').addClass('pcm-buttonOn');
         theBody = null;
@@ -124,7 +124,7 @@ class ModalOptionsClass {
       $(`<button class='btn btn-xs pcm-loadCSSFile pcm-disabled pcm-tooltipData pcm-tooltipHelper' data-original-title='Load the selected file to the current theme selected.'>Load CSS File</button>`).prop('disabled',true).on( 'click', e => {
         modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to replace Theme #${currentThemeIndex + 1} with contents of file?`, () => {
           currentThemeCSS = this.reader.result; $(`#pcm-themeTextArea`).val(currentThemeCSS);
-          globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
+          MyOptions.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
           $(e.target).addClass('pcm-disabled').prop('disabled',true);
         }, true, true,_,_,_,_, () => {});
         return false;
@@ -132,7 +132,7 @@ class ModalOptionsClass {
       $(`<button class='btn btn-xs pcm-resetCSSFile pcm-tooltipData pcm-tooltipHelper' data-original-title='Reset this theme selected to the default value which will be blank.'>Reset Theme</button>`).on( 'click', e => {
         modal.showDialogModal('700px', 'Reset Theme?', `Do you really want to reset Theme #${currentThemeIndex + 1} to a blank theme?`, () => {
           currentThemeCSS = ''; $(`#pcm-themeTextArea`).val(currentThemeCSS);
-          globalOpt.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
+          MyOptions.theThemes(currentThemeIndex, currentThemeCSS); setFileInput(); resetFileInput(); modal.closeModal();
         }, true, true,_,_,_,_, () => {});
         return false;
       }).appendTo(inputContainer);

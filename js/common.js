@@ -236,8 +236,8 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     theValue = (element.andString) ? `${theValue} - ${element.andString}` : theValue;
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
-    if (theValue === undefined) { theValue = element.default; }
-    if (element.money) theValue = (theValue !== null) ? Number(theValue).toFixed(2) : '_.__';
+    if (element.money) theValue = (theValue !== null || theValue !== undefined) ? Number(theValue).toFixed(2) : '_.__';
+    if (theValue === undefined || theValue === null || theValue === undefined) { theValue = element.default; }
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
@@ -326,9 +326,9 @@ function parsePandaUrl(url) {
 function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false) {
   $('.pcm-top:first').html(''); $('#pcm-pandaUI .pcm-quickMenu').html(''); $('.panel').html('');
   $('.panel:first').append(`<H1 class='pcm-myCenter'>${title}</H1><H5 class='pcm-haltMessage'>${alertMessage}</H5>`);
+  if (modal) modal.closeModal('Loading Data');
   if (!warn && error) { // Only show message on console as an error if it's not a warning.
     console.error( (consoleMessage) ? consoleMessage : alertMessage , error );
-    if (modal) modal.closeModal('Loading Data'); // Close modal before stopping script.
     if (bgQueue) bgQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
   } else console.info('Warning: ' + alertMessage); // Show a warning alert message on the console.

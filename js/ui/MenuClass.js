@@ -75,7 +75,7 @@ class MenuClass {
   /** Create the top menu using addMenu and addSubMenu Methods. */
   createPandaTopMenu() {
     let topMenu = $(`<div class='btn-group pcm-btnGroup' role='group'></div>`).appendTo($(`.${this.topMenuRow1}:first`));
-    let vol = globalOpt.theVolume(), volumeHoriz = globalOpt.theVolDir();
+    let vol = MyOptions.theVolume(), volumeHoriz = MyOptions.theVolDir();
     let volumeSlider = $(`<span class='pcm-volumeHorizGroup'>Vol: </span>`).css('display',(volumeHoriz) ? 'block' : 'none').appendTo(topMenu);
     inputRange(volumeSlider, 0, 100, vol, 'vol', (value) => { MyAlarms.setVolume(value); }, false);
     this.addSubMenu(topMenu, 'Vol: ', 'pcm-btn-dropDown', 'pcm-volumeVertGroup', '', [
@@ -107,15 +107,15 @@ class MenuClass {
       {'type':'item', 'label':'Create Instantly', 'menuFunc': () => { groupings.createInstant(); }, 'tooltip':'Create a grouping with any jobs running now with default name and description'},
       {'type':'item', 'label':'Edit', 'menuFunc': () => { groupings.showGroupingsModal(); }, 'tooltip':'Start, stop or edit groupings you have added'}
     ]);
-    this.addMenu(topMenu, '1', e => { this.changeTheTimer(e, globalOpt.useTimer1()); }, 'Change timer to the Main Timer', 'pcm-btn-menu pcm-timerButton pcm-buttonOn mainTimer');
-    this.addMenu(topMenu, '2', e => { this.changeTheTimer(e, globalOpt.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-btn-menu pcm-timerButton secondTimer');
-    this.addMenu(topMenu, '3', e => { this.changeTheTimer(e, globalOpt.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-btn-menu pcm-timerButton thirdTimer');
+    this.addMenu(topMenu, '1', e => { this.changeTheTimer(e, MyOptions.useTimer1()); }, 'Change timer to the Main Timer', 'pcm-btn-menu pcm-timerButton pcm-buttonOn mainTimer');
+    this.addMenu(topMenu, '2', e => { this.changeTheTimer(e, MyOptions.useTimer2()); }, 'Change timer to the Second Timer', 'pcm-btn-menu pcm-timerButton secondTimer');
+    this.addMenu(topMenu, '3', e => { this.changeTheTimer(e, MyOptions.useTimer3()); }, 'Change timer to the Third Timer', 'pcm-btn-menu pcm-timerButton thirdTimer');
     this.addSubMenu(topMenu, '', 'pcm-btn-dropDown', '', '', [
       {'type':'item', 'label':'Edit Timers', 'menuFunc': () => { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showTimerOptions(); }, 'tooltip':'Change options for the timers'},
-      {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerIncrease()); }, 'label':`Increase Timer By ${globalOpt.getTimerIncrease()}ms`, class:'pcm-timerIncrease', 'tooltip':`Increase the current timer by ${globalOpt.getTimerIncrease()}ms`},
-      {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, globalOpt.getTimerDecrease()); }, 'label':`Decrease Timer By ${globalOpt.getTimerDecrease()}ms`, class:'pcm-timerDecrease', 'tooltip':`Decrease the current timer by ${globalOpt.getTimerDecrease()}ms`},
-      {'type':'item', 'menuFunc': () => { this.timerChange(null, globalOpt.getTimerAddMore()); }, 'label':`Add ${globalOpt.getTimerAddMore()}ms to Timer`, class:'pcm-timerAddMore', 'tooltip':`Add ${globalOpt.getTimerAddMore()}ms to the current timer`},
-      {'type':'item', 'menuFunc': () => { let currentTimer = globalOpt.timerUsed; $(`.pcm-timerButton.${currentTimer}:first`).click(); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}
+      {'type':'item', 'menuFunc': () => { this.timerChange(null, MyOptions.getTimerIncrease()); }, 'label':`Increase Timer By ${MyOptions.getTimerIncrease()}ms`, class:'pcm-timerIncrease', 'tooltip':`Increase the current timer by ${MyOptions.getTimerIncrease()}ms`},
+      {'type':'item', 'menuFunc': () => { this.timerChange(null, 0, MyOptions.getTimerDecrease()); }, 'label':`Decrease Timer By ${MyOptions.getTimerDecrease()}ms`, class:'pcm-timerDecrease', 'tooltip':`Decrease the current timer by ${MyOptions.getTimerDecrease()}ms`},
+      {'type':'item', 'menuFunc': () => { this.timerChange(null, MyOptions.getTimerAddMore()); }, 'label':`Add ${MyOptions.getTimerAddMore()}ms to Timer`, class:'pcm-timerAddMore', 'tooltip':`Add ${MyOptions.getTimerAddMore()}ms to the current timer`},
+      {'type':'item', 'menuFunc': () => { let currentTimer = MyOptions.timerUsed; $(`.pcm-timerButton.${currentTimer}:first`).click(); }, 'label':'Reset Timer', 'tooltip':'Reset the current timer to the original time.'}
     ]);
     this.addMenu(topMenu, 'Options', () => { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showGeneralOptions( () => this.modalOptions = null ); }, 'Change the general options', 'pcm-btn-menu', 'pcm-bPandaOptions');
     this.addSubMenu(topMenu, ' ', 'pcm-btn-dropDown', '', '', [
@@ -144,7 +144,7 @@ class MenuClass {
     this.addMenu(group, 'Stop All', () => { bgPanda.stopAll(); }, 'Stop All Collecting Panda and Search Jobs.', 'pcm-btn-menu', 'pcm-bqPandaStopAll');
     this.addMenu(group, 'Add Job', () => { pandaUI.showJobAddModal(); }, 'Add a Panda or Search Job.', 'pcm-btn-menu', 'pcm-bqPandaAddJobs');
     this.addSeparator(group, ' - ');
-    this.addMenu(group, 'Reset Timer', () => { let currentTimer = globalOpt.timerUsed; $(`.pcm-timerButton.${currentTimer}:first`).click(); }, 'Reset the current timer to the original time.', 'pcm-btn-menu', 'pcm-bqPandaReset');
+    this.addMenu(group, 'Reset Timer', () => { let currentTimer = MyOptions.timerUsed; $(`.pcm-timerButton.${currentTimer}:first`).click(); }, 'Reset the current timer to the original time.', 'pcm-btn-menu', 'pcm-bqPandaReset');
     this.addMenu(group, 'Search Jobs', () => { pandaUI.showJobsModal(); }, 'Search the Panda Jobs Added', 'pcm-btn-menu', 'pcm-bqPandaSearchJobs');
     // this.addMenu(group, 'Search Mturk', () => {}, 'Search Mturk for HITs', 'pcm-btn-menu' );
     quickMenu = null; group = null;
@@ -218,8 +218,8 @@ class MenuClass {
 		], 'Sort the way the triggers are displayed in the tabs below.', 'pcm-bSearchSorting');
 		$(`#pcm-sortingDropDown .dropdown-item`).eq(MySearchUI.sorting).addClass('pcm-selectedItem');
 		controls.append(' | ');
-    this.addMenu(controls, 'Allow Auto', e => {
-			let autoAllow = MySearch.autoHitsAllow(!MySearch.autoHitsAllow()), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
+    this.addMenu(controls, 'Allow Auto', async (e) => {
+      let autoAllow = await MySearch.toggleAutoHits(), buttonText = (autoAllow) ? 'Turn Auto Off' : 'Allow Auto';
 			$(e.target).html(buttonText).removeClass('pcm-autoOn pcm-autoOff').addClass((autoAllow) ? 'pcm-autoOn' : 'pcm-autoOff'); $(e.target).blur();
 		}, 'Should triggers be allowed to automatically collect found HITs?', 'pcm-btn-menu pcm-btn-toggle pcm-autoOff', 'pcm-bAutoAllow');
 		if (MySearchUI) MySearchUI.searchGStats.prepare();

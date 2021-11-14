@@ -27,7 +27,6 @@ class SearchUI {
 		this.multiple = {'rid':[], 'gid':[], 'custom':[]};
 		this.totals = {'rid':0, 'gid':0, 'custom':0};
 		this.clickTimer = null;
-		this.listener = new ListenerClass();		// Listener class for any message listens.
 		this.hitsTabInactive = true;
 		this.triggeredHits = [];
 		this.triggeredUnique = 0;
@@ -58,21 +57,26 @@ class SearchUI {
 	nowLoggedOn() { if (modal) modal.closeModal('Program Paused!'); }
 	/** Show message that it is now importing data so please wait. */
 	importing() { this.stopSearching(); modal = new ModalClass(); this.showModalMessage('Importing Data', 'Please Wait. Loading up all data for you.'); }
+	lostPandaUI() {
+		this.stopSearching(); $('.pcm-searchTop').html(''); $('#pcm-searchTriggers').html('');
+		modal = new ModalClass(); this.showModalMessage('Waiting for PandaUI', 'This search page can not run without the panda page so this page is now paused until you start up the panda page. If panda page is running now then just restart this page.');
+	}
 	/** Importing finished so set variable so this page can be reloaded. */
-	importingDone() { this.wasImporting = true; bgPage.searchUIImporting(); }
-	/** After importing data this page should reload when pandaUI finishes reloading. */
-	pandaUILoaded() { if (this.wasImporting) window.location.reload(); }
+	importingDone() { this.wasImporting = true; $('.pcm-searchTop').html(''); $('#pcm-searchTriggers').html(''); }
+	importCompleted() { if (modal) modal.closeModal(); modal = null; }
+	goRestart() { setTimeout(() => { window.location.reload(); }, 2000); }
 	/** Updates the stat object with the text provided or the stat value.
 	 * @param  {object} statObj - Stat object @param  {string} [text] - The text to display in the stat area. */
 	updateStatNav(statObj, text='') {
-		if (text === '') {
-			if (statObj.disabled === null) statObj.disabled = ($(statObj.id).length) ? false : true;
-			if (statObj.disabled === true) return null;
-			let cssVar = (statObj.tempStr) ? statObj.tempStr : getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string), newValue = `${cssVar} ${statObj.value}`;
-			statObj.tempStr = cssVar; $(statObj.id).html(newValue);
-		} else if (text) $(statObj.id).html(text);
-		if (statObj.onClass && statObj.offClass && statObj.value) $(statObj.id).removeClass(statObj.offClass).addClass(statObj.onClass);
-		else if (statObj.onClass && statObj.offClass) $(statObj.id).removeClass(statObj.onClass).addClass(statObj.offClass);
+		if (statObj.disabled) $(statObj.id).hide();
+		else {
+			if (text === '') {
+				let cssVar = (statObj.tempStr) ? statObj.tempStr : getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string), newValue = `${cssVar} ${statObj.value}`;
+				statObj.tempStr = cssVar; $(statObj.id).html(newValue);
+			} else if (text) $(statObj.id).html(text);
+			if (statObj.onClass && statObj.offClass && statObj.value) $(statObj.id).removeClass(statObj.offClass).addClass(statObj.onClass);
+			else if (statObj.onClass && statObj.offClass) $(statObj.id).removeClass(statObj.onClass).addClass(statObj.offClass);
+		}
 	}
 	/** Filter is set to show all triggers. */
 	enableShowAll() {
@@ -119,7 +123,7 @@ class SearchUI {
 		this.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
     let [, err] = await this.tabs.prepare();
     if (!err) {
-			let approvalRateDisplay = (globalOpt.doSearch().displayApproval) ? ' display:table-cell;' : ' display:none;';
+			let approvalRateDisplay = (MyOptions.doSearch().displayApproval) ? ' display:table-cell;' : ' display:none;';
 			this.ridTab = await this.tabs.addTab('Requester ID', true);
 			this.gidTab = await this.tabs.addTab('Group ID');
 			this.customTab = await this.tabs.addTab('Custom Search');
@@ -218,7 +222,7 @@ class SearchUI {
 			if (!this.ctrlDelete.includes(unique)) this.ctrlDelete.push(unique);
 			this.removeJobs(this.ctrlDelete, response => {
 				if ((response === 'NO' && this.ctrlDelete.length === 1) || response === 'CANCEL' ) { this.ctrlDelete = []; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
-			}, () => {}, 'Unselect All');
+			}, () => { this.redoAllTabs(); this.redoAllTabTitles(); }, 'Unselect All');
 		} ).data('unique',unique).appendTo(buttonGroup);
 		this.multiple[data.type].push(card);
 		card = null; body = null; nameGroup = null; buttonGroup = null;
@@ -242,6 +246,7 @@ class SearchUI {
 		});
 		this.sortCards(type); allCards = null;
 	}
+	redoAllTabs() { this.redoFilters('rid'); this.redoFilters('gid'); this.redoFilters('custom'); }
 	/**	Resets the tab title according to any new data changed.
 	 * @param {string} type - Trigger Type */
 	redoTabTitle(type) {
@@ -282,7 +287,7 @@ class SearchUI {
 			let foundData = {'gid':hitData.hit_set_id, 'rid':hitData.requester_id, 'reqName':hitData.requester_name, 'desc':hitData.description, 'title':markedTitle, 'price':`$${priceFloat}`, 'approval':(cellRate) ? cellRate + '%' : '--'};
 			let unique = this.triggeredUnique++, reqName = foundData.reqName.replace(/'/g, `&#39;`);
 			let trClass = (auto) ? 'pcm-autoHit' : 'pcm-triggeredhit';
-			let trRate = (globalOpt.doSearch().displayApproval) ? 'table-cell' : 'none;';
+			let trRate = (MyOptions.doSearch().displayApproval) ? 'table-cell' : 'none;';
 			displayObjectData( [
 				{'type':'string', 'string':'TV', 'link':`https://turkerview.com/requesters/${hitData.requester_id}`, 'linkClass':'pcm-tvLink', 'tooltip':`Turkerview Requester Link`},
 				{'type':'keyValue', 'key':'reqName', 'maxWidth':'120px', 'tooltip':`${reqName}<br>Activity Level: ${rInfo.activityLevel}<br>Approval Rate: ${rInfo.taskApprovalRate}<br>Review Time: ${rInfo.taskReviewTime}`, 'notHelper':true},

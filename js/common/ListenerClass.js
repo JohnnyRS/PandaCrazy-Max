@@ -32,9 +32,9 @@ class ListenerClass {
           else if (command === 'getStats') { if (pandaUI) pandaUI.sendStats(sendResponse); }
           else if (command === 'pause') { if (pandaUI) pandaUI.pauseToggle(true); }
           else if (command === 'unpause') { if (pandaUI) pandaUI.pauseToggle(false); }
-          else if (command === 'forumOptions') { if (pandaUI && globalOpt) sendResponse(globalOpt.theHelperOptions()); }
-          else if (command === 'queueOptions') { if (pandaUI && globalOpt) globalOpt.theSessionQueue(data); if (sendResponse) sendResponse(globalOpt.theHelperOptions()); }
-          else if (command === 'monitorSpeech') { if (pandaUI && !globalOpt.doGeneral().disableMonitorAlert) MyAlarms.speakThisNow('HITs in Queue. Going to first.'); }
+          else if (command === 'forumOptions') { if (pandaUI && MyOptions) sendResponse(MyOptions.theHelperOptions()); }
+          else if (command === 'queueOptions') { if (pandaUI && MyOptions) MyOptions.theSessionQueue(data); if (sendResponse) sendResponse(MyOptions.theHelperOptions()); }
+          else if (command === 'monitorSpeech') { if (pandaUI && !MyOptions.doGeneral().disableMonitorAlert) MyAlarms.speakThisNow('HITs in Queue. Going to first.'); }
           else console.info(JSON.stringify(request), sender);
         }
       }

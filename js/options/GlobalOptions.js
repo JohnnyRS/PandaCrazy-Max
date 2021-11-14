@@ -199,14 +199,14 @@ class PandaGOptions {
   /** Resets the captcha counter back down to 0. */
   resetCaptcha() { this.captchaCounter = 0; }
   sendOptionsToSearch() {
-    pcm_channel.postMessage({'msg':'global options', 'object':{'general':globalOpt.doGeneral(), 'search':globalOpt.doSearch(), 'timers':globalOpt.doTimers(), 'alarms':globalOpt.doAlarms(), 'ranges':globalOpt.getRanges()}});
+    searchChannel.postMessage({'msg':'searchTo: globalOptions', 'object':{'general':this.doGeneral(), 'search':this.doSearch(), 'timers':this.doTimers(), 'alarms':this.doAlarms(), 'ranges':this.getRanges()}});
   }
   /** Updates the global options and resets anything that is needed. */
   update(toSearch=true) {
     if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
     MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
     MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
-    //if (toSearch) this.sendOptionsToSearch();
+    if (toSearch) this.sendOptionsToSearch();
   }
   /** Import the options from an exported file.
    * @param  {object} newData - Data with the imported objects.
@@ -219,11 +219,6 @@ class PandaGOptions {
    * @return {array} - The array of objects to be exported.
   **/
   exportOptions() { return [this.general, this.timers, this.alarms, this.helpers, this.search]; }
-  /** Resets any tooltip helpers that should be disabled if helptooltips option is disabled or shown if enabled. */
-  resetToolTips() {
-    if (extPandaUI) extPandaUI.resetToolTips(this.general.showHelpTooltips);
-    if (MySearchUI) MySearchUI.resetToolTips(this.general.showHelpTooltips);
-  }
   /** Checks to see if it's OK to sound the queue alarm or not.
    * @param  {number} seconds - The lowest seconds on the queue to check if alarm is needed.
    * @return {bool}           - True if the queue alert should be sounded.
@@ -434,17 +429,3 @@ class PandaGOptions {
     return df;
   }
 }
-
-/*************************************************************************************************************/
-/** A listener specific to using the GlobalOptions when BroadcastChannel is being used.
- * @param  {object} data - The data object that was passed in a message from the BroadcastChannel.
-**/
-function optionListener(data) {
-  if (data && globalOpt) {
-    if (data.msg === 'search: global options' && data.object) {
-      let theObject = data.object;
-      globalOpt.doGeneral(theObject.general, false); globalOpt.doSearch(theObject.search, false); globalOpt.doTimers(theObject.timers, false); globalOpt.doAlarms(theObject.alarms, false);
-      globalOpt.update(false);
-    } else if (data.msg === 'search: prepare globals') { globalOpt.sendOptionsToSearch(); }
-  }
-};

@@ -269,12 +269,15 @@ class TimerClass {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item
 		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
 		tDuration = (duration > 0 && tDuration > duration) ? 0 : tDuration;
-		this.queueObject[thisUnique] = { 'theFunction':doFunc, 'funcAfter':funcAfter, 'myId':myId, 'duration':duration, 'tDuration':tDuration, 'dGoHam':dGoHam, 'timeStarted':null, 'timeRestarted':null, 'hamStarted':null, 'skipped':skipped };
-		if ( (dGoHam > 0 || goHamStart) && this.goingHam === null) { this.goHam(thisUnique, dGoHam); }
-		if (skipped) this.skipThis(thisUnique);
-		if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} dGoHam: ${dGoHam}`, CONSOLE_INFO);
-		if (!this.running) this.goTimer(); else this.sendBackInfo();
-		return thisUnique;
+		let duplicate = false; for (let item of Object.values(this.queueObject)) { if (myId === item.myId) duplicate = true; }
+		if (!duplicate) {
+			this.queueObject[thisUnique] = { 'theFunction':doFunc, 'funcAfter':funcAfter, 'myId':myId, 'duration':duration, 'tDuration':tDuration, 'dGoHam':dGoHam, 'timeStarted':null, 'timeRestarted':null, 'hamStarted':null, 'skipped':skipped };
+			if ( (dGoHam > 0 || goHamStart) && this.goingHam === null) { this.goHam(thisUnique, dGoHam); }
+			if (skipped) this.skipThis(thisUnique);
+			if (this.dLog(2)) console.info(`%c[${this.timerName}] new add [${myId}]: duration: ${duration} tDuration: ${tDuration} goHamStart: ${goHamStart} dGoHam: ${dGoHam}`, CONSOLE_INFO);
+			if (!this.running) this.goTimer(); else this.sendBackInfo();
+			return thisUnique;
+		} else return null;
 	}
 	/** Delete this job with the unique number from the queue.
 	 * @param {number} queueUnique - Unique number of job to be deleted. */

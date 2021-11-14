@@ -178,9 +178,9 @@ class LogTabsClass {
           $(hit).find('.pcm-timeLeft').html(timeLeft);
           if (newInfo[taskId].secondsLeft < 0) $(hit).css('text-decoration', 'line-through');
           else if (firstOne) {
-            if (globalOpt.checkQueueAlert(newInfo[taskId].secondsLeft)) {
-              if (globalOpt.isQueueAlert()) this.queueContent.closest('.tab-pane').stop(true,true).effect( 'highlight', {color:this.bgLowTimeHighlighter}, 3600 );
-              if (globalOpt.isQueueAlarm()) theAlarms.doQueueAlarm(globalOpt.lastQueueAlert);
+            if (MyOptions.checkQueueAlert(newInfo[taskId].secondsLeft)) {
+              if (MyOptions.isQueueAlert()) this.queueContent.closest('.tab-pane').stop(true,true).effect( 'highlight', {color:this.bgLowTimeHighlighter}, 3600 );
+              if (MyOptions.isQueueAlarm()) theAlarms.doQueueAlarm(MyOptions.lastQueueAlert);
             }
             firstOne = false;
           }

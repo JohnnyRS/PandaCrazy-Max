@@ -36,11 +36,11 @@ class PandaUI {
 	async prepare(afterFunc) {
 		let success = [], err = null;
 		this.tabs = new TabbedClass($(`#pcm-pandaSection`), `pcm-pandaTabs`, `pcm-tabbedPandas`, `pcm-pandaTabContents`);
-		this.cards.prepare(this.tabs); this.logTabs = new LogTabsClass(); this.logTabs.updateCaptcha(globalOpt.getCaptchaCount()); this.pandaGStats = new PandaGStats();
+		this.cards.prepare(this.tabs); this.logTabs = new LogTabsClass(); this.logTabs.updateCaptcha(MyOptions.getCaptchaCount()); this.pandaGStats = new PandaGStats();
 		[success[0], err] = await this.tabs.prepare();
 		if (!err) {
-			let oO = optObject(_,_,_,_,_,_,_,_, globalOpt.getHamDelayTimer()), savedLogHeight = globalOpt.theTabLogHeight();
-			if (MYDB.useDefault('panda')) await this.addPanda(dataObject('3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', 'Tell us if two receipts are the same', 'Tell us if two receipts are the same', 'AGVV5AWLJY7H2', 'Mechanical Turk', '0.01'), oO,_,_,_,_,_,true);
+			let oO = optObject(_,_,_,_,_,_,_,_, MyOptions.getHamDelayTimer()), savedLogHeight = MyOptions.theTabLogHeight();
+			if (MYDB.useDefault('panda')) await this.addPanda(dataObject('3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', 'Tell us if two receipts are the same', 'Tell us if two receipts are the same', 'AGVV5AWLJY7H2', 'Receipt Processing', '0.01'), oO,_,_,_,_,_,true);
 			else err = await bgPanda.getAllPanda(); // Not using initializing default value so load from database
 			if (!err) {
 				[success[1], err] = await this.logTabs.prepare();
@@ -72,7 +72,7 @@ class PandaUI {
 				}
 			}
 			this.tabPandaHeight = $(`#pcm-pandaPanel`).height(); this.tabLogHeight = $(`#pcm-logPanel`).height(); this.windowHeight = window.innerHeight;
-			if (savedLogHeight < 10) { savedLogHeight = this.tabLogHeight; globalOpt.theTabLogHeight(this.tabLogHeight); }
+			if (savedLogHeight < 10) { savedLogHeight = this.tabLogHeight; MyOptions.theTabLogHeight(this.tabLogHeight); }
 			this.pandaGStats.setPandaTimer(bgPanda.timerChange()); pandaUI.pandaGStats.setHamTimer(bgPanda.hamTimerChange());
 			pandaUI.pandaGStats.setSearchTimer(MySearch.timerChange()); pandaUI.pandaGStats.setQueueTimer(bgQueue.timerChange());
 			window.onresize = () => { this.resizeTabContents(); }
@@ -124,13 +124,13 @@ class PandaUI {
 	/** Shows the logged off modal and after it will unpause the timer. */
 	nowLoggedOff() {
 		if (!modal) modal = new ModalClass(); modal.showLoggedOffModal( () => { if (modal.modals.length < 2) modal = null; bgPanda.unPauseTimer(); });
-		if (!bgPanda.isLoggedOff()) { theAlarms.doLoggedOutAlarm(); if (globalOpt.isNotifications()) notify.showLoggedOff(); }
+		if (!bgPanda.isLoggedOff()) { theAlarms.doLoggedOutAlarm(); if (MyOptions.isNotifications()) notify.showLoggedOff(); }
 		dashboard.nowLoggedOff();
 	}
 	/** Shows the Captcha Found Modal and after it will unpause the timers.
 	 * @param {string} [url] - Url of panda to use to fill in captcha. */
 	captchaFound(url='') {
-		globalOpt.resetCaptcha(); this.pauseToggle(true); document.title = 'Captcha Found - Panda Crazy Max'; this.captchaAlert();
+		MyOptions.resetCaptcha(); this.pauseToggle(true); document.title = 'Captcha Found - Panda Crazy Max'; this.captchaAlert();
 		this.soundAlarm('Captcha'); console.info('captcha found');
 		if (!modal) modal = new ModalClass(); modal.showCaptchaModal( () => {
 			if (modal.modals.length < 2) modal = null; this.pauseToggle(false); document.title = 'Panda Crazy Max';
@@ -316,13 +316,13 @@ class PandaUI {
 		let myId = null, search = (msg.command === 'addSearchOnceJob') ? 'gid' : (msg.command === 'addSearchMultiJob') ? 'rid' : null;
 		let once = (msg.command === 'addOnceJob' || msg.command === 'addSearchOnceJob'), run = (msg.command !== 'addOnlyJob');
 		if (!msg.auto) msg.auto = false;
-		let duration = ((search) ? 10000 : (msg.auto) ? 12000 : 0), hamD = (!msg.hamDuration) ? globalOpt.getHamDelayTimer() : msg.hamDuration;
+		let duration = ((search) ? 10000 : (msg.auto) ? 12000 : 0), hamD = (!msg.hamDuration) ? MyOptions.getHamDelayTimer() : msg.hamDuration;
 		if (search === 'rid' && msg.reqId !== '' && bgPanda.searchesReqIds.hasOwnProperty(msg.reqId)) myId = bgPanda.searchesReqIds[msg.reqId][0];
 		if (search === 'gid' && msg.groupId !== '' && bgPanda.searchesGroupIds.hasOwnProperty(msg.groupId)) myId = bgPanda.searchesGroupIds[msg.groupId][0];
 		if (myId === null) {
 			let data = dataObject(msg.groupId, msg.description, decodeURIComponent(msg.title), msg.reqId, decodeURIComponent(msg.reqName), msg.price);
 			let opt = optObject(once, search,_,_,_,_,_,_, hamD);
-			if (search && globalOpt.theToSearchUI() && MySearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
+			if (search && MyOptions.theToSearchUI() && MySearch.isSearchUI()) { data.id = -1; data.disabled = false; bgPanda.sendToSearch(-1, {...data, ...opt},_,_, true,_,_, true, true); }
 			else this.addPanda(data, opt, (msg.auto) ? true : false, run, true, duration, 4000);
 		} else if (search === 'rid') this.doSearching(myId);
 		else this.startCollecting(myId)
@@ -334,7 +334,7 @@ class PandaUI {
 	 * @param  {string} [from]    - from which UI?			 @param  {number} [tF] 			 - Temp fetches */
 	addFromSearch(data, opt, auto, run, ext, tempDuration, tempGoHam, searchType, myId=-1, from='fromPanda', tF=0) {
 		if (myId !== -1 && data.reqName !== '') bgPanda.updateReqName(myId, data.reqName);
-		if (data.hamDuration === 0) data.hamDuration = globalOpt.getHamDelayTimer();
+		if (data.hamDuration === 0) data.hamDuration = MyOptions.getHamDelayTimer();
 		this.addPanda(data, opt, auto, run, ext, tempDuration, tempGoHam,_,_,_,_, searchType, from, tF);
 	}
 	/** Add panda from the database.
@@ -346,12 +346,12 @@ class PandaUI {
 		if (!r.hasOwnProperty('mute')) { r.mute = false; update = true; }
 		if (!tabUniques.includes(r.tabUnique)) { r.tabUnique = tabUniques[0]; update = true; }
 		if (r.duration < 60000 && r.duration !== 0) { r.duration = 0; update = true; }
-		let hamD = (r.hamDuration === 0) ? globalOpt.getHamDelayTimer() : r.hamDuration; if (r.hamDuration !== hamD) { update = true; r.hamDuration = hamD; }
+		let hamD = (r.hamDuration === 0) ? MyOptions.getHamDelayTimer() : r.hamDuration; if (r.hamDuration !== hamD) { update = true; r.hamDuration = hamD; }
 		let dO = dataObject(r.groupId, r.description, r.title, r.reqId, r.reqName, r.price, r.hitsAvailable, r.assignedTime, r.expires, r.friendlyTitle, r.friendlyReqName);
 		let oO = optObject(r.once, r.search, r.tabUnique, r.limitNumQueue, r.limitTotalQueue, r.limitFetches, r.duration, r.autoGoHam, hamD, r.acceptLimit, r.day, r.weight, r.dailyDone, r.disabled, r.mute);
 		let dbInfo = {...dO, ...oO, 'dateAdded':r.dateAdded, 'totalSeconds':r.totalSeconds, 'totalAccepted':r.totalAccepted, 'tF':0};
 		if (r.hasOwnProperty('id')) dbInfo.id = r.id;
-		await bgPanda.addPanda(dbInfo, false, {},_,_, update, loaded, globalOpt.theSearchDuration(), globalOpt.getHamDelayTimer());
+		await bgPanda.addPanda(dbInfo, false, {},_,_, update, loaded, MyOptions.theSearchDuration(), MyOptions.getHamDelayTimer());
 	}
 	/** Add a new panda job with lot of information and options to the panda area and database.
 	 * @async											- To wait for the data to be loaded from database if needed.
@@ -373,7 +373,7 @@ class PandaUI {
 		} else {
 			if (opt.tabUnique === -1) opt.tabUnique = this.tabs.getTabInfo(this.tabs.currentTab).id;
 			let dbInfo = {...d, ...opt, 'dateAdded': dated, 'totalSeconds':seconds, 'totalAccepted':accepts, 'tF':tF}, newAddInfo = {'tempDuration':tDur, 'tempGoHam':tGoH, 'run':run};
-			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, 0, globalOpt.getHamDelayTimer());
+			await bgPanda.addPanda(dbInfo, add, newAddInfo,_,_, false, loaded, 0, MyOptions.getHamDelayTimer());
 		}
 	}
 	/** Add this panda job to the panda UI with a card and stats.
@@ -402,7 +402,7 @@ class PandaUI {
   /** When a HIT is accepted then set up the stats and display it on the card.
    * @param  {number} myId - Unique ID  @param  {number} queueUnique - Queue ID  @param  {object} html - Html object  @param  {object} url - URL */
 	hitAccepted(myId, queueUnique, html, url) {
-		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(globalOpt.updateCaptcha());
+		this.logTabs.queueTotal++; this.logTabs.updateCaptcha(MyOptions.updateCaptcha());
     this.pandaGStats.addTotalAccepted(); this.cards.highlightEffect_card(myId);
 		let pandaInfo = bgPanda.options(myId); this.pandaStats[myId].addAccepted(); pandaInfo.data.dailyDone++;
     if (pandaInfo.autoTGoHam !== 'disable' && (pandaInfo.data.autoGoHam || pandaInfo.autoTGoHam === 'on')) {
@@ -417,7 +417,7 @@ class PandaUI {
 		hitDetails.assignment_id = bgPanda.parseHitDetails(hitDetails, myId, pandaInfo.data); bgPanda.queueAddAccepted(pandaInfo, hitDetails);
 		this.logTabs.addIntoQueue(hitDetails, pandaInfo.data, url.replace('https://worker.mturk.com',''));
 		this.logTabs.addToLog(pandaInfo.data); this.updateLogStatus(myId, 0, pandaInfo.data);
-		if (globalOpt.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
+		if (MyOptions.isNotifications()) notify.showAcceptedHit(pandaInfo.data);
 		if (!pandaInfo.data.mute) theAlarms.doAlarms(pandaInfo.data);
 		bgPanda.checkIfLimited(myId, true, pandaInfo.data);
 		targetDiv = null; rawProps = null; formInfo = null; hitDetails = null;
@@ -446,9 +446,9 @@ class PandaUI {
 	 * @param  {string} name - The name of an alarm to sound. */
 	soundAlarm(name) { if (['Captcha','Queue','Full'].includes(name)) theAlarms[`do${name}Alarm`](); }
 	/** Notifies the user that a captcha has been found. */
-	captchaAlert() { if (globalOpt.isNotifications() && globalOpt.isCaptchaAlert()) notify.showCaptchaAlert(); }
+	captchaAlert() { if (MyOptions.isNotifications() && MyOptions.isCaptchaAlert()) notify.showCaptchaAlert(); }
 	/** Notifies the user that they can't accept any more HITs for today. */
-	mturkLimit() { if (globalOpt.isNotifications()) notify.showDailyLimit(); }
+	mturkLimit() { if (MyOptions.isNotifications()) notify.showDailyLimit(); }
 	/** Updates the status log tab on the bottom with relevant information.
 	 * @param  {number} myId - The unique ID  @param  {number} milliseconds - Elapsed time  @param  {object} [changes] - Stat changes to make */
 	updateLogStatus(myId, milliseconds, changes=null) { const stats = (changes) ? null : this.pandaStats[myId]; this.logTabs.updateLogStatus(stats, myId, milliseconds, changes); }
@@ -458,7 +458,7 @@ class PandaUI {
 		groupings.checkStartTimes();
 		if (isNewDay()) await this.resetDailyStats();
 		this.logTabs.updateQueue(queueResults);
-		if (this.tabLogResized) { globalOpt.theTabLogHeight(this.tabLogHeight); this.tabLogResized = false; }
+		if (this.tabLogResized) { MyOptions.theTabLogHeight(this.tabLogHeight); this.tabLogResized = false; }
 	}
 	/** A HIT was submitted externally.
 	 * @param  {object} request - The HIT data object with info. */

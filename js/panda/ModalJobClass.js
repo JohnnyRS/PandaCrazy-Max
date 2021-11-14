@@ -33,15 +33,15 @@ class ModalJobClass {
     let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).appendTo(appendHere);
     let ridDisableTip = (ridDisabled) ? ' May not be changed by user.' : '';
     displayObjectData([
-      {'label':'Requester ID', 'type':'text', 'key':'reqId', 'disable':ridDisabled, 'tooltip':`The requester ID for this job.${ridDisableTip}`},
+      {'label':'Requester ID', 'type':'text', 'key':'reqId', 'disable':ridDisabled, 'default':'-- No Requester ID found yet --', 'tooltip':`The requester ID for this job.${ridDisableTip}`},
       {'label':'Requester Name:', 'type':'text', 'key':'reqName', 'disable':true, 'tooltip':'The requester name for this job. May not be changed by user.'},
       {'label':'Friendly Requester Name:', 'type':'text', 'key':'friendlyReqName', 'disable':false, 'tooltip':'A user created requester name to make the name shorter or easier to remember.'},
-      {'label':'Group ID', 'type':'text', 'key':'groupId', 'disable':true, 'tooltip':'The group ID for this job. May have multiple group ID jobs if wanted. May not be changed by user.'},
+      {'label':'Group ID', 'type':'text', 'key':'groupId', 'disable':true, 'default':'-- RID Search Jobs do not use Group ID --', 'tooltip':'The group ID for this job. May have multiple group ID jobs if wanted. May not be changed by user.'},
       {'label':'Title', 'type':'text', 'key':'title', 'disable':true, 'tooltip':'The title for this job. May not be changed by user.'},
-      {'label':'Description', 'type':'text', 'key':'description', 'disable':true, 'tooltip':'The description for this job. May not be changed by user.'},
+      {'label':'Description', 'type':'text', 'key':'description', 'disable':true, 'default':'-- RID Search Jobs have no description --', 'tooltip':'The description for this job. May not be changed by user.'},
       {'label':'Price', 'type':'text', 'key':'price', 'money':true, 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
-      {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'tooltip':'The day and time which this HIT will no longer be on MTURK. May not be changed by user.'},
+      {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'default':'No Expiration', 'tooltip':'The day and time which this HIT will no longer be on MTURK. May not be changed by user.'},
       {'label':'Date Added', 'type':'keyValue', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this HIT was added to PandaCrazy Max. May not be changed by user.'},
       {'label':'Total Seconds Collecting', 'type':'text', 'key':'totalSeconds', 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect HITs since it was added. May not be changed by user.'},
       {'label':'Total Accepted HITs', 'type':'text', 'key':'totalAccepted', 'disable':true, 'tooltip':'The total amount of HITs collected by this job since it was added. May not be changed by user.'}
@@ -110,9 +110,9 @@ class ModalJobClass {
           if (!modal) modal = new ModalClass();
           modal.showDialogModal('700px', 'Search trigger created', 'The search job has been moved to the search UI successfully.',_,_, true,_,_,_, (idName) => {
             let checkboxDiv = $(`<div class='pcm-autoSearchUI small'></div>`).appendTo(`#${idName} .${modal.classModalBody}`);
-            createCheckBox(checkboxDiv, 'Search job buttons should create search UI triggers by default.', 'searchUITriggers', 'autoSearchUI', globalOpt.theToSearchUI());
+            createCheckBox(checkboxDiv, 'Search job buttons should create search UI triggers by default.', 'searchUITriggers', 'autoSearchUI', MyOptions.theToSearchUI());
             checkboxDiv = null;
-          }, () => { globalOpt.theToSearchUI($(`#searchUITriggers`).prop('checked')); },_, 'OK');
+          }, () => { MyOptions.theToSearchUI($(`#searchUITriggers`).prop('checked')); },_, 'OK');
         });
       }
     }, true, true,_,_,_,_, () => {});
@@ -136,7 +136,7 @@ class ModalJobClass {
         if (!hitInfo.data) { await bgPanda.getDbData(myId); }
         if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
         changes.mute = hitInfo.data.mute; changes.disabled = (changes.disabled) ? changes.disabled : false;
-        if (!changes.autoGoHam) changes.hamDuration = 0; else if (changes.hamDuration === 0) changes.hamDuration = globalOpt.getHamDelayTimer();
+        if (!changes.autoGoHam) changes.hamDuration = 0; else if (changes.hamDuration === 0) changes.hamDuration = MyOptions.getHamDelayTimer();
         hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
         await bgPanda.updateDbData(myId, hitInfo.data); hitInfo.disabled = changes.disabled;
         pandaUI.cards.updateAllCardInfo(myId, hitInfo); pandaUI.logTabs.updateLogStatus(null, myId, 0, hitInfo.data); modal.closeModal();
@@ -144,7 +144,7 @@ class ModalJobClass {
         if (!pandaUI.pandaStats[myId].collecting) hitInfo.data = null;
         if (successFunc!==null) successFunc(changes);
       }
-      if (searchChanges && searchChanges.rules.minPay === 0.00 && (oldMinPay !== searchChanges.rules.minPay) && globalOpt.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 on the Panda Crazy Search page so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeSaveModal(); });
+      if (searchChanges && searchChanges.rules.minPay === 0.00 && (oldMinPay !== searchChanges.rules.minPay) && MyOptions.doSearch().minReward !== 0) modal.showDialogModal('700px', 'Remember to change minReward in General Options', 'For the minReward at 0.00 to work you must set the General Search Options minReward to 0.00 on the Panda Crazy Search page so it will use it on MTURK search page.', null, false, false,_,_,_,_, () => { closeSaveModal(); });
       else closeSaveModal();
     }
     if (!modal) modal = new ModalClass();
@@ -181,7 +181,7 @@ class ModalJobClass {
           radioGroup = null;
         } else {
           if (searchChanges.rules.minPay === 0.00) {
-            if (globalOpt.doSearch().minReward !== 0) $('.pcm-editTrigWarning').html('The minPay at $0.00 will only work if the main search option minPay is at $0.00 also.');
+            if (MyOptions.doSearch().minReward !== 0) $('.pcm-editTrigWarning').html('The minPay at $0.00 will only work if the main search option minPay is at $0.00 also.');
           }
           let value = (hitInfo.search === 'gid') ? hitInfo.data.groupId : hitInfo.data.reqId;
           $(`<div class='pcm-detailsBtnArea2 w-100'></div>`).append($(`<button class='btn btn-xs pcm-toSearchUI'>Move to searchUI and create search trigger</button>`)
@@ -198,7 +198,7 @@ class ModalJobClass {
         $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(modal.tempObject[idName]); });
         optionTab = null; optionsContents = null; detailTab = null; detailsContents = null;
       }
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      pandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       df = null; df2 = null, df3 = null; detailsDiv = null; detailsTabs = null;
     }, () => { if (afterClose) afterClose(); else modal = null; this.modalSearch = null; });
   }
@@ -229,8 +229,8 @@ class ModalJobClass {
           if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm-searchJob').is(':checked')) ? 'gid' : null);
           let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
-          let opt = optObject(once, search,_,_,_,_, 0,_, (search) ? 0 : globalOpt.getHamDelayTimer());
-          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : globalOpt.getHamDelayTimer());
+          let opt = optObject(once, search,_,_,_,_, 0,_, (search) ? 0 : MyOptions.getHamDelayTimer());
+          pandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : MyOptions.getHamDelayTimer());
           modal.closeModal();
         } else {
           $(`label[for='pcm-formAddGroupID']`).addClass('pcm-inputError');
@@ -240,7 +240,7 @@ class ModalJobClass {
         $(`label[for='pcm-formAddGroupID']`).addClass('pcm-inputError');
         theBody.find('.pcm-checkStatus.pcm-inputError').html('Invalid Group ID or URL').data('gIdInvalid',true);
       }
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      pandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       theBody = null;
     }
     if (!modal) modal = new ModalClass();
@@ -380,7 +380,7 @@ class ModalJobClass {
         if (afterShow) afterShow(this);
         df2 = null; modalControl = null;
       });
-      pandaUI.resetToolTips(globalOpt.doGeneral().showHelpTooltips);
+      pandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
     }, () => { if (afterClose) afterClose(); else modal = null; });
   }
 }

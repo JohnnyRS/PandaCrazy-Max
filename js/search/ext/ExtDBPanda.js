@@ -1,5 +1,5 @@
 class ExtDBPanda {
-  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=500) {
+  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=5000) {
     const db2Channel = new BroadcastChannel('PCM_kDatabase2_band');
     return new Promise( (resolve, reject) => {
       db2Channel.postMessage({'msg':msg, 'value':value});
@@ -12,7 +12,7 @@ class ExtDBPanda {
       setTimeout(() => { db2Channel.close(); resolve(timeoutVal); }, timeoutTime);
     });
   }
-  getFromDB() {
+  async getFromDB() {
     return new Promise((resolve, reject) => {
       this.sendBroadcastMsg('searchDB: getFromDB', 'searchDB: returning getFromDB', [...arguments], false).then( results => resolve(results), rejected => reject(rejected) );
     });

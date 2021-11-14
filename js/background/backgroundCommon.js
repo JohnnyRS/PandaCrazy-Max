@@ -1,4 +1,4 @@
-let extSearchUI = null, extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newUpdatedVersion = null;
+let extPandaUI = null, dbError = null, savedSearchUI = null, pandaOpening = false, searchOpening = false, newUpdatedVersion = null;
 let pandaUIOpened = false, searchUIOpened = false, MYDB = null, mySearch = null, myPanda = null, myHistory = null, myQueue = null, gLocalVersion = null;
 let pandaTimer = null, queueTimer = null, searchTimer = null, MyOptions = null, MyAlarms = null, myDash = null, currentTab = null, firstInstall = false;
 let MySearchUI = new ExtSearchUI(), pcm_searchOpened = true;
@@ -23,19 +23,16 @@ function removeAll() {
   extPandaUI = null;
   cleanLocalStorage();
 }
-/** Importing data so make sure searchUI gets refreshed if it was opened also. */
-function searchUIImporting() { savedSearchUI = extSearchUI; gSetSearchUI(null); }
 /** Returns the search UI class. Useful when detecting if the UI is already opened in another tab.
  * @return {class} - The Search UI Class. */
-function gGetSearchUI() { return extSearchUI; }
+function gGetSearchUI() { return searchUIOpened; }
 function gGetMySearchUI() { return MySearchUI; }
 /** Function to set up a search UI variable for the background and returns search class.
  * @param {class} classUI - Object variable for the search UI or null if UI is closing.
  * @return {class}        - Returns the search class in background for easier access. */
-function gSetSearchUI(classUI) {
-  extSearchUI = classUI;
-  if (classUI === null) { if (pandaUIOpened) mySearch.originRemove(); myPanda.searchUIConnect(false); MyAlarms.setAudioClass(null, 'search'); searchUIOpened = false; }
-  else if (myPanda) myPanda.searchUIConnect(true);
+function gSetSearchUI(status=false) {
+  if (!status) { if (pandaUIOpened) mySearch.originRemove(); MyAlarms.setAudioClass(null, 'search'); searchUIOpened = false; }
+  else { searchUIOpened = true; if (myPanda) myPanda.searchUIConnect(true); }
   checkUIConnects();
   return mySearch;
 }
@@ -99,7 +96,7 @@ async function prepareToOpen(panda=null, search=null, version=null) {
   if (!MyAlarms) MyAlarms = new AlarmsClass();
   await MYDB.openSearching().then( async () => {
     await MYDB.openHistory(historyWipe).then( async () => {
-      if (!myPanda && !searchUIOpened) {
+      if (!myPanda) {
         chrome.storage.local.set({'PCM_running':true});
         myHistory = new HistoryClass();
         dbHistoryGood = true;
@@ -122,13 +119,6 @@ async function prepareToOpen(panda=null, search=null, version=null) {
     }, rejected => { dbError = rejected; console.error(rejected); } );
   }, rejected => { dbError = rejected; console.error(rejected); } );
 }
-/** Once PandaUI is fully loaded check if searchUI needs to refresh and reset all tooltips using tooltip options. */
-function pandaUILoaded() {
-  if (savedSearchUI) { savedSearchUI.pandaUILoaded(); savedSearchUI = null; }
-  if (MyOptions) MyOptions.resetToolTips();
-}
-/** Once SearchUI is fully loaded check if tooltips needs to be reset using tooltip options. */
-function searchUILoaded() { if (MyOptions) MyOptions.resetToolTips(); }
 /** Wipe all data from memory and database from each class usually from a user wipe data request. */
 async function wipeData() {
   if (!MyOptions) MyOptions = new PandaGOptions();
@@ -181,7 +171,7 @@ chrome.runtime.onUpdateAvailable.addListener( details => {
 });
 
 chrome.runtime.onMessage.addListener( (request,_, sendResponse) => {
-  if (request.command === 'pcmStarting') {
+  if (request.command === 'pandaUI_starting') {
     chrome.storage.local.get('firstInstall', (result) => {
       if (typeof result.firstInstall === 'undefined') firstInstall = true; else firstInstall = result.firstInstall;
       chrome.storage.local.set({'firstInstall':false});
@@ -190,8 +180,17 @@ chrome.runtime.onMessage.addListener( (request,_, sendResponse) => {
       if (typeof result.startingUp === 'undefined') chrome.storage.local.set({'startingUp':request.data.tabID}, () => { sendResponse(true); });
       else sendResponse(false);
     });
-    return true;
-  } else if (request.command === 'startDone') chrome.storage.local.remove('startingUp'); // Release hold on any other pages trying to start up at same time.
+  } else if (request.command === 'pandaUI_startDone') chrome.storage.local.remove('startingUp'); // Release hold on any other pages trying to start up at same time.
+  else if (request.command === 'searchUI_starting') {
+    chrome.storage.local.get('searchUI_startingUp', (result) => { // Find out if another page has tried to start up by checking the hold data.
+      if (typeof result.searchUI_startingUp === 'undefined') chrome.storage.local.set({'searchUI_startingUp':request.data.tabID}, () => { sendResponse(true); });
+      else sendResponse(false);
+    });
+  } else if (request.command === 'searchUI_startDone') chrome.storage.local.remove('searchUI_startingUp');
+  else if (request.command === 'searchUI_closed') searchUIOpened = false;
+  return true;
 });
 
-chrome.runtime.onInstalled.addListener( () => { chrome.storage.local.set({'firstInstall':true}); chrome.storage.local.remove('startingUp'); });
+chrome.runtime.onInstalled.addListener( () => {
+  chrome.storage.local.set({'firstInstall':true}); chrome.storage.local.remove('startingUp'); chrome.storage.local.remove('searchUI_startingUp');
+});

@@ -7,14 +7,14 @@ class SearchGStats {
 		this.errors = 0;								// Amount of errors that happened while searching.
 		this.totalPandas = 0;						// Total number of panda's found.
 		this.totalSearches = 0;					// Total number of searches made.
-		this.searchNow = {'value':false, 'id':'#pcm-searchNow', 'disabled':null, 'type':'boolean', 'onClass':'pcm-searchingOn', 'offClass':'pcm-searchingOff'};
-		this.searching = {'value':false, 'id':'#pcm-searching', 'disabled':null, 'type':'boolean', 'onClass':'pcm-span-on', 'offClass':'pcm-span-off'};
+		this.searchNow = {'value':false, 'id':'#pcm-searchNow', 'disabled':false, 'type':'boolean', 'onClass':'pcm-searchingOn', 'offClass':'pcm-searchingOff'};
+		this.searching = {'value':false, 'id':'#pcm-searching', 'disabled':false, 'type':'boolean', 'onClass':'pcm-span-on', 'offClass':'pcm-span-off'};
 		this.searchElapsed = {'value':0, 'id':'#pcm-searchElapsed', 'disabled':false, 'type':'integer', 'string':`Elapsed:`};
-		this.totalSearchFetched = {'value': 0, 'id': '#pcm-searchTotalFetched', 'disabled':null, 'type':'integer', 'string':`Fetched:`};
-		this.totalSearchPREs = {'value': 0, 'id': '#pcm-totalSearchPREs', 'disabled':null, 'type':'integer', 'string':`SearchPRE's: `};
-		this.totalSearchHits = {'value': 0, 'id': '#pcm-searchHitsFound', 'disabled':null, 'type':'integer', 'string':`HITs Found: `};
-		this.totalSearchResults = {'value': 0, 'id': '#pcm-searchResults', 'disabled':null, 'type':'integer', 'string':`HITs Available: `};
-		this.fetchedElapsed = {'value': 0, 'id': '#pcm-fetchedElapsed', 'disabled':true, 'type':'integer', 'string':`FetchElapsed: `};
+		this.totalSearchFetched = {'value': 0, 'id':'#pcm-searchTotalFetched', 'disabled':false, 'type':'integer', 'string':`Fetched:`};
+		this.totalSearchPREs = {'value': 0, 'id':'#pcm-totalSearchPREs', 'disabled':false, 'type':'integer', 'string':`SearchPRE's: `};
+		this.totalSearchHits = {'value': 0, 'id':'#pcm-searchHitsFound', 'disabled':false, 'type':'integer', 'string':`HITs Found: `};
+		this.totalSearchResults = {'value': 0, 'id':'#pcm-searchResults', 'disabled':false, 'type':'integer', 'string':`HITs Available: `};
+		this.fetchedElapsed = {'value': 0, 'id':'#pcm-fetchedElapsed', 'disabled':true, 'type':'integer', 'string':`Fetch Elapsed: `};
 		this.timerStats = [this.searchElapsed, this.fetchedElapsed];
 	}
 	/** Checks to see if searching is on by using searching value.

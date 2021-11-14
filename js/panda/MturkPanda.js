@@ -76,16 +76,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} myId - The unique ID for a panda job.
 	 * @return {number}			 - Was panda job trigger found and toggled? */
 	async toggleReqSearch(myId) { return mySearch.toggleReqSearch(this.info[myId].dbId); }
-	/** Tests if the database can be opened and has all the storage created.
-	 * @async 				- To wait for the results of the database testing of the storage in the database.
-	 * @return {bool} - True if database is all ready. */
-	async testDB() {
-		let result = await MYDB.testDB().then( () => { return true; }, () => {
-			return MYDB.openPCM(true).then( () => { return true; }, rejected => { dbError = rejected; return false; });
-		});
-		return result;
-	}
-	/** This will wipe all data from panda and status database. Usually used for importing data.
+	/** This will wipe all data from panda and status database. Usually used when user asks for a reset data.
 	 * @async - To wait for all data to be deleted from panda and stats database. */
 	async wipeData() {
 		await MYDB.openPCM().then( async () => { await MYDB.deleteDB('panda'); await MYDB.openStats().then( async () => { await MYDB.deleteDB('stats'); } ); });
@@ -147,7 +138,7 @@ class MturkPanda extends MturkClass {
 	closeDB() { MYDB.closeDB('panda'); MYDB.closeDB('stats'); }
 	/** Recreates the database after it's closed usually only used when importing data.
 	 * @async - To wait for the database and the search database to open. */
-	async recreateDB() { await MYDB.openPCM(true); await MYDB.openStats(true); await MYDB.openSearching(true); }
+	async recreateDB() { await MYDB.openPCM(true, false); await MYDB.openStats(true); await MYDB.openSearching(true); }
 	/** Remove all panda jobs usually because panda UI is closing.
 	 * @param {bool} [removeUI] - Should the pandaUI be asked to remove all also? */
 	removeAll(removeUI=false) {
@@ -328,7 +319,7 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} [run]  - Run it now	 @param  {number} [sDur]    - Duration     @param  {number} [sGD]   - Goham duration
 	 * @param  {bool} [sUI]  - SearchUI?   @param  {bool} [fragments] - Should searchUI append fragments? */
 	async sendToSearch(myId, dbData, rules={}, history={}, run=false, sDur=0, sGD=0, sUI=false, fragments=false) {
-		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':'disabled', 'pandaId':myId, 'pDbId':dbData.id};
+		let tempInfo = {'name':dbData.reqName, 'reqId':dbData.reqId, 'groupId':dbData.groupId, 'title':dbData.title, 'reqName':dbData.reqName, 'pay':dbData.price, 'duration':dbData.assignedTime, 'status':(run) ? 'searching' : 'disabled', 'pandaId':myId, 'pDbId':dbData.id};
 		let tempOptions = {'duration':sDur, 'once':dbData.once, 'limitNumQueue':dbData.limitNumQueue, 'limitTotalQueue':dbData.limitTotalQueue, 'limitFetches':dbData.limitFetches, 'autoGoHam':false, 'tempGoHam':sGD, 'acceptLimit':0, 'auto': false, 'autoLimit': 2};
 		if (run) await mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);
 		else mySearch.addTrigger(dbData.search, tempInfo, tempOptions, rules, history, sUI);

@@ -13,7 +13,7 @@ class DatabasesClass {
    * @param  {bool} [del] - Delete from database?
    * @return {promise}    - 'OPENED' or rejected has any errors.
   **/
-  openPCM(del=false) {
+  openPCM(del=false, useDefault=true) {
     return new Promise( (resolve, reject) => {
       this.panda.db = new DatabaseClass(this.panda.dbName, 1);
       this.panda.db.openDB( del, e => {
@@ -23,7 +23,7 @@ class DatabasesClass {
           e.target.result.createObjectStore(this.panda.options, {'keyPath':'category'});
           e.target.result.createObjectStore(this.panda.alarms, {'keyPath':'id', 'autoIncrement':true}).createIndex('name', 'name', {'unique':false});
           e.target.result.createObjectStore(this.panda.grouping, {'keyPath':'id', 'autoIncrement':true});
-          this.panda.default = true;
+          if (useDefault) this.panda.default = true;
         }
       }).then( response => { if (response === 'OPENED') resolve(this.panda.db); }, rejected => { console.error(rejected); reject(rejected); });
     });
@@ -133,10 +133,6 @@ class DatabasesClass {
   deleteFromDB(target, store='storeName', key=null, indexName=null) {
 		return new Promise((resolve, reject) => { this[target].db.deleteFromDB(this[target][store], key, indexName).then( r => resolve(r), e => reject(e) ); });
   }
-  /** Tests the database to make sure it was created and can open correctly.
-   * @return {promise} - 'good' for test successful or bad in reject for errors.
-  **/
-  testDB() { return new Promise( (resolve, reject) => { this.panda.db.testDB().then( r => resolve(r), e => reject(e) ); }); }
   /** Clears the store name given in the database provided.
    * @param  {string} target - Database Name  @param  {string} [store] - Store Name
   **/
@@ -155,16 +151,6 @@ class DatabaseClass {
     this.dbName = dbName;           // Database name for the indexedDB object.
     this.dbVersion = dbVersion;     // Database version for the indexedDB object.
     this.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB;
-  }
-  /** Test the database to make sure there are stores available.
-   * @Return {promise} - Resolves with 'good' or rejects with 'bad'.
-  **/
-  testDB() {
-    return new Promise( (resolve, reject) => {
-      let request = this.indexedDB.open( this.dbName, this.dbVersion );
-      request.onsuccess = () => { if (request.result.objectStoreNames.length === 0) { request.result.close(); reject('bad'); } else resolve('good'); };
-      request.onerror = () => { request.result.close(); reject('bad'); }
-    });
   }
   /** Deletes this database with all data with it.
    * @return {promise} - 'SUCCESS' in resolve or Errors in reject.

@@ -51,7 +51,7 @@ class EximClass {
     this.exportPre.extVersion = gManifestData.version;
     await bgPanda.getAllPanda(false);
     for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
-    exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = globalOpt.exportOptions(); exportGrouping = groupings.theGroups();
+    exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = MyOptions.exportOptions(); exportGrouping = groupings.theGroups();
     exportedAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await MySearch.exportTriggers(); exportSearchGroups = await MySearch.exportSearchGroupings();
     this.exportPre.jobs = exportJobs.length; 
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
@@ -110,11 +110,11 @@ class EximClass {
         bgPanda.removeAll(false); MySearch.removeAll();
         bgPanda.closeDB(); MySearch.closeDB(); // Must close DB before deleting and recreating stores.
         await bgPanda.recreateDB(); // Recreate database and stores.
-        await globalOpt.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
+        await MyOptions.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
         await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
         await groupings.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
         $('.pcm-importButton:first').append('.');
-        globalOpt.importOptions(this.importOptions);
+        MyOptions.importOptions(this.importOptions);
         for (const key of Object.keys(this.importTabsData)) {
           $('.pcm-importButton:first').append('.');
           let active = (counters++ === 0) ? true : false;
@@ -213,19 +213,20 @@ class EximClass {
         });
         $('.pcm-importButton:first').on('click', async e => {
           if (!this.importCompleted) {
-            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); MySearch.importing();
+            $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); MySearchUI.importing();
             await this.startImporting($('#pcm-importAlarms').prop('checked'));
             await delay(100);
             $('.custom-file-input').off('change');
             $(e.target).html('Importing completed. Click to restart!').css({'backgroundColor':'#00FF7F','color':'#000c9c', 'fontWeight':'bold'}).prop('disabled',false);
             this.reader.abort();
             this.reader = null; this.importCompleted = true; this.resetData();
+            MySearchUI.importingDone(); pcm_pandaOpened = false;
           } else modal.closeModal();
         });
         inputContainer = null;
       }
       df = null;
-    }, () => { modal = null; if (this.importCompleted) { MySearch.importingDone(); window.location.reload(); } });
+    }, () => { modal = null; if (this.importCompleted) { MySearchUI.importCompleted(); window.location.reload(); } });
   }
   /** Shows the export modal for user to choose to export alarm sounds or not. */
   exportModal() {
@@ -292,7 +293,7 @@ class EximClass {
       if (this.importJobsTabs[rData.tabUnique]) this.importJobsTabs[rData.tabUnique].list.push(rData.id);
       else { this.importJobsTabs[rData.tabUnique] = {'title': '',list:[rData.id], 'id':rData.tabUnique}; this.tabPosition++; }
     }
-    let hamD = (!rData.hamDuration) ? globalOpt.getHamDelayTimer() : rData.hamDuration;
+    let hamD = (!rData.hamDuration) ? MyOptions.getHamDelayTimer() : rData.hamDuration;
 		if (typeof rData.dateAdded === 'string') rData.dateAdded = new Date(rData.dateAdded).getTime();
     let dO = dataObject(rData.groupId, rData.description, rData.title, rData.reqId, rData.reqName, rData.price, rData.hitsAvailable, rData.assignedTime, rData.expires, rData.friendlyTitle, rData.friendlyReqName);
     let oO = optObject(rData.once, rData.search, rData.tabUnique, rData.limitNumQueue, rData.limitTotalQueue, rData.limitFetches, rData.duration, rData.autoGoHam, hamD, rData.acceptLimit, rData.day, rData.weight, rData.dailyDone);
@@ -316,7 +317,7 @@ class EximClass {
       if (rData.action.toLowerCase().indexOf('search') !== -1) search = 'rid';
       if (!rData.dateAdded) rData.dateAdded = new Date().getTime();
       if (typeof rData.dateAdded === 'string') rData.dateAdded = new Date(rData.dateAdded).getTime();
-      let hamD = (!rData.hamTimer) ? globalOpt.getHamDelayTimer() : rData.hamTimer * 1000, minutesOff = (rData.secondsOff > 0) ? Math.round(rData.secondsOff / 60) : 0;
+      let hamD = (!rData.hamTimer) ? MyOptions.getHamDelayTimer() : rData.hamTimer * 1000, minutesOff = (rData.secondsOff > 0) ? Math.round(rData.secondsOff / 60) : 0;
       let dO = dataObject(rData.groupId, rData.title, rData.title, rData.requesterId, rData.requesterName, rData.pay,_, totalSeconds,_, rData.friendlyTitle, rData.friendlyRName);
       let oO = optObject(rData.once, search, rData.tabNumber, rData.queueHitLimit, rData.queueLimit,_, minutesOff, rData.stickyDelayedHam, hamD, rData.dailyLimit,_, rData.weight);
       let searchRules = (rData.hasOwnProperty('searchData')) ? rData.searchData.searchOptions : {};
@@ -346,29 +347,29 @@ class EximClass {
     if (Array.isArray(rData)) {
       for (const cat of ['general', 'timers', 'alarms', 'helpers', 'search']) {
         let count = arrayCount(rData, (item) => {
-          if (item.category === cat) { this.importOptions[cat] = Object.assign({}, globalOpt[cat + 'Default'], item); return true; } else return false;
+          if (item.category === cat) { this.importOptions[cat] = Object.assign({}, MyOptions[cat + 'Default'], item); return true; } else return false;
         }, true);
-        if (count === 0) { this.importOptions[cat] = Object.assign({}, globalOpt[cat + 'Default']); }
+        if (count === 0) { this.importOptions[cat] = Object.assign({}, MyOptions[cat + 'Default']); }
       }
     } else {
       let tempOptions = {'generalDefault':{}, 'timersDefault':{}, 'alarmsDefault':{}, 'helpersDefault':{}, 'searchDefault':{}};
       for (const key of Object.keys(rData)) {
         let keyName = (this.options.hasOwnProperty(key)) ? this.options[key] : key, optionName = null;
-        if (globalOpt['generalDefault'].hasOwnProperty(keyName)) optionName = 'generalDefault';
-        if (globalOpt['timersDefault'].hasOwnProperty(keyName)) optionName = 'timersDefault';
-        if (globalOpt['alarmsDefault'].hasOwnProperty(keyName)) optionName = 'alarmsDefault';
-        if (globalOpt['helpersDefault'].hasOwnProperty(keyName)) optionName = 'helpersDefault';
-        if (globalOpt['searchDefault'].hasOwnProperty(keyName)) optionName = 'searchDefault';
+        if (MyOptions['generalDefault'].hasOwnProperty(keyName)) optionName = 'generalDefault';
+        if (MyOptions['timersDefault'].hasOwnProperty(keyName)) optionName = 'timersDefault';
+        if (MyOptions['alarmsDefault'].hasOwnProperty(keyName)) optionName = 'alarmsDefault';
+        if (MyOptions['helpersDefault'].hasOwnProperty(keyName)) optionName = 'helpersDefault';
+        if (MyOptions['searchDefault'].hasOwnProperty(keyName)) optionName = 'searchDefault';
         if (optionName) tempOptions[optionName][keyName] = rData[key];
       }
-      this.importOptions.general = Object.assign({}, globalOpt['generalDefault'], tempOptions['generalDefault']);
-      this.importOptions.timers = Object.assign({}, globalOpt['timersDefault'], tempOptions['timersDefault']);
-      this.importOptions.alarms = Object.assign({}, globalOpt['alarmsDefault'], tempOptions['alarmsDefault']);
-      this.importOptions.helpers = Object.assign({}, globalOpt['helpersDefault'], tempOptions['helpersDefault']);
-      this.importOptions.search = Object.assign({}, globalOpt['searchDefault'], tempOptions['searchDefault']);
+      this.importOptions.general = Object.assign({}, MyOptions['generalDefault'], tempOptions['generalDefault']);
+      this.importOptions.timers = Object.assign({}, MyOptions['timersDefault'], tempOptions['timersDefault']);
+      this.importOptions.alarms = Object.assign({}, MyOptions['alarmsDefault'], tempOptions['alarmsDefault']);
+      this.importOptions.helpers = Object.assign({}, MyOptions['helpersDefault'], tempOptions['helpersDefault']);
+      this.importOptions.search = Object.assign({}, MyOptions['searchDefault'], tempOptions['searchDefault']);
     }
-    let hamDelayTimer = this.importOptions.timers.hamDelayTimer, hamRange = globalOpt.getTimerHamRange();
-    if (hamDelayTimer < hamRange.min || hamDelayTimer > hamRange.max) this.importOptions.timers.hamDelayTimer = globalOpt.timersDefault.hamDelayTimer;
+    let hamDelayTimer = this.importOptions.timers.hamDelayTimer, hamRange = MyOptions.getTimerHamRange();
+    if (hamDelayTimer < hamRange.min || hamDelayTimer > hamRange.max) this.importOptions.timers.hamDelayTimer = MyOptions.timersDefault.hamDelayTimer;
   }
   /** Parse the groupings data from an import file to the data object needed.
    * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */

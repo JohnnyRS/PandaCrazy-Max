@@ -79,7 +79,7 @@ class PandaCards {
   /** Change the information displayed on all the panda cards to normal, minimal or one liner.
    * @param  {number} display - The number representing the info displayed in the panda card. */
   changeDisplay(display) {
-		globalOpt.setCardDisplay(display);
+		MyOptions.setCardDisplay(display);
 		for (const myId of Object.keys(this.cards)) { this.cards[myId].updateCardDisplay(this.values); }
 	}
   /** Create the status area for the panda card.
@@ -175,7 +175,7 @@ class PandaCards {
   /** Highlight the panda card's gid number with this unique ID.
    * @param  {number} myId - The unique ID for a panda job. */
   highlightEffect_gid(myId) {
-    if (globalOpt.doGeneral().fetchHighlight) $(`#pcm-groupId-${myId}, #pcm-buttonGroup1-${myId}`).stop(true, true).effect('highlight', {color:this.bgHighlighter}, 300);
+    if (MyOptions.doGeneral().fetchHighlight) $(`#pcm-groupId-${myId}, #pcm-buttonGroup1-${myId}`).stop(true, true).effect('highlight', {color:this.bgHighlighter}, 300);
   }
   /** Highlight the panda card according to the action and duration.
    * @param  {number} myId - Unique ID @param  {string} [action] - Effect Action @param  {number} [duration] - Effect Duration */
@@ -333,7 +333,7 @@ class PandaCards {
         else $(e.target).closest('.pcm-hitButton').removeClass('pcm-buttonOn').addClass('pcm-buttonOff');
       });
     });
-    if (globalOpt.doGeneral().advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
+    if (MyOptions.doGeneral().advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();
 	}
 }
 /** This class deals with showing panda information on a card and sorts them in the panda area.
@@ -382,7 +382,7 @@ class PandaCard {
   /** Update the card display by showing or hiding different elements in the card.
    * @param  {object} val - The object with the values for classes and text for this card. */
   updateCardDisplay(val) {
-    const oneLine = (globalOpt.getCardDisplay() === 0), min = (globalOpt.getCardDisplay() === 1);
+    const oneLine = (MyOptions.getCardDisplay() === 0), min = (MyOptions.getCardDisplay() === 1);
     this.hideShow(val.reqName.id, '.pcm-nameGroup', (!oneLine)); this.hideShow(val.reqName1Line.id, '.pcm-nameGroup1', (oneLine));
     this.hideShow(val.price.id, '.pcm-priceGroup', (!oneLine && !min)); this.hideShow(val.groupId.id, '', (!oneLine));
     this.hideShow(val.title.id, '', (!oneLine && !min)); this.hideShow('#pcm-hitStats', '', (!oneLine)); this.hideShow('#pcm-buttonGroup', '', (!oneLine));
