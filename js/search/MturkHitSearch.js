@@ -599,7 +599,7 @@ class MturkHitSearch extends MturkClass {
 	 * @async								 - To wait for the data from database to be fully loaded.
 	 * @param  {string} type - Type of trigger  @param  {string} value  - Group ID or requester ID  @param  {bool} disabled - Disabled?
 	 * @param  {bool} [sUI]  - Search UI?       @param  {bool} [remove] - Remove Live Trigger?  */
-	async setDisabled(type, value, disabled, sUI=true, remove=true, stopOk=false) {
+	async setDisabled(type, value, disabled, sUI=true, remove=true, stopOk=true) {
 		let dbId = this.theDbId(type, value, false, sUI); if (!dbId) return;
 		let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options'); 
 		if (type === 'custom') this.termData(!disabled, rules, options, dbId);
@@ -780,7 +780,7 @@ class MturkHitSearch extends MturkClass {
 				} else if (MySearchUI.searchGStats) {
 					if (!dbId) MySearchUI.searchGStats.addTotalSearchFetched();
 					MySearchUI.searchGStats.addFetchedElapsed(this.resultsBack.elapsed); this.resultsBack.elapsed = 0;
-					if (!this.pausedPandaUI && dbId) myPanda.searchFetched();
+					if (!this.pausedPandaUI) myPanda.searchFetched(dbId);
 					if (result.mode === 'logged out' && queueUnique !== null) this.nowLoggedOff();
 					else if (result.mode === 'pre') {
 						MySearchUI.searchGStats.addTotalSearchPRE(); if (extPandaUI) extPandaUI.pandaGStats.addSearchPRE(); // found a PRE while searching so increment search pre counter

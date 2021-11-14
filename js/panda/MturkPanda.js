@@ -218,7 +218,12 @@ class MturkPanda extends MturkClass {
 	 * @param  {object} data - Data Object  @param  {bool} status - Collection status.  @param {bool} [collected] - Collected Yet?  @param {string} [url] - URL String */
 	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, data.reqId, status, collected, url); }
 	/** Will add fetched to search jobs when search class fetches a HIT list. */
-	searchFetched() { for (const unique of this.searchesUniques) { if (extPandaUI.pandaStats[unique].doSearching()) extPandaUI.pandaStats[unique].addFetched(); }}
+	searchFetched(dbId) {
+		for (const unique of this.searchesUniques) {
+			let sDbId = mySearch.pandaToDbId(this.info[unique].dbId), reqSearch = (sDbId) ? mySearch.getTrigger(sDbId).reqSearch : false;
+			if (extPandaUI.pandaStats[unique].doSearching() && ((dbId === null && !reqSearch) || (dbId !== null && reqSearch))) extPandaUI.pandaStats[unique].addFetched();
+		}
+	}
 	/** Stop searching for all search jobs.
 	 * @async - To wait for disabling searching. */
 	async searchingStopped() { for (const unique of this.searchesUniques) { await this.disableSearching(unique, null, true); }}
