@@ -19,6 +19,7 @@ class ExtSearchUI {
   importCompleted() { searchChannel.postMessage({'msg':'searchTo: importCompleted'}); }
   goRestart() { searchChannel.postMessage({'msg':'searchTo: goRestart'}); }
   themeChanged() { searchChannel.postMessage({'msg':'searchTo: themeChanged'}); }
+  releaseHoldAlarm() { searchChannel.postMessage({'msg':'searchTo: releaseHoldAlarm'}); }
   
   // Methods to send a message but doesn't have to wait for a response and with arguments to pass.
   externalSet() { searchChannel.postMessage({'msg':'searchTo: externalSet', 'value':[...arguments]}); }
@@ -34,97 +35,79 @@ class ExtSearchUI {
   resetToolTips() { searchChannel.postMessage({'msg':'searchTo: resetToolTips', 'value':[...arguments]}); }
 
   // Combo methods for specific multiple actions needed instead of sending multiple messages.
-  moveToSearch(data, status, name, count, type) { }
+  getTheGroups() { }
+  groupingExternalCommand() {}
 }
 
-function sendToChannel(msg, value) { search2Channel.postMessage({'msg':msg, 'value':value}); }
+function sendToChannel(returning, value, subject='search') { search2Channel.postMessage({'msg':`${subject}: returning ${returning}`, 'value':value}); }
 
 searchChannel.onmessage = async (e) => {
   if (e.data && searchUIOpened) {
-    const data = e.data;
+    const data = e.data, val = data.value;
     if (data.msg === 'search: stopSearching') { mySearch.stopSearching(); }
     else if (data.msg === 'search: unPauseTimer') { mySearch.unPauseTimer(); }
+    else if (data.msg === 'searchGStat: searchingOff') { MySearchUI.searchGStats.searchingOff(); }
+    else if (data.msg === 'searchGStat: searchingOn') { MySearchUI.searchGStats.searchingOn(); }
+    else if (data.msg === 'searchGStat: prepare') { MySearchUI.searchGStats.prepare(); }
+    else if (data.msg === 'searchGStat: toggleStat') { MySearchUI.searchGStats.toggleStat(val[0], val[1], val[2]); }
   }
 }
 
 search2Channel.onmessage = async (e) => {
   if (e.data && searchUIOpened) {
     const data = e.data;
-    if (data.msg === 'search: startSearching') {
-      let retVal = mySearch.startSearching(); search2Channel.postMessage({'msg':'search: returning startSearching', 'value':retVal});
-    } else if (data.msg === 'search: loadFromDB') {
-      let retVal = await mySearch.loadFromDB(); sendToChannel('search: returning loadFromDB', retVal);
-    } else if (data.msg === 'search: prepareSearch') {
-      await mySearch.prepareSearch(); sendToChannel('search: returning prepareSearch', null);
-    } else if (data.msg === 'search: toggleAutoHits') {
-      let retVal = await mySearch.autoHitsAllow(!mySearch.autoHitsAllow()); sendToChannel('search: returning toggleAutoHits', retVal);
+    if (data.msg === 'search: startSearching') { let retVal = mySearch.startSearching(); sendToChannel('startSearching', retVal); }
+    else if (data.msg === 'search: loadFromDB') { let retVal = await mySearch.loadFromDB(); sendToChannel('loadFromDB', retVal); }
+    else if (data.msg === 'search: prepareSearch') { await mySearch.prepareSearch(); sendToChannel('prepareSearch', null); }
+    else if (data.msg === 'search: toggleAutoHits') { let retVal = await mySearch.autoHitsAllow(!mySearch.autoHitsAllow()); sendToChannel('toggleAutoHits', retVal); }
+    else if (data.msg === 'searchGStat: isSearchOn') { let retVal = await MySearchUI.searchGStats.isSearchOn(); sendToChannel('isSearchOn', retVal, 'searchGStat'); }
+    else if (data.msg === 'searchGStat: getStats') { let retVal = await MySearchUI.searchGStats.getStats(); sendToChannel('getStats', retVal, 'searchGStat');
     } else if (data.value) {
       const val = data.value;
-      if (data.msg === 'search: addTrigger') {
-        let retVal = await mySearch.addTrigger(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('search: returning addTrigger', retVal);
-      } else if (data.msg === 'search: removeTrigger') {
-        await mySearch.removeTrigger(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('search: returning removeTrigger', null);
-      } else if (data.msg === 'search: optionsCopy') {
-        let retVal = await mySearch.optionsCopy(val[0]); sendToChannel('search: returning optionsCopy', retVal);
-      } else if (data.msg === 'search: sendToPanda') {
-        await mySearch.sendToPanda(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('search: returning sendToPanda', null);
-      } else if (data.msg === 'search: optionsChanged') {
-        await mySearch.optionsChanged(val[0], val[1]); sendToChannel('search: returning optionsChanged', null);
-      } else if (data.msg === 'search: rulesCopy') {
-        let retVal = await mySearch.rulesCopy(val[0]); sendToChannel('search: returning rulesCopy', retVal);
-      } else if (data.msg === 'search: pauseToggle') {
-        let retVal = await mySearch.pauseToggle(val[0]); sendToChannel('search: returning pauseToggle', retVal);
-      } else if (data.msg === 'search: timerChange') {
-        let retVal = await mySearch.timerChange(val[0]); sendToChannel('search: returning timerChange', retVal);
-      } else if (data.msg === 'search: pandaToDbId') {
-        let retVal = await mySearch.pandaToDbId(val[0]); sendToChannel('search: returning pandaToDbId', retVal);
-      } else if (data.msg === 'search: getData') {
-        let retVal = await mySearch.getData(val[0]); sendToChannel('search: returning getData', retVal);
-      } else if (data.msg === 'search: theData') {
-        let retVal = await mySearch.theData(val[0], val[1], val[2]); sendToChannel('search: returning theData', retVal);
-      } else if (data.msg === 'search: uniqueToDbId') {
-        let retVal = await mySearch.uniqueToDbId(val[0]); sendToChannel('search: returning uniqueToDbId', retVal);
-      } else if (data.msg === 'search: getFrom') {
-        let retVal = await mySearch.getFrom(val[0]); sendToChannel('search: returning getFrom', retVal);
-      } else if (data.msg === 'search: theBlocked') {
-        let retVal = await mySearch.theBlocked(val[0], val[1], val[2], val[3], val[4]); sendToChannel('search: returning theBlocked', retVal);
+      if (data.msg === 'search: addTrigger') { let retVal = await mySearch.addTrigger(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('addTrigger', retVal); }
+      else if (data.msg === 'search: removeTrigger') { await mySearch.removeTrigger(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('removeTrigger', null); }
+      else if (data.msg === 'search: optionsCopy') { let retVal = await mySearch.optionsCopy(val[0]); sendToChannel('optionsCopy', retVal); }
+      else if (data.msg === 'search: sendToPanda') { await mySearch.sendToPanda(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('sendToPanda', null); }
+      else if (data.msg === 'search: optionsChanged') { await mySearch.optionsChanged(val[0], val[1]); sendToChannel('optionsChanged', null); }
+      else if (data.msg === 'search: rulesCopy') { let retVal = await mySearch.rulesCopy(val[0]); sendToChannel('rulesCopy', retVal); }
+      else if (data.msg === 'search: pauseToggle') { let retVal = await mySearch.pauseToggle(val[0]); sendToChannel('pauseToggle', retVal); }
+      else if (data.msg === 'search: timerChange') { let retVal = await mySearch.timerChange(val[0]); sendToChannel('timerChange', retVal); }
+      else if (data.msg === 'search: pandaToDbId') { let retVal = await mySearch.pandaToDbId(val[0]); sendToChannel('pandaToDbId', retVal); }
+      else if (data.msg === 'search: getData') { let retVal = await mySearch.getData(val[0]); sendToChannel('getData', retVal); }
+      else if (data.msg === 'search: theData') { let retVal = await mySearch.theData(val[0], val[1], val[2]); sendToChannel('theData', retVal); }
+      else if (data.msg === 'search: uniqueToDbId') { let retVal = await mySearch.uniqueToDbId(val[0]); sendToChannel('uniqueToDbId', retVal); }
+      else if (data.msg === 'search: getFrom') { let retVal = await mySearch.getFrom(val[0]); sendToChannel('getFrom', retVal); }
+      else if (data.msg === 'search: theBlocked') { let retVal = await mySearch.theBlocked(val[0], val[1], val[2], val[3], val[4]); sendToChannel('theBlocked', retVal); }
 
         // ********** Start of multiple actions needed for search messages. ************
-      } else if (data.msg === 'search: getToggleTrigger') {
-        let item = mySearch.getTrigger(val[0]); mySearch.toggleTrigger(null, val[0], val[1], val[2]); sendToChannel('search: returning getToggleTrigger', item.count);
+      else if (data.msg === 'search: doFilterSearch') { let retVal = mySearch.getFrom('Search').filter((item) => mySearch[val[0]](item)); sendToChannel('doFilterSearch', retVal); }
+      else if (data.msg === 'search: getToggleTrigger') {
+        let item = mySearch.getTrigger(val[0]); mySearch.toggleTrigger(null, val[0], val[1], val[2]); sendToChannel('getToggleTrigger', item.count);
       } else if (data.msg === 'search: getBothBlocked') {
-        let gidVals = mySearch.getBlocked(), ridVals = mySearch.getBlocked(false); sendToChannel('search: returning getBothBlocked', [gidVals, ridVals]);
+        let gidVals = mySearch.getBlocked(), ridVals = mySearch.getBlocked(false); sendToChannel('getBothBlocked', [gidVals, ridVals]);
       } else if (data.msg === 'search: getDataTrigger') {
-        let status = (val[1] !== null) ? val[1] : mySearch.toggleTrigger(val[0]), info = mySearch.getData(mySearch.uniqueToDbId(val[0]));
-        sendToChannel('search: returning getDataTrigger', [info, status]);
+        let status = (val[1] !== null) ? val[1] : mySearch.toggleTrigger(val[0]), info = mySearch.getData(mySearch.uniqueToDbId(val[0])); sendToChannel('getDataTrigger', [info, status]);
       } else if (data.msg === 'search: getTrigData') {
         let trigger = mySearch.getTrigger(val[0]), gotData = mySearch.getData(val[0]), theData = (val[1]) ? await mySearch.theData(val[0], val[1]) : null;
-        sendToChannel('search: returning getTrigData', [trigger, gotData, theData]);
+        sendToChannel('getTrigData', [trigger, gotData, theData]);
       } else if (data.msg === 'search: getUniquesDbIds') {
-        let retVal = []; for (let dbId of val[0]) { retVal.push(mySearch.getTrigger(dbId).count); }
-        sendToChannel('search: returning getUniquesDbIds', retVal);
+        let retVal = []; for (let dbId of val[0]) { retVal.push(mySearch.getTrigger(dbId).count); } sendToChannel('getUniquesDbIds', retVal);
       } else if (data.msg === 'search: doRidSearch') {
         let timerUnique = mySearch.doRidSearch(val[0], async (timerUnique, elapsed, rId) => {
           await mySearch.goFetch(mySearch.createReqUrl(rId), timerUnique, elapsed, mySearch.uniqueToDbId(val[1]), 'gid', val[2], true, val[2]);
         });
-        sendToChannel('search: returning doRidSearch', timerUnique);
+        sendToChannel('doRidSearch', timerUnique);
       } else if (data.msg === 'search: sortingTriggers') {
         let retVal = {}, uniques = mySearch.getAllUniques();
-        for (const unique of Object.keys(uniques)) {
-          let dbId = uniques[unique]; retVal[unique] = mySearch.getData(dbId);
-        }
-        sendToChannel('search: returning sortingTriggers', retVal);
-      } else if (data.msg === 'search: doFilterSearch') {
-        let retVal = mySearch.getFrom('Search').filter((item) => mySearch[val[0]](item)); sendToChannel('search: returning doFilterSearch', retVal);
+        for (const unique of Object.keys(uniques)) { let dbId = uniques[unique]; retVal[unique] = mySearch.getData(dbId); }
+        sendToChannel('sortingTriggers', retVal);
       } else if (data.msg === 'search: getFromDBData') {
         let groupHist = await mySearch.getFromDB(val[0], val[1], val[2], val[3], val[4], val[5]), rules = await mySearch.theData(val[1], val[6]);
-        sendToChannel('search: returning getFromDBData', [groupHist, rules]);
+        sendToChannel('getFromDBData', [groupHist, rules]);
       } else if (data.msg === 'search: goCheckGroup') {
         let retVal = {};
-        for (const key of val[0]) {
-          myId = (mySearch.getTrigger(key)) ? key : undefined; enabled = (myId !== undefined) ? mySearch.isEnabled(myId) : undefined; retVal[key] = enabled;
-        }
-        sendToChannel('search: returning goCheckGroup', retVal);
+        for (const key of val[0]) { myId = (mySearch.getTrigger(key)) ? key : undefined; enabled = (myId !== undefined) ? mySearch.isEnabled(myId) : undefined; retVal[key] = enabled; }
+        sendToChannel('goCheckGroup', retVal);
       }
     }
   }

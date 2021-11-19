@@ -35,7 +35,7 @@ class LogTabsClass {
 	 * @param {bool} v - Set the total number of HITs in queue. */											
 	set queueTotal(v) {
     if (v !== this._queueTotal) { this._queueTotal = v; bgPanda.doNewChecks(); }
-    this.queuePrice = this.totalResults(); pandaUI.pandaGStats.setTotalValueInQueue(this.queuePrice);
+    this.queuePrice = this.totalResults(); if (typeof pandaUI !== 'undefined') pandaUI.pandaGStats.setTotalValueInQueue(this.queuePrice);
     if (this.queueTab) this.queueTab.find('span').html(`Queue Watch - ${this.queueTotal} - $${this.queuePrice}`);
   }
   /** Prepare the tabs on the bottom and placing the id names in an array.

@@ -17,7 +17,8 @@ class PandaCards {
     this.requesterTextDef = 'R'; this.requesterText = null;
     this.deleteTextDef = 'X'; this.deleteText = null;
     this.acceptedStatusTextDef = 'Acc'; this.acceptedStatusText = null;
-    this.fetchedStatusTextDef = 'Fetched'; this.fetchedStatusText = null;
+    this.fetchedStatusTextDef = 'Fetch'; this.fetchedStatusText = null;
+    this.foundStatusTextDef = 'Hits'; this.foundStatusText = null;
     this.values = {
       'reqName':{'valueName':'reqName', 'id':'#pcm-hitReqName', 'class':'.pcm-reqName', 'label':''},
       'reqName1Line':{'valueName':'reqName', 'id':'#pcm-hitReqName1', 'class':'.pcm-reqName1', 'label':''},
@@ -42,7 +43,7 @@ class PandaCards {
     this.bgHighlighter = getCSSVar('bgHighlighter', this.bgHighlighterDef); this.bgLimitedColor = getCSSVar('bgLimitedColor', this.bgLimitedColorDef);
     this.bgCollectedColor = getCSSVar('bgCollectedColor', this.bgCollectedColorDef); this.bgStoppedColor = getCSSVar('bgStoppedColor', this.bgStoppedColorDef);
     this.acceptedStatusText = getCSSVar('hitAccepted', this.acceptedStatusTextDef); this.fetchedStatusText = getCSSVar('hitFetched', this.fetchedStatusTextDef);
-    this.requesterText = getCSSVar('requesterButton', this.requesterTextDef);
+    this.requesterText = getCSSVar('requesterButton', this.requesterTextDef); this.foundStatusText = getCSSVar('hitSearchFound', this.foundStatusTextDef);
   }
   /** Prepare cards by getting CSS variable Values and assigning the tabs object.
    * @param  {object} tabs - The tab object with tab information. */
@@ -53,6 +54,7 @@ class PandaCards {
     $('.pcm-collectButton').html(this.collectText); $('.pcm-hamButton').html(this.goHamText);
     $('.pcm-detailsButton').html(this.detailsText); $('.pcm-deleteButton').html(this.deleteText);
     $('.pcm-hitAccepted').html(this.acceptedStatusText); $('.pcm-hitFetched').html(this.fetchedStatusTextDef);
+    $('.pcm-hitSearchFound').html(this.foundStatusTextDef);
   }
   /** Add card to the tab content area.
    * @param  {number} myId - Unique ID  @param  {object} info - Panda Info  @param  {bool} [fromDB] - From Database? */
@@ -86,9 +88,10 @@ class PandaCards {
    * @param  {number} myId - Unique ID  @param  {object} info - Panda Info  @param  {string} [oneLine] - One Line?
    * @return {string}      - HTML of the card status area. */
   createCardStatus(myId, info, oneLine=false) {
-    let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : ' search';
+    let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : '';
     let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
-    return `<${element} class='pcm-hitStats${one} text-truncate' id='pcm-hitStats${one}-${myId}'>[ <span class='pcm-hitAccepted' id='pcm-hitAccepted${one}-${myId}'></span> | <span class='pcm-hitFetched' id='pcm-hitFetched${one}-${myId}'></span> ]${search}</${element}>`;
+    let searchFound = (info.search === 'rid') ? ` <span class='pcm-hitSearchFound' id='pcm-hitSearchFound${one}-${myId}'></span> | ` : '';
+    return `<${element} class='pcm-hitStats${one} text-truncate' id='pcm-hitStats${one}-${myId}'>[ <span class='pcm-hitAccepted' id='pcm-hitAccepted${one}-${myId}'></span> | ${searchFound}<span class='pcm-hitFetched' id='pcm-hitFetched${one}-${myId}'></span> ]${search}</${element}>`;
   }
   /** Create the button group area for the panda card.
    * @param  {number} myId - Unique ID  @param  {object} info - Panda Info

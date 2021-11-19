@@ -85,8 +85,8 @@ class PandaGOptions {
       'defaultDur':18000,           // Default value used for the time in milliseconds to use for a panda duration when a HIT is found by search triggers.
       'defaultFetches':0,           // Default value used for the number of fetches to use for panda when a HIT is found by search triggers.
       'defaultHamDur':6000,         // Default value used for the time in milliseconds to use for ham duration when a HIT is found by search triggers.
-      'defaultCustDur':0,           // Default value used for the time in milliseconds to use for panda duration when a HIT is found by custom search triggers.
-      'defaultCustFetches':120,     // Default value used for the number of fetches to use for a panda when a HIT is found by custom search triggers.
+      'defaultCustDur':60000,       // Default value used for the time in milliseconds to use for panda duration when a HIT is found by custom search triggers.
+      'defaultCustFetches':0,       // Default value used for the number of fetches to use for a panda when a HIT is found by custom search triggers.
       'defaultCustHamDur':10000,    // Default value used for the time in milliseconds to use for ham duration when a HIT is found by custom search triggers.
       'customHistDays':10,          // Default value used for the number of days to keep the HITs found by custom search triggers to save database memory.
       'triggerHistDays':45,         // Default value used for the number of days to keep the HITs found by search triggers to save database memory.
@@ -171,6 +171,8 @@ class PandaGOptions {
           if (count === 0) { await MYDB.addToDB('panda', 'options', this[cat + 'Default']).then( () => { this[cat] = Object.assign({}, this[cat + 'Default']); }); }
         }
         if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
+        if (this.search.defaultDur === 0 && this.search.defaultFetches === 0) this.search.defaultDur = this.searchDefault.defaultDur;
+        if (this.search.defaultCustDur === 0 && this.search.defaultCustFetches === 0) this.search.defaultCustDur = this.searchDefault.defaultCustDur;
         success[0] = 'Loaded all global options from database';
       } else { // Add default values to the options database and use them.
         await MYDB.addToDB('panda', 'options', this.generalDefault)

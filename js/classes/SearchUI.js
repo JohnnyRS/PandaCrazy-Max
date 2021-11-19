@@ -2,7 +2,7 @@
  * @class SearchUI ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class SearchUI {
-  constructor (searchStats) {
+  constructor () {
 		this.ridRow = null;
 		this.ridColumn1 = null;
 		this.ridListGroup1 = null;
@@ -15,7 +15,6 @@ class SearchUI {
 		this.gidContent = {};
 		this.customContent = {};
 		this.triggeredContent = {};
-    this.searchGStats = searchStats;
 		this.modalSearch = null;
 		this.modalAlarms = null;
 		this.ctrlDelete = [];
@@ -31,19 +30,20 @@ class SearchUI {
 		this.triggeredHits = [];
 		this.triggeredUnique = 0;
 		this.triggersData = {};
+		this.holdTermAlarm = false;
 	}
 	/** Shows a message on a modal dialog with a title.
 	 * @param {string} theTitle - Title for Modal  @param {string} theMessage - Message to Show */
 	showModalMessage(theTitle, theMessage) { if (!modal) modal = new ModalClass(); modal.showDialogModal('700px', theTitle, theMessage, null , false, false, '', '', null ); }
   /** Stops the searching process. */
   stopSearching() {
-		if (this.searchGStats.isSearchOn()) this.searchGStats.searchingOff();
+		if (MySearch.searchGStats.isSearchOn()) { MySearch.searchGStats.searchingOff(); }
 		MySearch.stopSearching(); $('.pcm-top').removeClass('pcm-searchingOn').addClass('pcm-searchingOff');
 	}
   /** Starts the searching process. */
   async startSearching() {
 		let doStart = await MySearch.startSearching();
-		if (doStart) { this.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
+		if (doStart) { MySearch.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
 	}
 	/** Will toggle the paused value or force the paused value to a given value.
@@ -113,13 +113,16 @@ class SearchUI {
   /** Prepare the search page with button events and set up the columns for triggers to use.
 	 * @async - To wait for tabs to be created. */
 	async prepareSearch() {
-		await MySearch.prepareSearch(); menus.createSearchTopMenu();
+		await MySearch.prepareSearch(); MyMenu.createSearchTopMenu();
 		$('#pcm-timerStats').append(`<span id='pcm-searchElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for search timer to send a fetch request to MTURK.'></span><span id='pcm-fetchedElapsed' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time in ms for MTURK to respond to a search fetch request.'></span>`).data('toggled', 1).data('max',2).data('array', 'timerStats');
 		$('.pcm-searchStats .toggle').click( e => { 
 			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
-			this.searchGStats.toggleStat(theToggle, toggled, max, theArray);
+			let beforeToggled = toggled; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);
+			let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true); 
+			let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
+			MySearch.searchGStats.toggleStat(beforeToggled, toggled, theArray);
 		});
-		this.searchGStats.prepare();
+		MySearch.searchGStats.prepare();
 		this.tabs = new TabbedClass($(`#pcm-searchTriggers`), `pcm-triggerTabs`, `pcm-tabbedTriggers`, `pcm-triggerContents`, false);
     let [, err] = await this.tabs.prepare();
     if (!err) {
@@ -138,20 +141,23 @@ class SearchUI {
 		}
 	}
 	/** Informs the searchUI that the theme has changed on pandaUI so needs to change the theme here too. */
-	themeChanged() {
-		themes.prepareThemes(); menus.resetCSSValues();
+	async themeChanged() {
+		themes.prepareThemes(); MyMenu.resetCSSValues();
 		let setTempStr = (statObj) => { statObj.tempStr = getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string); this.updateStatNav(statObj); }
-		let properties = ['searchElapsed', 'totalSearchFetched', 'totalSearchPREs', 'totalSearchHits', 'totalSearchResults'];
-		for (const prop of properties) { setTempStr(this.searchGStats[prop]); }
+		let storeStats = await MySearch.searchGStats.getStats();
+		for (let key of Object.keys(storeStats)) { setTempStr(storeStats[key]); }
 	}
 	/** This method will update the passed element with the info from the passed trigger info.
 	 * @param  {object} thetrigger - Jquery element  @param {string} [theStatus] - Status  @param  {bool} [tempDisabled] - Only Temporary? */
 	async updateTrigger(thetrigger, theStatus=null, tempDisabled=false) {
-		let unique = $(thetrigger).data('unique'), [info, newStatus] = await MySearch.getDataTrigger(unique, theStatus);
-		$(thetrigger).stop(true,true).data('status', newStatus);
-		if (newStatus === 'disabled') $(thetrigger).addClass('pcm-disabled'); else $(thetrigger).removeClass('pcm-disabled');
-		if (tempDisabled) $(thetrigger).addClass('pcm-tempDisabled'); else $(thetrigger).removeClass('pcm-tempDisabled');
-		this.redoTabTitle(info.type); return newStatus;
+		let unique = $(thetrigger).data('unique'), retValue = await MySearch.getDataTrigger(unique, theStatus);
+		if (retValue) {
+			let info = retValue[0], newStatus = retValue[1];
+			$(thetrigger).stop(true,true).data('status', newStatus);
+			if (newStatus === 'disabled') $(thetrigger).addClass('pcm-disabled'); else $(thetrigger).removeClass('pcm-disabled');
+			if (tempDisabled) $(thetrigger).addClass('pcm-tempDisabled'); else $(thetrigger).removeClass('pcm-tempDisabled');
+			this.redoTabTitle(info.type); return newStatus;
+		}
 	}
 	/** Changes the status of the trigger with the unique number.
 	 * @param {number} unique - Unique Number  @param {string} [theStatus] - Trigger Status */
@@ -211,7 +217,7 @@ class SearchUI {
 		let body = $(`<div class='card-body'></div>`).appendTo(card), text = $(`<div class='card-text' id='pcm-cardText-${unique}'></div>`).appendTo(body); name = name.replace(/'/g, `&#39;`);
 		let nameGroup = $(`<div class='pcm-triggerGroup row w-100'></div>`).appendTo(text);
 		nameGroup.append($(`<span class='pcm-triggerName col text-truncate unSelectable pcm-tooltipData' id='pcm-triggerName-${unique}' data-toggle='tooltip' data-html='true' data-placement='bottom' data-trigger='hover' data-original-title='${name}<br><small>Single click for stats. Double click to enable or disable.</small>'>${name}</span>`));
-		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn pcm-tooltipData pcm-tooltipHelper' data-original-title='Display all the HITs found from this trigger.'>Found HITs</button>: <span class='pcm-stats-numHits'>${data.numHits}</span> | Total: <span class='pcm-stats-totalFound'>${data.numFound}</span></span>`).hide());
+		nameGroup.append($(`<span class='pcm-triggerStats col text-truncate unSelectable small' id='pcm-triggerStats-${unique}'><button class='pcm-foundHitsButton btn pcm-tooltipData pcm-tooltipHelper' data-original-title='Display all the HITs found from this trigger.'>Found</button>: <span class='pcm-stats-numHits'>${data.numHits}</span> | Acc: <span class='pcm-stats-Accepted'>0</span> | Total: <span class='pcm-stats-totalFound'>${data.numFound}</span></span>`).hide());
 		let buttonGroup = $(`<span class='pcm-tButtonGroup col col-auto' id='pcm-tButtons-${unique}'></span>`).css('cursor', 'pointer').appendTo(nameGroup);
 		$(`<i class='fas fa-caret-square-down pcm-optionsMenu pcm-tooltipData pcm-tooltipHelper' data-original-title='Display and edit all options for this trigger.'></i>`).click( e => {
 			let unique = $(e.target).closest('.card').data('unique'); e.stopPropagation(); clearTimeout(this.clickTimer);
@@ -229,9 +235,10 @@ class SearchUI {
 	}
 	/** Updates the stats on the trigger card status.
 	 * @param {number} unique - Unique Number  @param {object} data - The data for Trigger */
-	updateStats(unique, data) {
-		$(`#pcm-triggerStats-${unique}`).find('.pcm-stats-numHits').html(data.numHits);
-		$(`#pcm-triggerStats-${unique}`).find('.pcm-stats-totalFound').html(data.numFound);
+	updateStats(unique, data, accepted=null) {
+		if (data) $(`#pcm-triggerStats-${unique}`).find('.pcm-stats-numHits').html(data.numHits);
+		if (accepted !== null) $(`#pcm-triggerStats-${unique}`).find('.pcm-stats-Accepted').html(accepted);
+		if (data) $(`#pcm-triggerStats-${unique}`).find('.pcm-stats-totalFound').html(data.numFound);
 	}
 	/** Rechecks the filters for the triggers to show or hide.
 	 * @param {string} type - Trigger Type  @param {object} filter - Filter Data */
@@ -311,12 +318,13 @@ class SearchUI {
 	/** Will fill in the triggered HIT found from a custom trigger to the Triggered HITs tab.
 	 * @param {number} unique   - Unique Number        @param {object} triggerData - Trigger Data     @param {object} [hitData] - HIT Data  @param {string} [term] - Term Found
 	 * @param {bool} [started]  - Started Collecting?  @param {bool} [auto]        - Auto Collecting? */
-	triggeredHit(unique, triggerData, hitData=null, term=null, started=true, auto=false) {
+	triggeredHit(unique, triggerData, hitData=null, term=null, auto=false) {
 		$(`#pcm-triggerCard-${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm-triggerStats-${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
 		if (hitData !== null && triggerData.type === 'custom') this.displayTriggeredHits(triggerData, hitData, term, auto);
-		if (term && started) MyAlarms.playSound('triggeredAlarm');
+		if (term && !this.holdTermAlarm) { MyAlarms.playSound('triggeredAlarm'); this.holdTermAlarm = true; }
 	}
+	releaseHoldAlarm() { this.holdTermAlarm = false; }
 	/** Shows the add search trigger modal for normal and custom triggers.
 	 * @param  {bool} [doCustom] - Adding Custom Trigger? */
 	showSearchAddModal(doCustom=false) { this.modalSearch = new ModalSearchClass(); this.modalSearch.showTriggerAddModal( () => this.modalSearch = null, doCustom ); }

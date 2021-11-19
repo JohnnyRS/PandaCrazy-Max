@@ -5,7 +5,10 @@ class ModalSearchClass {
 	constructor() {
     this.pandaDur = {'min':0, 'max':360};            // The minimum and maximum duration for panda jobs in minutes. (6 hours max)
     this.pandaDurSeconds = {'min':0, 'max':21600};   // The minimum and maximum duration for panda jobs in seconds. (6 hours max)
-    this.hamDur = {'min':0, 'max':120};              // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
+    this.hamDur = {'min':2, 'max':120};              // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
+    this.pandaHamDur = {'min':0, 'max':120};         // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
+    this.dailyLimitRange = {'min':0, 'max':5000};    // The minimum and maximum number of HITs allowed in a day for a panda job.
+    this.fetchesTempDur = {'min':0, 'max':21600};    // The minimum and maximum number of fetches allowed. (6 hour max approximately)
     this.fetchesDur = {'min':0, 'max':21600};        // The minimum and maximum number of fetches allowed. (6 hour max approximately)
     this.pageSize = {'min':20, 'max':100};           // The minimum and maximum amount of HITs for MTURK to show on one search page.
     this.queueSize = {'min':20, 'max':600};          // The minimum and maximum amount of triggers to keep in memory for faster operation vs larger memory used.
@@ -68,7 +71,7 @@ class ModalSearchClass {
         displayObjectData([
           {'label':'Requester Name:', 'type':'text', 'key':'reqName', 'tooltip':'Optional Field. The requester name for this job.'},
           {'label':'HIT Title:', 'type':'text', 'key':'hitTitle', 'tooltip':'Optional Field. The HIT title for this job.'},
-          {'label':'Pay Amount:', 'type':'text', 'key':'price', 'money':true, 'tooltip':'Optional Field. The payment reward for this job.'},
+          {'label':'Pay Amount:', 'type':'text', 'key':'price', 'money':true, 'tooltip':'Optional Field. The payment reward for this job.', 'minMax':this.minPayRange},
         ], table1, data, true);
         table1 = null;
       }
@@ -77,11 +80,9 @@ class ModalSearchClass {
       displayObjectData([
         {'label':'Limit # of GroupID in Queue:', 'type':'range', 'key':'limitNumQueue', 'tooltip':'Optional Field. Limit number of HITs in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
         {'label':'Limit # of Total HITs in Queue:', 'type':'range', 'key':'limitTotalQueue', 'tooltip':'Optional Field. Limit number of HITs allowed in queue. Good when you want to leave room in queue for better HITs.', 'minMax':{'min':0, 'max':24}},
-        {'label':'Temporary Duration (Seconds):', 'type':'number', 'key':'tempDuration', 'seconds':true, 'default':data.duration, 'tooltip':'Optional Field. The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDurSeconds},
-        {'label':'Temporary Number of Fetches:', 'type':'number', 'key':'tempFetches', 'default':data.limitFetches, 'tooltip':'Optional Field. Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
-        {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'tooltip':'Optional Field. Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-        {'label':'Force Delayed Ham Duration (Seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':data.hamDuration, 'tooltip':'Optional Field. The duration in seconds to use to go in ham mode after collecting a HIT and then go back to normal collecting mode.', 'minMax':this.hamDur},
-        {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'tooltip':'Optional Field. How many HITs a day should be accepted for this job?'},
+        {'label':'Temporary Duration (Seconds):', 'type':'number', 'key':'duration', 'seconds':true, 'default':data.duration, 'tooltip':'Optional Field. The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.', 'minMax':this.pandaDurSeconds},
+        {'label':'Temporary Number of Fetches:', 'type':'number', 'key':'limitFetches', 'default':data.limitFetches, 'tooltip':'Optional Field. Number of tries to catch a HIT to do before stopping. This value can not be 0 if Temporary Duration is 0 and will go back to previous value.', 'minMax':this.fetchesTempDur},
+        {'label':'Force Delayed Ham Duration (Seconds):', 'type':'number', 'key':'hamDuration', 'seconds':true, 'default':data.hamDuration, 'tooltip':'Optional Field. The duration in seconds to use to go in ham mode after collecting a HIT and then go back to normal collecting mode. Every panda job created by a trigger will go into Ham mode at beginning.', 'minMax':this.hamDur},
         {'label':'Auto Collect Hits:', 'type':'trueFalse', 'key':'auto', 'tooltip':'Optional Field. Should Hits be auto collected when a HIT is found?', 'skip':!doCustom},
       ], table2, data, true);
       let modalBody = $(`#${idName} .${modal.classModalBody}`);
@@ -172,7 +173,7 @@ class ModalSearchClass {
     displayObjectData([
       ...prependOpt,
       {'label':'Minimum Pay:', 'type':'number', 'key':'minPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The minimum pay for a HIT to start collecting.', 'minMax': this.minPayRange},
-      {'label':'Maximum Pay:', 'type':'number', 'key':'maxPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The maximum pay for a HIT to start collecting.'},
+      {'label':'Maximum Pay:', 'type':'number', 'key':'maxPay', 'key1':'rules', 'money':true, 'default':0, 'tooltip':'The maximum pay for a HIT to start collecting.', 'minMax': this.minPayRange},
       {'label':'Words or phrases Accepted Only:', 'id':'pcm-string-include', 'type':'string', 'string':iTStr, 'key':'acceptWords1', 'disable':true, 'default':0, 'tooltip':'HITs with these words or phrases only will try to be collected.'},
       {'label':'Edit', 'type':'button', 'btnLabel':'Accepted Words or Phrases', 'addClass':' btn-xxs pcm-myPrimary', 'key':'acceptWords2', 'width':'165px', 'unique':1, 'btnFunc': e => {
         this.editTriggerOptions(changes.rules.include, 'Word or phrase to watch for', 'Word or phrase', () => { return true; }, () => {
@@ -191,9 +192,15 @@ class ModalSearchClass {
           bGStr = this.rulesToStr(changes.rules.blockGid, $('#pcm-string-blockGid')); modal.closeModal(); $(e.target).closest(`.pcm-modal`).focus();
         }, changes.details.type);
       }, 'tooltip': 'Add or delete Excluded Group IDs Which will be ignored.'},
-      {'label':'Temporary Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempDuration', 'seconds':true, 'default':0, 'tooltip':'The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDurSeconds},
-      {'label':'Temporary Number of Fetches:', 'type':'number', 'key1':'options', 'key':'tempFetches', 'default':0, 'tooltip':'The TEMPORARY Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
-      {'label':'Temporary Start Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':MyOptions.doSearch().defaultHamDur, 'tooltip':'The TEMPORARY duration in seconds to use to go in ham mode after starting to collect a HIT and then go back to normal collecting mode.', 'minMax':this.hamDur},
+      {'label':'Temporary Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempDuration', 'seconds':true, 'default':18, 'tooltip':'The TEMPORARY number of seconds for HITs found to collect before stopping. Resets time if a HIT gets collected. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.', 'minMax':this.pandaDurSeconds, 'minFunc': () => {
+        let otherValue = $(`#pcm-tempFetchesDetailS`).html() || $(`#pcm-tempFetchesDetailI`).val();
+        return (Number(otherValue) === this.fetchesTempDur.min);
+      }},
+      {'label':'Temporary Number of Fetches:', 'type':'number', 'key1':'options', 'key':'tempFetches', 'default':12, 'tooltip':'The TEMPORARY Number of tries to catch a HIT to do before stopping. This value can not be 0 if Temporary Duration is 0 and will go back to previous value.', 'minMax':this.fetchesTempDur, 'minFunc': () => {
+        let otherValue = $(`#pcm-tempDurationDetailS`).html() || $(`#pcm-tempDurationDetailI`).val();
+        return (Number(otherValue) === this.pandaDurSeconds.min);
+      }},
+      {'label':'Temporary Start Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':MyOptions.doSearch().defaultHamDur, 'tooltip':'The TEMPORARY duration in seconds to use to go in ham mode after starting to collect a HIT and then go back to normal collecting mode. Every panda job created by a trigger will go into Ham mode at beginning.', 'minMax':this.hamDur},
       ...customOpt,
     ], theTable, changes, true);
     theTable = null; prependOpt = null; customOpt = null;
@@ -207,11 +214,11 @@ class ModalSearchClass {
       {'label':'Limit # of GroupID in queue:', 'type':'range', 'key1':'options', 'key':'limitNumQueue', 'tooltip':'Limit number of HITs in queue by this group ID. Great way to do batches slowly.', 'minMax':{'min':0, 'max':24}},
       {'label':'Limit # of Total HITs in Queue:', 'type':'range', 'key1':'options', 'key':'limitTotalQueue', 'tooltip':'Limit number of HITs allowed in queue. Good when you want to leave room in queue for better HITs.', 'minMax':{'min':0, 'max':24}},
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key1':'options', 'key':'once', 'tooltip':'Should only one HIT be accepted and then stop collecting? Great for surveys.'},
-      {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many HITs a day should be accepted for this job?'},
+      {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key1':'options', 'key':'acceptLimit', 'default':0, 'tooltip':'How many HITs a day should be accepted for this job?', 'minMax':this.dailyLimitRange},
       {'label':'Stop Collecting After (Minutes):', 'type':'number', 'key1':'options', 'key':'duration', 'minutes':true, 'default':0, 'tooltip':'The number of minutes for HITs found to collect before stopping. Resets time if a HIT gets collected.', 'minMax':this.pandaDur},
       {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key1':'options', 'key':'limitFetches', 'default':0, 'tooltip':'Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key1':'options', 'key':'autoGoHam', 'tooltip':'Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
-      {'label':'Delayed Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'goHamDuration', 'seconds':true, 'default':MyOptions.getHamDelayTimer(), 'tooltip':'If forcing delayed ham mode then go ham for this amount of seconds for each panda job.', 'minMax':this.hamDur},
+      {'label':'Delayed Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'goHamDuration', 'seconds':true, 'default':MyOptions.getHamDelayTimer(), 'tooltip':'If forcing delayed ham mode then go ham for this amount of seconds for each panda job.', 'minMax':this.pandaHamDur},
     ], theTable, changes, true);
     theTable = null;
   }
@@ -219,11 +226,16 @@ class ModalSearchClass {
    * @param {number} unique - Trigger Unique Number  @param {function} [afterClose] - After Close Function  */
   async showDetailsModal(unique, afterClose=null) {
     if (!modal) modal = new ModalClass();
-    let dbId = await MySearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId), oldMinPay = sChanges.rules.minPay;
+    let dbId = await MySearch.uniqueToDbId(unique), sChanges = await this.fillInData(dbId);
+    let oldMinPay = sChanges.rules.minPay, oldTempDuration = sChanges.options.tempDuration, oldTempFetches = sChanges.options.tempFetches;
     let idName = modal.prepareModal(sChanges, '700px', 'pcm-triggerDetailsModal', 'modal-lg', 'Details for a Trigger', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
-      $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError');
-      if (changes.options.autoGoHam && changes.options.goHamDuration === 0) changes.options.goHamDuration = MyOptions.getHamDelayTimer();
-      if (changes.options.tempGoHam === 0) changes.options.tempGoHam = MyOptions.doSearch().defaultHamDur;
+      $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError'); let newOpt = changes.options;
+      if (newOpt.autoGoHam && newOpt.goHamDuration === 0) newOpt.goHamDuration = MyOptions.getHamDelayTimer();
+      if (newOpt.tempGoHam === 0) newOpt.tempGoHam = MyOptions.doSearch().defaultHamDur;
+      if (newOpt.tempDuration === 0 && newOpt.tempFetches === 0) {
+        newOpt.tempDuration = (newOpt.tempDuration !== oldTempDuration) ? oldTempDuration : newOpt.tempDuration;
+        newOpt.tempFetches = (newOpt.tempFetches !== oldTempFetches) ? oldTempFetches : newOpt.tempFetches;
+      }
       if (changes.details.type === 'custom' && changes.rules.include.size === 0) {
         $(`#${idName} .pcm-checkStatus.pcm-inputError`).html('Custom searches MUST have 1 Accepted word or phrase!');
         $(`#pcm-tdLabel-acceptWords1, #pcm-tdLabel-acceptWords2`).addClass('pcm-optionLabelError');
@@ -264,12 +276,17 @@ class ModalSearchClass {
     if (!modal) modal = new ModalClass(); let dbId = await MySearch.uniqueToDbId(unique);
     const idName = modal.prepareModal(null, '860px', 'pcm-triggerFoundModal', 'modal-lg', 'Show HITs found by Trigger.', '', 'pcm-modalHitsFound', '', 'visible btn-sm', 'Done', () => { modal.closeModal(); }, 'invisible', 'No', null, 'invisible', 'Cancel');
     modal.showModal(null, async () => {
-      let [groupHist, rules] = await MySearch.getFromDBData('history', dbId, 'dbId', true, false, 80, 'rules');
+      $('.modal-body').html(`<h4 class='pcm-pleaseWaitData pcm-myWarning'>Loading data... Please Wait!</h4>`);
+      let returnedData = await MySearch.getFromDBData('history', dbId, 'dbId', true, false, 80, 'rules');
+      if (returnedData === null) {
+        $('.modal-body').html(`<h4 class='pcm-myWarning'>Sorry. The data took to long to load due to high activity.<br>Please wait a few seconds and try again.</h4>`); return;
+      }
+      let groupHist = returnedData[0], rules = returnedData[1];
       let gidsValues = [], gidsData = {}, blocked = rules.blockGid, df = document.createDocumentFragment();
       arrayCount(groupHist, (value) => { gidsValues.push(value.gid); gidsData[value.gid] = value; return true; }, true);
       let gidsHistory = await MyHistory.findValues(gidsValues);
       let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-moreCondensed table-bordered'></table>`)
-        .append(`<thead><tr><td style='width:75px; max-width:75px;'>date</td><td style='width:82px; max-width:82px;'>Gid</td><td style='width:120px; max-width:120px;'>Title</td><td style='width:440px; max-width:440px'>Descriptions</td><td style='width:52px; max-width:52px;'>Pays</td><td style='width: 70px; max-width:70px;'></td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
+        .append(`<thead><tr><td style='width:75px; max-width:75px; text-align:left;'>Date</td><td style='width:82px; max-width:82px; text-align:left;'>Gid</td><td style='width:120px; max-width:120px; text-align:left;'>Title</td><td style='width:440px; max-width:440px; text-align:left;'>Descriptions</td><td style='width:52px; max-width:52px; text-align:left;'>Pays</td><td style='width: 70px; max-width:70px; text-align:left;'>Block?</td></tr></thead>`).append(`<tbody></tbody>`).appendTo(df);
       for (const key of gidsValues) {
         let dateString = '----', title = '----', description = '----', pays = '----';
         let theDate = new Date(gidsData[key].date); dateString = theDate.toLocaleDateString('en-US', {'month':'short', 'day':'2-digit'}).replace(' ','');
@@ -301,6 +318,7 @@ class ModalSearchClass {
         this.showTriggeredHit(cData, () => {},_, false);
       });
       $(`#${idName} .${modal.classModalBody}`).append(df);
+      $('.pcm-pleaseWaitData').remove();
       if (MySearchUI) MySearchUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       groupHist = null; df = null; gidsHistory = null; theTable = null;
     }, () => { modal = null; if (afterClose) afterClose(); });
@@ -308,13 +326,22 @@ class ModalSearchClass {
   /** Shows a modal with all search options that can be changed by the user.
    * @param {function} [afterClose] - After Close Function */
   showSearchOptions(afterClose=null) {
-    let searchOptions = MyOptions.doSearch(), oldMinReward = searchOptions.minReward;
+    let searchOptions = MyOptions.doSearch(), oldMinReward = searchOptions.minReward, oldTempDuration = searchOptions.defaultDur, oldTempFetches = searchOptions.defaultFetches;
+    let oldCustTempDuration = searchOptions.defaultCustDur, oldCustTempFetches = searchOptions.defaultCustFetches;
     let saveFunction = (changes) => {
       let closeAndSave = async () => {
         MyOptions.theToSearchUI(changes.toSearchUI, false); MyOptions.theSearchTimer(changes.searchTimer, false); MyOptions.doGeneral(changes.general);
         MyOptions.doSearch(changes.options); await MySearch.timerChange(changes.searchTimer); await MySearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
         setTimeout( () => modal.closeModal(), 0);
+      } 
+      if (changes.options.defaultDur === 0 && changes.options.defaultFetches === 0) {
+        changes.options.defaultDur = (changes.options.defaultDur !== oldTempDuration) ? oldTempDuration : changes.options.defaultDur;
+        changes.options.defaultFetches = (changes.options.defaultFetches !== oldTempFetches) ? oldTempFetches : changes.options.defaultFetches;
+      }
+      if (changes.options.defaultCustDur === 0 && changes.options.defaultCustFetches === 0) {
+        changes.options.defaultCustDur = (changes.options.defaultCustDur !== oldCustTempDuration) ? oldCustTempDuration : changes.options.defaultCustDur;
+        changes.options.defaultCustFetches = (changes.options.defaultCustFetches !== oldCustTempFetches) ? oldCustTempFetches : changes.options.defaultCustFetches;
       }
       if (changes.options.minReward === 0 && oldMinReward !== changes.options.minReward) modal.showDialogModal('700px', 'Minimum Reward at $0.00 Warning.', 'When setting Minimum Reward for MTURK search page to $0.00 there may be better HITs missed if there are a lot of HITs at $0.00.', null, false, false,_,_,_,_, () => { closeAndSave(); } );
       else closeAndSave();
@@ -330,12 +357,24 @@ class ModalSearchClass {
         {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
         {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':MyOptions.getTimerSearch()},
-        {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs.`, 'minMax':this.pandaDurSeconds},
-        {'label':'Default Trigger Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultFetches', 'tooltip':`The TEMPORARY default number of fetches for new triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
-        {'label':'Default Trigger Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultHamDur', 'tooltip':`The default ham duration for new triggers to use on panda jobs.`, 'minMax':this.hamDur},
-        {'label':'Default Custom Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The TEMPORARY default duration for new custom triggers to use on panda jobs.`, 'minMax':this.pandaDurSeconds},
-        {'label':'Default Custom Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The TEMPORARY default number of fetches for new custom triggers to use on panda jobs.`, 'minMax':this.fetchesDur},
-        {'label':'Default Custom Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs.`, 'minMax':this.hamDur},
+        {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.`, 'minMax':this.pandaDurSeconds, 'minFunc': () => {
+          let otherValue = $(`#pcm-defaultFetchesDetailS`).html() || $(`#pcm-defaultFetchesDetailI`).val();
+          return (Number(otherValue) === this.pandaDurSeconds.min);
+        }},
+        {'label':'Default Trigger Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultFetches', 'tooltip':`The TEMPORARY default number of fetches for new triggers to use on panda jobs. This value can not be 0 if Temporary Duration is 0 and will go back to previous value.`, 'minMax':this.fetchesTempDur, 'minFunc': () => {
+          let otherValue = $(`#pcm-defaultDurDetailS`).html() || $(`#pcm-defaultDurDetailI`).val();
+          return (Number(otherValue) === this.fetchesTempDur.min);
+        }},
+        {'label':'Default Trigger Temporary Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultHamDur', 'tooltip':`The default ham duration for new triggers to use on panda jobs. Every panda job created by a trigger will go into Ham mode at beginning.`, 'minMax':this.hamDur},
+        {'label':'Default Custom Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustDur', 'tooltip':`The TEMPORARY default duration for new custom triggers to use on panda jobs. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.`, 'minMax':this.pandaDurSeconds, 'minFunc': () => {
+          let otherValue = $(`#pcm-defaultFetchesDetailS`).html() || $(`#pcm-defaultFetchesDetailI`).val();
+          return (Number(otherValue) === this.pandaDurSeconds.min);
+        }},
+        {'label':'Default Custom Temporary Fetches Limit:', 'type':'number', 'key1':'options', 'key':'defaultCustFetches', 'tooltip':`The TEMPORARY default number of fetches for new custom triggers to use on panda jobs. This value can not be 0 if Temporary Duration is 0 and will go back to previous value.`, 'minMax':this.fetchesTempDur, 'minFunc': () => {
+          let otherValue = $(`#pcm-defaultDurDetailS`).html() || $(`#pcm-defaultDurDetailI`).val();
+          return (Number(otherValue) === this.fetchesTempDur.min);
+        }},
+        {'label':'Default Custom Temporary Ham Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultCustHamDur', 'tooltip':`The default ham duration for new custom triggers to use on panda jobs. Every panda job created by a trigger will go into Ham mode at beginning.`, 'minMax':this.hamDur},
         {'label':'Page Size for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'pageSize', 'tooltip':`Number of HITs used on MTURK first search page. The higher the number can slow searching but also can give a better chance of finding HITs you want.`, 'minMax':this.pageSize},
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
         {'label':'Display MTURK Approval Rate For Requesters:', 'type':'trueFalse', 'key1':'options', 'key':'displayApproval', 'tooltip':`Should Approval Rate from MTURK be shown on the Custom Triggered Hits Tab or only shown on mouse over requester name?`},
@@ -378,6 +417,7 @@ class ModalSearchClass {
       let blockTabs = new TabbedClass(blockingDiv, `pcm-blockingTabs`, `pcm-gidBlock`, `pcm-ridBlock`, false, 'Block');
       let [, err] = await blockTabs.prepare();
       if (!err) {
+        $('#pcm-gidBlock').append(`<h4 class='pcm-pleaseWaitData pcm-myWarning' style='padding-left:10px;'>Loading data... Please Wait!</h4>`);
         let [gidvals, ridvals] = await MySearch.getBothBlocked();
         /** Changes the status displayed to a given text and will change class if an error.
          * @param {string} tab - Tab Class Name  @param {String} [resultStr] - Html text  @param {bool} [error] - Error? */
@@ -448,6 +488,7 @@ class ModalSearchClass {
           typeGid = false, thisTab = 'pcm-ridCont', thisFrag = df2, typeExample = exampleRid, values = ridvals;
           form = null; selectBox = null;
         }
+        $('.pcm-pleaseWaitData').remove();
         gidContents.append(df); ridContents.append(df2);
         $(`#${blockTabs.ulId} .nav-link`).click( e => {
           let content = $(e.target).closest('a').attr('href'); setTimeout(() => { $(content).find('input').focus(); }, 1);

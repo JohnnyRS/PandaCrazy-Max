@@ -3,8 +3,9 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com */
 class ModalJobClass {
 	constructor() {
-    this.pandaDur = {'min':0, 'max':120}       // Limits for the panda duration in minutes. (2 hours max)
-    this.fetchesDur = {'min':0, 'max':3600};   // The minimum and maximum number of fetches allowed.
+    this.pandaDur = {'min':0, 'max':120}           // Limits for the panda duration in minutes. (2 hours max)
+    this.fetchesDur = {'min':0, 'max':3600};       // The minimum and maximum number of fetches allowed.
+    this.dailyLimitRange = {'min':0, 'max':5000};  // The minimum and maximum number of HITs allowed in a day for a panda job.
     this.modalSearch = null;
   }
   /** Will create a table with the panda options ready to be changed by user.
@@ -16,7 +17,7 @@ class ModalJobClass {
       {'label':'Limit # of GroupID in Queue:', 'type':'range', 'key':'limitNumQueue', 'min':0, 'max':24, 'ifNot':'search', 'tooltip':'Limit number of HITs in queue by this group ID. Great way to do batches slowly.'},
       {'label':'Limit # of Total HITs in Queue:', 'type':'range', 'key':'limitTotalQueue', 'min':0, 'max':24, 'ifNot':'search', 'tooltip':'Limit number of HITs allowed in queue. Good when you want to leave room in queue for better HITs.'},
       {'label':'Accept Only Once:', 'type':'trueFalse', 'key':'once', 'ifNot':'search', 'tooltip':'Should only one HIT be accepted and then stop collecting? Great for surveys.'},
-      {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'ifNot':'search', 'tooltip':'How many HITs a day should be accepted for this job?'},
+      {'label':'Daily Accepted HIT Limit:', 'type':'number', 'key':'acceptLimit', 'default':0, 'ifNot':'search', 'tooltip':'How many HITs a day should be accepted for this job?', 'minMax':this.dailyLimitRange},
       {'label':'Stop Collecting After (Minutes):', 'type':'number', 'key':'duration', 'minutes':true, 'default':0, 'ifNot':'search', 'tooltip':'The number of minutes for this job to collect before stopping. Resets Time if a HIT Gets Collected.', 'minMax':this.pandaDur},
       {'label':'Stop Collecting After # of Fetches:', 'type':'number', 'key':'limitFetches', 'default':0, 'ifNot':'search', 'tooltip':'Number of tries to catch a HIT to do before stopping.', 'minMax':this.fetchesDur},
       {'label':'Force Delayed Ham on Collect:', 'type':'trueFalse', 'key':'autoGoHam', 'ifNot':'search', 'tooltip':'Should this job go ham when it finds a HIT and then runs for delayed ham duration in milliseconds before it goes back to normal collecting mode?'},
@@ -38,6 +39,7 @@ class ModalJobClass {
       {'label':'Friendly Requester Name:', 'type':'text', 'key':'friendlyReqName', 'disable':false, 'tooltip':'A user created requester name to make the name shorter or easier to remember.'},
       {'label':'Group ID', 'type':'text', 'key':'groupId', 'disable':true, 'default':'-- RID Search Jobs do not use Group ID --', 'tooltip':'The group ID for this job. May have multiple group ID jobs if wanted. May not be changed by user.'},
       {'label':'Title', 'type':'text', 'key':'title', 'disable':true, 'tooltip':'The title for this job. May not be changed by user.'},
+      {'label':'Friendly Title', 'type':'text', 'key':'friendlyTitle', 'disable':false, 'tooltip':'A user created HIT title to make the title shorter or easier to remember what it is.'},
       {'label':'Description', 'type':'text', 'key':'description', 'disable':true, 'default':'-- RID Search Jobs have no description --', 'tooltip':'The description for this job. May not be changed by user.'},
       {'label':'Price', 'type':'text', 'key':'price', 'money':true, 'disable':true, 'tooltip':'The payment reward for this job. May not be changed by user.'},
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
@@ -120,8 +122,12 @@ class ModalJobClass {
   /** This will set up the changes and save it to the search database.
    * @async                  - To wait for search options to be saved.
    * @param {object} changes - Data Options  @param {object} sChanges - Search Data Options */
-  async searchOptionsChanged(changes, sChanges) {
+  async searchOptionsChanged(changes, sChanges, oldDur, oldFet) {
     let sOptions = sChanges.options;
+    if (sOptions.tempDuration === 0 && sOptions.tempFetches === 0) { console.log(oldDur,oldFet);
+       sOptions.tempDuration = (sOptions.tempDuration !== oldDur) ? oldDur : sOptions.tempDuration;
+       sOptions.tempFetches = (sOptions.tempFetches !== oldFet) ? oldFet : sOptions.tempFetches;
+    }
     changes = Object.assign(changes, {'acceptLimit':sOptions.acceptLimit, 'autoGoHam':sOptions.autoGoHam, 'duration':sOptions.duration, 'limitFetches':sOptions.limitFetches, 'limitNumQueue':sOptions.limitNumQueue, 'limitTotalQueue':sOptions.limitTotalQueue, 'once':sOptions.once});
     await MySearch.optionsChanged(sChanges, sChanges.searchDbId); sOptions = null;
   }
@@ -130,11 +136,11 @@ class ModalJobClass {
    * @param  {number} myId - Unique ID  @param  {function} [successFunc] - Save Function  @param  {function} [afterClose]  - After Close function */
   async showDetailsModal(myId, successFunc=null, afterClose=null) {
     await bgPanda.getDbData(myId);
-    let hitInfo = bgPanda.options(myId), searchChanges = null, oldMinPay = -1;
+    let hitInfo = bgPanda.options(myId), searchChanges = null, oldMinPay = -1, oldTempDuration = null, oldTempFetches = null;
     let saveFunction = async changes => {
       let closeSaveModal = async () => {
         if (!hitInfo.data) { await bgPanda.getDbData(myId); }
-        if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges);
+        if (hitInfo.search) await this.searchOptionsChanged(changes, searchChanges, oldTempDuration, oldTempFetches);
         changes.mute = hitInfo.data.mute; changes.disabled = (changes.disabled) ? changes.disabled : false;
         if (!changes.autoGoHam) changes.hamDuration = 0; else if (changes.hamDuration === 0) changes.hamDuration = MyOptions.getHamDelayTimer();
         hitInfo.data = Object.assign(hitInfo.data, changes); bgPanda.timerDuration(myId);
@@ -160,6 +166,7 @@ class ModalJobClass {
         if (hitInfo.search) {
           let optionTab1 = await detailsTabs.addTab(`Panda Job Options`), optionContents1 = $(`<div class='pcm-detailsCont card-deck'></div>`).appendTo(`#${optionTab1.tabContent}`);
           this.modalSearch = new ModalSearchClass(); searchChanges = await this.modalSearch.fillInData(null, hitInfo.data.id); oldMinPay = searchChanges.rules.minPay;
+          oldTempDuration = searchChanges.options.tempDuration, oldTempFetches = searchChanges.options.tempFetches;
           this.modalSearch.triggerOptions(df, searchChanges, false); ridDisabled = true;
           this.modalSearch.triggerPandaOptions(df2, searchChanges, false); optionContents1.append(df2);
           optionTab1 = null;

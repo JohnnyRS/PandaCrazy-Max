@@ -108,6 +108,8 @@ pcm_channel.onmessage = async (e) => {
     } else if (data.msg === 'search: closingSearchUI') {
       pandaUI.searchUIConnect(false); bgPage.gSetSearchUI(false);
     } else if (data.msg === 'search: openedSearchUI') {      
+    } else if (data.msg === 'search: getSearchGStats') { bgPage.gGetSearchUI().searchGStats;   
+    } else if (data.msg === 'search: setSearchUI') { bgPage.gSetSearchUI(true);
     } else if (data.msg === 'search: sendOptionsToSearch') { MyOptions.sendOptionsToSearch(); }
     else if (data.msg === 'search: updateOptions' && data.object) {
       let theObject = data.object;

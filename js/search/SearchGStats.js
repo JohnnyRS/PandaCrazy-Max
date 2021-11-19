@@ -26,10 +26,8 @@ class SearchGStats {
 	/** Updates the given stat object on the status bar and pass a text to use too.
 	 * @param  {object} statObj   - The stat object  @param  {string} [text] - The text to use in the status bar for this stat object. */
 	updateStatNav(statObj, text='') { MySearchUI.updateStatNav(statObj, text); }
-	toggleStat(theToggle, toggled, max, theArray) {
-		this[theArray][toggled-1].disabled = true; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);  this[theArray][toggled-1].disabled = false;
-		let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true);
-		let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
+	toggleStat(oldToggled, toggled, theArray) {
+		this[theArray][oldToggled-1].disabled = true; this[theArray][toggled-1].disabled = false;
 		this.updateStatNav(this[theArray][toggled-1]);
 	}
 	/** Set the searching value and searching now value to on and update stat in status bar. */
@@ -54,4 +52,5 @@ class SearchGStats {
 	 * @param  {number} value - The new value for the total amount of HITs found in one search result. */
 	addTotalSearchResults(value) { this.totalSearchResults.value = value; this.updateStatNav(this.totalSearchResults); }
 	addFetchedElapsed(value) { this.fetchedElapsed.value = value; this.updateStatNav(this.fetchedElapsed); }
+	getStats() { return {'searchElapsed':this.searchElapsed, 'totalSearchFetched':this.totalSearchFetched, 'totalSearchPREs':this.totalSearchPREs, 'totalSearchHits':this.totalSearchHits, 'totalSearchResults':this.totalSearchResults}; }
 }

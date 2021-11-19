@@ -381,7 +381,8 @@ class PandaUI {
 	 * @param  {bool} [loaded] - Database loaded?  @param  {bool} [multiple]  - Multiple jobs?  @param  {number} [tF]       - Temporary Fetches
 	 * @return {number}				 - Panda Job Unique Number */
 	addPandaToUI(myId, pandaInfo, newAddInfo, loaded=false, multiple=false, tF=0) {
-		this.cards.addCard(myId, pandaInfo, loaded, multiple); this.pandaStats[myId] = new PandaStats(myId, pandaInfo.dbId, this.cards.acceptedStatusText, this.cards.fetchedStatusText);
+		this.cards.addCard(myId, pandaInfo, loaded, multiple);
+		this.pandaStats[myId] = new PandaStats(myId, pandaInfo.dbId, this.cards.acceptedStatusText, this.cards.fetchedStatusText, this.cards.foundStatusText);
 		if (pandaInfo.data.dailyDone > 0) this.pandaStats[myId].setDailyStats(pandaInfo.data.dailyDone);
 		if (pandaInfo.search && (loaded || (newAddInfo && !newAddInfo.run))) this.searchDisabled(myId);
 		if (pandaInfo.search) this.pandaGStats.addSearch(); else this.pandaGStats.addPanda();

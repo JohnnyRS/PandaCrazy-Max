@@ -25,7 +25,7 @@ class ThemesClass {
     if (reset) {
       document.getElementById('pcm-stylesheet').setAttribute('href', '');
       document.getElementById('pcm-stylesheet').setAttribute('href', this.pcmStylesheet);
-      if (pandaUI) { pandaUI.resetCSSValues(); bgPage.themeChanged(); }
+      if (typeof pandaUI !== 'undefined') { pandaUI.resetCSSValues(); bgPage.themeChanged(); }
     }
   }
   /** Shows a dialog modal which allows the user to change the current theme by calling the showThemeModal from the modalOptions Class. */

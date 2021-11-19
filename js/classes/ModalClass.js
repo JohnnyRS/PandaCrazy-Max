@@ -62,8 +62,8 @@ class ModalClass {
   /** Workaround for popup unload not working when crossed domains. (www.mturk.com vs worker.mturk.com)
    * Recursively will keep checking until popup window closes. Used for login popup window. */
   isPopup() {
-    if (!this.popup.closed && bgQueue && bgQueue.isLoggedOff()) setTimeout(this.isPopup.bind(this), 500);
-    else if (bgQueue) bgQueue.nowLoggedOn();
+    if (!this.popup.closed && (typeof bgQueue !== 'undefined') && bgQueue.isLoggedOff()) setTimeout(this.isPopup.bind(this), 500);
+    else if (typeof bgQueue !== 'undefined') bgQueue.nowLoggedOn();
   }
   /** Prepare a modal dialog for showing data with different buttons.
    * @param {object} dataObject     - Cloned Data   @param {number} width        - Width          @param {string} addModalClass  - Modal Class

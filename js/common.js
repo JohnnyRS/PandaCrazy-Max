@@ -179,6 +179,7 @@ function flattenSortObject(obj, key, value) {
  * @param  {string} gId - The group ID to shorten.  @param  {number} [preNum] - Limit length at Start  @param  {number} [postNum] - Limit length at end;
  * @return {string}     - The shortened string for the group ID. */
 function shortenGroupId(gId, preNum=2, postNum=4) { return gId.slice(0, preNum) + '...' + gId.slice(-1 * postNum); }
+function doOptLimit(key, status) { if (status) $(`#pcm-tdLabel-${key}`).addClass('pcm-optionLimited'); else $(`#pcm-tdLabel-${key}`).removeClass('pcm-optionLimited pcm-optionEmpty'); }
 /** Toggles showing a text or a text input of a value for editing purposes.
  * @param  {object} thisObject  - Main object  @param  {object} target - Changed target  @param  {object} obj          - Object with key
  * @param  {string} theValue    - Value        @param  {bool} [editMe] - Input or text?  @param  {string} [textBorder] - Border class
@@ -187,15 +188,26 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder=n
   let parent = $(target).parent(), pre = (obj.money) ? '$' : '', borderClass = (textBorder) ? ` ${textBorder}` : '', colorClass = (textColor) ? ` ${textColor}` : '';
   if (editMe) {
     let doTextToggle = e => { textToggle(thisObject, e.target, obj, theValue, false, textBorder); };
-    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`).blur( e => doTextToggle(e) )
-      .focus( e => $(e.target).select() ).keypress( e => { if (e.keyCode === 13) doTextToggle(e); e.stopPropagation(); } ));
+    $(parent).empty().append($(`<input class='pcm-inputText' id='pcm-${obj.key}DetailI' type='text' value='${theValue}'></input>`)
+      .blur( e => doTextToggle(e) )
+      .focus( e => $(e.target).select() )
+      .keypress( e => { if (e.keyCode === 13) doTextToggle(e); e.stopPropagation(); } )
+      .on('input', e => {
+        let thisValue = $(e.target).val(), limit = false;
+        if (obj.min === undefined || obj.max === undefined) return;
+        if (obj.minFunc) { limit = (Number(thisValue) === obj.min) ? obj.minFunc(obj.key) : false; }
+        if (limit) doOptLimit(obj.key, true);
+        else if (obj.min !== undefined && (thisValue < obj.min || thisValue > obj.max)) doOptLimit(obj.key, true);
+        else doOptLimit(obj.key, false);
+      }));
     $(`#pcm-${obj.key}DetailI`).focus();
   } else {
     $(target).closest(`.pcm-modal`).focus();
-    $(`#pcm-tdLabel-${obj.key}`).removeClass('pcm-optionLimited pcm-optionEmpty');
+    doOptLimit(obj.key, false);
     if (editMe !== null) theValue = $(target).val(); // Null is on first call of function.
     if (theValue === '' || theValue === '{Empty}') { theValue = '{Empty}'; colorClass = ' pcm-optionEmpty'; }
     if ((obj.min === undefined && obj.max === undefined) || ((theValue >= obj.min) && (theValue <= obj.max))) {
+      if (obj.minFunc && Number(theValue) === obj.min) if (obj.minFunc(obj.key)) doOptLimit(obj.key, true); else doOptLimit(obj.key, false);
       if (obj.type === 'number') thisObject[obj.key] = Number((obj.minutes) ? theValue * 60000 : (obj.seconds) ? theValue * 1000 : theValue);
       else if (theValue !== '{Empty}') thisObject[obj.key] = theValue; else thisObject[obj.key] = ''
       if (obj.money) theValue = Number(theValue).toFixed(2);
@@ -203,7 +215,7 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder=n
       $(parent).empty().append(theSpan);
       if (!obj.disable) $(theSpan).on('click', e => { textToggle(thisObject, e.target, obj, theValue, true, textBorder, textColor); });
       theSpan = null;
-    } else $(`#pcm-tdLabel-${obj.key}`).addClass('pcm-optionLimited');
+    } else doOptLimit(obj.key, true);
   }
   parent = null;
 }
@@ -244,11 +256,13 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (element.minMax) { element.min = element.minMax.min; element.max = element.minMax.max; }
     if (table && !horizontal) { element.width = 'auto'; element.maxWidth = '450px'; tdCol = 'col-7 '; }
     if ('styleDisplay' in element) styleAdd = ` display:${element.styleDisplay};`; else styleAdd = '';
+    const strMin = (element.money && element.minMax) ? `$${element.min.toFixed(2)}` : element.min;
+    const strMax = (element.money && element.minMax) ? `$${element.max.toFixed(2)}` : element.max;
     const pre = (element.pre) ? element.pre : '', addSpan = (element.type === 'text' || element.type === 'number') ? '<span></span>' : '';
     const tdWidth = (element.width) ? `width:${element.width} !important;` : '', tdMaxWidth = (element.maxWidth) ? `max-width:${element.maxWidth} !important;` : '';
     const tdMinWidth = `min-width:` + ((element.minWidth) ? element.minWidth : '20px') + ` !important;`;
     const tdStyle = ` style='${tdMaxWidth} ${tdMinWidth} ${tdWidth}${styleAdd}'`, tdClass = (element.addTdClass) ? ` ${element.addTdClass}` : '';
-    const theRange = (element.minMax) ? ` (min:&nbsp;${element.minMax.min}&nbsp;|&nbsp;max:&nbsp;${element.minMax.max}&nbsp;)` : '';
+    const theRange = (element.minMax) ? ` (min:&nbsp;${strMin}&nbsp;|&nbsp;max:&nbsp;${strMax}&nbsp;)` : '';
     const addTip = (element.tooltip && element.tooltip !== '') ? ` data-toggle='tooltip' data-html='true' data-placement='bottom' data-original-title='${element.tooltip}${theRange}'` : ``;
     const toolTipClass = (element.tooltip) ? ` pcm-tooltipData${(element.notHelper) ? '' : ' pcm-tooltipHelper'}`: '';
     if (element.type === 'hr') row = $(`<tr class='d-flex pcm-hrTable'><td class='col-12 pcm-hrTable'></td></tr>`);
@@ -329,7 +343,7 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
   if (modal) modal.closeModal('Loading Data');
   if (!warn && error) { // Only show message on console as an error if it's not a warning.
     console.error( (consoleMessage) ? consoleMessage : alertMessage , error );
-    if (bgQueue) bgQueue.stopQueueMonitor();
+    if (typeof bgQueue !== 'undefined') bgQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
   } else console.info('Warning: ' + alertMessage); // Show a warning alert message on the console.
 }

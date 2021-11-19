@@ -9,7 +9,7 @@ class PandaStats {
    * @param  {string} accepted - String used for the accepted stats text.
    * @param  {string} fetched  - String used for the fetched stats text.
    */
-  constructor(myId, dbId, accepted, fetched) {
+  constructor(myId, dbId, accepted, fetched, searchFound) {
     this.myId = myId;                         // The unique ID for this panda job.
     this.dbId = dbId;                         // The unique database ID for this panda job.
     this.collecting = false;                  // Is this panda collecting or not?
@@ -19,15 +19,19 @@ class PandaStats {
     this.collectAccepted = 0;                 // The number of HITs accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
     this.dailyAccepted = 0;                   // The number of accepted HITs today.
-    this.fetched = { 'value':0, 'session':0, 'id':'#pcm-hitFetched', 'class':'.pcm-hitFetched', 'label':'Fetched', 'id1':'#pcm-hitFetched1' };
+    this.fetched = { 'value':0, 'session':0, 'id':'#pcm-hitFetched', 'class':'.pcm-hitFetched', 'label':'Fetch', 'id1':'#pcm-hitFetched1' };
     this.accepted = { 'value':0, 'id':'#pcm-hitAccepted', 'class':'.pcm-hitAccepted', 'label':'Acc', 'id1':'#pcm-hitAccepted1' };
     this.noMore = { 'value':0, 'id':'#pcm-hitNoMore', 'class':'.pcm-hitNoMore', 'label':'NM', 'id1':'#pcm-hitNoMore1' };
-    this.prepare(accepted, fetched);
+    this.searchFound = { 'value':0, 'id':'#pcm-hitSearchFound', 'class':'.pcm-hitSearchFound', 'label':'Hits', 'id1':'#pcm-hitSearchFound1' };
+    this.acceptedStatusText = this.accepted.label;
+    this.fetchedStatusText = this.fetched.label;
+    this.foundStatusText = this.searchFound.label;
+    this.prepare(accepted, fetched, searchFound);
     this.updateAllStats();
   }
   /** Prepares the card stats with the accepted and fetched text.
    * @param {string} accepted - Accepted Stat Text  @param {string} fetched - Fetched Stat text */
-  prepare(accepted, fetched) { this.acceptedStatusText = accepted; this.fetchedStatusText = fetched; }
+  prepare(accepted, fetched, searchFound) { this.acceptedStatusText = accepted; this.fetchedStatusText = fetched; this.foundStatusText = searchFound; }
   /** Will return the number of accepted HITs from this panda job for this day.
    * @return {number} - The number of accepted HITs for this day. */
   getDailyAccepted() { return this.dailyAccepted; }
@@ -53,11 +57,12 @@ class PandaStats {
       card.document.find(`.pcm-hitStats`).css('cursor', 'default');
       card.document.find(`${this.accepted.class}`).html(`${this.acceptedStatusText}: ${this.accepted.value}`);
       card.document.find(`${this.fetched.class}`).html(`${this.fetchedStatusText}: ${this.fetched.value}`);
+      card.document.find(`${this.searchFound.class}`).html(`${this.foundStatusText}: ${this.searchFound.value}`);
     } else {
       $(`${this.accepted.id}-${this.myId}`).html(`${this.acceptedStatusText}: ${this.accepted.value}`);
       $(`${this.fetched.id}-${this.myId}`).html(`${this.fetchedStatusText}: ${this.fetched.value}`);
       $(`${this.accepted.id1}-${this.myId}`).html(`${this.acceptedStatusText}: ${this.accepted.value}`);
-      $(`${this.fetched.id1}-${this.myId}`).html(`${this.fetchedStatusText}: ${this.fetched.value}`);
+      $(`${this.searchFound.id1}-${this.myId}`).html(`${this.foundStatusText}: ${this.searchFound.value}`);
     }
   }
   /** Update a specific stat on the panda card.
@@ -76,6 +81,7 @@ class PandaStats {
   addToAcceptedTimes() { this.acceptedStatsDB( {'dbId':this.dbId, 'date':new Date().getTime()} ); }
   /** Adds 1 to the fetched counter for this panda and updates stat on the panda card. */
   addFetched() { this.fetched.value++; this.fetched.session++; this.updateHitStat(this.fetched); }
+  addSearchFound() { this.searchFound.value++; this.updateHitStat(this.searchFound); }
   /** Returns the fetched value for this collected session.
    * @return {number} - The value of the number of fetches made in the collected session. */
   getFetchedSession() { return this.fetched.session; }

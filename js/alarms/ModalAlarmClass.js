@@ -51,7 +51,7 @@ class ModalAlarmClass {
       }
       $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(theAlarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
-      let resetTipsClass = (pandaUI) ? pandaUI : MySearchUI;
+      let resetTipsClass = (typeof pandaUI !== 'undefined') ? pandaUI : MySearchUI;
       if (resetTipsClass) resetTipsClass.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
@@ -71,7 +71,7 @@ class ModalAlarmClass {
       modalBody.find('.pcm-muteMe').click( e => {
         let btn = $(e.target), mute = theAlarms.muteToggle(btn.closest('div').data('snd'));
         if (mute) btn.addClass('btn-mutted'); else btn.removeClass('btn-mutted');
-        pandaUI.queueAlertUpdate();
+        if (typeof pandaUI !== 'undefined') pandaUI.queueAlertUpdate();
         btn.blur(); btn = null;
       });
       modalBody.find('.pcm-ttsMe').click( e => {

@@ -216,7 +216,9 @@ class MturkPanda extends MturkClass {
 	nowLoggedOn() { this.unPauseTimer(); this.loggedOff = false; if (extPandaUI) extPandaUI.nowLoggedOn(); }
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - Data Object  @param  {bool} status - Collection status.  @param {bool} [collected] - Collected Yet?  @param {string} [url] - URL String */
-	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, data.reqId, status, collected, url); }
+	sendStatusToSearch(data, status, collected=false, url='') { mySearch.pandaStatus(data.groupId, data.reqId, status, collected, url, data.search); }
+	searchJobAccepted(pDbId) { extPandaUI.pandaStats[this.dbIds[pDbId]].addAccepted(); }
+	searchHitFound(pDbId) { extPandaUI.pandaStats[this.dbIds[pDbId]].addSearchFound(); }
 	/** Will add fetched to search jobs when search class fetches a HIT list. */
 	searchFetched(dbId) {
 		for (const unique of this.searchesUniques) {

@@ -184,9 +184,10 @@ class EximClass {
           for (const key of Object.keys(group.triggers)) { if (newIds.hasOwnProperty(key)) newTriggers[newIds[key]] = {'id':newIds[key]}; }
           group.triggers = newTriggers;
         }
-    }
+      }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
-      groupings.importToDB(this.importGroupings); sGroupings.importToDB(this.importSGroupings);
+      let searchGroupings = new TheGroupings('searching'); await searchGroupings.prepare(showMessages);
+      groupings.importToDB(this.importGroupings); searchGroupings.importToDB(this.importSGroupings);
       for (const unique of pandaUI.tabs.getUniques()) { if (newPositions[unique]) pandaUI.tabs.setPositions(unique, newPositions[unique]); }
     }
   }

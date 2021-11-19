@@ -92,7 +92,7 @@ class TabbedClass {
   resizeTabContents() {
     let change = $(`#pcm-tabbedPandas`).height() - this.tabNavHeight;
     if (change !== 0 && this.tabContentsHeight > 0) { $('#pcm-pandaTabContents .pcm-tabs').height(`${this.tabContentsHeight - change}px`); }
-    pandaUI.innerHeight = window.innerHeight;
+    if (typeof pandaUI !== 'undefined') pandaUI.innerHeight = window.innerHeight;
     this.tabContentsHeight = $('#pcm-pandaTabContents .pcm-tabs:first').height(); this.tabNavHeight = $(`#pcm-tabbedPandas`).height();
   }
   /** Creates the tab structure with the supplied id names and element appended to it.
@@ -176,7 +176,7 @@ class TabbedClass {
         let mainUnique = $('#pcm-t1Tab').closest('li').data('unique');
         for (const dbId of this.#dataTabs[unique].list) { // Move any jobs in tab to main tab.
           let myId = bgPanda.getMyId(dbId), data = await bgPanda.dataObj(myId);
-          pandaUI.cards.get(myId).moveCard(this, mainUnique);
+          if (typeof pandaUI !== 'undefined') pandaUI.cards.get(myId).moveCard(this, mainUnique);
           data.tabUnique = mainUnique;
           this.removePosition(unique, dbId); this.setPosition(mainUnique, dbId);
         }
