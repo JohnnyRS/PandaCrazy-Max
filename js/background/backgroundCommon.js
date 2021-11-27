@@ -7,7 +7,7 @@ chrome.storage.local.set({'PCM_running':false});
 /** Checks if panda UI was closed so it can stop the queue monitor and search UI. */
 function checkUIConnects() {
   if (extPandaUI === null) { myQueue.stopQueueMonitor(); mySearch.stopSearching(); }
-  if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; MyOptions = null; MyAlarms = null; } 
+  if (!pandaUIOpened && !searchUIOpened) { removeAll(); MYDB = null; MyOptions = null; MyAlarms = null; }
 }
 /** Cleans the chrome local storage of all created data from extension. Used at start and when all pages are closed. */
 function cleanLocalStorage() {
@@ -28,7 +28,7 @@ function removeAll() {
 function gGetSearchUI() { return searchUIOpened; }
 function gGetMySearchUI() { return MySearchUI; }
 /** Function to set up a search UI variable for the background and returns search class.
- * @param {class} classUI - Object variable for the search UI or null if UI is closing.
+ * @param {bool} [status] - true if searchUI status is opened
  * @return {class}        - Returns the search class in background for easier access. */
 function gSetSearchUI(status=false) {
   if (!status) { if (pandaUIOpened) mySearch.originRemove(); MyAlarms.setAudioClass(null, 'search'); searchUIOpened = false; }

@@ -96,7 +96,7 @@ class ModalSearchClass {
     }, () => { modal = null; if (afterClose) afterClose(); });
   }
   /** This creates a string out of a rule Set
-   * @param  {object} rules - Trigger Rule Set  @param {object} [placeHere] - Jquery Element
+   * @param  {object} ruleSets - Trigger Rule Set  @param {object} [placeHere] - Jquery Element
    * @return {string}       - String with rules spread out. */
   rulesToStr(ruleSets, placeHere=null) {
     let setStr = ''; for (const value of ruleSets.values()) { setStr += `${value}, `; }
@@ -334,7 +334,7 @@ class ModalSearchClass {
         MyOptions.doSearch(changes.options); await MySearch.timerChange(changes.searchTimer); await MySearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
         setTimeout( () => modal.closeModal(), 0);
-      } 
+      }
       if (changes.options.defaultDur === 0 && changes.options.defaultFetches === 0) {
         changes.options.defaultDur = (changes.options.defaultDur !== oldTempDuration) ? oldTempDuration : changes.options.defaultDur;
         changes.options.defaultFetches = (changes.options.defaultFetches !== oldTempFetches) ? oldTempFetches : changes.options.defaultFetches;
@@ -354,8 +354,8 @@ class ModalSearchClass {
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
       if (searchOptions.minReward === 0) $(`<div class='pcm-optionEditWarning'>Having the Minimum Reward at $0.00 may cause better HITs to slip by if there are many HITs at $0.00.</div>`).appendTo(df);
       displayObjectData( [
-        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'},
+        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'},
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':MyOptions.getTimerSearch()},
         {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.`, 'minMax':this.pandaDurSeconds, 'minFunc': () => {
           let otherValue = $(`#pcm-defaultFetchesDetailS`).html() || $(`#pcm-defaultFetchesDetailI`).val();
@@ -458,7 +458,7 @@ class ModalSearchClass {
         let ridTab = await blockTabs.addTab(`Requester ID Blocked`), ridContents = $(`<div class='pcm-ridCont'></div>`).appendTo(`#${ridTab.tabContent}`);
         let exampleGid = 'example: 3SHL2XNU5XNTJYNO5JDRKKP26VU0PY', exampleRid = 'example: AGVV5AWLJY7H2', df = document.createDocumentFragment();
         let typeGid = true, thisTab = 'pcm-gidCont', thisFrag = df, typeExample = exampleGid, df2 = document.createDocumentFragment();
-        let gidsHistory = await MyHistory.findValues(gidvals), ridsHistory = await MyHistory.findValues(ridvals), values = gidvals; 
+        let gidsHistory = await MyHistory.findValues(gidvals), ridsHistory = await MyHistory.findValues(ridvals), values = gidvals;
         for (let j=0, len=gidvals.length; j < len; j++) { gidvals[j] += (gidsHistory[gidvals[j]]) ? ` - ${gidsHistory[gidvals[j]].title}` : ` -`; }
         for (let j=0, len=ridvals.length; j < len; j++) { ridvals[j] += (ridsHistory[ridvals[j]]) ? ` - ${ridsHistory[ridvals[j]].reqName}` : ` -`; }
         for (let i=0; i < 2; i++) {

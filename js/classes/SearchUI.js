@@ -115,10 +115,10 @@ class SearchUI {
 	async prepareSearch() {
 		await MySearch.prepareSearch(); MyMenu.createSearchTopMenu();
 		$('#pcm-timerStats').append(`<span id='pcm-searchElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for search timer to send a fetch request to MTURK.'></span><span id='pcm-fetchedElapsed' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time in ms for MTURK to respond to a search fetch request.'></span>`).data('toggled', 1).data('max',2).data('array', 'timerStats');
-		$('.pcm-searchStats .toggle').click( e => { 
+		$('.pcm-searchStats .toggle').click( e => {
 			let theToggle = $(e.target).closest('.toggle'), toggled = theToggle.data('toggled'), max = theToggle.data('max'), theArray = theToggle.data('array');
 			let beforeToggled = toggled; toggled = (++toggled > max) ? 1 : toggled; theToggle.data('toggled', toggled);
-			let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true); 
+			let thisStat = theToggle.find(`.pcm-stat${toggled}`); theToggle.find('span').hide(); thisStat.show().stop(true,true);
 			let oldColor = thisStat.css('color'); thisStat.css('color','Tomato').animate({'color':oldColor}, 3500);
 			MySearch.searchGStats.toggleStat(beforeToggled, toggled, theArray);
 		});
@@ -317,7 +317,7 @@ class SearchUI {
 	}
 	/** Will fill in the triggered HIT found from a custom trigger to the Triggered HITs tab.
 	 * @param {number} unique   - Unique Number        @param {object} triggerData - Trigger Data     @param {object} [hitData] - HIT Data  @param {string} [term] - Term Found
-	 * @param {bool} [started]  - Started Collecting?  @param {bool} [auto]        - Auto Collecting? */
+	 * @param {bool} [auto]     - Auto Collecting? */
 	triggeredHit(unique, triggerData, hitData=null, term=null, auto=false) {
 		$(`#pcm-triggerCard-${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm-triggerStats-${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
@@ -336,7 +336,7 @@ class SearchUI {
 	resetToolTips(enabled=true) { if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr				 - Jobs to Delete     @param  {function} [afterFunc] - After Function  @param  {function} [afterClose] - After Close Function
-	 * @param  {function} [cancelText] - Cancel Button Text */
+	 * @param  {string} [cancelText] - Cancel Button Text */
 	removeJobs(jobsArr, afterFunc=null, afterClose=null, cancelText='cancel') {
 		let bodyText = '';
 		for (const thisId of jobsArr) { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; }
