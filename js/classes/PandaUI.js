@@ -192,7 +192,7 @@ class PandaUI {
 		if (!bgPanda.checkUnique(myId)) return;
 		let pandaStat = this.pandaStats[myId];
 		if (pandaStat.collecting || pandaStat.searching) {
-			let info = bgPanda.options(myId), classToo = ''; 
+			let info = bgPanda.options(myId), classToo = '';
 			if (!info.data) await bgPanda.getDbData(myId);
 			if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
 			if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
@@ -213,7 +213,7 @@ class PandaUI {
 	/** Removes a job from the UI.
 	 * @async												 - To wait for removal of cards with animation on UI and panda job from database.
 	 * @param  {Number} myId				 - Unique Number     @param  {function} [afterFunc] - After Function   @param  {function} [animate]	 - Animate Card?
-	 * @param  {function} [deleteDB] - Database Delete?  @param  {string} [whyStop]     - Why Stopping? */
+	 * @param  {bool} [deleteDB] - Database Delete?  @param  {string} [whyStop]     - Why Stopping? */
 	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true, whyStop=null) {
 		this.cards.removeCard(myId, async () => {
 			let options = bgPanda.options(myId), data = await bgPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
@@ -304,7 +304,7 @@ class PandaUI {
 				diff = nowDate - this.lastAdded;
 				if (diff < this.hitQueue[0].lowestDur) {
 					if (this.hitQueue.length > 1) this.hitQueue.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
-					bgPanda.sendStatusToSearch(hitInfo.data, true); 
+					bgPanda.sendStatusToSearch(hitInfo.data, true);
 					if (!this.delayedTimeout) this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500, diff);
 				} else this.nextInDelayedQueue(diff);
 			} else this.nextInDelayedQueue(-1);
@@ -340,7 +340,7 @@ class PandaUI {
 	/** Add panda from the database.
 	 * @async							- To wait for the process of adding data to the database.
 	 * @param  {object} r - Panda Job Data  @param  {bool} [loaded] - Already Loaded? */
-	async addPandaDB(r, loaded=true) { 
+	async addPandaDB(r, loaded=true) {
 		let update = gNewVersion, tabUniques = this.tabs.getUniques();
 		if (typeof r.dateAdded === 'string') { r.dateAdded = new Date(r.dateAdded).getTime(); update = true; }
 		if (!r.hasOwnProperty('mute')) { r.mute = false; update = true; }

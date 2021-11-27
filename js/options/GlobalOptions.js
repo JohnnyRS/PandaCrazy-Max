@@ -111,7 +111,7 @@ class PandaGOptions {
   **/
   doTimers(changes=null, update=true) { if (changes) this.doChanges('timers', changes, update); else return this.timers; }
   /** Changes the general options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
    * @return {object}           - General Options Object
   **/
   doGeneral(changes=null, update=true) {
@@ -123,12 +123,12 @@ class PandaGOptions {
     else return this.general;
   }
   /** Changes the search options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
    * @return {object}           - Search Options Object
   **/
   doSearch(changes=null, update=true) { if (changes) this.doChanges('search', changes, update); else return this.search; }
   /** Changes the alarms options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
    * @return {object}           - Alarms Options Object
   **/
   doAlarms(changes=null, update=true) { if (changes) this.doChanges('alarms', changes, update); else return this.alarms; }
@@ -334,8 +334,8 @@ class PandaGOptions {
   **/
   theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
+   * @return {null|object|string}         - Returns current theme string.
    * @param  {number} [index] - Theme Index Value  @param  {string} [cssTheme] - Theme CSS Value  @param  {bool} all - Return All Themes
-   * @return {string}         - Returns current theme string.
   **/
   theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;

@@ -215,10 +215,10 @@ class MturkHitSearch extends MturkClass {
 		if (name === 'rules') { let ruleSet = returnValue.ruleSet; returnValue = returnValue.rules[ruleSet]; }
 		return returnValue;
 	}
+	prepareSearch() { this.resetSearch(); }
 	/** Prepare the search URL with many options.
 	 * @param  {number} [pageSize]  - Page size      @param  {bool} [onlyQual] - Only qualified?
 	 * @param  {bool} [onlyMasters]	- Only Masters?  @param  {string} [sort]   - Sort value       @param  {string} [minReward] - Minimum reward */
-	prepareSearch() { this.resetSearch(); }
 	resetSearch(pageSize=35, onlyQual=true, onlyMasters=false, sort='updated_desc', minReward='0.01') {
 		let savedOptions = MyOptions.doSearch();
 		sort = (this.sorting.includes(sort)) ? sort : this.sorting[0]; // set up sorting with passed value or default
@@ -609,7 +609,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {bool} [sUI]  - Search UI?       @param  {bool} [remove] - Remove Live Trigger?  */
 	async setDisabled(type, value, disabled, sUI=true, remove=true, stopOk=true) {
 		let dbId = this.theDbId(type, value, false, sUI); if (!dbId) return;
-		let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options'); 
+		let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options');
 		if (type === 'custom') this.termData(!disabled, rules, options, dbId);
 		else this.liveString(type, value, !disabled, sUI, remove);
 		if (disabled && this.triggers[dbId].reqSearch) {
@@ -683,7 +683,7 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Fills objects in memory for adding from database or from user.
 	 * @param  {number} count	- Unique ID       @param  {number} dbId				 - Database ID    @param  {object} data - Trigger data
-	 * @param  {bool} status	- Trigger status  @param  {string} valueString - Unique string 	@param  {bool} SUI 		- From searchUI? */
+	 * @param  {bool} status	- Trigger status  @param  {string} valueString - Unique string 	@param  {bool} sUI 		- From searchUI? */
 	fillInObjects(count, dbId, data, status, valueString, sUI) {
 		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
@@ -844,7 +844,7 @@ class MturkHitSearch extends MturkClass {
 								} else if (foundData) this.sendToPanda(foundData, dbId, lookGid);
 							}
 							this.searchesString = tempString + this.searchesString;
-							this.searchesString = this.searchesString.substr(0,3700);	
+							this.searchesString = this.searchesString.substr(0,3700);
 							tempString = ''; hitsData = null; rewardSort = null;
 						}
 						if (dbId !== null && (this.triggers[dbId].setName === 'fromSearch' || !this.triggers[dbId].reqSearch)) {

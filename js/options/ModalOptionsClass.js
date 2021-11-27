@@ -35,19 +35,19 @@ class ModalOptionsClass {
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
       if (theseOptions.search.minReward === 0) $(`<div class='pcm-optionEditWarning'>Having the Minimum Reward at $0.00 may cause better HITs to slip by if there are many HITs at $0.00.</div>`).appendTo(df);
       displayObjectData([
-        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-        {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for HITs nearing the expiration time.'}, 
-        {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for HITs nearing the expiration time.'}, 
-        {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key1':'general', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting HITs or warnings.'}, 
-        {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key1':'general', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'}, 
-        {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key1':'general', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'}, 
-        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key1':'general', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
-        {'label':'Days to keep History:', 'type':'number', 'key1':'general', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange}, 
-        {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'}, 
-        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`}, 
-        {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key1':'general', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'}, 
-        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key1':'general', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?', 'minMax':this.minCaptchaRange}, 
-        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key1':'general', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'}, 
+        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'},
+        {'label':'Disable Queue Watch Color Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlert', 'tooltip':'Disable the color alert in the queue watch area for HITs nearing the expiration time.'},
+        {'label':'Disable Queue Watch Alarm:', 'type':'trueFalse', 'key1':'general', 'key':'disableQueueAlarm', 'tooltip':'Disable sounding the alarm for HITs nearing the expiration time.'},
+        {'label':'Disable Desktop Notifications:', 'type':'trueFalse', 'key1':'general', 'key':'disableNotifications', 'tooltip':'Disable notifications shown when accepting HITs or warnings.'},
+        {'label':'Show Fetch Highlighter on Group ID:', 'type':'trueFalse', 'key1':'general', 'key':'fetchHighlight', 'tooltip':'Should group ID be highlighted when job is trying to fetch?'},
+        {'label':'Volume Slider Horizontal:', 'type':'trueFalse', 'key1':'general', 'key':'volHorizontal', 'tooltip':'Should volume slider be shown horizontal or vertical?'},
+        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key1':'general', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'},
+        {'label':'Days to keep History:', 'type':'number', 'key1':'general', 'key':'historyDays', 'tooltip':'How many days should the history of active HITs be kept? The more days the more disk space it could use.', 'minMax':this.historyRange},
+        {'label':'Disable Monitoring Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableMonitorAlert', 'tooltip':'Disable the Monitor Queue Speech Alert When Queue Monitoring is Turned on.'},
+        {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`},
+        {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key1':'general', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'},
+        {'label':'Captcha Shown After #HITs:', 'type':'text', 'key1':'general', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?', 'minMax':this.minCaptchaRange},
+        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key1':'general', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'},
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'search', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
       ], df, modal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${modal.classModalBody}`);
@@ -75,11 +75,11 @@ class ModalOptionsClass {
       let searchRange = MyOptions.getTimerSearch(), queueRange = MyOptions.getTimerQueue();
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:<br><span class='small pcm-modalInfo'>All timers are in milliseconds unless specified otherwise.</span></div>`).appendTo(df);
       displayObjectData([
-        {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds.`, 'minMax':timerRange}, 
-        {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds.`, 'minMax':timerRange}, 
-        {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds.`, 'minMax':timerRange}, 
-        {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds.`, 'minMax':timerRange}, 
-        {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'minMax':this.defDur}, 
+        {'label':'Main Timer:', 'type':'number', 'key':'mainTimer', 'tooltip':`Change the main timer duration in milliseconds.`, 'minMax':timerRange},
+        {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds.`, 'minMax':timerRange},
+        {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds.`, 'minMax':timerRange},
+        {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds.`, 'minMax':timerRange},
+        {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'minMax':this.defDur},
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':searchRange},
         {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the MTURK queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'minMax':queueRange},
         {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'minMax':timerChange},
@@ -170,7 +170,7 @@ class ModalOptionsClass {
         MyOptions.doSearch(changes.options); await MySearch.timerChange(changes.searchTimer); await MySearch.prepareSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
         setTimeout( () => modal.closeModal(), 0);
-      } 
+      }
       if (changes.options.defaultDur === 0 && changes.options.defaultFetches === 0) {
         changes.options.defaultDur = (changes.options.defaultDur !== oldTempDuration) ? oldTempDuration : changes.options.defaultDur;
         changes.options.defaultFetches = (changes.options.defaultFetches !== oldTempFetches) ? oldTempFetches : changes.options.defaultFetches;
@@ -190,8 +190,8 @@ class ModalOptionsClass {
       $(`<div class='pcm-detailsEdit'>Click on the options you would like to change below:</div>`).appendTo(df);
       if (searchOptions.minReward === 0) $(`<div class='pcm-optionEditWarning'>Having the Minimum Reward at $0.00 may cause better HITs to slip by if there are many HITs at $0.00.</div>`).appendTo(df);
       displayObjectData( [
-        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'}, 
-        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'}, 
+        {'label':'Show Help Tooltips:', 'type':'trueFalse', 'key1':'general', 'key':'showHelpTooltips', 'tooltip':'Should help tooltips be shown for buttons and options? What you are reading is a tooltip.'},
+        {'label':'Search Job Buttons Create Search UI Triggers:', 'type':'trueFalse', 'key':'toSearchUI', 'tooltip':'Using search buttons creates search triggers in the search UI instead of panda UI.'},
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':MyOptions.getTimerSearch()},
         {'label':'Default Trigger Temporary Duration (Seconds):', 'seconds':true, 'type':'number', 'key1':'options', 'key':'defaultDur', 'tooltip':`The TEMPORARY default duration for new triggers to use on panda jobs. This value can not be 0 if Temporary Fetches is 0 and will revert back to previous value.`, 'minMax':this.pandaDurSeconds, 'minFunc': () => {
           let otherValue = $(`#pcm-defaultFetchesDetailS`).html() || $(`#pcm-defaultFetchesDetailI`).val();

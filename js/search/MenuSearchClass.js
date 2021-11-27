@@ -11,7 +11,7 @@
     let elements = '.pcm-searchTop .pcm-btn-menu';
     $(elements).each( (_, ele) => {
       let theId = $(ele).attr('id'), label = $(ele).data('label');
-      if (theId) { let cssVar = getCSSVar(theId.replace('pcm-', ''), label); $(ele).html(cssVar); } 
+      if (theId) { let cssVar = getCSSVar(theId.replace('pcm-', ''), label); $(ele).html(cssVar); }
     });
   }
   /** This method will add a menu with a label and the function to use when button clicked.
@@ -27,7 +27,7 @@
    * @param  {object} appendHere    - Jquery Element      @param  {string} label      - SubMenu label    @param  {string} theClass        - Class Name
    * @param  {string} btnGroupClass - Button Group Class  @param  {string} btnGroupID - Button Group ID  @param  {array} dropdownInfo     - Dropdown Info
    * @param  {string} [tooltip]     - CSS style           @param  {string} [buttonId] - CSS style        @param  {string} [dropdownClass] - CSS style
-   * @param  {string} [noClick]     - CSS style           @param  {string} [onClosed] - CSS style */
+   * @param  {bool} [noClick]       - should stop prop?   @param  {function} [onClosed] - Menu close function */
   addSubMenu(appendHere, label, theClass, btnGroupClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
     const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
     let btnGroup = $(`<div class='btn-group ${btnGroupClass}'${addId}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';

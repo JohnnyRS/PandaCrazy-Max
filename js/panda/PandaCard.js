@@ -189,7 +189,7 @@ class PandaCards {
   /** Show that this panda is not collecting anymore and show effect or a new background color.
    * @param  {number} myId - Unique ID  @param  {bool} [stopEffect] - Stop Effects?  @param  {string} [whyStop] - Stop Reason  @param  {string} [addClass] - Class to Add */
   stopItNow(myId, stopEffect=false, whyStop=null, addClass=null) {
-    if (stopEffect) this.stopEffect_card(myId); 
+    if (stopEffect) this.stopEffect_card(myId);
     if (addClass) { $(`#pcm-pandaCard-${myId}`).data('previousColor1', $(`#pcm-pandaCard-${myId}`).css('background-color')).data('stopped', whyStop).addClass(addClass); }
     else $(`#pcm-pandaCard-${myId}`).removeClass('pcm-noQual pcm-blocked pcm-notValid');
     if (stopEffect) this.highlightEffect_card(myId, 'stop', 7500);
@@ -247,7 +247,7 @@ class PandaCards {
 				else { theButton.addClass('pcm-btn-selected'); this.ctrlDelete.push(myId); }
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
 			theButton = null; card = null;
-    }).unbind('contextmenu').contextmenu( async e => {      
+    }).unbind('contextmenu').contextmenu( async e => {
       let card = $(e.target).closest('.card'), myId = card.data('myId'), data = await bgPanda.dataObj(myId); e.preventDefault();
       data.mute = !data.mute; bgPanda.updateDbData(myId, data); this.pandaMute(myId, data.mute); card = null; return false;
     }).mousedown( e => { $(`.pcm-tooltipData`).tooltip('dispose'); $(e.target).closest('.pcm-pandaCard').find('.pcm-tooltipData').addClass('pcm-tooltipDisable');
@@ -345,7 +345,7 @@ class PandaCards {
 class PandaCard {
   /**
    * @param  {number} myId             - The unique id of the panda for this card.
-   * @param  {object} info             - The data information for this panda.
+   * @param  {number} dbId             - Database ID
    */
   constructor(myId, dbId) {
     this.myId = myId;

@@ -65,7 +65,7 @@ function createCheckBox(appendHere, label, id, value, checked, divClass=null, in
  * @return {object}              - The Jquery object for the radio button. */
 function radioButtons(appendHere, nameGroup, value, label, checked=false, classAdd='', labelTitle='') {
   const checkedText = (checked) ? ' checked' : '', lAddTitle = (labelTitle) ? ` data-original-title='${labelTitle}'` : '', addClass = (classAdd) ? ` ${classAdd}` : '';
-  let radioButton = $(`<label class='radio-inline small${addClass}'${lAddTitle}><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
+  let radioButton = $(`<label class='radio-inline small${addClass}'${lAddTitle}><input type='radio'${checkedText} name='${nameGroup}' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
   return radioButton;
 }
 /** Creates a time input using a date time picker from tempus dominus plugin.
@@ -249,7 +249,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
     if (element.money) theValue = (theValue !== null || theValue !== undefined) ? Number(theValue).toFixed(2) : '_.__';
-    if (theValue === undefined || theValue === null || theValue === undefined) { theValue = element.default; }
+    if (theValue === undefined || theValue === null) { theValue = element.default; }
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
@@ -317,7 +317,7 @@ function allTabs(search, doAfter) {
 }
 /** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
  * @param  {object} theData    - Export Data          @param  {string} [prefix]      - File Prefix                     @param {string} [suffix] - File Ending
- * @param  {string} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
+ * @param  {function} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
 **/
 function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
   let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;
@@ -435,7 +435,7 @@ function compareVersion(version1, version2) {
 }
 /** Checks the CSS file if user set a CSS variable and then returns it or returns the default value if no CSS variable found.
  * @param  {string} [varName] - Variable Name  @param {string} [defaultText] - Default Text to Use
- * @return {string}           - CSS variable or the default value if no CSS variable found. */
+ * @return {void|string}           - CSS variable or the default value if no CSS variable found. */
 function getCSSVar(varName=null, defaultText='') {
   if (varName === null) return;
   let varContent = getComputedStyle(document.documentElement).getPropertyValue(`--pcm-${varName}`).trim();

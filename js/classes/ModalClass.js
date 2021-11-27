@@ -19,7 +19,7 @@ class ModalClass {
     this.tempObject =  [];                        // A place to keep data changes before the save button clicked.
   }
   /** Create a modal with header and footer
-   * @return {string} - Id name of the modal created. */
+   * @return {string} [addModalClass] - pcm-modal class name. */
   createModal(addModalClass=null) {
     let count = this.modals.length, backdrop = (count>0) ? ` data-backdrop='static'` : ``, style = ` style='z-index:${1051+(count*2)}'`, idName = `${this.idName}-${count}`;
     this.modals.push(idName); // Push the id name of the modal on to the modals array for multiple modals.
@@ -32,7 +32,7 @@ class ModalClass {
   }
   /** Show this modal dialog allowing multiple modals to be shown with zIndex.
    * @param {function} [cancelFunc] - Cancel Function      @param {function} [afterShow] - After Show Function @param {function} [afterClose] - After Close Function
-   * @param {function} [cancelText] - Text Used for Cancel */
+   * @param {string} [cancelText] - Text Used for Cancel */
   showModal(cancelFunc=null, afterShow=null, afterClose=null, cancelText='Cancel') {
     const idName = this.modals.slice(-1)[0]; // Get the last modal id name opened.
     $(`#${idName}`).modal({backdrop:'static', keyboard:false}); // Move last modal to background.
@@ -141,8 +141,8 @@ class ModalClass {
    * @param {number} width         - Width               @param {string} title          - Title                @param {string} body            - Body Html
    * @param {function} yesFunc     - Yes Function        @param {bool} yesBtn           - Show Yes             @param {bool} noBtn             - Show No
    * @param {string} [question]    - Question            @param {string} [defAns]       - Default Answer       @param {number} [max]           - Max Characters
-   * @param {function} [afterShow] - AfterShow Function  @param {function} [afterClose] - AfterClose Function  @param {function} [yesTxt]      - Yes Text
-   * @param {function} [noTxt]     - No Text             @param {function} [noFunc]     - No Function          @param {function} [placeHolder] - PlaceHolder */
+   * @param {function} [afterShow] - AfterShow Function  @param {function} [afterClose] - AfterClose Function  @param {string} [yesTxt]      - Yes Text
+   * @param {string} [noTxt]     - No Text             @param {function} [noFunc]     - No Function          @param {function} [placeHolder] - PlaceHolder */
   showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, () => { if (yesFunc) yesFunc(idName); }, noClass, noTxt, noFunc);
