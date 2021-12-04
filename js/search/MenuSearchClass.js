@@ -26,11 +26,18 @@
     let cssVar = getCSSVar(idName.replace('pcm-', ''), label); theButton.html(cssVar); theButton = null;
   }
   /** Adds a sub menu to a menu with dropdownstyle allowing for 3 submenus under the main menu.
+<<<<<<< HEAD
    * @param  {object} appendHere    - Jquery element.      @param  {string} label        - SubMenu label.    @param  {string} theClass        - Class name.
    * @param  {string} btnGroupClass - Button group class.  @param  {string} btnGroupID   - Button group ID.  @param  {array} dropdownInfo     - Dropdown info.
    * @param  {string} [tooltip]     - CSS style.           @param  {string} [buttonId]   - CSS style.        @param  {string} [dropdownClass] - CSS style.
    * @param  {bool} [noClick]       - Should stop prop?    @param  {function} [onClosed] - Menu close function.
   **/
+=======
+   * @param  {object} appendHere    - Jquery Element      @param  {string} label      - SubMenu label    @param  {string} theClass        - Class Name
+   * @param  {string} btnGroupClass - Button Group Class  @param  {string} btnGroupID - Button Group ID  @param  {array} dropdownInfo     - Dropdown Info
+   * @param  {string} [tooltip]     - CSS style           @param  {string} [buttonId] - CSS style        @param  {string} [dropdownClass] - CSS style
+   * @param  {bool} [noClick]       - should stop prop?   @param  {function} [onClosed] - Menu close function */
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   addSubMenu(appendHere, label, theClass, btnGroupClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
     const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
     let btnGroup = $(`<div class='btn-group ${btnGroupClass}'${addId}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';

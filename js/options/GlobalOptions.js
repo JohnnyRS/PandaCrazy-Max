@@ -117,8 +117,13 @@ class PandaGOptions {
   **/
   doTimers(changes=null, update=true) { if (changes) this.doChanges('timers', changes, update); else return this.timers; }
   /** Changes the general options with the changes object and updates database if update is true.
+<<<<<<< HEAD
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - General options object.
+=======
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
+   * @return {object}           - General Options Object
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   doGeneral(changes=null, update=true) {
     if (changes) {
@@ -129,13 +134,23 @@ class PandaGOptions {
     else return this.general;
   }
   /** Changes the search options with the changes object and updates database if update is true.
+<<<<<<< HEAD
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Search options object.
+=======
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
+   * @return {object}           - Search Options Object
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   doSearch(changes=null, update=true) { if (changes) { MySearch.redoCacheOptions(changes, this.search); this.doChanges('search', changes, update); } else return this.search; }
   /** Changes the alarms options with the changes object and updates database if update is true.
+<<<<<<< HEAD
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Alarms options object.
+=======
+   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
+   * @return {object}           - Alarms Options Object
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   doAlarms(changes=null, update=true) { if (changes) this.doChanges('alarms', changes, update); else return this.alarms; }
   /** Returns the timer range object.
@@ -344,8 +359,13 @@ class PandaGOptions {
   **/
   theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
+<<<<<<< HEAD
    * @param  {number} [index]     - Theme index value.  @param  {string} [cssTheme] - Theme CSS value.  @param  {bool} [all] - Return all themes?
    * @return {null|object|string} - Returns current theme string or all objects or null if index is out of bounds.
+=======
+   * @return {null|object|string}         - Returns current theme string.
+   * @param  {number} [index] - Theme Index Value  @param  {string} [cssTheme] - Theme CSS Value  @param  {bool} all - Return All Themes
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;

@@ -49,6 +49,10 @@ class ModalOptionsClass {
         {'label':'Disable Captcha Alert:', 'type':'trueFalse', 'key1':'general', 'key':'disableCaptchaAlert', 'tooltip':`Disable the captcha alert and notification. Disable this if you are a master or using another script for captcha's.`},
         {'label':'Show Captcha Counter Text:', 'type':'trueFalse', 'key1':'general', 'key':'captchaCountText', 'tooltip':'Should the captcha count be shown on the bottom log tabbed area? Disable this if you are a master.'},
         {'label':'Captcha Shown After #HITs:', 'type':'text', 'key1':'general', 'key':'captchaAt', 'tooltip':'How many HITs on average will MTURK show a captcha for you?', 'minMax':this.minCaptchaRange},
+<<<<<<< HEAD
+=======
+        {'label':'Enable Advanced Search Jobs:', 'type':'trueFalse', 'key1':'general', 'key':'advancedSearchJobs', 'tooltip':'Allow search jobs to do a requester search from old script. Shows a button search jobs to toggle requester search option.'},
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'search', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
       ], df, MyModal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${MyModal.classModalBody}`);
@@ -81,7 +85,11 @@ class ModalOptionsClass {
         {'label':'Timer #2:', 'type':'number', 'key':'secondTimer', 'tooltip':`Change the second timer duration in milliseconds.`, 'minMax':timerRange},
         {'label':'Timer #3:', 'type':'number', 'key':'thirdTimer', 'tooltip':`Change the third timer duration in milliseconds.`, 'minMax':timerRange},
         {'label':'GoHam Timer:', 'type':'number', 'key':'hamTimer', 'tooltip':`Change the go ham timer duration in milliseconds.`, 'minMax':timerRange},
+<<<<<<< HEAD
         {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'minMax':this.hamDur},
+=======
+        {'label':'Default GoHam Timer Delay (Seconds):', 'type':'number', 'seconds':true, 'key':'hamDelayTimer', 'tooltip':'Change the default duration for jobs going into ham automatically by delay.', 'minMax':this.defDur},
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
         {'label':'Search Timer:', 'type':'number', 'key':'searchTimer', 'tooltip':`Change the search timer duration for HITs to be searched and found in milliseconds.`, 'minMax':searchRange},
         {'label':'Check Queue Every:', 'type':'number', 'key':'queueTimer', 'tooltip':'Change the timer duration for the MTURK queue to be checked and updated in milliseconds. Higher amount may lower data use.', 'minMax':queueRange},
         {'label':'Timer Increase By:', 'type':'number', 'key':'timerIncrease', 'tooltip':'Change the value in milliseconds on the increase menu button to increase the current timer by.', 'minMax':timerChange},
@@ -178,7 +186,11 @@ class ModalOptionsClass {
         MyOptions.theToSearchUI(changes.toSearchUI, false); MyOptions.theSearchTimer(changes.searchTimer, false); MyOptions.doGeneral(Object.assign(MyOptions.doGeneral(), changes.general));
         MyOptions.doSearch(Object.assign(MyOptions.doSearch(), changes.options)); await MySearch.timerChange(changes.searchTimer); await MySearch.resetSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
+<<<<<<< HEAD
         setTimeout( () => MyModal.closeModal(), 0);
+=======
+        setTimeout( () => modal.closeModal(), 0);
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
       }
       if (changes.options.defaultDur === 0 && changes.options.defaultFetches === 0) {
         changes.options.defaultDur = (changes.options.defaultDur !== oldTempDuration) ? oldTempDuration : changes.options.defaultDur;

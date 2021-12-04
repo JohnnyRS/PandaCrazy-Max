@@ -187,8 +187,13 @@ class DatabaseClass {
     });
   }
   /** Adds data to database with a key in data or next key available. Can add Multiple or save only new. Can use a function when data gets updated.
+<<<<<<< HEAD
    * @param  {string} storeName - Store name.  @param  {object} mdata          - Multiple data.   @param  {bool} [onlyNew] - True for only updating data that is new.
    * @param  {bool} [key]       - Key name.    @param  {function} [updateFunc] - Update function.
+=======
+   * @param  {string} storeName - Store name  @param  {object} mdata      - Multiple Data   @param  {bool} [onlyNew] - True for only updating data that is new.
+   * @param  {bool} [key]       - Key         @param  {function} [updateFunc] - Update function
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
    * @return {promise}          - Database key or new key in resolve. Error object in reject.
   **/
   addToDB(storeName, mData, onlyNew=false, key=null, updateFunc=null) {

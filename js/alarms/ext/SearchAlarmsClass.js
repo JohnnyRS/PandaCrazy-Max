@@ -31,7 +31,11 @@ class SearchAlarmsClass {
   /** Removes any data that should be removed when closing down. **/
   removeAll() { MyModal = null; this.voices = []; this.data = {}; this.myAudio = null; }
   /** Uses the Text to speech synthesis to speak a text provided. Will cancel any text speaking first.
+<<<<<<< HEAD
    * @param  {string} thisText - The text.  @param  {function} [endFunc] - The function to run when the text spoken ends.
+=======
+   * @param  {string} thisText - The text  @param  {function} [endFunc] - The function to run when the text spoken ends.
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   speakThisNow(thisText, endFunc=null) {
     if (this.synth) {
@@ -92,7 +96,11 @@ class SearchAlarmsClass {
     return options;
   }
   /** Play the sound with the name provided or text to speech if not muted. Also changes the volume.
+<<<<<<< HEAD
    * @param  {string} alarmSound - Alarm name.  @param  {bool} [testing] - Test alarm.  @param  {string} [speakThis] - TTS text.  @param  {function} [endFunc] - End function.
+=======
+   * @param  {string} alarmSound - Alarm name  @param  {bool} [testing] - Test alarm  @param  {string} [speakThis] - TTS text  @param  {function} [endFunc] - End function
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   **/
   playSound(alarmSound, testing=false, speakThis='', endFunc=null) {
     if (this.data[alarmSound]) {

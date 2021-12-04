@@ -207,8 +207,13 @@ class PandaUI {
 		if (!MyPanda.checkUnique(myId)) return;
 		let pandaStat = this.pandaStats[myId];
 		if (pandaStat.collecting || pandaStat.searching) {
+<<<<<<< HEAD
 			let info = MyPanda.options(myId), classToo = '';
 			if (!info.data) await MyPanda.getDbData(myId);
+=======
+			let info = bgPanda.options(myId), classToo = '';
+			if (!info.data) await bgPanda.getDbData(myId);
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 			if (whyStop === 'manual') this.cards.collectTipChange(myId, '');
 			if (pandaStat.collecting && !pandaStat.searching && !searching) this.pandaGStats.subCollecting();
 			let theStats = pandaStat.stopCollecting(); this.pandaGStats.collectingOff();
@@ -226,10 +231,16 @@ class PandaUI {
 		}
 	}
 	/** Removes a job from the UI.
+<<<<<<< HEAD
 	 * @async										 - To wait for removal of cards with animation on UI and panda job from database.
 	 * @param  {Number} myId		 - Unique number.    @param  {function} [afterFunc] - After function.  @param  {function} [animate] - Animate card?
 	 * @param  {bool} [deleteDB] - Database delete?  @param  {string} [whyStop]     - Why stopping?
 	**/
+=======
+	 * @async												 - To wait for removal of cards with animation on UI and panda job from database.
+	 * @param  {Number} myId				 - Unique Number     @param  {function} [afterFunc] - After Function   @param  {function} [animate]	 - Animate Card?
+	 * @param  {bool} [deleteDB] - Database Delete?  @param  {string} [whyStop]     - Why Stopping? */
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 	async removeJob(myId, afterFunc=null, animate=true, deleteDB=true, whyStop=null) {
 		this.cards.removeCard(myId, async () => {
 			let options = MyPanda.options(myId), data = await MyPanda.dataObj(myId); this.tabs.removePosition(data.tabUnique, options.dbId);
@@ -328,7 +339,11 @@ class PandaUI {
 				diff = nowDate - this.lastAdded;
 				if (diff < this.hitQueue[0].lowestDur) {
 					if (this.hitQueue.length > 1) this.hitQueue.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+<<<<<<< HEAD
 					MyPanda.sendStatusToSearch(hitInfo.data, true);
+=======
+					bgPanda.sendStatusToSearch(hitInfo.data, true);
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 					if (!this.delayedTimeout) this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500, diff);
 				} else this.nextInDelayedQueue(diff);
 			} else this.nextInDelayedQueue(-1);
@@ -365,8 +380,12 @@ class PandaUI {
 	}
 	/** Add panda from the database.
 	 * @async							- To wait for the process of adding data to the database.
+<<<<<<< HEAD
 	 * @param  {object} r - Panda job data.  @param  {bool} [loaded] - Already loaded?
 	**/
+=======
+	 * @param  {object} r - Panda Job Data  @param  {bool} [loaded] - Already Loaded? */
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 	async addPandaDB(r, loaded=true) {
 		let update = gNewVersion, tabUniques = this.tabs.getUniques();
 		if (typeof r.dateAdded === 'string') { r.dateAdded = new Date(r.dateAdded).getTime(); update = true; }

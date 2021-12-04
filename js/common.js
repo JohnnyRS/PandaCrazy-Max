@@ -346,8 +346,13 @@ function allTabs(search, doAfter=null) {
   });
 }
 /** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
+<<<<<<< HEAD
  * @param  {object} theData      - Export data.          @param  {string} [prefix]      - File prefix.                    @param  {string} [suffix] - File ending.
  * @param  {function} [doneFunc] - After save function.  @param  {bool}   [doStringify] - Should theData be stringified?
+=======
+ * @param  {object} theData    - Export Data          @param  {string} [prefix]      - File Prefix                     @param {string} [suffix] - File Ending
+ * @param  {function} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 **/
 function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
   let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;
@@ -485,9 +490,14 @@ function compareVersion(version1, version2) {
   return(result);
 }
 /** Checks the CSS file if user set a CSS variable and then returns it or returns the default value if no CSS variable found.
+<<<<<<< HEAD
  * @param  {string} [varName] - Variable name.  @param  {string} [defaultText] - Default text to use.
  * @return {null|string}      - CSS variable or the default value if no CSS variable found. Null if no varName given.
 **/
+=======
+ * @param  {string} [varName] - Variable Name  @param {string} [defaultText] - Default Text to Use
+ * @return {void|string}           - CSS variable or the default value if no CSS variable found. */
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 function getCSSVar(varName=null, defaultText='') {
   if (varName === null) return null;
   let varContent = getComputedStyle(document.documentElement).getPropertyValue(`--pcm-${varName}`).trim();

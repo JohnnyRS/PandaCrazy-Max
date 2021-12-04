@@ -336,10 +336,16 @@ class MturkHitSearch extends MturkClass {
 		if (name === 'rules') { let ruleSet = returnValue.ruleSet; returnValue = returnValue.rules[ruleSet]; }
 		return returnValue;
 	}
+	prepareSearch() { this.resetSearch(); }
 	/** Prepare the search URL with many options.
+<<<<<<< HEAD
 	 * @param  {number} [pageSize] - Page size.   @param  {bool} [onlyQual]    - Only qualified?  @param  {bool} [onlyMasters]	- Only masters?
 	 * @param  {string} [sort]     - Sort value.  @param  {string} [minReward] - Minimum reward.
 	**/
+=======
+	 * @param  {number} [pageSize]  - Page size      @param  {bool} [onlyQual] - Only qualified?
+	 * @param  {bool} [onlyMasters]	- Only Masters?  @param  {string} [sort]   - Sort value       @param  {string} [minReward] - Minimum reward */
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 	resetSearch(pageSize=35, onlyQual=true, onlyMasters=false, sort='updated_desc', minReward='0.01') {
 		let savedOptions = MyOptions.doSearch();
 		sort = (this.sorting.includes(sort)) ? sort : this.sorting[0]; // Set up sorting with passed value or default
@@ -751,6 +757,7 @@ class MturkHitSearch extends MturkClass {
 	 * @param  {bool} [sUI]     - From search UI?   @param  {bool} [remove] - Remove live trigger?       @param  {bool} [stopOk] - OK to stop searching if needed?
 	**/
 	async setDisabled(type, value, disabled, sUI=true, remove=true, stopOk=true) {
+<<<<<<< HEAD
 		let dbId = this.theDbId(type, value, false, sUI);
 		if (dbId) {
 			let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options');
@@ -764,6 +771,14 @@ class MturkHitSearch extends MturkClass {
 			else if (this.liveCounter > 0 && !sUI) this.startSearching();
 			else if (stopOk && this.liveCounter === 0) this.stopSearching();
 			rules = null; options = null;
+=======
+		let dbId = this.theDbId(type, value, false, sUI); if (!dbId) return;
+		let rules = await this.theData(dbId, 'rules'), options = await this.theData(dbId, 'options');
+		if (type === 'custom') this.termData(!disabled, rules, options, dbId);
+		else this.liveString(type, value, !disabled, sUI, remove);
+		if (disabled && this.triggers[dbId].reqSearch) {
+			searchTimer.deleteFromQueue(this.triggers[dbId].timerUnique); this.triggers[dbId].status = 'disabled'; this.triggers[dbId].reqSLastCreated = null;
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 		}
 	}
 	/** Toggles the status of the trigger.
@@ -834,11 +849,17 @@ class MturkHitSearch extends MturkClass {
 		if (rules !== null) await this.doAddToDB('searching', 'rules', rules, dbId);
 	}
 	/** Fills objects in memory for adding from database or from user.
+<<<<<<< HEAD
 	 * @async									- To wait for Disabling the trigger if needed.
 	 * @param  {number} count	- Unique ID.       @param  {number} dbId				- Database ID.   @param  {object} data - Trigger data.
 	 * @param  {bool} status	- Trigger status.  @param  {string} valueString - Unique string. 	@param  {bool} sUI 	 - From searchUI?
 	**/
 	async fillInObjects(count, dbId, data, status, valueString, sUI) {
+=======
+	 * @param  {number} count	- Unique ID       @param  {number} dbId				 - Database ID    @param  {object} data - Trigger data
+	 * @param  {bool} status	- Trigger status  @param  {string} valueString - Unique string 	@param  {bool} sUI 		- From searchUI? */
+	fillInObjects(count, dbId, data, status, valueString, sUI) {
+>>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 		let reqUrl = (data.type === 'rid') ? this.createReqUrl(data.value) : null;
 		let setName = (data.searchUI) ? 'fromSearch' : 'fromPanda'; this[setName].add(dbId);
 		this.triggers[dbId] = {'count':count, 'pDbId':data.pDbId, 'setName':setName, 'status':status, 'tempDisabled':false, 'timerUnique':-1, 'reqUrl':reqUrl, 'histDaily':false,
