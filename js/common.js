@@ -346,13 +346,8 @@ function allTabs(search, doAfter=null) {
   });
 }
 /** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
-<<<<<<< HEAD
  * @param  {object} theData      - Export data.          @param  {string} [prefix]      - File prefix.                    @param  {string} [suffix] - File ending.
  * @param  {function} [doneFunc] - After save function.  @param  {bool}   [doStringify] - Should theData be stringified?
-=======
- * @param  {object} theData    - Export Data          @param  {string} [prefix]      - File Prefix                     @param {string} [suffix] - File Ending
- * @param  {function} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 **/
 function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
   let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;

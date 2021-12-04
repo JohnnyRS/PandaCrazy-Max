@@ -20,13 +20,9 @@ class ModalClass {
     this.tempObject =  [];                        // A place to keep data changes before the save button clicked.
   }
   /** Create a modal with header and footer
-<<<<<<< HEAD
    * @param  {string} [addModalClass] - pcm-modal class name.
    * @return {string}                 - Id name of the modal created.
   **/
-=======
-   * @return {string} [addModalClass] - pcm-modal class name. */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   createModal(addModalClass=null) {
     let count = this.modals.length, backdrop = (count>0) ? ` data-backdrop='static'` : ``, style = ` style='z-index:${1051+(count*2)}'`, idName = `${this.idName}-${count}`;
     this.modals.push(idName); // Push the id name of the modal on to the modals array for multiple modals.
@@ -38,14 +34,9 @@ class ModalClass {
     return idName;
   }
   /** Show this modal dialog allowing multiple modals to be shown with zIndex.
-<<<<<<< HEAD
    * @param  {function} [cancelFunc] - Cancel function.  @param  {function} [afterShow] - After show function.  @param  {function} [afterClose] - After close function.
    * @param  {string} [cancelText]   - Text used for cancel.
   **/
-=======
-   * @param {function} [cancelFunc] - Cancel Function      @param {function} [afterShow] - After Show Function @param {function} [afterClose] - After Close Function
-   * @param {string} [cancelText] - Text Used for Cancel */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   showModal(cancelFunc=null, afterShow=null, afterClose=null, cancelText='Cancel') {
     const idName = this.modals.slice(-1)[0]; // Get the last modal id name opened.
     $(`#${idName}`).modal({backdrop:'static', keyboard:false}); // Move last modal to background.
@@ -157,20 +148,12 @@ class ModalClass {
     }, () => { if (afterClose) afterClose(); else MyModal = null; }, cancelText);
   }
   /** Shows a modal dialog with a message or question with a yes and/or no button.
-<<<<<<< HEAD
    * @param  {number} width         - The width.           @param  {string} title          - The title.            @param  {string} body            - Body html.
    * @param  {function} yesFunc     - Yes function.        @param  {bool} yesBtn           - Show yes button?      @param  {bool} noBtn             - Show no button?
    * @param  {string} [question]    - The question.        @param  {string} [defAns]       - Default answer.       @param  {number} [max]           - Max characters.
    * @param  {function} [afterShow] - AfterShow function.  @param  {function} [afterClose] - AfterClose function.  @param  {string} [yesTxt]        - Yes text.
    * @param  {string} [noTxt]       - No text.             @param  {function} [noFunc]     - No function.          @param  {function} [placeHolder] - The placeholder.
   **/
-=======
-   * @param {number} width         - Width               @param {string} title          - Title                @param {string} body            - Body Html
-   * @param {function} yesFunc     - Yes Function        @param {bool} yesBtn           - Show Yes             @param {bool} noBtn             - Show No
-   * @param {string} [question]    - Question            @param {string} [defAns]       - Default Answer       @param {number} [max]           - Max Characters
-   * @param {function} [afterShow] - AfterShow Function  @param {function} [afterClose] - AfterClose Function  @param {string} [yesTxt]      - Yes Text
-   * @param {string} [noTxt]     - No Text             @param {function} [noFunc]     - No Function          @param {function} [placeHolder] - PlaceHolder */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
     const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
     let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, () => { if (yesFunc) yesFunc(idName); }, noClass, noTxt, noFunc);

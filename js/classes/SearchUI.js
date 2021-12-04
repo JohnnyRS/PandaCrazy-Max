@@ -353,14 +353,9 @@ class SearchUI {
 		$(`#` + this.triggeredTab.tabId).html(this.triggeredTab.tabTitle + ` (${this.triggeredContent.find('tbody tr').length})`);
 	}
 	/** Will fill in the triggered HIT found from a custom trigger to the Triggered HITs tab.
-<<<<<<< HEAD
 	 * @param  {number} unique - Unique number.  @param  {object} triggerData - Trigger data.  @param  {object} [hitData] - HIT data.
 	 * @param  {string} [term] - Term found.     @param  {bool} [auto]   			- Auto collecting?
 	**/
-=======
-	 * @param {number} unique   - Unique Number        @param {object} triggerData - Trigger Data     @param {object} [hitData] - HIT Data  @param {string} [term] - Term Found
-	 * @param {bool} [auto]     - Auto Collecting? */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 	triggeredHit(unique, triggerData, hitData=null, term=null, auto=false) {
 		$(`#pcm-triggerCard-${unique}`).stop(true,true).effect( 'highlight', {'color':'green'}, 6000 );
 		$(`#pcm-triggerStats-${unique} span`).html(`${triggerData.numHits} | Total: ${triggerData.numFound}`);
@@ -382,14 +377,9 @@ class SearchUI {
 	**/
 	resetToolTips(enabled=true) { if (enabled) $('.pcm-tooltipHelper').removeClass('pcm-tooltipDisable'); else $('.pcm-tooltipHelper').addClass('pcm-tooltipDisable'); }
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
-<<<<<<< HEAD
 	 * @param  {array} jobsArr			 - Jobs to delete.  @param  {function} [afterFunc] - After function.  @param  {function} [afterClose] - After close function.
 	 * @param  {string} [cancelText] - Cancel button text.
 	**/
-=======
-	 * @param  {array} jobsArr				 - Jobs to Delete     @param  {function} [afterFunc] - After Function  @param  {function} [afterClose] - After Close Function
-	 * @param  {string} [cancelText] - Cancel Button Text */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 	removeJobs(jobsArr, afterFunc=null, afterClose=null, cancelText='cancel') {
 		let bodyText = '';
 		for (const thisId of jobsArr) { bodyText += '( ' + $(`#pcm-triggerName-${thisId}`).html() + ' )<BR>'; }

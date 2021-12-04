@@ -278,13 +278,8 @@ class PandaCards {
 			} else if (e.altKey) { this.ctrlDelete.length = 0; $('.pcm-deleteButton').removeClass('pcm-btn-selected'); }
 			theButton = null; card = null;
     }).unbind('contextmenu').contextmenu( async e => {
-<<<<<<< HEAD
       let card = $(e.target).closest('.card'), myId = card.data('myId'), data = await MyPanda.dataObj(myId); e.preventDefault();
       data.mute = !data.mute; MyPanda.updateDbData(myId, data); this.pandaMute(myId, data.mute); card = null; return false;
-=======
-      let card = $(e.target).closest('.card'), myId = card.data('myId'), data = await bgPanda.dataObj(myId); e.preventDefault();
-      data.mute = !data.mute; bgPanda.updateDbData(myId, data); this.pandaMute(myId, data.mute); card = null; return false;
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
     }).mousedown( e => { $(`.pcm-tooltipData`).tooltip('dispose'); $(e.target).closest('.pcm-pandaCard').find('.pcm-tooltipData').addClass('pcm-tooltipDisable');
     }).mouseup( e => { $(e.target).closest('.pcm-pandaCard').find('.pcm-tooltipData').removeClass('pcm-tooltipDisable'); });
 		$(`.pcm-collectButton, .pcm-collectButton1`).unbind('click').click( async e => {
@@ -380,13 +375,8 @@ class PandaCards {
 **/
 class PandaCard {
   /**
-<<<<<<< HEAD
    * @param  {number} myId - The unique ID of the panda for this card.
    * @param  {number} dbId - Database ID.
-=======
-   * @param  {number} myId             - The unique id of the panda for this card.
-   * @param  {number} dbId             - Database ID
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
    */
   constructor(myId, dbId) {
     this.myId = myId;       // Holds the unique ID of the panda for this card.

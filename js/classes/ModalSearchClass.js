@@ -101,14 +101,9 @@ class ModalSearchClass {
     }, () => { MyModal = null; if (afterClose) afterClose(); });
   }
   /** This creates a string out of a rule Set
-<<<<<<< HEAD
    * @param  {object} ruleSets - Trigger rule set.  @param  {object} [placeHere] - Jquery element.
    * @return {string}          - String with rules spread out.
   **/
-=======
-   * @param  {object} ruleSets - Trigger Rule Set  @param {object} [placeHere] - Jquery Element
-   * @return {string}       - String with rules spread out. */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
   rulesToStr(ruleSets, placeHere=null) {
     let setStr = ''; for (const value of ruleSets.values()) { setStr += `${value}, `; }
     if (setStr.length > 2) setStr = setStr.slice(0, -2);
@@ -361,11 +356,7 @@ class ModalSearchClass {
         MyOptions.theToSearchUI(changes.toSearchUI, false); MyOptions.theSearchTimer(changes.searchTimer, false); MyOptions.doGeneral(Object.assign(MyOptions.doGeneral(), changes.general));
         MyOptions.doSearch(Object.assign(MyOptions.doSearch(), changes.options)); await MySearch.timerChange(changes.searchTimer); await MySearch.resetSearch();
         if (changes.options.displayApproval) $('.pcm-approvalRateCol').show(); else $('.pcm-approvalRateCol').hide();
-<<<<<<< HEAD
         setTimeout( () => MyModal.closeModal(), 0);
-=======
-        setTimeout( () => modal.closeModal(), 0);
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
       }
       if (changes.options.defaultDur === 0 && changes.options.defaultFetches === 0) {
         changes.options.defaultDur = (changes.options.defaultDur !== oldTempDuration) ? oldTempDuration : changes.options.defaultDur;
