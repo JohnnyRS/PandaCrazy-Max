@@ -490,14 +490,9 @@ function compareVersion(version1, version2) {
   return(result);
 }
 /** Checks the CSS file if user set a CSS variable and then returns it or returns the default value if no CSS variable found.
-<<<<<<< HEAD
  * @param  {string} [varName] - Variable name.  @param  {string} [defaultText] - Default text to use.
  * @return {null|string}      - CSS variable or the default value if no CSS variable found. Null if no varName given.
 **/
-=======
- * @param  {string} [varName] - Variable Name  @param {string} [defaultText] - Default Text to Use
- * @return {void|string}           - CSS variable or the default value if no CSS variable found. */
->>>>>>> d88f37734cd1d7a2ca83aab0b7bd6f253aded9ee
 function getCSSVar(varName=null, defaultText='') {
   if (varName === null) return null;
   let varContent = getComputedStyle(document.documentElement).getPropertyValue(`--pcm-${varName}`).trim();
