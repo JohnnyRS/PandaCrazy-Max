@@ -1,20 +1,27 @@
-let todayDay = new Date().getDate(), MYAUDIO = null;
-const _ = undefined; // used for sending to functions if parameter is not used.
+let STARTDATE = new Date();   // Date the script started to detect day changes while script is running.
+const _ = undefined;          // Used for sending to functions if parameter is not used.
+/** Constant values for console coloring. **/
+const CONSOLE_WARN  = 'color: red;'
+const CONSOLE_INFO  = 'color: purple;'
+const CONSOLE_DEBUG = 'color: blue;'
 
 /** Checks to see if a value is a string.
- * @param  {object} val - unknown type of value
- * @return {bool}       - True if val is a string and false otherwise. */
+ * @param  {object} val - Unknown type of value.
+ * @return {bool}       - True if val is a string and false otherwise.
+**/
 function checkString(val) { if (typeof val === 'string') return true; else return false; }
 /** Returns an empty sting if the value given is undefined or null.
- * @param  {object} val - Value to Check
- * @return {string}     - Returns an empty string if value is empty. */
+ * @param  {object} val - Value to check.
+ * @return {string}     - Returns an empty string if value is empty.
+**/
 function passEmptyStr(val) { return (val) ? val : ''; }
 /** Creates a Jquery input object and returns it and appends to element if appendHere is passed.
- * @param  {object} appendHere   - Jquery Element  @param  {string} divAddClass - Div class      @param  {string} id            - Input ID
- * @param  {string} label        - Label Name      @param  {string} placeholder - Placeholder    @param  {function} [enterFunc] - Enter Pressed Function
- * @param  {string} [labelClass] - label Class     @param  {string} [value]     - Initial Value  @param  {number} [width]       - Width
- * @param  {bool} [noTab]        - Can't Tab       @param  {string} [max]       - Max Length     @param  {string} [labelTitle]  - Label Title
- * @return {object}              - The Jquery object of the input element. */
+ * @param  {object} appendHere   - Jquery element.  @param  {string} divAddClass - Div class.      @param  {string} id            - Input ID.
+ * @param  {string} label        - Label name.      @param  {string} placeholder - Placeholder.    @param  {function} [enterFunc] - Enter pressed function.
+ * @param  {string} [labelClass] - Label class.     @param  {string} [value]     - Initial value.  @param  {string} [width]       - The width.
+ * @param  {bool} [noTab]        - No tab key.      @param  {string} [max]       - Max length.     @param  {string} [labelTitle]  - Label title.
+ * @return {object}              - The Jquery object of the input element.
+**/
 function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=null, labelClass='', value='', width='100', noTab=false, max=null, labelTitle=null) {
   let noIndex = (noTab) ? ` tabindex='-1'` : '', maxlength = (max) ? ` maxlength=${max}` : '', addTitle = (labelTitle) ? ` data-original-title='${labelTitle}'` : '';
   let addClass = (divAddClass) ? ` ${divAddClass}` : '', lAddClass = (labelClass) ? ` ${labelClass}` : '', theValue = (value) ? ` value='${value}'` : '';
@@ -24,8 +31,9 @@ function createInput(appendHere, divAddClass, id, label, placeholder, enterFunc=
   return theInput;
 }
 /** Create a Jquery file input object and returns it and appends to element if appendHere is passed.
- * @param  {object} [appendHere] - Jquery Element  @param  {string} [accept] - String of file extensions to accept.  @param {string} [title] - Input Title
- * @return {object}              - Jquery element of the input created. */
+ * @param  {object} [appendHere] - Jquery Element.  @param  {string} [accept] - String of file extensions to accept.  @param  {string} [title] - Input title.
+ * @return {object}              - Jquery element of the input created.
+**/
 function createFileInput(appendHere=null, accept=null, title=null) {
   let acceptStr = (accept) ? ` accept='${accept}'` : '', addTitle = (title) ? ` data-original-title='${title}'` : '';
   let inputGroup = $(`<div class='custom-file pcm-tooltipData pcm-tooltipHelper'${addTitle}></div>`);
@@ -34,20 +42,22 @@ function createFileInput(appendHere=null, accept=null, title=null) {
   return inputGroup;
 }
 /** Creates a Jquery link and returns it and appends it to element passed.
- * @param  {object} appendHere - Jquery Element  @param  {string} addClass  - Link Class   @param  {string} theUrl        - URL
- * @param  {string} theText    - Link Text       @param  {string} theTarget - Link Target  @param  {function} [clickFunc] - Clicked Function
- * @return {object}            - The Jquery object of the link element. */
+ * @param  {object} appendHere - Jquery element.  @param  {string} addClass  - Link class.   @param  {string} theUrl        - The URL.
+ * @param  {string} theText    - Link text.       @param  {string} theTarget - Link target.  @param  {function} [clickFunc] - Clicked function.
+ * @return {object}            - The jquery object of the link element.
+**/
 function createLink(appendHere, addClass, theUrl, theText, theTarget, clickFunc=null) {
   let theLink = $(`<a class='${addClass}' target='${theTarget}' href='${theUrl}'>${theText}</a>`).appendTo(appendHere);
   if (clickFunc !== null) $(theLink).click( e => { clickFunc(e); } )
   return theLink;
 }
 /** Creates a Jquery checkbox with a label, id name and classes of elements.
- * @param  {object} appendHere   - Jquery Element  @param  {string} label        - Label Text   @param  {string} id            - Id Name
- * @param  {string} value        - Value           @param  {bool} checked        - Checked?     @param  {string} [divClass]    - Div Class
- * @param  {string} [inputClass] - Input Class     @param  {string} [divTitle]   - Div Title    @param  {function} [clickFunc] - Click Function
- * @param  {string} [labelClass] - Label Class     @param  {string} [labelTitle] - Label Title
- * @return {object}              - The Jquery object of the checkbox element. */
+ * @param  {object} appendHere   - Jquery element.  @param  {string} label        - Label text.  @param  {string} id            - Id name.
+ * @param  {string} value        - The value.       @param  {bool} checked        - Checked?     @param  {string} [divClass]    - Div class.
+ * @param  {string} [inputClass] - Input class.     @param  {string} [divTitle]   - Div title.   @param  {function} [clickFunc] - Click function.
+ * @param  {string} [labelClass] - Label class.     @param  {string} [labelTitle] - Label title.
+ * @return {object}              - The Jquery object of the checkbox element.
+**/
 function createCheckBox(appendHere, label, id, value, checked, divClass=null, inputClass=null, divTitle=null, clickFunc=null, labelClass=null, labelTitle=null) {
   let checkedText = (checked) ? ' checked' : '', titleText = (divTitle) ? ` title='${divTitle}'`: '', divAddClass = (divClass) ? ` ${divClass}` : '';
   let lAddClass = (labelClass) ? ` ${labelClass}` : '', lAddTitle = (labelTitle) ? ` data-original-title='${labelTitle}'` : '', iAddClass = (inputClass) ? ` ${inputClass}` : '';
@@ -59,18 +69,20 @@ function createCheckBox(appendHere, label, id, value, checked, divClass=null, in
   return formCheck;
 }
 /** Creates a Jquery radio button with a name group, label and value.
- * @param  {object} appendHere   - Jquery element  @param  {string} nameGroup - Input name  @param  {string} value      - Value
- * @param  {string} label        - Label           @param  {bool} [checked]   - Checked     @param  {string} [classAdd] - Class Names
- * @param  {string} [labelTitle] - Label Title
- * @return {object}              - The Jquery object for the radio button. */
+ * @param  {object} appendHere   - Jquery element.  @param  {string} nameGroup - Input name.  @param  {string} value      - The value.
+ * @param  {string} label        - The label.       @param  {bool} [checked]   - Checked?     @param  {string} [classAdd] - Class names.
+ * @param  {string} [labelTitle] - Label title.
+ * @return {object}              - The jquery object for the radio button.
+**/
 function radioButtons(appendHere, nameGroup, value, label, checked=false, classAdd='', labelTitle='') {
   const checkedText = (checked) ? ' checked' : '', lAddTitle = (labelTitle) ? ` data-original-title='${labelTitle}'` : '', addClass = (classAdd) ? ` ${classAdd}` : '';
-  let radioButton = $(`<label class='radio-inline small${addClass}'${lAddTitle}><input type='radio'${checkedText} name='${nameGroup}' size='sm' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
+  let radioButton = $(`<label class='radio-inline small${addClass}'${lAddTitle}><input type='radio'${checkedText} name='${nameGroup}' value='${value}' class='radio-xxs'>${label}</input></label>`).appendTo(appendHere);
   return radioButton;
 }
 /** Creates a time input using a date time picker from tempus dominus plugin.
- * @param  {string} label - The Label  @param  {string} id - The Time Input ID.  @param {string} [value] - The Time Input Value
- * @return {object}       - The Jquery object for the time input. */
+ * @param  {string} label - The label.  @param  {string} id - The time input ID.  @param  {string} [value] - The time input value.
+ * @return {object}       - The jquery object for the time input.
+**/
 function createTimeInput(label, id, value=null) {
   let theValue = (value) ? ` value='${value}'` : '';
   let input = $(`<div class='input-group pcm-inputGroup'><label for='${id}' class='pcm-timeLabel'>${label}</label><input type='text' class='form-control pcm-inputDate-md' id='${id}' tabindex='-1' placeholder='None'${theValue}/></div>`);
@@ -78,8 +90,9 @@ function createTimeInput(label, id, value=null) {
   return input;
 }
 /** Sets up an input range and appends it to given element with minimum and maximum values. Uses a current value and a set value function.
- * @param {object} appendTo - Jquery Element  @param {number} min        - Minimum Range       @param {number} max    - Maximum Range   @param {number} theValue - The Value
- * @param {string} key      - Key Name        @param {function} setValue - Set Value Function  @param {bool} withText - Show Value Text? */
+ * @param  {object} appendTo - Jquery element.  @param  {number} min        - Minimum range.       @param  {number} max      - Maximum range.  @param  {number} theValue - The value.
+ * @param  {string} key      - Key name.        @param  {function} setValue - Set value function.  @param  {bool} [withText] - Show value text?
+**/
 function inputRange(appendTo, min, max, theValue, key, setValue, withText=true) {
   $(`<input class='pcm-inputRange' type='range' min='${min}' max='${max}' value='${theValue}'></input>`).on('input', e => {
     $(`#pcm-${key}Detail`).val(($(e.target).val())); setValue(Number($(e.target).val()));
@@ -89,12 +102,14 @@ function inputRange(appendTo, min, max, theValue, key, setValue, withText=true) 
     .keypress( e => { if (e.keyCode === 13) { inputSetVal(e); return false; } }).appendTo(appendTo);
 }
 /** Limits a value to a low limit and hight limit.
- * @param  {number} val - The value  @param  {number} low  - The low limit  @param  {number} high - The high limit
- * @return {number}     - Returns the new value in the limit range. */
+ * @param  {number} val - The value.  @param  {number} low - The low limit.  @param  {number} high - The high limit.
+ * @return {number}     - Returns the new value in the limit range.
+**/
 function limitRange(val, low, high) { return val < low ? low : (val > high ? high : val); }
 /** Shows the hour value and the minute value in two inputs so user can edit them.
  * @param  {string} hourValue - The hour value to use for hour input.  @param  {string} minuteValue - The minute value to use for minute input.
- * @return {object}           - Returns the time elapse element. */
+ * @return {object}           - Returns the time elapse element.
+**/
 function createTimeElapse(hourValue, minuteValue) {
   let inputGroup = $(`<span class='form-inline pcm-timeToStop'></span>`)
   let input1 = createInput(null, ' pcm-hoursRow', 'pcm-endHours', `Ends after hours: `, '0', null, ' pcm-hoursLabel', hourValue, '10', true);
@@ -109,8 +124,9 @@ function createTimeElapse(hourValue, minuteValue) {
   return inputGroup;
 }
 /** Returns the date in a readable format according to the provided format and timezone.
- * @param  {string} theFormat   - The format  @param  {object} theDate - The date  @param  {string} theTimeZone - The timezone
- * @return {string}             - Returns the string of the date in a more readable format. */
+ * @param  {string} theFormat - The format.  @param  {object} theDate - The date.  @param  {string} theTimeZone - The timezone.
+ * @return {string}           - Returns the string of the date in a more readable format.
+**/
 function formatAMPM(theFormat, theDate, theTimeZone) {
   var d = (theDate) ? theDate : new Date();
   if (theTimeZone === 'mturk') {
@@ -126,11 +142,13 @@ function formatAMPM(theFormat, theDate, theTimeZone) {
   if (theFormat === 'short') return ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) + '-' + d.getFullYear() + '(' + hours + ':' + minutes + ampm + ')';
   else if (theFormat === 'dayandtime') return days[d.getDay()] + ' ' + hours + ':' + minutes + ampm;
   else if (theFormat === 'onlydate') return ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) + '-' + d.getFullYear();
+  else if (theFormat === 'yearMonDay') return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   else return days[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear() + ' ' + hours + ':' + minutes + ampm;
 }
 /** Convert seconds into the number of weeks, days, hours, minutes and seconds.
  * @param  {number} seconds - The number of seconds to be converted.
- * @return {string}         - The converted time in a string format. */
+ * @return {string}         - The converted time in a string format.
+**/
 function getTimeLeft(seconds) {
   let returnString = '', displaying = 0;
   if (seconds >= 0) {
@@ -146,44 +164,53 @@ function getTimeLeft(seconds) {
   return returnString.trim();
 }
 /** Tests a given URL to make sure it's a preview, accept URL or a requester URL.
- * @param  {string} url - URL to Test
- * @return {bool}       - True if matched or false otherwise. */
+ * @param  {string} url - URL to test.
+ * @return {bool}       - True if matched or false otherwise.
+**/
 function testGidRid(url) {return /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requesters)\/[^\s]*\/(tasks|projects)|^[Aa][^\s]{5,25}|^[3][^\s]{10,50})/.test(url); }
 /** Used to count object property values in arrays using a count function and returning the total count.
- * @param  {array} arr - Array  @param  {function} countFunc - Counting Function  @param  {bool} [counting] - Counting or not?
- * @return {number}    - Total value counted or from count function. */
+ * @param  {array} arr - The array.  @param  {function} countFunc - Counting function.  @param  {bool} [counting] - Counting or not?
+ * @return {number}    - Total value counted or from count function.
+**/
 function arrayCount(arr, countFunc, counting=true) { // Similar to the ES6 filter method without creating an array.
   let total = 0;
   if (countFunc && arr.length) { for (const item of arr) { let val = countFunc(item); total += (!counting) ? val : ((val) ? 1 : 0); }}
   return total;
 }
-/** Limit the size of an array with the given limit size value.
- * @param {array} arr - Array to limit  @param {number} limitSize - Size to limit Array */
-function limitQueue(arr, limitSize) { arr.length = Math.min(arr.length, limitSize); }
 /** Moves a value in an array from one position to another. The array is changed by splice so no need to return array.
- * @param  {array} arr - Array to Move  @param  {number} from - From position  @param  {number} to - To position */
+ * @param  {array} arr - Array to move.  @param  {number} from - From position.  @param  {number} to - To position.
+**/
 function arrayMove(arr, from, to) { arr.splice(to, 0, arr.splice(from, 1)[0]); }
 /** Remove a value in an array provided. Must return array because filter doesn't change the array.
- * @param  {array} arr - Array to Remove From   @param  {string} value - Search value
- * @return {array}     - Array with value removed. */
+ * @param  {array} arr - Array to remove from.  @param  {string} value - Search value.
+ * @return {array}     - Array with value removed.
+**/
 function arrayRemove(arr, value) { return arr.filter( (item) => item !== value ); }
 /** Builds up an object with a key having an array of values. Creates key if doesn't exist in object.
- * @param  {object} obj - Object   @param  {string} key - Key value   @param  {number} value - Added value */
+ * @param  {object} obj - The object.  @param  {string} key - Key value.  @param  {number} value - Added value.
+**/
 function buildSortObject(obj, key, value) { if (obj.hasOwnProperty(key)) obj[key].push(value); else obj[key] = [value]; }
 /** Flattens the object by removing a value from the array in key value.
- * @param  {object} obj - Object   @param  {string} key - Key value   @param  {number} value - Remove value */
+ * @param  {object} obj - The object.  @param  {string} key - Key value.  @param  {number} value - Remove value.
+**/
 function flattenSortObject(obj, key, value) {
   if (obj.hasOwnProperty(key)) { if (obj[key].length > 1) obj[key] = arrayRemove(obj[key], value); else delete obj[key]; }
 }
 /** Shorten the group ID into a 2 letters then '...' and 4 letters at end.
- * @param  {string} gId - The group ID to shorten.  @param  {number} [preNum] - Limit length at Start  @param  {number} [postNum] - Limit length at end;
- * @return {string}     - The shortened string for the group ID. */
+ * @param  {string} gId - The group ID to shorten.  @param  {number} [preNum] - Limit length at start.  @param  {number} [postNum] - Limit length at end.
+ * @return {string}     - The shortened string for the group ID.
+**/
 function shortenGroupId(gId, preNum=2, postNum=4) { return gId.slice(0, preNum) + '...' + gId.slice(-1 * postNum); }
+/**
+ * Adds or removes classes to the option label depending on the status.
+ * @param  {string} key - The key.  @param  {bool} status - The option limit status.
+**/
 function doOptLimit(key, status) { if (status) $(`#pcm-tdLabel-${key}`).addClass('pcm-optionLimited'); else $(`#pcm-tdLabel-${key}`).removeClass('pcm-optionLimited pcm-optionEmpty'); }
 /** Toggles showing a text or a text input of a value for editing purposes.
- * @param  {object} thisObject  - Main object  @param  {object} target - Changed target  @param  {object} obj          - Object with key
- * @param  {string} theValue    - Value        @param  {bool} [editMe] - Input or text?  @param  {string} [textBorder] - Border class
- * @param  {string} [textColor] - Color class */
+ * @param  {object} thisObject  - Main object.  @param  {object} target - Changed target.  @param  {object} obj          - Object with key.
+ * @param  {string} theValue    - The value.    @param  {bool} [editMe] - Input or text?   @param  {string} [textBorder] - Border class.
+ * @param  {string} [textColor] - Color class.
+**/
 function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder=null, textColor=null) {
   let parent = $(target).parent(), pre = (obj.money) ? '$' : '', borderClass = (textBorder) ? ` ${textBorder}` : '', colorClass = (textColor) ? ` ${textColor}` : '';
   if (editMe) {
@@ -220,8 +247,9 @@ function textToggle(thisObject, target, obj, theValue, editMe=null, textBorder=n
   parent = null;
 }
 /** Finds a text in a string and sets a mark on each one found to emphasize those text.
- * @param  {string} findThis - String to find   @param  {string} fromHere - String to Search From
- * @return {string}          - String with Found Text Marked. */
+ * @param  {string} findThis - String to find.  @param  {string} fromHere - String to search from.
+ * @return {string}          - String with found text marked.
+**/
 function markInPlace(findThis, fromHere) {
   let find = findThis.toLowerCase(), findLength = find.length, str = fromHere.toLowerCase(), start = 0, returnStr = '';
   if (!findThis.length || !fromHere.length) return fromHere;
@@ -230,12 +258,13 @@ function markInPlace(findThis, fromHere) {
   }
   return returnStr + fromHere.substring(start);
 }
-/** Displays an array of objects line by line in different ways and allows for toggling an edit input
- * for each value. Types: text, range, trueFalse, button, checkbox, keyValue and string.
- * @param  {array} thisArrayObject - Array of objects   @param  {object} divContainer - Container       @param  {object} thisObject - The object
- * @param  {bool} [table]          - Table or not?      @param  {bool} [horizontal]   - Horizontal?     @param  {bool} [append]     - Append or Prepend?
- * @param  {string} [addClass]     - Class to be Added  @param  {string} [addId]      - ID to be added  @param  {object} [theData]  - Data to Save
- * @param  {object} [theData]      - Second Data to Save */
+/** Displays an array of objects line by line in different ways and allows for toggling an edit input for each value.
+ * Types: range, text, number, trueFalse, button, checkbox, keyValue, hr and string.
+ * @param  {array} thisArrayObject - Array of objects.   @param  {object} divContainer - Container.       @param  {object} thisObject - The object.
+ * @param  {bool} [table]          - Table or not?       @param  {bool} [horizontal]   - Horizontal?      @param  {bool} [append]     - Append or prepend?
+ * @param  {string} [addClass]     - Class to be added.  @param  {string} [addId]      - ID to be added.  @param  {object} [theData]  - Data to save.
+ * @param  {object} [data2]        - Second data to save
+**/
 function displayObjectData(thisArrayObject, divContainer, thisObject, table=true, horizontal=false, append=true, addClass=null, addId=null, theData=null, data2=null) {
   let row = null, tdCol = '', trClass = (addClass) ? ` class='${addClass}'` : '', trId = (addId) ? ` id='${addId}'` : '', styleAdd = '';
   if (horizontal) { row = $(`<tr${trClass}${trId}></tr>`).hide(); if (theData) row.data('theData', theData); if (data2) row.data('data2', data2); }
@@ -249,7 +278,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
     if (theValue === '') { theValue = '{Empty}'; textColor = ' pcm-optionEmpty'; }
     if (theValue === -1) { theValue = '0'; }
     if (element.money) theValue = (theValue !== null || theValue !== undefined) ? Number(theValue).toFixed(2) : '_.__';
-    if (theValue === undefined || theValue === null || theValue === undefined) { theValue = element.default; }
+    if (theValue === undefined || theValue === null) { theValue = element.default; }
     if (element.format === 'date') { theValue = formatAMPM('short',new Date(theValue)); }
     if (element.link) theValue = `<a href='${element.link}' class='${element.linkClass}' target='_blank'>${theValue}</a>`;
     if (element.disable) { textColor = ' pcm-optionDisabled'; textBorder = ''; }
@@ -305,19 +334,20 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
   row = null;
 }
 /** Gets all the tabs opened in browser and will count how many page URLs that includes the search term.
- * @param {string} search    - Search term to use for all tabs opened in browser.  @param {function} doAfter - Function to call after counting tabs. */
-function allTabs(search, doAfter) {
+ * @param  {string} search - Search term to use for all tabs opened in browser.  @param  {function} [doAfter] - Function to call after counting tabs.
+**/
+function allTabs(search, doAfter=null) {
   let count = 0;
   chrome.windows.getAll({'populate':true}, windows => { // Populate is true so tabs are included in the windows objects.
     for (let i1=0, len1=windows.length; i1 < len1; i1++) {
       for (let i2=0, len2=windows[i1].tabs.length; i2 < len2; i2++) { const tab = windows[i1].tabs[i2]; if (tab.url.includes(search)) count++; }
     }
-    doAfter(count);
+    if (doAfter !== null) doAfter(count);
   });
 }
 /** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
- * @param  {object} theData    - Export Data          @param  {string} [prefix]      - File Prefix                     @param {string} [suffix] - File Ending
- * @param  {string} [doneFunc] - After Save Function  @param  {bool}   [doStringify] - Should theData be stringified?
+ * @param  {object} theData      - Export data.          @param  {string} [prefix]      - File prefix.                    @param  {string} [suffix] - File ending.
+ * @param  {function} [doneFunc] - After save function.  @param  {bool}   [doStringify] - Should theData be stringified?
 **/
 function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
   let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;
@@ -328,122 +358,139 @@ function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null,
 }
 /** Get the group ID and requester ID from the preview or accept URL.
  * @param  {string} url - The URL to parse and return info from.
- * @return {array}			- Group ID is first in array. Requester ID is second in array. */
+ * @return {array}			- Group ID is first in array. Requester ID is second in array.
+**/
 function parsePandaUrl(url) {
   const groupInfo = url.match(/\/projects\/([^\/]*)\/tasks([\/?]|$)/), requesterInfo = url.match(/\/requesters\/([^\/]*)\/projects(\/|\?|$)/);
   let groupId = (groupInfo) ? groupInfo[1] : null, reqId = (requesterInfo) ? requesterInfo[1] : null;
   return [groupId, reqId];
 }
 /** Halt the script with error messages or just warn and continue script.
- * @param  {object} error   - Error object  @param  {string} alertMessage - Alert Message  @param  {string} [consoleMessage] - Console Message
- * @param  {string} [title] - Title         @param  {bool} [warn]         - True if just a warning and don't stop the script yet! */
+ * @param  {object} error   - Error object.  @param  {string} alertMessage - Alert Message.  @param  {string} [consoleMessage] - Console message.
+ * @param  {string} [title] - The title.     @param  {bool} [warn]         - True if just a warning and don't stop the script yet!
+**/
 function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false) {
   $('.pcm-top:first').html(''); $('#pcm-pandaUI .pcm-quickMenu').html(''); $('.panel').html('');
   $('.panel:first').append(`<H1 class='pcm-myCenter'>${title}</H1><H5 class='pcm-haltMessage'>${alertMessage}</H5>`);
-  if (modal) modal.closeModal('Loading Data');
-  if (!warn && error) { // Only show message on console as an error if it's not a warning.
-    console.error( (consoleMessage) ? consoleMessage : alertMessage , error );
-    if (typeof bgQueue !== 'undefined') bgQueue.stopQueueMonitor();
+  if (MyModal) setTimeout(() => { MyModal.closeModal(); }, 200);
+  if (!warn && error) {                             // Only show message on console as an error if it's not a warning.
+    console.error( (consoleMessage !== null) ? consoleMessage : alertMessage, error );
+    if (MyQueue !== null) MyQueue.stopQueueMonitor();
     throw 'Stopping script due to an error displayed previously or in another console.';
-  } else console.info('Warning: ' + alertMessage); // Show a warning alert message on the console.
+  } else console.info('Warning: ' + alertMessage);  // Show a warning alert message on the console.
 }
 /** Checks if the day sent is the same day as today.
  * @param  {date} day - The date that needs to be compared to today.
- * @return {bool}     - True if the date is the same as today. */
+ * @return {bool}     - True if the date is the same as today.
+**/
 function isSameDay(day) {
   let d1 = new Date();
   return day.getFullYear() === d1.getFullYear() && day.getMonth() === d1.getMonth() && day.getDate() === d1.getDate();
 }
-/** Checks if it's a new day.
- * @return {bool} - True if it's a new day. */
-function isNewDay() {
-  let day = new Date().getDate();
-  if (todayDay != day) { todayDay = day; return true; }
-  else return false;
+/** Checks if it's a new day by using getDate.
+ * @param  {Date} [testDate] - A date to test today's date with.
+ * @return {bool}            - True if it's a new day.
+**/
+function isNewDay(testDate=null) {
+  let day = new Date(), returnValue = false;
+  if (testDate !== null && (!datesAreOnSameDay(STARTDATE, testDate, true) || STARTDATE.getDate() !== testDate.getDate())) returnValue = true;
+  else if (STARTDATE.getDate() !== day.getDate()) returnValue = true;
+  STARTDATE = day; return returnValue;
+}
+/** Checks if two dates are the exact day, month and year. Don't compare to the day if notDay is true.
+ * @param  {Date} first - First date.  @param  {Date} second - Second date.  @param  {bool} [notDay] - Don't use getDate?
+ * @return {bool}       - True is same day, month and year or just same month and year.
+ */
+function datesAreOnSameDay(first, second, notDay=false) {
+  return first.getFullYear() === second.getFullYear() && first.getMonth() === second.getMonth() && (notDay || first.getDate() === second.getDate());
 }
 /** Returns just the date in a string without the time.
  * @param  {object} date - The object date to drop the time from.
- * @return {string}      - Returns the string with only the date without the time. */
+ * @return {string}      - Returns the string with only the date without the time.
+**/
 function justDate(date) { return new Date(date).toISOString().substring(0, 10); }
 /** Creates and returns an object filled with data for a HIT using default values without friendly data.
- * @param  {string} gid - GroupId  @param  {string} desc - Description    @param  {string} title - Title         @param  {string} rid   - ReqId    @param  {string} rN   - ReqName
- * @param  {string} pay - Price    @param  {number} [hA] - HitsAvailable  @param  {number} [aT]  - AssignedTime  @param  {string} [exp] - Expires
- * @return {object}     - Object with all the data set or using default values. */
+ * @param  {string} gid   - The group ID.    @param  {string} desc - The description.  @param  {string} title - The title.       @param  {string} rid  - Requester ID.
+ * @param  {string} rN    - Requester name.  @param  {string} pay  - The price.        @param  {number} [hA]  - Hits available.  @param  {number} [aT] - Assigned time.
+ * @param  {string} [exp] - Date and time expires.
+ * @return {object}     - Object with all the data set or using default values.
+**/
 function hitObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null) {
   return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp};
 }
 /** Creates and returns an object filled with data for a HIT and default values set if needed.
- * @param  {string} gid	 - GroupId   @param  {string} desc - Description    @param  {string} title - Title         @param  {string} rid	  - ReqId   @param  {string} rN	  - ReqName
- * @param  {string} pay	 - Price     @param  {number} [hA] - HitsAvailable  @param  {number} [aT]  - AssignedTime  @param  {string} [exp] - Expires @param  {string} [fT]	- FriendlyTitle
- * @param  {string} [fR] - FriendlyReqName
- * @return {object}      - Object with all the data set or using default values. */
+ * @param  {string} gid	  - The group ID.           @param  {string} desc - The description.  @param  {string} title - The title.       @param  {string} rid  - Requester ID.
+ * @param  {string} rN	  - Requester name.         @param  {string} pay	- The price.        @param  {number} [hA]  - Hits available.  @param  {number} [aT] - Assigned time.
+ * @param  {string} [exp] - Date and time expires.  @param  {string} [fT]	- Friendly title.   @param  {string} [fR]  - Friendly requester name.
+ * @return {object}       - Object with all the data set or using default values.
+**/
 function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT='', fR='') {
   return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp, 'friendlyTitle':fT, 'friendlyReqName':fR };
 }
 /** Creates and returns an object for options of a HIT and default values set if needed.
- * @param  {bool} [o]	     - Once            @param  {string} [s]  - Search        @param  {number} [tab] - TabUnique  @param  {number} [lN] - LimitNumQueue
- * @param  {number} [lT]	 - LimitTotalQueue @param  {number} [lF] - LimitFetches  @param  {number} [dur] - Duration   @param  {bool} [aG]   - AutoGoHam
- * @param  {number} [hamD] - HamDuration     @param  {number} [aL] - AcceptLimit   @param  {number} [day]	- Day        @param  {number} [wt] - Weight
- * @param  {number} [dd]	 - DailyDone       @param  {bool} [dis]  - Disabled?     @param  {bool} [mute]  - Muted?
- * @return {object}        - Object with options set or using default values. */
+ * @param  {bool} [o]	     - Once?               @param  {string} [s]  - Search?         @param  {number} [tab] - Tab unique.    @param  {number} [lN] - Limit number queue.
+ * @param  {number} [lT]	 - Limit total queue.  @param  {number} [lF] - Limit fetches.  @param  {number} [dur] - The duration.  @param  {bool} [aG]   - Auto goham?
+ * @param  {number} [hamD] - Ham duration.       @param  {number} [aL] - Accept limit.   @param  {number} [day]	- The day.       @param  {number} [wt] - Weight number.
+ * @param  {number} [dd]	 - Daily done.         @param  {bool} [dis]  - Disabled?       @param  {bool} [mute]  - Muted?
+ * @return {object}        - Object with options set or using default values.
+**/
 function optObject(o=false, s=null, tab=-1, lN=0, lT=0, lF=0, dur=0, aG=false, hamD=0, aL=0, day=0, wt=0, dd=0, dis=false, mute=false) {
   let today = new Date();
   if (day === 0 || justDate(day) !== justDate(today)) { day = today.getTime(); dd = 0; }
   return {'once':o, 'search':s,'limitNumQueue':Number(lN), 'limitTotalQueue':Number(lT), 'limitFetches':Number(lF), 'duration':Number(dur),'autoGoHam':aG, 'hamDuration':Number(hamD), 'acceptLimit':Number(aL), 'tabUnique':Number(tab), 'day':Number(day), 'dailyDone':Number(dd), 'weight':Number(wt), 'disabled':dis, 'mute':mute};
 }
 /** Creates and returns an object for the rules for a search trigger.
- * @param  {array} [bG]  - Blocked gid     @param  {array} [oG]   - Only gid     @param  {array} [exc]  - Excluded terms
- * @param  {array} [inc] - Included terms  @param  {number} [min] - Minimum pay  @param  {number} [max] - Maximum pay
- * @return {object}      - Object with the rules all set. */
+ * @param  {array} [bG]  - Blocked gid.     @param  {array} [oG]   - Only gid.     @param  {array} [exc]  - Excluded terms.
+ * @param  {array} [inc] - Included terms.  @param  {number} [min] - Minimum pay.  @param  {number} [max] - Maximum pay.
+ * @return {object}      - Object with the rules all set up.
+**/
 function sRulesObject(bG=[], oG=[], exc=[], inc=[], min=0.00, max=0.00) {
   bG = bG.filter(Boolean); oG = oG.filter(Boolean); exc = exc.filter(Boolean); inc = inc.filter(Boolean); // Filters out false boolean values.
   let terms = (exc.length || inc.length), range = (min > 0.00 || max > 0.00);
   return {'blockGid': new Set(bG), 'onlyGid': new Set(oG), 'terms': terms, 'exclude': new Set(exc), 'include': new Set(inc), 'payRange': range, 'minPay': Number(min), 'maxPay': Number(max)};
 }
 /** Creates and returns an object for the history database.
- * @param  {string} rN     - reqName      @param  {string} rid   - reqId     @param  {number} [pay]  - pay   @param  {string} [title] - title
- * @param  {string} [desc] - description  @param  {string} [dur] - duration  @param  {string} [date] - date
- * @return {object}        - Object with data used for the history database. */
+ * @param  {string} rN     - Requester name.   @param  {string} rid   - Requester ID.  @param  {number} [pay]  - The price.  @param  {string} [title] - The title.
+ * @param  {string} [desc] - The description.  @param  {string} [dur] - The duration.  @param  {string} [date] - The date.
+ * @return {object}        - Object with data used for the history database.
+**/
 function sHistoryObject(rN, rid, pay=0.00, title='', desc='', dur='', date=null) {
   if (!date) date = new Date().toISOString();
   return {'reqName':rN, 'reqId':rid, 'pay': pay, 'title': title, 'description':desc, 'duration': dur, 'date': date};
 }
 /** Converts history HIT data back into MTURK data format to show on some modal dialogs.
- * @param  {object} data - History Data
- * @return {object}      - Returns data back into MTURK data format. */
+ * @param  {object} data - History data.
+ * @return {object}      - Returns data back into MTURK data format.
+**/
 function hConverterObject(data) {
   data = (data) ? data : {};
   return {'requester_name':'', 'title':passEmptyStr(data.title), 'description':passEmptyStr(data.description), 'monetary_reward':{'amount_in_dollars':(data.pay) ? data.pay : null}, 'requester_id':passEmptyStr(data.reqId), 'hit_set_id':passEmptyStr(data.theId), 'date':data.date};
 }
 /** Delays the script for certain amount of milliseconds.
- * @param  {number} ms - The milliseconds to delay script for. */
+ * @param  {number} ms - The milliseconds to delay script for.
+**/
 function delay(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 /** If the version1 is older than version2 then returns true otherwise false.
- * @param  {string} version1 - Older version  @param {string} version2 - Newer Version
- * @return {bool}            - Returns if first is older than second. */
+ * @param  {string} version1 - Older version.  @param  {string} version2 - Newer Version.
+ * @return {bool}            - Returns if first is older than second.
+**/
 function compareVersion(version1, version2) {
   let result = false; if (!version1) return true;
-  if (typeof version1 !== 'object'){ version1 = version1.toString().split('.'); }
-  if (typeof version2 !== 'object'){ version2 = version2.toString().split('.'); }
+  if (typeof version1 !== 'object'){ version1 = version1.toString().split('.'); } if (typeof version2 !== 'object'){ version2 = version2.toString().split('.'); }
   for (let i=0; i < (Math.max(version1.length, version2.length)); i++){
-    if (version1[i] === undefined) { version1[i] = 0; }
-    if (version2[i] === undefined) { version2[i] = 0; }
+    if (version1[i] === undefined) { version1[i] = 0; } if (version2[i] === undefined) { version2[i] = 0; }
     if (Number(version1[i]) < Number(version2[i])) { result = true; break; }
     if (version1[i] != version2[i]) { break; }
   }
   return(result);
 }
 /** Checks the CSS file if user set a CSS variable and then returns it or returns the default value if no CSS variable found.
- * @param  {string} [varName] - Variable Name  @param {string} [defaultText] - Default Text to Use
- * @return {string}           - CSS variable or the default value if no CSS variable found. */
+ * @param  {string} [varName] - Variable name.  @param  {string} [defaultText] - Default text to use.
+ * @return {null|string}      - CSS variable or the default value if no CSS variable found. Null if no varName given.
+**/
 function getCSSVar(varName=null, defaultText='') {
-  if (varName === null) return;
+  if (varName === null) return null;
   let varContent = getComputedStyle(document.documentElement).getPropertyValue(`--pcm-${varName}`).trim();
   varContent = varContent.replace(/^['"](.*)['"]$/g, '$1');
   if (varContent === '___') return '&nbsp;'; else return (varContent) ? varContent : defaultText;
 }
-
-/** Constant values for console coloring. */
-const CONSOLE_WARN  = 'color: red;'
-const CONSOLE_INFO  = 'color: purple;'
-const CONSOLE_DEBUG = 'color: blue;'

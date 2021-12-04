@@ -4,7 +4,8 @@
  * Minimum timer is set to make sure the timer never goes under a certain time which could cause problems.
  * Allows jobs to be skipped or jumped over. Allows jobs to go ham which runs on a lower elapsed time.
  * @class TimerClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class TimerClass {
 	/**
 	 * @param  {number} [timer]     - Do jobs after this time in milliseconds has elapsed.
@@ -31,23 +32,29 @@ class TimerClass {
 	}
 	/** Setters and getters to change the private properties and send back info */
 	/** Passes back the running status of the timer.
-	 * @return {bool} - True if timer is running. */
+	 * @return {bool} - True if timer is running.
+	**/
 	get running() { return this._running; }
 	/** Sets the running status of the timer.
-	 * @param {bool} v - Set timer as running or not. */
+	 * @param  {bool} v - Set timer as running or not.
+	**/
 	set running(v) { if (v != this._running) { this._running = v; this.sendBackInfo(); } }
 	/** Passes back the status of going ham.
-	 * @return {bool} - True if timer is going ham. */
+	 * @return {bool} - True if timer is going ham.
+	**/
 	get goingHam() { return this._goingHam; }
 	/** Sets the going ham status for this timer.
-	 * @param {bool} v - Set timer as going ham or not. */
+	 * @param  {bool} v - Set timer as going ham or not.
+	**/
 	set goingHam(v) { if (v != this._goingHam) { this._goingHam = v; this.sendBackInfo(); } }
 	/** Passes back the status of timer being paused.
-	 * @return {bool} - True if timer is paused. */
+	 * @return {bool} - True if timer is paused.
+	**/
 	get paused() { return this._paused; }
 	/** Sets the status of being paused for this timer.
 	 * @param  {bool} v - Set timer as paused or not.
-	 * @return {bool}   - Returns pause status. */
+	 * @return {bool}   - Returns pause status.
+	**/
 	set paused(v) {
 		const oldPaused = this._paused;
 		this._paused = v; // Set private property to change.
@@ -55,12 +62,13 @@ class TimerClass {
 		if (v != oldPaused) this.sendBackInfo(); // If paused was changed then send back info to class.
 		return v;
 	}
-	/** Tells timer to send back information about timer status to class attached. */
+	/** Tells timer to send back information about timer status to class attached. **/
 	pleaseSendBack() { this.sendBack = true; }
 	/** Set the myClass property so timer can send back timer info.
-	 * @param  {object} myClass - Class object which is using this timer. */
+	 * @param  {object} myClass - Class object which is using this timer.
+	**/
 	setMyClass(myClass) { this.myClass = myClass; }
-	/** Will send some important timer info back to the class that started the timer. */
+	/** Will send some important timer info back to the class that started the timer. **/
 	sendBackInfo() {
 		let goingHamNow = this._goingHam;
 		if ((goingHamNow && this.queueObject.hasOwnProperty(goingHamNow)) || !goingHamNow) {
@@ -72,7 +80,8 @@ class TimerClass {
 	/** Set a new time for this timer. If new time is lower than last time elapsed than do job now.
 	 * If new time is higher than last time elapsed then take the difference and use it to complete the time needed.
 	 * @param  {number} [timer] - The time that this timer should run at.  @param  {bool} [adjust]  - Should the timer calculate the time difference from last timer?
-	 * @return {number}				  - Returns the new timer time. */
+	 * @return {number}				  - Returns the new timer time.
+	**/
 	theTimer(timer=null, adjust=false) {
 		if (!timer) return this.timeout;
 		if (timer >= this.min) { // Make sure it's not under the minimum time.
@@ -84,11 +93,13 @@ class TimerClass {
 	}
 	/** Add time to the timer.
 	 * @param  {number} add - The time in milliseconds to add to the current timer.
-	 * @return {number}     - The current timeout value. */
+	 * @return {number}     - The current timeout value.
+	**/
 	addToTimer(add) { this.timeout += add; this.adjustTimer(this.timeout); return this.timeout; }
 	/** Remove time from the time.
 	 * @param  {number} del - The time in milliseconds to delete from the current timer.
-	 * @return {number}     - The current timeout value. */
+	 * @return {number}     - The current timeout value.
+	**/
 	delFromTimer(del) {
 		this.timeout -= del;
 		if (this.timeout <= this.min) this.timeout = this.min;
@@ -96,8 +107,9 @@ class TimerClass {
 		return this.timeout;
 	}
 	/** Set a new ham time for this timer.
-	 * @param  {number} timer - The time for hamming that this timer should run at.
-	 * @return {number}				- Returns the new ham time. */
+	 * @param  {number} [timer] - The time for hamming that this timer should run at.
+	 * @return {number}				  - Returns the new ham time.
+	**/
 	theHamTimer(timer=null) {
 		if (timer >= this.min) { this.hamTimer = timer; return this.hamTimer; }
 		else if (timer === null) return this.hamTimer;
@@ -105,7 +117,8 @@ class TimerClass {
 	}
 	/** This is the main loop for the timer to work with. After timeout is done it will run this method.
 	 * Stops timer if duration is elapsed. Stops hamming after ham duration is elapsed.
-	 * Calculates exact elapsed time for information purposes. */
+	 * Calculates exact elapsed time for information purposes.
+	**/
 	privateLoop() {
 		this.timeoutDoing = this.timeoutID; this.timeoutID = null;
 		const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
@@ -149,7 +162,8 @@ class TimerClass {
 		} else { this.running = false; } // queue isn't running right now.
 	}
 	/** Starts the timer if it's not running, not paused and the queue is not empty.
-	 * Checks to make sure the timeoutID is null so it won't start another timeout. */
+	 * Checks to make sure the timeoutID is null so it won't start another timeout.
+	**/
 	goTimer() {
 		if (this.timeoutID === null && !this.running && this.timeout !== null && !this.paused && this.queue.length > 0) {
 			if (this.dLog(2)) console.info(`%c[${this.timerName}] is now starting: ${this.timeout}`, CONSOLE_INFO);
@@ -158,7 +172,8 @@ class TimerClass {
 		}
 	}
 	/** Removes the unique number from the queue.
-	 * @param  {number} queueUnique - Unique number for job to remove from queue. */
+	 * @param  {number} queueUnique - Unique number for job to remove from queue.
+	**/
 	removeFromQueue(queueUnique) {
 		if (this.queue.includes(queueUnique)) {
 			this.queue = arrayRemove(this.queue, queueUnique);
@@ -166,7 +181,8 @@ class TimerClass {
 		} else if (this.dLog(3)) console.log(`[${this.timerName}] unique: ${queueUnique} not in main queue`);
 	}
 	/** Removes the unique number from the skipped queue.
-	 * @param  {number} queueUnique - Unique number for job to remove from skipped queue. */
+	 * @param  {number} queueUnique - Unique number for job to remove from skipped queue.
+	**/
 	removeFromQueueSkipped(queueUnique) {
 		if (this.queueSkipped.includes(queueUnique)) {
 			this.queueSkipped = arrayRemove(this.queueSkipped, queueUnique);
@@ -174,7 +190,8 @@ class TimerClass {
 		} else if (this.dLog(3)) console.log(`[${this.timerName}] unique: ${queueUnique} not in skipped queue`);
 	}
 	/** Find the difference from new timer and old timer and then use difference as timer once to catchup.
-	 * @param  {number} newTimer - The new timer to be used. */
+	 * @param  {number} newTimer - The new timer to be used.
+	**/
 	adjustTimer(newTimer) {
 		if (this.timeoutID !== null && this.timeoutDoing !== this.timeoutID) {
 			clearTimeout(this.timeoutID); // Drop current timeout ID.
@@ -184,7 +201,8 @@ class TimerClass {
 		}
 	}
 	/** Change the duration for a job inside the queue.
-	 * @param  {number} queueUnique - Unique number from skipped queue.  @param  {number} duration - The new duration for this job. */
+	 * @param  {number} queueUnique - Unique number from skipped queue.  @param  {number} duration - The new duration for this job.
+	**/
 	changeDuration(queueUnique, duration) {
 		if (this.queueObject.hasOwnProperty(queueUnique)) {
 			if (this.dLog(2)) console.info(`%c[${this.timerName}] duration changed for: ${queueUnique} to ${duration}`, CONSOLE_INFO);
@@ -193,7 +211,8 @@ class TimerClass {
 	}
 	/** Start to go ham on the job with this unique number and use a temporary go ham duration if necessary.
 	 * If ham time is higher than last time elapsed then take the difference and use it to complete the time needed.
-	 * @param  {number} queueUnique - Unique number for job to go ham.  @param  {number} [dGoHam] - Temporary duration to go ham. */
+	 * @param  {number} queueUnique - Unique number for job to go ham.  @param  {number} [dGoHam] - Temporary duration to go ham.
+	**/
 	goHam(queueUnique, dGoHam=0) {
 		if (this.goingHam === null && this.queueObject[queueUnique]) { // If it's already going ham then do nothing.
 			if (this.dLog(3)) console.log(`[${this.timerName}] is now going ham for ${queueUnique}: ${this.hamTimer} for ${dGoHam}`);
@@ -204,7 +223,8 @@ class TimerClass {
 	/** Turn off going ham for unique ID or if no ID passed then turn off whatever is going ham now.
 	 * If main time is higher than last time elapsed then take the difference and use it to complete the time needed.
 	 * @param  {number} [queueUnique] - Unique number for job to go ham.
-	 * @return {number}               - Unique number of job that stopped hamming. */
+	 * @return {number}               - Unique number of job that stopped hamming.
+	**/
 	hamOff(queueUnique=null) {
 		const thisUnique = (queueUnique) ? queueUnique : this.goingHam;
 		if (thisUnique === this.goingHam && thisUnique) {
@@ -215,13 +235,14 @@ class TimerClass {
 		return thisUnique;
 	}
 	/** Toggle the pause status of timer.
-	 * @return {bool} - Returns the status of the timer after toggling. */
+	 * @return {bool} - Returns the status of the timer after toggling.
+	**/
 	pauseToggle() { this.paused = !this.paused; return this.paused;  }
-	/** Remove all jobs from queue and stop the timer. */
+	/** Remove all jobs from queue and stop the timer. **/
 	stopAll() {
 		if (this.queue.length || this.queueSkipped.length) {
 			if (this.timeoutID !== null) clearTimeout(this.timeoutID);
-			this.timeoutDoing = this.timeoutID = null;
+			this.timeoutDoing = null; this.timeoutID = null;
 			Object.keys(this.queueObject).forEach( key => {
 				let thisItem = this.queueObject[key];
 				thisItem.funcAfter(thisItem.myId, false);
@@ -232,7 +253,8 @@ class TimerClass {
 		}
 	}
 	/** Skip the job with the unique number until it is unskipped.
-	 * @param  {number} queueUnique - Unique number of job to be skipped. */
+	 * @param  {number} queueUnique - Unique number of job to be skipped.
+	**/
 	skipThis(queueUnique) {
 		if (this.queue.includes(queueUnique)) {
 			if (this.goingHam === queueUnique) this.hamOff(queueUnique); // Turn off ham if this item was going ham.
@@ -242,18 +264,20 @@ class TimerClass {
 		}
 	}
 	/** Unskip the job with the unique number.
-	 * @param  {number} queueUnique - Unique number of job to be unskipped. */
+	 * @param  {number} queueUnique - Unique number of job to be unskipped.
+	**/
 	unSkipThis(queueUnique) {
 		if (this.queueSkipped.includes(queueUnique)) {
 			if (this.dLog(3)) console.log(`[${this.timerName}] is trying to unskip: ${queueUnique}`);
-			this.removeFromQueueSkipped(queueUnique); // Remove item unique ID from the skipped queue.
-			this.queueObject[queueUnique].skipped = false; // Set flag to show it is not skipped in object data.
-			this.queue.unshift(queueUnique); // Put item unique ID back on the queue.
+			this.removeFromQueueSkipped(queueUnique);       // Remove item unique ID from the skipped queue.
+			this.queueObject[queueUnique].skipped = false; 	// Set flag to show it is not skipped in object data.
+			this.queue.unshift(queueUnique); 								// Put item unique ID back on the queue.
 			if (!this.running) this.goTimer();
 		}
 	}
 	/** Resets the time started for this job so it can keep trying to collect after a HIT was collected.
-	 * @param  {number} queueUnique - Reset the time started on the job with this unique. */
+	 * @param  {number} queueUnique - Reset the time started on the job with this unique.
+	**/
 	resetTimeStarted(queueUnique) {
 		if (this.dLog(2)) console.info(`%c[${this.timerName}] is trying to reset time started: ${queueUnique}`, CONSOLE_INFO);
 		if (this.queueObject.hasOwnProperty(queueUnique) &&
@@ -261,13 +285,14 @@ class TimerClass {
 	}
 	/** Add a new job to the queue for this timer. Also will remove job when duration has elapsed.
 	 * Can go ham at start and have a duration for the go ham too. Can also be skipped at beginning.
-	 * @param  {number} myId       - Unique id                 @param  {function} doFunc   - Do every cycle  @param  {function} funcAfter - Do after Removal
-	 * @param  {bool} [goHamStart] - Go ham at start?          @param  {number} [duration] - Run Duration    @param  {number} [tDuration]	- Temporary Run Duration
-	 * @param  {number} [dGoHam]	 - Temporary Goham duration  @param  {bool} [skipped]	   - Should skip it at beginning?
-	 * @return {number}						 - Returns a unique number for this job in queue. */
+	 * @param  {number} myId       - Unique ID number.          @param  {function} doFunc   - Do every cycle.  @param  {function} funcAfter - Do after removal.
+	 * @param  {bool} [goHamStart] - Go ham at start?           @param  {number} [duration] - Run duration.    @param  {number} [tDuration]	- Temporary run duration.
+	 * @param  {number} [dGoHam]	 - Temporary goham duration.  @param  {bool} [skipped]	  - Should skip it at beginning?
+	 * @return {number}						 - Returns a unique number for this job in queue.
+	**/
 	addToQueue(myId, doFunc, funcAfter, goHamStart=false, duration=0, tDuration=0, dGoHam=0, skipped=false) {
 		const thisUnique = this.unique++; // Advance unique index for this new queue item
-		this.queue.unshift(thisUnique); // put this new unique index at the beginning of the queue
+		this.queue.unshift(thisUnique); 	// put this new unique index at the beginning of the queue
 		tDuration = (duration > 0 && tDuration > duration) ? 0 : tDuration;
 		let duplicate = false; for (let item of Object.values(this.queueObject)) { if (myId === item.myId) duplicate = true; }
 		if (!duplicate) {
@@ -280,7 +305,8 @@ class TimerClass {
 		} else return null;
 	}
 	/** Delete this job with the unique number from the queue.
-	 * @param {number} queueUnique - Unique number of job to be deleted. */
+	 * @param  {number} queueUnique - Unique number of job to be deleted.
+	**/
 	deleteFromQueue(queueUnique) {
 		if (this.queueObject.hasOwnProperty(queueUnique)) {
 			if (this.goingHam === queueUnique) this.goingHam = null;
@@ -288,10 +314,13 @@ class TimerClass {
 			this.removeFromQueueSkipped(queueUnique); // Make sure it's no longer in skipped queue.
 			delete this.queueObject[queueUnique];
 			if (this.dLog(3)) console.info(`%c[${this.timerName}] is trying to delete from queue: ${queueUnique}`, CONSOLE_INFO);
-			if (this.queue.length === 0) this.running = false;
+			if (this.queue.length === 0) { this.running = false; clearTimeout(this.timeoutID); this.timeoutID = null; this.timeoutDoing = null; }
 			else this.sendBackInfo();
 		}
 	}
+	/** Sends this job to the front of the line so it will be done next.
+	 * @param  {number} queueUnique - Unique number of job to skip in front of line.
+	**/
 	frontOfQueue(queueUnique) {
 		if (this.queueObject.hasOwnProperty(queueUnique)) {
 			this.removeFromQueue(queueUnique);
@@ -303,7 +332,8 @@ class TimerClass {
    * (1)-error = Errors that shouldn't be happening but may not be fatal.
    * (2)-warn = Warnings of errors that could be bad but mostly can be self corrected.
 	 * @param  {number} levelNumber - Level number for this error.
-	 * @return {bool}								- True if this error is permitted to show. */
+	 * @return {bool}								- True if this error is permitted to show.
+	**/
 	dError(levelNumber) { return dError(levelNumber, 'TimeClass'); }
 	/** Checks if this debug message is allowed to show depending on user options and class name.
    * (1)-info = Shows basic information of progress of program.
@@ -311,6 +341,7 @@ class TimerClass {
    * (3)-trace = More details shown including variable contents and functions being called.
    * (4)-trace urls = Shows full details of variables, functions, fetching urls and flow of program.
 	 * @param  {number} levelNumber - Level number for this debug message.
-	 * @return {bool}								- True if this message is permitted to show. */
+	 * @return {bool}								- True if this message is permitted to show.
+	**/
 	dLog(levelNumber) { return dLog(levelNumber, 'TimerClass'); }
 }

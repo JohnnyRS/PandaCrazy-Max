@@ -1,66 +1,70 @@
 /** This class takes care of the exporting and importing of data.
  * @class EximClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class EximClass {
   constructor() {
+    this.tabPosition = 0;                 // Unique counter for the tabs being imported.
+    this.importJobData = {};              // All the jobs data being imported.
+    this.importJobIds = [];               // All the id's for the jobs being imported.
+    this.importTabsData = {};             // Panda jobs tabs being imported.
+    this.importJobsTabs = {};             // Temporary panda jobs tabs being imported.
+    this.importOptions = {};              // Global options being imported.
+    this.importGroupings = [];            // Panda groupings being imported.
+    this.importSGroupings = [];           // Search groupings being imported.
+    this.importSearchData = {};           // Search data being imported.
+    this.importAlarmsData = {};           // Alarms data being imported.
+    this.importTriggersData = [];         // Triggers data being imported.
+    this.importCompleted = false;         // Flag used to represent when the importing is completed.
+    this.alarmsOnly = false;              // Only export the alarms.
+    this.reader = new FileReader();       // Used to allow user to find a themes file on their computer.
     this.exportPre = {'extVersion':'0', 'exportVersion':'JRJUN-0', 'jobs':0, 'Options':0, 'groupings':0, 'tabs':0, 'searchTriggers':0};
-    this.tabPosition = 0;
-    this.importJobData = {};
-    this.importJobIds = [];
-    this.importTabsData = {};
-    this.importTabsIds = [];
-    this.importJobsTabs = {};
-    this.importOptions = {};
-    this.importGroupings = [];
-    this.importSGroupings = [];
-    this.importSearchData = {};
-    this.importAlarmsData = {};
-    this.importTriggersData = [];
-    this.importCompleted = false;
-    this.alarmsOnly = false;
     this.propData = {'Options':{'func':'theOptions', 'prop':'Options'}, 'Grouping':{'func':'theGroupings', 'prop':'Grouping'}, 'Alarms':{'func':'theSoundOptions', 'prop':'SoundOptions'}, 'Tabs':{'func':'theTabs', 'prop':'Tabsdata'}, 'SearchGroupings':{'func':'searchGroupings', 'prop':'SearchGroupings'}, 'Triggers':{'func':'theTriggers', 'prop':'SearchTriggers'}};
     this.soundConvert = {'more15':'less99', 'queueFull':'fullQueue', 'loggedOut':'hasToPause', 'captchaAlarm':'captchaAlarm'};
-    this.reader = new FileReader();
     this.options = {'HamCycleNumber':'hamTimer', 'cycleNumber':'mainTimer', 'cycleNumber2':'secondTimer', 'cycleNumber3':'thirdTimer', 'cycleAdding':'timerAddMore', 'cycleAutoIncrease':'timerAutoIncrease', 'cycleDecrease':'timerDecrease', 'cycleIncrease':'timerIncrease', 'savedCycleNum':'timerUsed', 'alarmVolume':'volume'};
   }
   /** Converts the amount of time set for the HIT from string to seconds.
    * @param  {string} duration - The duration in a string format that MTURK has for this HIT.
-   * @return {number}          - Returns the number in seconds. */
+   * @return {number}          - Returns the number in seconds.
+  **/
   secondsDuration(duration) {
     let testReg = /(\d*) (week|day|hour|minute|second)/g, totalMinutes = 0, matches = Array.from(duration.matchAll(testReg));
     let min_data = {'week':10080, 'day':1440, 'hour':60, 'minute':1, 'second':0};
     for (const match of matches) { totalMinutes += min_data[match[2]] * match[1]; }
     return totalMinutes * 60;
   }
-  /** Empties out all the properties for this class to reset filled in import data. */
+  /** Empties out all the properties for this class to reset filled in import data. **/
   resetData() {
     this.tabPosition = 0; this.importJobData = {}; this.importTabsData = {}; this.importOptions = {}; this.importSearchData = {}; this.importJobsTabs = {};
-    this.importJobIds = []; this.importTabsIds = []; this.importGroupings = []; this.importSGroupings = [];
+    this.importJobIds = []; this.importGroupings = []; this.importSGroupings = [];
   }
   /** Export only alarms to an export file.
-   * @param {function} doneFunc - Do After Function */
+   * @param  {function} [doneFunc] - Do after function.
+  **/
   exportOnlyAlarms(doneFunc=null) {
-    let exportedAlarms = theAlarms.exportAlarms(true);
+    let exportedAlarms = MyAlarms.exportAlarms(true);
     saveToFile({'pre':this.exportPre, 'Alarms':exportedAlarms},_, '_only_alarms', () => { if (doneFunc) doneFunc(); });
   }
   /** Export all the data to a file with alarms or not.
    * @async                      - To wait for all panda job data to be loaded.
-   * @param  {bool} [withAlarms] - Should alarm sounds be included?  @param  {function} [doneFunc] - The function to call after saving file to computer. */
+   * @param  {bool} [withAlarms] - Should alarm sounds be included?  @param  {function} [doneFunc] - The function to call after saving file to computer.
+  **/
   async exportData(withAlarms=false, doneFunc=null) {
     let exportJobs = [], exportTabs = [], exportOptions = [], exportGrouping = {}, exportedAlarms = [], exportTriggers = {}, exportSearchGroups = {};
-    this.exportPre.extVersion = gManifestData.version;
-    await bgPanda.getAllPanda(false);
-    for (const key of Object.keys(bgPanda.info)) { let data = await bgPanda.dataObj(key); exportJobs.push(data); }
-    exportTabs = Object.values(pandaUI.tabs.getTabInfo()); exportOptions = MyOptions.exportOptions(); exportGrouping = groupings.theGroups();
-    exportedAlarms = theAlarms.exportAlarms(withAlarms); exportTriggers = await MySearch.exportTriggers(); exportSearchGroups = await MySearch.exportSearchGroupings();
-    this.exportPre.jobs = exportJobs.length; 
+    this.exportPre.extVersion = gCurrentVersion;
+    await MyPanda.getAllPanda(false);
+    for (const key of Object.keys(MyPanda.info)) { let data = await MyPanda.dataObj(key); exportJobs.push(data); }
+    exportTabs = Object.values(MyPandaUI.tabs.getTabInfo()); exportOptions = MyOptions.exportOptions(); exportGrouping = MyGroupings.theGroups();
+    exportedAlarms = MyAlarms.exportAlarms(withAlarms); exportTriggers = await MySearch.exportTriggers(); exportSearchGroups = await MySearch.exportSearchGroupings();
+    this.exportPre.jobs = exportJobs.length;
     saveToFile({'pre':this.exportPre, 'jobs':exportJobs, 'Tabsdata':exportTabs, 'Options':exportOptions, 'Grouping':exportGrouping, 'SearchTriggers':exportTriggers,
       'SearchGroupings':exportSearchGroups, 'SoundOptions':exportedAlarms},_, (withAlarms) ? '_w_alarms' : null, () => {
-      bgPanda.nullData(false); if (doneFunc) doneFunc();
+      MyPanda.nullData(false); if (doneFunc) doneFunc();
     });
   }
   /** Show user that the file used was not valid.
-   * @param  {bool} status - True for good file or false for a bad file. */
+   * @param  {bool} status - True for good file or false for a bad file.
+  **/
   statusFile(status) {
     let statusText = (status) ? 'Data from file ready to be imported.' : 'Not a valid import file.';
     $('.pcm-importStatus').html(statusText).removeClass('pcm-inputError');
@@ -68,7 +72,8 @@ class EximClass {
     else { $('.pcm-importButton').addClass('pcm-disabled').prop('disabled',true); $('.pcm-importStatus').addClass('pcm-inputError'); }
   }
   /** Reads the data from the file to be imported and then verifies it.
-   * @async - To check each property needed in the import file. */
+   * @async - To check each property needed in the import file.
+  **/
   async readData() {
     let textData = this.reader.result;
     $('.pcm-importStatus').html('');
@@ -97,30 +102,30 @@ class EximClass {
   }
   /** Starts to import the data to the program and deleting all the old data.
    * @async                      - To wait for all the current data to be deleted and new imported data to be saved in database.
-   * @param  {bool} [onlyAlarms] - Should alarm sounds only get imported? */
+   * @param  {bool} [onlyAlarms] - Should alarm sounds only get imported?
+  **/
   async startImporting(onlyAlarms=false) {
     if (onlyAlarms || this.alarmsOnly) {
-      await theAlarms.clearAlarms();
-      await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
+      await MyAlarms.clearAlarms();
+      await MyAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
     } else {
       if (!Object.keys(this.importTabsData).length) this.importTabsData = Object.assign({}, this.importJobsTabs);
       let counters = 0, tabDbId = 1, mInfo = [], mData = []; this.tabPosition = 0;
       if (Object.keys(this.importTabsData).length > 0) {
         $('#pcm-tabbedPandas').hide(); $('.pcm-importButton:first').append('.');
-        bgPanda.removeAll(false); MySearch.removeAll();
-        bgPanda.closeDB(); MySearch.closeDB(); // Must close DB before deleting and recreating stores.
-        await bgPanda.recreateDB(); // Recreate database and stores.
-        await MyOptions.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
-        await theAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
-        await groupings.prepare( (_, bad) => { if (bad) showMessages(null,bad); } );
+        MyPanda.removeAll(); MySearch.removeAll(); MyPanda.closeDB(); MySearch.closeDB(); // Must close DB before deleting and recreating stores.
+        await MyPanda.recreateDB(); // Recreate database and stores.
+        await MyOptions.prepare((_s, bad) => { if (bad) showMessages(null,bad); });
+        await MyAlarms.prepareAlarms(Object.values(this.importAlarmsData), false);
+        await MyGroupings.prepare((_s, bad) => { if (bad) showMessages(null,bad); });
         $('.pcm-importButton:first').append('.');
         MyOptions.importOptions(this.importOptions);
         for (const key of Object.keys(this.importTabsData)) {
           $('.pcm-importButton:first').append('.');
           let active = (counters++ === 0) ? true : false;
           let theTitle = (this.importTabsData[key].title !== '') ? this.importTabsData[key].title : ((this.tabPosition === 0) ? 'Main' : `tab #${this.tabPosition}`);
-          tabDbId = await pandaUI.tabs.addFromDB({'title':theTitle, 'list':this.importTabsData[key].list, 'position':this.tabPosition++}, active);
-          pandaUI.tabs.hideContents();
+          tabDbId = await MyPandaUI.tabs.addFromDB({'title':theTitle, 'list':this.importTabsData[key].list, 'position':this.tabPosition++}, active);
+          MyPandaUI.tabs.hideContents();
           for (const myId of this.importTabsData[key].list) {
             if (this.importJobData.hasOwnProperty(myId)) {
               this.importJobIds = arrayRemove(this.importJobIds, myId);
@@ -142,7 +147,7 @@ class EximClass {
           job = null;
         }
       }
-      await bgPanda.addToDB(mInfo, true);
+      await MyPanda.addToDB(mInfo, true);
       let newPositions = {}, triggers = [], options = [], rules = [], addedTime = new Date().getTime();
       for (let i = 0, len = mInfo.length; i < len; i++) {
         if (mInfo[i].search) {
@@ -186,16 +191,16 @@ class EximClass {
         }
       }
       for (const group of this.importGroupings) { delete group.grouping; delete group.delayed; }
-      let searchGroupings = new TheGroupings('searching'); await searchGroupings.prepare(showMessages);
-      groupings.importToDB(this.importGroupings); searchGroupings.importToDB(this.importSGroupings);
-      for (const unique of pandaUI.tabs.getUniques()) { if (newPositions[unique]) pandaUI.tabs.setPositions(unique, newPositions[unique]); }
+      let searchGroupings = new TheGroupings('searching'); await searchGroupings.prepare((_s, bad) => { if (bad) showMessages(null,bad); });
+      MyGroupings.importToDB(this.importGroupings); searchGroupings.importToDB(this.importSGroupings);
+      for (const unique of MyPandaUI.tabs.getUniques()) { if (newPositions[unique]) MyPandaUI.tabs.setPositions(unique, newPositions[unique]); }
     }
   }
-  /** Shows the import modal for user to select a file to import. */
+  /** Shows the import modal for user to select a file to import. **/
   importModal() {
-    modal = new ModalClass();
-    const idName = modal.prepareModal(null, '800px', 'pcm-importModal', 'modal-lg', 'Import Data', '<h4>Import saved data from an exported file.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
-    modal.showModal(null, () => {
+    MyModal = new ModalClass();
+    const idName = MyModal.prepareModal(null, '800px', 'pcm-importModal', 'modal-lg', 'Import Data', '<h4>Import saved data from an exported file.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
+    MyModal.showModal(null, () => {
       let df = document.createDocumentFragment();
       if (window.File && window.FileReader && window.FileList && window.Blob) {
         createCheckBox(df, 'Import only alarm sounds: ', 'pcm-importAlarms', 'alarmsYes', false, ' pcm-importCheckbox',_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Import Alarm sounds ONLY from the exported file. No other data will be imported and all data will be kept.');
@@ -204,7 +209,7 @@ class EximClass {
         $(`<div id='pcm-importCheck'></div>`).appendTo(df);
         $(`<div class='pcm-importStatus'>&nbsp;</div>`).appendTo(df);
         $('<div></div>').append($(`<button class='pcm-importButton pcm-disabled pcm-tooltipData pcm-tooltipHelper' data-original-title='Import jobs, options, groupings, triggers and alarm options from an exported file.'>Import Data From File</button>`).prop('disabled',true)).appendTo(df);
-        $(`#${idName} .${modal.classModalBody}`).append(df);
+        $(`#${idName} .${MyModal.classModalBody}`).append(df);
         $('.custom-file-input').on('change', e => {
           const fileName = $(e.target).val().replace('C:\\fakepath\\', '');
           $(e.target).next('.custom-file-label').addClass('selected').html(fileName);
@@ -216,24 +221,24 @@ class EximClass {
           if (!this.importCompleted) {
             $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); MySearchUI.importing();
             await this.startImporting($('#pcm-importAlarms').prop('checked'));
-            await delay(100);
+            await delay(600);
             $('.custom-file-input').off('change');
             $(e.target).html('Importing completed. Click to restart!').css({'backgroundColor':'#00FF7F','color':'#000c9c', 'fontWeight':'bold'}).prop('disabled',false);
             this.reader.abort();
             this.reader = null; this.importCompleted = true; this.resetData();
-            MySearchUI.importingDone(); pcm_pandaOpened = false;
-          } else modal.closeModal();
+            MySearchUI.importingDone(); gPCM_pandaOpened = false;
+          } else MyModal.closeModal();
         });
         inputContainer = null;
       }
       df = null;
-    }, () => { modal = null; if (this.importCompleted) { MySearchUI.importCompleted(); window.location.reload(); } });
+    }, () => { MyModal = null; if (this.importCompleted) { MySearchUI.importCompleted(); setTimeout(() => { window.location.reload(); }, 800); } });
   }
-  /** Shows the export modal for user to choose to export alarm sounds or not. */
+  /** Shows the export modal for user to choose to export alarm sounds or not. **/
   exportModal() {
-    modal = new ModalClass();
-    const idName = modal.prepareModal(null, '800px', 'pcm-exportModal', 'modal-lg', 'Export Data', '<h4>Export data to a file for importing later.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
-    modal.showModal(null, () => {
+    MyModal = new ModalClass();
+    const idName = MyModal.prepareModal(null, '800px', 'pcm-exportModal', 'modal-lg', 'Export Data', '<h4>Export data to a file for importing later.</h4>', '', '', 'invisible', 'No', null, 'invisible', 'No', null, 'invisible', 'Close');
+    MyModal.showModal(null, () => {
       let df = document.createDocumentFragment();
       $(`<h4 class='pcm-exportText'>Any added jobs, tabs, groupings and all options will be exported.<br />Only the alarm options will be saved unless you click the checkbox to save alarm sounds.<br />Saving alarm sounds will create a larger exported file so only do it when you add new sounds.</div>`).appendTo(df);
       let div1 = $(`<div></div>`).appendTo(df);
@@ -241,19 +246,20 @@ class EximClass {
       let div2 = $(`<div></div>`).appendTo(df);
       createCheckBox(div2, 'Export ONLY alarm sounds: ', 'pcm-exportAlarmsOnly', 'alarmsYes', false, ' pcm-exportCheckAlarmsOnly',_,_,_, 'pcm-tooltipData pcm-tooltipHelper', 'Export ONLY Alarm sounds to the export file. No other data will be exported so you can share your personal alarms only.');
       $(`<div></div>`).append($(`<button class='pcm-exportButton pcm-tooltipData pcm-tooltipHelper' data-original-title='Export jobs, options, groupings, triggers and alarms to a file.'>Export Your Data To A File</button>`)).appendTo(df);
-      $(`#${idName} .${modal.classModalBody}`).append(df);
+      $(`#${idName} .${MyModal.classModalBody}`).append(df);
       $('.pcm-exportButton:first').on('click', e => {
         $(e.target).html('Please Wait: Exporting').css('color','white').prop('disabled',true);
-        if ($('#pcm-exportAlarmsOnly').prop('checked')) this.exportOnlyAlarms(async () => { await delay(1500); modal.closeModal(); });
-        else this.exportData($('#pcm-exportAlarmsToo').prop('checked'), async () => { await delay(1500); modal.closeModal(); });
+        if ($('#pcm-exportAlarmsOnly').prop('checked')) this.exportOnlyAlarms(async () => { await delay(1500); MyModal.closeModal(); });
+        else this.exportData($('#pcm-exportAlarmsToo').prop('checked'), async () => { await delay(1500); MyModal.closeModal(); });
       });
       df = null;
-    }, () => { modal = null; });
+    }, () => { MyModal = null; });
   }
   /** Validates the job data in the file to be imported.
    * @async                - To delay for status text to be read by user.
-   * @param  {object} data - The job data   @param  {string} type - The version of the import file.
-   * @return {bool}        - Returns if it was verified or not. */
+   * @param  {object} data - The job data.  @param  {string} type - The version of the import file.
+   * @return {bool}        - Returns if it was verified or not.
+  **/
   async checkJobs(data, type) {
     let jobData = null;
     $('#pcm-importCheck .jobs').html('Job Data - Checking').removeClass('pcm-verified');
@@ -261,7 +267,7 @@ class EximClass {
     else if (type === 'PCOLD') jobData = Object.keys(data.Requesters);
     else if (type === 'PCOLDER') jobData = data;
     if (jobData) {
-      for (const key of jobData) { 
+      for (const key of jobData) {
         const rData = (type === 'PCOLD') ? data.Requesters[key] : key;
         if (type === 'PCM') this.newerImportsJobs(rData);
         else if (type === 'PCOLD') this.olderImportsJobs(rData, key, type);
@@ -273,8 +279,10 @@ class EximClass {
     } else { $('#pcm-importCheck .jobs').html('Job Data - None').addClass('pcm-dataNone'); return false; }
   }
   /** Checks the properties from an import data and then calls the specific function for it.
-   * @param  {object} data        - Import data  @param  {string} version    - Import version  @param  {string} type - Property Id
-   * @param  {string} [typeClass] - Class name   @param  {string} [typeText] - Import name */
+   * @async                       - To wait for a delay.
+   * @param  {object} data        - Import data.  @param  {string} version    - Import version.  @param  {string} type - Property ID.
+   * @param  {string} [typeClass] - Class name.   @param  {string} [typeText] - Import name.
+  **/
   async checkProps(data, version, type, typeClass='', typeText='') {
     $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - Checking`).removeClass('pcm-verified');
     await delay(400);
@@ -286,10 +294,11 @@ class EximClass {
     else $(`#pcm-importCheck .${typeClass}`).html(`${typeText} Data - None`).addClass('pcm-dataNone');
   }
   /** Parse job data read from a newer import file to the data object needed.
-   * @param  {object} rData - The job data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The job data read from the import file to be parsed to the newer data object.
+  **/
   newerImportsJobs(rData) {
     if (Object.keys(this.importTabsData).length > 0) {
-      if (!Object.keys(this.importTabsData).includes(rData.tabUnique.toString())) rData.tabUnique = pandaUI.tabs.currentTab;
+      if (!Object.keys(this.importTabsData).includes(rData.tabUnique.toString())) rData.tabUnique = MyPandaUI.tabs.currentTab;
     } else {
       if (this.importJobsTabs[rData.tabUnique]) this.importJobsTabs[rData.tabUnique].list.push(rData.id);
       else { this.importJobsTabs[rData.tabUnique] = {'title': '',list:[rData.id], 'id':rData.tabUnique}; this.tabPosition++; }
@@ -302,13 +311,14 @@ class EximClass {
     this.importJobData[rData.id] = {'data':dO, 'options':oO, 'dateAdded':rData.dateAdded, 'totalSeconds':rData.totalSeconds, 'totalAccepted':rData.totalAccepted};
   }
   /** Parse job data read from an older import file to the data object needed.
-   * @param  {object} rData - Job Data  @param  {number} key - Job Key Name  @param  {string} type  - The version of the import file. */
+   * @param  {object} rData - Job data.  @param  {number} key - Job key name.  @param  {string} type - The version of the import file.
+  **/
   olderImportsJobs(rData, key, type) {
     let firstOne = (rData.requesterName && ['JRSep','JRAPR'].includes(rData.requesterName.substring(0,5))) ? true : false;
     if (!firstOne && (rData.groupId || rData.requesterId)) {
       if (type === 'PCOLDER') rData.tabNumber++;
       if (Object.keys(this.importTabsData).length > 0) {
-        if (!Object.keys(this.importTabsData).includes(rData.tabNumber.toString())) rData.tabNumber = pandaUI.tabs.currentTab;
+        if (!Object.keys(this.importTabsData).includes(rData.tabNumber.toString())) rData.tabNumber = MyPandaUI.tabs.currentTab;
       } else {
         if (this.importJobsTabs[rData.tabNumber]) this.importJobsTabs[rData.tabNumber].list.push(key);
         else { this.importJobsTabs[rData.tabNumber] = {'title': '',list:[key], 'id':rData.tabNumber}; this.tabPosition++; }
@@ -324,11 +334,11 @@ class EximClass {
       let searchRules = (rData.hasOwnProperty('searchData')) ? rData.searchData.searchOptions : {};
       let excludes = (searchRules.hasOwnProperty('excludeGID') && searchRules.excludeGID.length > 0) ? searchRules.excludeGID[0].split(/\s*,\s*/) : [];
       let rO = sRulesObject(excludes,_, searchRules.excludeTerm, searchRules.includeTerm, searchRules.minReward, searchRules.maxReward);
-      let history = ('searchData' in rData && 'theHistory' in rData.searchData) ? rData.searchData.theHistory : {}, fullHist = {};
-      if (Object.keys(history).length > 0) {
-        for (const key2 of Object.keys(history)) {
-          let info = history[key2].info;
-          let hO = sHistoryObject(info.requesterName, info.requesterId, info.pay, info.title, info.description, info.duration, history[key2].date);
+      let theHistory = ('searchData' in rData && 'theHistory' in rData.searchData) ? rData.searchData.theHistory : {}, fullHist = {};
+      if (Object.keys(theHistory).length > 0) {
+        for (const key2 of Object.keys(theHistory)) {
+          let info = theHistory[key2].info;
+          let hO = sHistoryObject(info.requesterName, info.requesterId, info.pay, info.title, info.description, info.duration, theHistory[key2].date);
           fullHist[key2] = hO;
         }
       }
@@ -337,13 +347,15 @@ class EximClass {
     }
   }
   /** Parse tab data read from an import file to the data object needed.
-   * @param  {object} rData - Tab Data  @param  {string} version - Is exported data old or new? */
+   * @param  {object} rData - Tab data.  @param  {string} version - Is exported data old or new?
+  **/
   theTabs(rData, version) {
     if (version === 'PCOLD') this.importTabsData[rData.tabNumber.toString()] = {'title':rData.tabName, 'list':rData.positions, 'id':rData.tabNumber};
     else this.importTabsData[rData.id.toString()]= rData;
   }
   /** Parse option data read from an import file to the data object needed.
-   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object.
+  **/
   theOptions(rData) {
     if (Array.isArray(rData)) {
       for (const cat of ['general', 'timers', 'alarms', 'helpers', 'search']) {
@@ -373,7 +385,8 @@ class EximClass {
     if (hamDelayTimer < hamRange.min || hamDelayTimer > hamRange.max) this.importOptions.timers.hamDelayTimer = MyOptions.timersDefault.hamDelayTimer;
   }
   /** Parse the groupings data from an import file to the data object needed.
-   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object.
+  **/
   theGroupings(rData) {
     for (const key of Object.keys(rData)) {
       let importGroup = {};
@@ -384,14 +397,15 @@ class EximClass {
     }
   }
   /** Parse the alarms data from an import file to the data object needed.
-   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The option data read from the import file to be parsed to the newer data object.
+  **/
   theSoundOptions(rData) {
     if (rData.captchaAlarm) {
-      let defaultAlarms = theAlarms.theDefaultAlarms();
+      let defaultAlarms = MyAlarms.theDefaultAlarms();
       for (const key of Object.keys(rData)) {
         this.importAlarmsData[key] = Object.assign(defaultAlarms[key], rData[key]);
         if (!rData[key].obj) {
-          let audio = theAlarms.allAlarms(key).audio;
+          let audio = MyAlarms.allAlarms(key).audio;
           if (audio === null) this.importAlarmsData[key].obj = null;
           else if (audio.src.substr(0,4) === 'data') this.importAlarmsData[key].obj = audio.src;
         } else if (rData[key].obj.substr(0,4) === 'data') this.importAlarmsData[key].obj = rData[key].obj;
@@ -400,7 +414,8 @@ class EximClass {
     }
   }
   /** Parse the search trigger data from an import file to the data object needed.
-   * @param {object} rData - The search trigger data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The search trigger data read from the import file to be parsed to the newer data object.
+  **/
   theTriggers(rData) {
     let addedTime = new Date().getTime();
     for (const value of Object.values(rData)) {
@@ -413,6 +428,7 @@ class EximClass {
     }
   }
   /** Parse the search groupings data from an import file to the data object needed.
-   * @param {object} rData - The search groupings data read from the import file to be parsed to the newer data object. */
+   * @param  {object} rData - The search groupings data read from the import file to be parsed to the newer data object.
+  **/
   searchGroupings(rData) { for (const key of Object.keys(rData)) this.importSGroupings.push(rData[key]); }
 }

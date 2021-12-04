@@ -1,6 +1,7 @@
 /** This class deals with the use of themes to add to the CSS style of the pages.
  * @class ThemesClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class ThemesClass {
   constructor() {
     this.theStyle = ``;
@@ -9,7 +10,8 @@ class ThemesClass {
     this.pcmStylesheet = document.getElementById('pcm-stylesheet').getAttribute('href');
   }
   /** Loads a new css stylesheet in the header with the css styles provided.
-   * @param {string} cssStyles - CSS Theme Styles */
+   * @param  {string} cssStyles - CSS theme styles.
+  **/
   loadCSS(cssStyles) {
     let oldTheme = document.getElementById('pcm-usingTheme');
     if (oldTheme) { oldTheme.parentNode.removeChild(oldTheme); }
@@ -18,16 +20,18 @@ class ThemesClass {
     document.getElementsByTagName('head')[0].appendChild(link);
   }
   /** Loads the new CSS style theme and resets the default theme. Also will reset the CSS values from CSS variables.
-   * @param {bool} [reset] - Reset Default Theme? */
-  prepareThemes(reset=false) {
+   * @param  {bool} [reset] - Reset default theme?  @param  {function} [afterFunc] - Function to call after done to send success array.
+  **/
+  prepareThemes(reset=false, afterFunc=null) {
     this.themeIndex = MyOptions.theThemeIndex(); this.theStyle = MyOptions.theThemes();
     this.loadCSS(this.theStyle);
     if (reset) {
       document.getElementById('pcm-stylesheet').setAttribute('href', '');
       document.getElementById('pcm-stylesheet').setAttribute('href', this.pcmStylesheet);
-      if (typeof pandaUI !== 'undefined') { pandaUI.resetCSSValues(); bgPage.themeChanged(); }
+      if (MyPandaUI !== null) { MyPandaUI.resetCSSValues(); if (MySearchUI) MySearchUI.themeChanged(); }
     }
+    if (afterFunc) afterFunc(['Your Themes Have Been Loaded.']);
   }
-  /** Shows a dialog modal which allows the user to change the current theme by calling the showThemeModal from the modalOptions Class. */
+  /** Shows a dialog modal which allows the user to change the current theme by calling the showThemeModal from the modalOptions Class. **/
   showThemeModal() { if (!this.modalOptions) this.modalOptions = new ModalOptionsClass(); this.modalOptions.showThemeModal( () => this.modalOptions = null ); }
 }

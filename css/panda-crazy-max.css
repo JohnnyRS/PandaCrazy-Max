@@ -247,7 +247,7 @@ html, body { height: 100%; }
 .pcm-themeArea { margin-bottom:30px; }
 .pcm-volumeHorizGroup { background-color: #063e4d; font-size:0.8em; padding-left:2px; }
 .pcm-exportText { color: cyan; margin-top: 1rem; font-size: 80%; font-weight: 400; }
-.pcm-goNextHit { color: cyan; margin-top: 1rem; font-size: 0.75rem; font-weight: 400; margin-left: 8px; }
+.pcm-goNextHit, .pcm-goPrevHit { color: cyan; margin-top: 1rem; font-size: 0.75rem; font-weight: 400; margin-left: 8px; }
 .pcm-exportCheckAlarms { margin-top: 1rem; margin-bottom: 0.3rem; }
 .pcm-groupingItem .pcm-myPrimary, .pcm-optionCont .pcm-myPrimary { padding: .25rem .3rem; }
 .pcm-pandaCard.pcm-noQual { background-color: #DDA0DD; }

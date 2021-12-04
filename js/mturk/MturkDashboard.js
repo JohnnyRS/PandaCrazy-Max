@@ -2,37 +2,41 @@
 /** This class gets the earnings from the dashboard for the current date.
  * @class MturkDashboard ##
  * @extends MturkClass
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class MturkDashboard extends MturkClass {
 	constructor() {
-    super();
-    this.disconnected = false;
-    this.firstCheck = false;
-    this.dashDone = false;
-    this.interrupt = false;
-    this.loggedOff = false;
-    this.paused = false;
-    this.minTimer = 400;
-    this.page = 1;
-    this.total = 0.00;
-    this.dashUrl = 'https://worker.mturk.com/status_details/';
+    super();                      // Used to call the parent class.
+    this.disconnected = false;    // Disconnected from MTURK?
+    this.firstCheck = false;      // Is this the first check of dashboard?
+    this.dashDone = false;        // Calculating of earnings done?
+    this.interrupt = false;       // Something went wrong so stopped due to interruption.
+    this.loggedOff = false;       // Logged off from MTURK?
+    this.paused = false;          // Paused?
+    this.minTimer = 400;          // Minimum timer allowed.
+    this.page = 1;                // The current page it is calculating.
+    this.total = 0.00;            // Default value for the total earnings.
+    this.dashUrl = 'https://worker.mturk.com/status_details/';    // The URL to use for dashboard status details.
   }
   /** Returns a value representing if it finished calculating earnings.
-   * @return {bool} - Is calculating done? */
+   * @return {bool} - Is calculating done?
+  **/
   isFetching() { return !this.dashDone; }
   /** Starts calculating the earnings for today by checking the dashboard.
-   * @param  {bool} [start] - Initial start? */
+   * @param  {bool} [start] - Initial start?
+  **/
   doDashEarns(start=true) { if (start) { this.dashDone = false; this.total = 0.00; this.page = 1; } this.goFetch(); }
 	/** Stops calculating the earnings and sets the pause variable.
-   * @param  {bool} [paused] - Pausing or not? */
-	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; if (extPandaUI) extPandaUI.setEarnings(this.total) } }
-  /** Sets loggedOff to true and pauses the earning calculations. */
+   * @param  {bool} [paused] - Pausing or not?
+  **/
+	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; if (MyPandaUI) MyPandaUI.setEarnings(this.total) } }
+  /** Sets loggedOff to true and pauses the earning calculations. **/
   nowLoggedOff() { this.loggedOff = true; this.stopDashEarns(true); }
-  /** Sets loggedOff to false and starts to calculate the earnings. */
+  /** Sets loggedOff to false and starts to calculate the earnings. **/
   nowLoggedOn() { this.loggedOff = false; this.paused = false; if (!this.dashDone) this.doDashEarns(false); }
-  /** Fetches the URL for the dashboard after timer class tells it to do so and handles MTURK results. */
+  /** Fetches the URL for the dashboard after timer class tells it to do so and handles MTURK results. **/
   goFetch() {
-    let theDate = moment().format('YYYY-MM-DD'), urlString = `${this.dashUrl}${theDate}`, startTime = new Date().getTime();
+    let theDate = formatAMPM('yearMonDay', new Date()), urlString = `${this.dashUrl}${theDate}`, startTime = new Date().getTime();
     urlString = urlString + ((this.page > 1) ? `/?page_number=${this.page}` : '/'); let theUrl = new UrlClass(urlString);
     super.goFetch(theUrl).then( result => {
       if (!result) { console.error('Returned result fetch was a null.', JSON.stringify(theUrl)); }
@@ -50,7 +54,7 @@ class MturkDashboard extends MturkClass {
             if (!pagination && this.page !== 1) { this.interrupt = true; this.stopDashEarns(); }
             else if (!pagination && this.page === 1) { this.firstCheck = true; this.stopDashEarns(); }
             else {
-              if (extPandaUI) extPandaUI.waitEarningsPage(this.page);
+              if (MyPandaUI) MyPandaUI.waitEarningsPage(this.page);
               let pageData = JSON.parse(pagination), targetDiv = $(result.data).find(`.hits-status-details-table-header:first`).next('div'), total = 0.00;
               let rawProps = targetDiv.find('div[data-react-props]').attr('data-react-props'), hitsData = JSON.parse(rawProps).bodyData;
               for (const hit of hitsData) { if (hit.status !== 'Rejected') total += hit.reward; }
@@ -64,7 +68,7 @@ class MturkDashboard extends MturkClass {
           }
           errorPage = null;
         } else if (result.type === 'caught.error') {
-          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.error('disconnected'); this.disconnected = true; this.stopDashEarns(true); }
+          if (JSON.stringify(result.status).includes('Failed to fetch')) { console.info('disconnected'); this.disconnected = true; this.stopDashEarns(true); }
           console.info(`Mturk might be slow or you're disconnected. Received a service unavailable error.`);
         }
       }

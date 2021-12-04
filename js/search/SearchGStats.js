@@ -1,7 +1,7 @@
 /** This class stores the search stats data and values.
  * @class SearchGStats ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com
- */
+**/
 class SearchGStats {
 	constructor() {
 		this.errors = 0;								// Amount of errors that happened while searching.
@@ -18,39 +18,56 @@ class SearchGStats {
 		this.timerStats = [this.searchElapsed, this.fetchedElapsed];
 	}
 	/** Checks to see if searching is on by using searching value.
-	 * @return {bool} - True if searching is on now. */
+	 * @return {bool} - True if searching is on now.
+	**/
 	isSearchOn() { return this.searching.value; }
 	/** Checks to see if searching is on by using searchNow value.
-	 * @return {bool} - True if searchNow is on. */
+	 * @return {bool} - True if searchNow is on.
+	**/
 	isSearchNowOn() { return this.searchNow.value; }
 	/** Updates the given stat object on the status bar and pass a text to use too.
-	 * @param  {object} statObj   - The stat object  @param  {string} [text] - The text to use in the status bar for this stat object. */
+	 * @param  {object} statObj   - The stat object.  @param  {string} [text] - The text to use in the status bar for this stat object.
+	**/
 	updateStatNav(statObj, text='') { MySearchUI.updateStatNav(statObj, text); }
+	/**
+	 *
+	 * @param  {number} oldToggled - Old toggled stat.  @param  {number} toggled - The toggled stat.  @param  {string} theArray - The key name of stat.
+	**/
 	toggleStat(oldToggled, toggled, theArray) {
 		this[theArray][oldToggled-1].disabled = true; this[theArray][toggled-1].disabled = false;
 		this.updateStatNav(this[theArray][toggled-1]);
 	}
-	/** Set the searching value and searching now value to on and update stat in status bar. */
+	/** Set the searching value and searching now value to on and update stat in status bar. **/
 	prepare() {
 		this.updateStatNav(this.timerStats[0]); this.updateStatNav(this.totalSearchFetched); this.updateStatNav(this.totalSearchPREs);
 		this.updateStatNav(this.totalSearchHits); this.updateStatNav(this.totalSearchResults); this.updateStatNav(this.fetchedElapsed);
 	}
+	/** Set the searching value to on and update stat in status bar. **/
 	searchingOn() { this.searching.value = true; this.searchNow.value = true; this.updateStatNav(this.searching, null); this.updateStatNav(this.searchNow, null); }
-	/** Set the searching value to off and update stat in status bar. */
+	/** Set the searching value to off and update stat in status bar. **/
 	searchingOff() { this.searching.value = false; this.searchNow.value = false; this.updateStatNav(this.searching, null); this.updateStatNav(this.searchNow, null); }
 	/** Set the search elapsed time value and update stat in status bar.
-	 * @param  {bool} value */
+	 * @param  {bool} value - New search elapsed time.
+	**/
 	setSearchElapsed(value) { this.searchElapsed.value = value; this.updateStatNav(this.searchElapsed); }
-	/** Add 1 to the total amount of searches fetched and update stat in status bar. */
+	/** Add 1 to the total amount of searches fetched and update stat in status bar. **/
 	addTotalSearchFetched() { this.totalSearchFetched.value++; this.updateStatNav(this.totalSearchFetched); }
-	/** Add 1 to the total amount of PRE's found and update stat in status bar. */
+	/** Add 1 to the total amount of PRE's found and update stat in status bar. **/
 	addTotalSearchPRE() { this.totalSearchPREs.value++; this.updateStatNav(this.totalSearchPREs); }
 	/** Set the total search HITs value to value and update stat in status bar.
-	 * @param  {number} value - The new value for the total number of HITs in the database. */
+	 * @param  {number} value - The new value for the total number of HITs in the database.
+	**/
 	addTotalSearchHits(value) { this.totalSearchHits.value = value; }
 	/** Set the total search results value to value and update stat in status bar.
-	 * @param  {number} value - The new value for the total amount of HITs found in one search result. */
+	 * @param  {number} value - The new value for the total amount of HITs found in one search result.
+	**/
 	addTotalSearchResults(value) { this.totalSearchResults.value = value; this.updateStatNav(this.totalSearchResults); }
+	/** Set the fetched elapsed time value and update stat in status bar.
+	 * @param {number} value - The new value for the fetched elapsed time.
+	**/
 	addFetchedElapsed(value) { this.fetchedElapsed.value = value; this.updateStatNav(this.fetchedElapsed); }
+	/** Returns the stats for the search page so it can get it easily.
+	 * @return {object} - An object with all the search stats so SearchUI can get it quickly.
+	**/
 	getStats() { return {'searchElapsed':this.searchElapsed, 'totalSearchFetched':this.totalSearchFetched, 'totalSearchPREs':this.totalSearchPREs, 'totalSearchHits':this.totalSearchHits, 'totalSearchResults':this.totalSearchResults}; }
 }

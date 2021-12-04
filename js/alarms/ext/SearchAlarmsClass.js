@@ -3,22 +3,24 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com
 **/
 class SearchAlarmsClass {
+  /**
+   * @param  {object} pcm_channel - The Broadcast channel to use when sending messages back to the panda page.
+  **/
   constructor(pcm_channel) {
-    this.pcm_channel = pcm_channel;
-    this.alarmFolder = 'alarms';
-    this.modal = null;
-    this.volume = 50;
-    this.synth = null;
-    this.voices = [];
-    this.voiceIndex = 0;
-    this.searchAlarms = ['triggeredAlarm'];
-    this.data = {};
-    this.myAudio = null;
+    this.pcm_channel = pcm_channel;               // Stores the Broadcast channel to use for sending messages back to the panda page.
+    this.alarmFolder = 'alarms';                  // The folder that has all the default alarms in it.
+    this.volume = 50;                             // The default volume for the alarms.
+    this.synth = null;                            // This is used for text to speech to be used.
+    this.voices = [];                             // The voices on this computer will be loaded in this array for TTS.
+    this.voiceIndex = 0;                          // The default voice in the array to use.
+    this.searchAlarms = ['triggeredAlarm'];       // The key to use for searchUI alarms.
+    this.data = {};                               // Object with all the alarms data stored in memory.
+    this.myAudio = null;                          // This is a temporary variable that holds the audio which will be played.
 
-    pcm_channel.postMessage({'msg':'search: prepare alarms'});
+    this.pcm_channel.postMessage({'msg':'search: prepare alarms'});   // Send a message back to the panda page that it needs the alarms data to be sent.
   }
   /** Adds the supplied source for audio to the alarm object with key name or from default source object.
-   * @param {string} alarmKey - Alarm Key Property  @param {object} src - Source of the Audio
+   * @param  {string} alarmKey - Alarm key property.  @param  {object} [src] - Source of the audio.
   **/
   setTheAudio(alarmKey, src=null) {
     let alarm = this.data[alarmKey];
@@ -26,12 +28,12 @@ class SearchAlarmsClass {
     alarm.audio = new Audio(src); alarm.obj = src;
     alarm = null;
   }
-  /** Removes any data that should be removed when closing down. */
-  removeAll() { this.modal = null; this.voices = []; this.data = {}; this.myAudio = null; }
+  /** Removes any data that should be removed when closing down. **/
+  removeAll() { MyModal = null; this.voices = []; this.data = {}; this.myAudio = null; }
   /** Uses the Text to speech synthesis to speak a text provided. Will cancel any text speaking first.
-   * @param  {string} thisText - The text  @param  {string} [endFunc] - The function to run when the text spoken ends.
+   * @param  {string} thisText - The text.  @param  {function} [endFunc] - The function to run when the text spoken ends.
   **/
-  async speakThisNow(thisText, endFunc=null) {
+  speakThisNow(thisText, endFunc=null) {
     if (this.synth) {
       this.synth.cancel();
       let speech = new window.SpeechSynthesisUtterance(thisText);
@@ -47,7 +49,7 @@ class SearchAlarmsClass {
    * @param  {string} name - The name to use for the voice.
   **/
   theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update(false); }
-  /** Sets up the voices to use when using text to speech from options or default value. */
+  /** Sets up the voices to use when using text to speech from options or default value. **/
   setUpVoices() {
     if (this.voices.length === 0) {
       this.voices = this.synth.getVoices(); let i = 0, name = MyOptions.alarms.ttsName;
@@ -90,7 +92,7 @@ class SearchAlarmsClass {
     return options;
   }
   /** Play the sound with the name provided or text to speech if not muted. Also changes the volume.
-   * @param  {string} alarmSound - Alarm name  @param  {bool} [testing] - Test alarm  @param  {string} [speakThis] - TTS text  @param  {string} [endFunc] - End function
+   * @param  {string} alarmSound - Alarm name.  @param  {bool} [testing] - Test alarm.  @param  {string} [speakThis] - TTS text.  @param  {function} [endFunc] - End function.
   **/
   playSound(alarmSound, testing=false, speakThis='', endFunc=null) {
     if (this.data[alarmSound]) {
@@ -111,7 +113,7 @@ class SearchAlarmsClass {
     } else if (speakThis !== '') this.speakThisNow(speakThis, endFunc);
     else console.info('Alarms not fully loaded yet.');
   }
-  /** Stop any sound currently playing from the myAudio variable. */
+  /** Stop any sound currently playing from the myAudio variable. **/
   stopSound() { if (this.myAudio) this.myAudio.load(); }
   /** Toggles the mute value for this alarm.
    * @param  {string} alarmSound - The name of the alarm to toggle the mute value.
@@ -129,13 +131,11 @@ class SearchAlarmsClass {
   **/
   getData(alarmSound) { return this.data[alarmSound]; }
   /** Sets the audio object for this alarm.
-   * @param  {string} alarmSound  - The name of the alarm to set the audio data.  @param {object} theAudio - The audio object to change to.
+   * @param  {string} alarmSound  - The name of the alarm to set the audio data.  @param  {object} theAudio - The audio object to change to.
   **/
   setAlarmAudio(alarmSound, theAudio) { this.data[alarmSound].audio = theAudio; this.saveAlarm(alarmSound); }
-  /** This plays the logged out alarm. */
+  /** This plays the logged out alarm. **/
   doLoggedOutAlarm() { this.playSound('loggedOut',_, 'You are logged out.'); }
-  /** Shows the alarms modal to change alarms and other options. */
-  showAlarmsModal() { this.modal = new ModalAlarmClass(); this.modal.showAlarmsModal( () => { this.modal = null; } ); }
   /** Sets the volume used for the alarms and plays the first alarm for a test.
    * @param  {string} alarmSound - The name of the alarm to return the TTS value for.  @param  {number} newPay - The new value for the pay rate in decimal format.
   **/

@@ -4,18 +4,17 @@
   <meta charset='UTF-8'>
   <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-  <link rel='stylesheet' href='css/jquery-ui.min.css'>
-  <link rel='stylesheet' href='css/bootstrap.min.css'>
+  <link rel='stylesheet' href='css/jquery-ui.min.1.13.css'>
+  <link rel='stylesheet' href='css/bootstrap.min.4.6.1.css'>
   <link rel='stylesheet' href='css/all.min.css'>
-  <link rel='stylesheet' href='css/jquery-ui-timepicker-addon.min.css'>
+  <link rel='stylesheet' href='css/flatpickr.min.css'>
   <link id='pcm-stylesheet' rel='stylesheet' href='css/panda-crazy-max.css'>
-  <script src='lib/jquery-3.4.1.min.js'></script>
-  <script src='lib/jquery-ui.min.js'></script>
-  <script src='js/bootstrap.bundle.min.js'></script>
+  <script src='lib/jquery-3.6.0.min.js'></script>
+  <script src='lib/jquery-ui.min.1.13.js'></script>
+  <script src='lib/bootstrap.bundle.min.4.6.1.js'></script>
   <script src='js/jquery.longclick-min.js'></script>
   <script src='js/long-press-event.min.js'></script>
-  <script src='js/moment.js'></script>
-  <script src='js/jquery-ui-timepicker-addon.min.js'></script>
+  <script src='lib/flatpickr.js'></script>
   <title>Panda Crazy Max</title>
 </head>
 <body>
@@ -35,11 +34,21 @@
     </div>
   </div>
   <script src='js/common.js'></script>
+  <script src='js/common/LRUCacheClass.js'></script>
   <script src='js/data/DatabaseClass.js'></script>
+  <script src='js/timers/TimerClass.js'></script>
+  <script src='js/common/UrlClass.js'></script>
+  <script src='js/mturk/MturkClass.js'></script>
+  <script src='js/data/HistoryClass.js'></script>
+  <script src='js/panda/ext/ExtSearchUI.js'></script>
+  <script src='js/options/GlobalOptions.js'></script>
+  <script src='js/mturk/MturkQueue.js'></script>
+  <script src='js/mturk/MturkDashboard.js'></script>
+  <script src='js/panda/MturkPanda.js'></script>
+  <script src='js/search/MturkHitSearch.js'></script>
   <script src='js/panda/ext/ExtDBSearchUI.js'></script>
   <script src='js/panda/ext/ExtHistSearch.js'></script>
   <script src='js/common/DebuggerClass.js'></script>
-  <script src='js/alarms/MyAudioClass.js'></script>
   <script src='js/alarms/AlarmsClass.js'></script>
   <script src='js/classes/PandaUI.js'></script>
   <script src='js/classes/TheGroupings.js'></script>
@@ -49,6 +58,7 @@
   <script src='js/panda/ModalJobClass.js'></script>
   <script src='js/options/ModalOptionsClass.js'></script>
   <script src='js/panda/PandaGStats.js'></script>
+  <script src='js/search/SearchGStats.js'></script>
   <script src='js/panda/PandaStats.js'></script>
   <script src='js/common/ListenerClass.js'></script>
   <script src='js/panda/PandaCard.js'></script>

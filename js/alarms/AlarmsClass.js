@@ -4,13 +4,17 @@
 **/
 class AlarmsClass {
   constructor() {
-    this.alarmFolder = 'alarms';
-    this.modal = null;
-    this.volume = 50;
-    this.synth = null;
-    this.voices = [];
-    this.voiceIndex = 0;
-    this.dataDefault = {
+    this.alarmFolder = 'alarms';                  // The folder that has all the default alarms in it.
+    this.modal = null;                            // A modal used for editing the alarms.
+    this.volume = 50;                             // The default volume for the alarms.
+    this.synth = null;                            // This is used for text to speech to be used.
+    this.voices = [];                             // The voices on this computer will be loaded in this array for TTS.
+    this.voiceIndex = 0;                          // The default voice in the array to use.
+    this.searchAlarms = ['triggeredAlarm'];       // The key to use for searchUI alarms.
+    this.data = {};                               // Object with all the alarms data stored in memory.
+    this.myAudio = null;                          // This is a temporary variable that holds the audio which will be played.
+    this.audio = {'panda': null, 'search':null};  // An object that separates the panda page alarms from the search page alarms.
+    this.dataDefault = {                          // Default values for all the alarms data.
       'less2':{'filename':'sword-hit-01.mp3', 'name':'less2', 'obj':null, 'desc':'HITs Paying less than', 'pay':'0.02', 'lessThan':-1, 'mute':false, 'tts':false},
       'less2Short':{'filename':'less2Short.mp3', 'name':'less2Short', 'obj':null, 'desc':'HITs Paying less than', 'pay':'0.02', 'lessThan':2, 'mute':false, 'tts':false},
       'less5':{'filename':'lessthan5.mp3', 'name':'less5', 'obj':null, 'desc':'HITs Paying less than', 'pay':'0.05', 'lessThan':-1, 'mute':false, 'tts':false},
@@ -24,35 +28,30 @@ class AlarmsClass {
       'captchaAlarm':{'filename':'CrowCawSynthetic2.wav', 'name':'captchaAlarm', 'obj':null, 'desc':'Found a captcha.', 'pay':'', 'lessThan':-1, 'mute':false, 'tts':false},
       'triggeredAlarm':{'filename':'triggeredHit.mp3', 'name':'triggeredAlarm', 'obj':null, 'desc':'Found a Custom Search Trigger.', 'pay':'', 'lessThan':-1, 'mute':false, 'tts':false},
     };
-    this.searchAlarms = ['triggeredAlarm'];
-    this.data = {};
-    this.myAudio = null;
-    this.audio = {'panda': null, 'search':null};
   }
   /** Adds the supplied source for audio to the alarm object with key name or from default source object.
-   * @param {string} alarmKey - Alarm Key Property  @param {object} src - Source of the Audio
+   * @param  {string} alarmKey - Alarm key property.  @param  {object} [src] - Source of the audio.
   **/
   setTheAudio(alarmKey, src=null) {
-    let alarm = this.data[alarmKey], thisAudio = this.audio.panda;
+    let alarm = this.data[alarmKey];
     if (src === null) src = (!alarm.obj) ? alarm.audio.src : alarm.obj;
-    if (this.searchAlarms.includes(alarmKey)) thisAudio = this.audio.search;
-    alarm.audio = (thisAudio) ? thisAudio.newAudio(alarm.name, src) : null;
-    if (!thisAudio) alarm.obj = src; else alarm.obj = null;
-    alarm = null; thisAudio = null;
+    alarm.audio = ( (alarmKey !== this.searchAlarms[0]) ) ? new Audio(src) : null;
+    if (!alarm.audio) alarm.obj = src; else alarm.obj = null;
+    alarm = null;
   }
   /** Sets the audio class for the UI page supplied so each page can sound alarms from their page.
-   * @param {class} audioClass - Audio Class Object  @param {string} ui - Name of the UI Page
+   * @param  {class} audioClass - Audio class object.  @param  {string} ui - Name of the UI page.
   **/
   setAudioClass(audioClass, ui) {
     this.audio[ui] = audioClass;
     for (const alarmKey of Object.keys(this.data)) { this.setTheAudio(alarmKey); }
   }
-  /** Removes any data that should be removed when closing down. */
+  /** Removes any data that should be removed when closing down. **/
   removeAll() { this.modal = null; this.voices = []; this.data = {}; this.myAudio = null; }
   /** Uses the Text to speech synthesis to speak a text provided. Will cancel any text speaking first.
-   * @param  {string} thisText - The text  @param  {string} [endFunc] - The function to run when the text spoken ends.
+   * @param  {string} thisText - The text.  @param  {function} [endFunc] - The function to run when the text spoken ends.
   **/
-  async speakThisNow(thisText, endFunc=null) {
+  speakThisNow(thisText, endFunc=null) {
     if (this.synth) {
         this.synth.cancel();
         let speech = new window.SpeechSynthesisUtterance(thisText);
@@ -70,11 +69,11 @@ class AlarmsClass {
   theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update(false); }
   /** Prepare the alarms by getting the src of the alarm url and save to database if using default values.
    * @async                - To wait for the alarm data to completely load into memory.
-   * @param  {object} data - Data object  @param  {bool} fromDB - Did these alarms come from the database or default values?
+   * @param  {object} data - Data object.  @param  {bool} fromDB - Did these alarms come from the database or default values?
    * @return {object}      - Error object to return if error happened.
   **/
   async prepareAlarms(data, fromDB) {
-    let err = null; this.myAudio = null;  
+    let err = null; this.myAudio = null;
     for (const value of data) {
       delete value.audio;
       if (!fromDB) { await MYDB.addToDB('panda', 'alarms', value).then(id => value.id = id, rejected => err = rejected); }
@@ -83,7 +82,7 @@ class AlarmsClass {
     }
     return err;
   }
-  /** Sets up the voices to use when using text to speech from options or default value. */
+  /** Sets up the voices to use when using text to speech from options or default value. **/
   setUpVoices() {
     if (this.voices.length === 0) {
       this.voices = this.synth.getVoices(); let i = 0, name = MyOptions.alarms.ttsName;
@@ -91,21 +90,21 @@ class AlarmsClass {
     }
   }
   /** Loads up the alarms from the database or saves default values if no alarms are in the database.
-   * @async                       - To wait for the alarm data to be loaded from database.
-   * @param  {function} afterFunc - Function to call after done to send success error.
+   * @async                         - To wait for the alarm data to be loaded from database.
+   * @param  {function} [afterFunc] - Function to call after done to send success and error.
   **/
-  async prepare(afterFunc) {
+  async prepare(afterFunc=null) {
     let success = [], err = null;
     this.synth = ('speechSynthesis' in window) ? window.speechSynthesis : null; this.setUpVoices();
     this.synth.addEventListener('voiceschanged', () => this.setUpVoices()); this.volume = MyOptions.theVolume();
-    MYDB.getFromDB('panda', 'alarms').then( async result => {
+    await MYDB.getFromDB('panda', 'alarms').then( async result => {
       let valuesLen = result.length, defaultLen = Object.values(this.dataDefault).length, fromDB = false;
       let alarmData = (valuesLen === defaultLen) ? result : Object.assign(Object.values(this.dataDefault), result);
       if (valuesLen === 0 && !MYDB.useDefault('panda')) await MYDB.deleteFromDB('panda', 'alarms', null);
       if (valuesLen !== 0 && result[0].mute === undefined) await MYDB.deleteFromDB('panda', 'alarms', null);
       if (valuesLen === defaultLen && result[0].mute !== undefined) fromDB = true;
       err = await this.prepareAlarms(alarmData, fromDB);
-      if (!err) success[0] = 'All alarms have been loaded up.';
+      if (!err) success[0] = 'All Alarms Have Been Loaded Up.';
       if (afterFunc) afterFunc(success, err); // Sends any error back to the after function for processing.
     }, (rejected) => { err = rejected; if (afterFunc) afterFunc(success, err); } );
   }
@@ -121,11 +120,11 @@ class AlarmsClass {
     if (this.data[alarmSound].audio && this.data[alarmSound].audio.src.substr(0,4) === 'data') saveThis.obj = this.data[alarmSound].audio.src;
     delete saveThis.audio;
 		MYDB.addToDB('panda', 'alarms', saveThis).then( () => {},
-			rejected => { pandaUI.haltScript(rejected, 'Failed updating data to database for an alarm so had to end script.', 'Error adding alarm data. Error:'); }
+			rejected => { MyPandaUI.haltScript(rejected, 'Failed updating data to database for an alarm so had to end script.', 'Error adding alarm data. Error:'); }
 		);
   }
   /** sets up a select option with all the voices available in english and selects any previous voice selected.
-   * @return {object} - Jquery object of the voice options.
+   * @return  {object} - Jquery object of the voice options.
   **/
   voicesOption() {
     let options = $(document.createDocumentFragment()), i=0;
@@ -141,7 +140,7 @@ class AlarmsClass {
     return options;
   }
   /** Play the sound with the name provided or text to speech if not muted. Also changes the volume.
-   * @param  {string} alarmSound - Alarm name  @param  {bool} [testing] - Test alarm  @param  {string} [speakThis] - TTS text  @param  {string} [endFunc] - End function
+   * @param  {string} alarmSound - Alarm name.  @param  {bool} [testing] - Test alarm.  @param  {string} [speakThis] - TTS text.  @param  {function} [endFunc] - End function.
   **/
   playSound(alarmSound, testing=false, speakThis='', endFunc=null) {
     if (this.data[alarmSound]) {
@@ -162,7 +161,7 @@ class AlarmsClass {
     } else if (speakThis !== '') this.speakThisNow(speakThis, endFunc);
     else console.info('Alarms not fully loaded yet.');
   }
-  /** Stop any sound currently playing from the myAudio variable. */
+  /** Stop any sound currently playing from the myAudio variable. **/
   stopSound() { if (this.myAudio) this.myAudio.load(); }
   /** Toggles the mute value for this alarm.
    * @param  {string} alarmSound - The name of the alarm to toggle the mute value.
@@ -194,18 +193,18 @@ class AlarmsClass {
   **/
   setData(alarmSound, thisAlarm) { this.data[alarmSound] = thisAlarm; this.saveAlarm(alarmSound); }
   /** Sets the audio object for this alarm.
-   * @param  {string} alarmSound  - The name of the alarm to set the audio data.  @param {object} theAudio - The audio object to change to.
+   * @param  {string} alarmSound - The name of the alarm to set the audio data.  @param {object} theAudio - The audio object to change to.
   **/
   setAlarmAudio(alarmSound, theAudio) { this.data[alarmSound].audio = theAudio; this.saveAlarm(alarmSound); }
   /** This plays the queue alert alarm with minutes left if using text to speech.
-   * @param {number} minutes - Minutes for expiration of HIT.
+   * @param  {number} minutes - Minutes for expiration of HIT.
   **/
   doQueueAlarm(minutes) { minutes++; this.playSound('queueAlert',_, `A HIT in your queue has less than ${minutes} minute${(minutes > 1) ? 's' : ''} left before it expires.`); }
-  /** This plays the captcha alert alarm. */
+  /** This plays the captcha alert alarm. **/
   doCaptchaAlarm() { this.playSound('captchaAlarm'); }
-  /** This plays the logged out alarm. */
+  /** This plays the logged out alarm. **/
   doLoggedOutAlarm() { this.playSound('loggedOut',_, 'You are logged out.'); }
-  /** This plays the queue full alarm. */
+  /** This plays the queue full alarm. **/
   doFullAlarm() { this.playSound('queueFull'); }
 	/** Method to decide which alarm to play according to the HIT minutes and price.
 	 * @param  {object} hitData - The HIT information to use to decide on alarm to sound.
@@ -226,7 +225,7 @@ class AlarmsClass {
 			if (minutes <= this.data.less15.lessThan) this.playSound('less15Short',_, speakThis); else this.playSound('less15',_, speakThis);
 		} else if (this.data.more15 && hitData.price > parseFloat(this.data.more15.pay)) { this.playSound('more15',_, speakThis); }
   }
-  /** Shows the alarms modal to change alarms and other options. */
+  /** Shows the alarms modal to change alarms and other options. **/
   showAlarmsModal() { this.modal = new ModalAlarmClass(); this.modal.showAlarmsModal( () => { this.modal = null; } ); }
   /** Sets the volume used for the alarms and plays the first alarm for a test.
    * @param  {number} volume - The number to use for the volume for alarms from 0 to 100.
@@ -264,14 +263,14 @@ class AlarmsClass {
   **/
   allAlarms(name=null) { if (name) return this.data[name]; else return this.data; }
   /** Creates an object with the alarms to export with audio in base64 format and then returns it.
-   * @param  {bool} [onlyAlarms] - Should alarm sounds be included?
+   * @param  {bool} [withAlarms] - Should alarm sounds be included?
    * @return {object}            - Returns the object with all the alarms.
   **/
-  exportAlarms(onlyAlarms=false) {
+  exportAlarms(withAlarms=false) {
     let exportedAlarms = {};
     for (const key of Object.keys(this.data)) {
-      exportedAlarms[key] = (!onlyAlarms) ? Object.assign({}, this.data[key]) : {};
-      if (onlyAlarms) {
+      exportedAlarms[key] = Object.assign({}, this.data[key]);
+      if (withAlarms) {
         if (this.data[key].audio && this.data[key].audio.src.substr(0,4) === 'data') exportedAlarms[key].obj = this.data[key].audio.src;
         else exportedAlarms[key].obj = 'default';
       } else exportedAlarms[key].obj = null;
@@ -290,7 +289,6 @@ function alarmsListener(data) {
     if (data.msg === 'search: save alarm') { MyAlarms.setData(data.object.alarmSound, data.object.alarm); }
   } else if (data.msg === 'search: prepare alarms' && MyAlarms) {
     let alarmData = MyAlarms.getData('triggeredAlarm'), volume = MyAlarms.volume;
-    pcm_channel.postMessage({'msg':'search: alarm data', 'value':{'volume':volume, 'data':{'triggeredAlarm':alarmData}}});
+    PCM_channel.postMessage({'msg':'search: alarm data', 'value':{'volume':volume, 'data':{'triggeredAlarm':alarmData}}});
   }
 };
-

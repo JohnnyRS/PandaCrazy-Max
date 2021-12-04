@@ -2,10 +2,10 @@
  * @class ModalAlarmClass ##
  * @author JohnnyRS - johnnyrs@allbyjohn.com
 **/
-class ModalAlarmClass {
+class ModalSearchAlarmClass {
 	constructor() {
-    this.reader = new FileReader();   // Set up a file reader so user can select a audio file on their computer.
-    this.myAudio = null;              // A temporary variable to hold the audio in memory before saving it.
+    this.reader = new FileReader();     // Set up a file reader so user can select a audio file on their computer.
+    this.myAudio = null;                // A temporary variable to hold the audio in memory before saving it.
   }
   /** Creates a Jquery button and returns it.
    * @param  {string} text    - Button text.  @param  {string} [theClass] - Class name.  @param  {string} [status] - Status class name.
@@ -38,22 +38,17 @@ class ModalAlarmClass {
       MyAlarms.setAlarmAudio(name, this.myAudio); this.myAudio = null;
     });
   }
-  /** Shows the modal for the alarms so users can change alarm options.
-   * @param  {function} [afterClose] - After close function.
-  **/
-  showAlarmsModal(afterClose=null) {
+  /** Shows the alarms modal to change alarms and other options. **/
+  showAlarmsModal() {
     if (!MyModal) MyModal = new ModalClass();
     const idName = MyModal.prepareModal(null, '900px', 'pcm-alarmsModal', 'modal-lg', 'Alarm Options', '', '', '');
     MyModal.showModal(_, () => {
       let df = document.createDocumentFragment(), modalBody = $(`#${idName} .${MyModal.classModalBody}`);
       $(`<div class='pcm-alarmEdit'>You can mute and change an individual alarm sound here. Click the change button and pick your own sound from your computer. It must be less than 6MB and less than 30 seconds. You can also load in the default alarm sounds if you need to. The TTS button will have the script use a text to speech computerized voice instead of the alarm sound.</div>`).appendTo(df);
-      this.addDivAlarms('less2').appendTo(df); this.addDivAlarms('less2Short').appendTo(df); this.addDivAlarms('less5').appendTo(df);
-      this.addDivAlarms('less5Short').appendTo(df); this.addDivAlarms('less15').appendTo(df); this.addDivAlarms('less15Short').appendTo(df);
-      this.addDivAlarms('more15').appendTo(df); this.addDivAlarms('queueFull').appendTo(df); this.addDivAlarms('queueAlert').appendTo(df);
-      this.addDivAlarms('loggedOut').appendTo(df); this.addDivAlarms('captchaAlarm').appendTo(df);
+      this.addDivAlarms('triggeredAlarm').appendTo(df);
       $(`<div class='pcm-textToSpeechSelect'>Text to Speech voice: </div>`).append($(`<select id='voiceSelect' class='pcm-tooltipData pcm-tooltipHelper' data-original-title='Select the voice to use for Text to Speech.'></select>`).append(MyAlarms.voicesOption())).appendTo(df);
       $(`<div class='pcm-alarms'></div>`).append(df).appendTo(modalBody);
-      if (MyPandaUI) MyPandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
+      if (MySearchUI) MySearchUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
       $('#voiceSelect').change( () => {
         let index = $('#voiceSelect option:selected').data('index'), name = $('#voiceSelect option:selected').data('name');
         MyAlarms.theVoiceIndex(index, name);
@@ -72,7 +67,6 @@ class ModalAlarmClass {
       modalBody.find('.pcm-muteMe').click( e => {
         let btn = $(e.target), mute = MyAlarms.muteToggle(btn.closest('div').data('snd'));
         if (mute) btn.addClass('btn-mutted'); else btn.removeClass('btn-mutted');
-        if (MyPandaUI !== null) MyPandaUI.queueAlertUpdate();
         btn.blur(); btn = null;
       });
       modalBody.find('.pcm-ttsMe').click( e => {
@@ -106,7 +100,7 @@ class ModalAlarmClass {
             let data = MyAlarms.getData(soundName);
             this.myAudio = new Audio(); this.myAudio.src = chrome.runtime.getURL(`${MyAlarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
           });
-          if (MyPandaUI) MyPandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
+          if (MySearchUI) MySearchUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
         }
       });
       modalBody.find('.pcm-alarmsPay').click( e => {
@@ -135,7 +129,7 @@ class ModalAlarmClass {
         });
       });
       modalBody = null; df = null;
-    }, () => { MyAlarms.stopSound(); if (this.myAudio) this.myAudio.load(); this.myAudio = null; MyModal = null; if (afterClose) afterClose(); });
+    }, () => { MyAlarms.stopSound(); if (this.myAudio) this.myAudio.load(); this.myAudio = null; MyModal = null; });
   }
   /** Reads a file, sets up the audio and plays the audio to user.
    * @param  {string} name - Alarm name.  @param  {string} type - Audio type.

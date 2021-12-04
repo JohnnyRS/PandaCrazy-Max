@@ -1,6 +1,7 @@
 /** Class which handles the global status data and values.
  * @class PandaGStats ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class PandaGStats {
 	constructor() {
 		this.collecting = {'value':false, 'id':'#pcm-collecting', 'disabled':false, 'type':'boolean', 'on':'pcm-span-on', 'off':'pcm-span-off', 'paused':'pcm-span-paused'};
@@ -35,7 +36,8 @@ class PandaGStats {
 		this.prepare();
 	}
 	/** Updates the status bar for a specific stat with updated stat or with the text supplied.
-	 * @param  {object} statObj - Status object  @param  {string} [text] - Stat Text  @param  {string} 'className' - Class Name  @param  {bool} [effect] - Show Animation */
+	 * @param  {object} statObj - Status object.  @param  {string} [text] - Stat text.  @param  {string} [className] - Class name.  @param  {bool} [effect] - Show animation?
+	**/
 	updateStatNav(statObj, text='', className=null, effect=true) {
 		if (text === '') {
 			if (statObj.disabled) $(statObj.id).hide();
@@ -50,7 +52,7 @@ class PandaGStats {
 			}
 		} else { if (statObj.disabled) $(statObj.id).hide().html(text); else $(statObj.id).html(text); }
 	}
-	/** Prepare the status bar with values and hide the disabled status values. */
+	/** Prepare the status bar with values and hide the disabled status values. **/
 	prepare() {
 		$('#pcm-timerStats').append(`<span id='pcm-pandaElapsed' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time it took for timer to send a fetch request to MTURK.'></span><span id='pcm-pandaTimer' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the panda timer.'></span><span id='pcm-pandaHamTimer' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the ham timer.'></span><span id='pcm-searchTimer' class='pcm-stat4 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the search timer.'></span><span id='pcm-queueTimer' class='pcm-stat5 pcm-tooltipData pcm-tooltipHelper' data-original-title='The time set for the Queue Timer.'></span><span id='pcm-fetchedElapsed' class='pcm-stat6 pcm-tooltipData pcm-tooltipHelper' data-original-title='The exact accurate elapsed time to get results back from MTURK page.'></span>`).data('toggled', 1).data('max',6).data('array', 'timerStats');
 		$('#pcm-jobFetchStats').append(`<span id='pcm-totalAccepted' class='pcm-stat1 pcm-tooltipData pcm-tooltipHelper' data-original-title='Total number of accepted HITs since starting Panda Crazy Max.'></span><span id='pcm-totalFetched' class='pcm-stat2 pcm-tooltipData pcm-tooltipHelper' data-original-title='The total number of fetches from MTURK since starting Panda Crazy Max.'></span><span id='pcm-totalErrors' class='pcm-stat3 pcm-tooltipData pcm-tooltipHelper' data-original-title='The total number of errors received from fetching MTURK pages.'></span>`).data('toggled', 1).data('max',3).data('array', 'jobFetchStats');
@@ -71,10 +73,10 @@ class PandaGStats {
 		});
 		$('#pcm-earningsStats').on('long-press', e => {
 			e.preventDefault(); $(e.target).closest('.toggle').data('longClicked', true);
-			if (!dashboard.isFetching()) dashboard.doDashEarns();
+			if (!MyDash.isFetching()) MyDash.doDashEarns();
 		});
 	}
-  /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
+  /** Resets the CSS variable values after a theme change to change any text on buttons or stats. **/
 	resetCSSValues() {
 		let setTempStr = (statObj) => { statObj.tempStr = getCSSVar(statObj.id.replace('#pcm-', ''), statObj.string); this.updateStatNav(statObj); }
 		let properties = ['timerStats', 'jobFetchStats', 'preStats', 'jobStats', 'earningsStats', 'collectingTotal'];
@@ -83,45 +85,55 @@ class PandaGStats {
 			else setTempStr(this[prop]);
 		}
 	}
-  /** Add 1 to the PRE counter and update status bar. */
+  /** Add 1 to the PRE counter and update status bar. **/
 	addPandaPRE() { this.totalPandaPREs.value++; this.totalPREs.value++; this.updateStatNav(this.totalPandaPREs); this.updateStatNav(this.totalPREs); }
+	/** Add 1 to the search PRE counter and update status bar. **/
 	addSearchPRE() { this.totalSearchPREs.value++; this.totalPREs.value++; this.updateStatNav(this.totalSearchPREs); this.updateStatNav(this.totalPREs); }
-  /** Add 1 to the total panda's fetched counter and update status bar. */
+  /** Add 1 to the total panda's fetched counter and update status bar. **/
 	addTotalFetched() { this.totalFetched.value++; this.updateStatNav(this.totalFetched); }
-  /** Add 1 to the total no more counter and update status bar. */
+  /** Add 1 to the total no more counter and update status bar. **/
 	addTotalNoMore() { this.totalNoMore.value++; this.updateStatNav(this.totalNoMore); }
-  /** Add 1 to the total accepted counter and update status bar. */
+  /** Add 1 to the total accepted counter and update status bar. **/
 	addTotalAccepted() { this.totalAccepted.value++; this.updateStatNav(this.totalAccepted); }
-  /** Set the collecting value to on and then update the stat on the status bar. */
+  /** Set the collecting value to on and then update the stat on the status bar. **/
 	collectingOn() { this.collecting.value = true; this.updateStatNav(this.collecting, '', this.collecting.on); }
-  /** Set the collecting value to off and then update the stat on the status bar. */
+  /** Set the collecting value to off and then update the stat on the status bar. **/
 	collectingOff() { if (this.collectingTotal.value < 1) { this.collecting.value = false; this.updateStatNav(this.collecting, '', this.collecting.off); } }
-  /** Set the collecting value to paused and update the stat on the status bar. */
+  /** Set the collecting value to paused and update the stat on the status bar. **/
 	collectingPaused() { this.updateStatNav(this.collecting, '', this.collecting.paused); }
-  /** Set the collecting value to unpaused and update the stat on the status bar. */
+  /** Set the collecting value to unpaused and update the stat on the status bar. **/
 	collectingUnPaused() { this.updateStatNav(this.collecting, '', (this.collecting.value) ? this.collecting.on : this.collecting.off ); }
-  /** Add 1 to the total collecting jobs counter and update it on the status bar. */
+  /** Add 1 to the total collecting jobs counter and update it on the status bar. **/
 	addCollecting() { this.collectingTotal.value++; this.updateStatNav(this.collectingTotal); }
-  /** Subtract 1 to the total collecting jobs counter and update it on the status bar. */
+  /** Subtract 1 to the total collecting jobs counter and update it on the status bar. **/
 	subCollecting() { this.collectingTotal.value--; this.updateStatNav(this.collectingTotal); }
-  /** Add 1 to the total panda error counter and update it on the status bar. */
+  /** Add 1 to the total panda error counter and update it on the status bar. **/
 	addTotalPandaErrors() { this.totalErrors.value++; this.updateStatNav(this.totalErrors); }
-	/** Set the elapsed timer value and then update it on the status bar.
-	 * @param  {number} value - The value to change the elapsed time value. */
+	/** Set the elapsed fetched timer value and then update it on the status bar.
+	 * @param  {number} value - The value to change the elapsed time value.
+	**/
+	addFetchedElapsed(value) { this.fetchedElapsed.value = value; this.updateStatNav(this.fetchedElapsed); }
+	/** Set the elapsed panda timer value and then update it on the status bar.
+	 * @param  {number} value - The value to change the elapsed time value.
+	**/
 	setPandaElapsed(value) { this.pandaElapsed.value = value; this.updateStatNav(this.pandaElapsed); }
 	/** Set the panda timer value and then update it on the status bar.
-	 * @param  {number} value - The value to change the panda timer value. */
+	 * @param  {number} value - The value to change the panda timer value.
+	**/
 	setPandaTimer(value) { this.pandaTimer.value = value; this.updateStatNav(this.pandaTimer); }
 	/** Set the ham timer value and then update it on the status bar.
-	 * @param  {number} value - The value to change the ham timer value. */
+	 * @param  {number} value - The value to change the ham timer value.
+	**/
 	setHamTimer(value) { this.pandaHamTimer.value = value; this.updateStatNav(this.pandaHamTimer); }
 	/** Set the search timer value and then update it on the status bar.
-	 * @param  {number} value - The value to change the search timer value. */
+	 * @param  {number} value - The value to change the search timer value.
+	**/
 	setSearchTimer(value) { this.searchTimer.value = value; this.updateStatNav(this.searchTimer); }
 	/** Set the search timer value and then update it on the status bar.
-	 * @param  {number} value - The value to change the search timer value. */
+	 * @param  {number} value - The value to change the search timer value.
+	**/
 	setQueueTimer(value) { this.queueTimer.value = value; this.updateStatNav(this.queueTimer); }
-	/** Set the total earned from the potential earnings and the HITs in the queue. */
+	/** Set the total earned from the potential earnings and the HITs in the queue. **/
 	setTotalEarned() {
 		if (isNaN(this.totalPotential.value)) return;
 		else this.totalEarned.value = (Number(this.totalPotential.value) + Number(this.totalEarnedInQueue.value)).toFixed(2);
@@ -129,36 +141,40 @@ class PandaGStats {
 	}
 	/** Set the total earned value and then update it on the status bar.
 	 * @param  {number} [value] - The earned value. @param {bool} [addTo] - Add this value to earnings.
-	 * @return {string}         - The value of the potential earnings. */
+	 * @return {string}         - The value of the potential earnings.
+	**/
 	thePotentialEarnings(value=null, addTo=null) {
 		if (addTo !== null) value = Number(this.totalPotential.value) + addTo;
 		if (value !== null) { this.totalPotential.value = Number(value).toFixed(2); this.updateStatNav(this.totalPotential); this.setTotalEarned(); }
 		else return this.totalPotential.value;
 	}
 	/** Updates the earned stats with the page number of the MTURK stat page it's checking.
-	 * @param {number} [page] - Page Number */
+	 * @param  {number} [page] - Page number.
+	**/
 	waitEarningsPage(page=1) {
 		this.updateStatNav(this.totalEarned, `${this.totalEarned.string} [page ${page}]`);
 		this.updateStatNav(this.totalPotential, `${this.totalPotential.string} [page ${page}]`);
 	}
 	/** Set the total value in queue value and then update it on the status bar.
-	 * @param  {number} value - the value to change the total value in queue value. */
+	 * @param  {number} value - the value to change the total value in queue value.
+	**/
 	setTotalValueInQueue(value) { this.totalEarnedInQueue.value = value; this.updateStatNav(this.totalEarnedInQueue); this.setTotalEarned(); }
-  /** Add 1 to the total number of panda's loaded and update it on the status bar. */
+  /** Add 1 to the total number of panda's loaded and update it on the status bar. **/
 	addPanda() { this.totalPandas.value++; this.updateStatNav(this.totalPandas); }
-  /** Subtract 1 to the total number of panda's loaded and update it on the status bar. */
+  /** Subtract 1 to the total number of panda's loaded and update it on the status bar. **/
 	subPanda() { this.totalPandas.value--; this.updateStatNav(this.totalPandas); }
-  /** Add 1 to the total number of search jobs loaded and update it on the status bar. */
+  /** Add 1 to the total number of search jobs loaded and update it on the status bar. **/
 	addSearch() { this.totalSearches.value++; this.updateStatNav(this.totalSearches); }
-  /** Subtract 1 to the total number of search jobs loaded and update it on the status bar. */
+  /** Subtract 1 to the total number of search jobs loaded and update it on the status bar. **/
 	subSearch() { this.totalSearches.value--; this.updateStatNav(this.totalSearches); }
-  /** Add 1 to the total number of search jobs loaded and update it on the status bar. */
+  /** Add 1 to the total number of search jobs loaded and update it on the status bar. **/
 	addSubmitted() { this.totalSubmitted.value++; this.updateStatNav(this.totalSubmitted); }
-  /** Resets stats when wiping data for importing. */
+  /** Resets stats when wiping data for importing. **/
 	resetStats() { this.totalPandas.value = 0; this.totalSearches.value = 0; this.totalSubmitted.value = 0; }
 	/** Will send the full stats back using the function given.
-	 * @param {function} sendResponse - Function to send response back. */
-	sendStats(sendResponse) {
+	 * @param  {function} [sendResponse] - Function to send response back.
+	**/
+	sendStats(sendResponse=null) {
 		let newTime = new Date().getTime();
 		if (newTime - this.sendStatsTime < 1000) sendResponse({'for':'getStats', 'response':{error:'Too Fast'}});
 		else {
@@ -169,8 +185,7 @@ class PandaGStats {
 			for (const statObj of stats) {
 				for (const stat of statObj) { let key = (stat.string) ? stat.string : stat.id.replace('#', ''); statsReturned[key] = stat.value; }
 			}
-			sendResponse({'for':'getStats', 'response':statsReturned});
+			if (sendResponse) sendResponse({'for':'getStats', 'response':statsReturned});
 		}
 	}
-	addFetchedElapsed(value) { this.fetchedElapsed.value = value; this.updateStatNav(this.fetchedElapsed); }
 }

@@ -1,41 +1,53 @@
-const searchChannel = new BroadcastChannel('PCM_kSearch_band');      // Used for sending and receiving messages from search page.
+const PCM_searchChannel = new BroadcastChannel('PCM_kSearch_band');      // Used for sending and receiving messages from search page.
+
+/** This class deals with the different menus and which methods to call for SearchUI page.
+ * @class ExtHitSearch ##
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class ExtHitSearch {
   constructor() {
-    this.searchGStats = {
+    this.searchGStats = {    // Sets up the search global stats object for SearchUI page.
       isSearchOn: async () => { return await this.sendBroadcastMsg('searchGStat: isSearchOn', 'searchGStat: returning isSearchOn', null, null); },
-      searchingOff: () => { searchChannel.postMessage({'msg':'searchGStat: searchingOff'}); },
-      searchingOn: () => { searchChannel.postMessage({'msg':'searchGStat: searchingOn'}); },
-      toggleStat: (v1, v2, v3) => { searchChannel.postMessage({'msg':'searchGStat: toggleStat', 'value':[v1, v2, v3]}); },
-      prepare: () => { searchChannel.postMessage({'msg':'searchGStat: prepare'}); }, 
-      getStats: async () => { return await this.sendBroadcastMsg('searchGStat: getStats', 'searchGStat: returning getStats', null, null); }, 
+      searchingOff: () => { PCM_searchChannel.postMessage({'msg':'searchGStat: searchingOff'}); },
+      searchingOn: () => { PCM_searchChannel.postMessage({'msg':'searchGStat: searchingOn'}); },
+      toggleStat: (v1, v2, v3) => { PCM_searchChannel.postMessage({'msg':'searchGStat: toggleStat', 'value':[v1, v2, v3]}); },
+      prepare: () => { PCM_searchChannel.postMessage({'msg':'searchGStat: prepare'}); },
+      getStats: async () => { return await this.sendBroadcastMsg('searchGStat: getStats', 'searchGStat: returning getStats', null, null); },
     };
     this.searchOn = false;
     this.loggedoff = false;
   }
-  async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=2000) {
-    const s2Channel = new BroadcastChannel('PCM_kSearch2_band');
+  /** Sends a message through the Broadcast channel PCM_hist2Channel and waits for a response or timeouts and then sends the response.
+   * @async                        - To wait for the response from a message.
+   * @param  {string} msg          - The message to send.             @param  {string} retMsg        - The return string to use.  @param  {object} [value] - The value to send.
+   * @param  {object} [timeoutVal] - Object to use when it timeouts.  @param  {number} [timeoutTime] - The timeout time to wait for response.
+   * @return {promise}             - A promised value after waiting for a message to return.
+   */
+   async sendBroadcastMsg(msg, retMsg, value=null, timeoutVal=null, timeoutTime=2000) {
+    const PCM_hist2Channel = new BroadcastChannel('PCM_kSearch2_band');
     return new Promise( (resolve) => {
       let thisTimeOut = null;
-      s2Channel.postMessage({'msg':msg, 'value':value});
-      s2Channel.onmessage = async (e) => {
-        s2Channel.close(); if (thisTimeOut) clearTimeout(thisTimeOut);
+      PCM_hist2Channel.postMessage({'msg':msg, 'value':value});
+      PCM_hist2Channel.onmessage = async (e) => {
+        PCM_hist2Channel.close(); if (thisTimeOut) clearTimeout(thisTimeOut);
         if (e.data.msg === retMsg && e.data.value) resolve(e.data.value);
         else resolve(false);
       }
-      thisTimeOut = setTimeout(() => { s2Channel.close(); resolve(timeoutVal); }, timeoutTime);
+      thisTimeOut = setTimeout(() => { PCM_hist2Channel.close(); resolve(timeoutVal); }, timeoutTime);
     });
   }
-  isPandaUI() { return pcm_pandaOpened; }
-  
+  // Methods which do not need to send messages back and forth.
+  isPandaUI() { return gPCM_pandaOpened; }
+
   // Methods to send a message but doesn't have to wait for a response and no arguments to pass.
-  stopSearching() { searchChannel.postMessage({'msg':'search: stopSearching'}); }
-  unPauseTimer() { searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
-  
+  stopSearching() { PCM_searchChannel.postMessage({'msg':'search: stopSearching'}); }
+  unPauseTimer() { PCM_searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
+
+  /** Methods that pass messages through the Broadcast channel to the history class but no parameters because it gets passed through. */
   // Methods to send a message and wait for a response back and no arguments to pass.
-  async loadFromDB() { return await this.sendBroadcastMsg('search: loadFromDB', 'search: returning loadFromDB', null, false, 10000); }
   async startSearching() { return await this.sendBroadcastMsg('search: startSearching', 'search: returning startSearching', null, false); }
-  async prepareSearch() { return await this.sendBroadcastMsg('search: prepareSearch', 'search: returning prepareSearch', null, false, 10000); }
-  
+  async resetSearch() { return await this.sendBroadcastMsg('search: resetSearch', 'search: returning resetSearch', null, false, 10000); }
+
   // Methods to send a message and wait for a response back and with arguments to pass.
 	async getFrom() { return await this.sendBroadcastMsg('search: getFrom', 'search: returning getFrom', [...arguments], false); }
 	async theBlocked() { return await this.sendBroadcastMsg('search: theBlocked', 'search: returning theBlocked', [...arguments], false); }
@@ -51,7 +63,12 @@ class ExtHitSearch {
 	async rulesCopy() { return await this.sendBroadcastMsg('search: rulesCopy', 'search: returning rulesCopy', [...arguments], null); }
   async addTrigger() { return await this.sendBroadcastMsg('search: addTrigger', 'search: returning addTrigger', [...arguments], null); }
   async removeTrigger() { return await this.sendBroadcastMsg('search: removeTrigger', 'search: returning removeTrigger', [...arguments], null); }
-  
+  async loadFromDB() {
+    let returnResults =  await this.sendBroadcastMsg('search: loadFromDB', 'search: returning loadFromDB', null, false, 10000);
+    if (arguments[0]) arguments[0](returnResults.success, returnResults.err);
+    return returnResults;
+  }
+
   // Combo methods for specific multiple actions needed instead of sending multiple messages.
   async toggleAutoHits() { return await this.sendBroadcastMsg('search: toggleAutoHits', 'search: returning toggleAutoHits', null, false); }
   async doRidSearch() { return await this.sendBroadcastMsg('search: doRidSearch', 'search: returning doRidSearch', [...arguments], null); }
@@ -66,14 +83,13 @@ class ExtHitSearch {
   async getUniquesDbIds() { return await this.sendBroadcastMsg('search: getUniquesDbIds', 'search: returning getUniquesDbIds', [...arguments], null, 12000); }
 }
 
-function sendToChannel(msg, value) { search2Channel.postMessage({'msg':msg, 'value':value}); }
-
-searchChannel.onmessage = async (e) => {
+/** Listens on a channel for messages from PandaUI to the SearchUI page. **/
+PCM_searchChannel.onmessage = async (e) => {
   if (e.data && MySearchUI) {
     const data = e.data, msg=data.msg, val = data.value, theObject = data.object;
     if (msg === 'search: go for start') { startNow(); }
     else if (msg === 'search: abort start') {  }
-    else if (msg === 'search: DB loaded') { MySearchUI.appendFragments(); setTimeout( () => { modal.closeModal('Loading Data'); }, 300); }
+    else if (msg === 'search: DB loaded') { MySearchUI.appendFragments(); setTimeout( () => { MyModal.closeModal('Loading Data'); }, 300); }
     else if (msg === 'searchTo: nowLoggedOn') { MySearchUI.nowLoggedOn(); }
     else if (msg === 'searchTo: nowLoggedOff') { MySearchUI.nowLoggedOff(); }
     else if (msg === 'searchTo: stopSearching') { MySearchUI.stopSearching(); }
@@ -86,7 +102,7 @@ searchChannel.onmessage = async (e) => {
     else if (msg === 'searchTo: releaseHoldAlarm') { MySearchUI.releaseHoldAlarm(); }
     else if (msg === 'searchTo: globalOptions' && theObject) {
       MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
-      MyOptions.doRanges(theObject.ranges, false); MyOptions.update(false);  
+      MyOptions.doRanges(theObject.ranges, false);
     }
     else if (val) {
       if (msg === 'searchTo: resetToolTips') { MySearchUI.resetToolTips(val[0]); }

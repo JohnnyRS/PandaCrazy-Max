@@ -1,6 +1,7 @@
 /** Class for the global options and methods to change them. Breaks up the options into general, timers and alarm options.
  * @class PandaGOptions ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class PandaGOptions {
   constructor() {
     this.general = {};              // The general object used in script from database or default values.
@@ -19,7 +20,8 @@ class PandaGOptions {
       'logPanelHeight':0,           // The height of the bottom log panel if user resizes it.
       'toSearchUI':false,           // Should search jobs go directly to search UI?
       'fetchHighlight':true,        // Highlight the groupID when script tries to fetch it.
-      'debugger':0,                 // Main debugger level.
+      'debugger':0,                 // Main debugger log level.
+      'debugErrorLevel':0,          // Main debugger error level.
       'disableMonitorAlert':false,  // Disable the alert when hits are about to expire from the queue watch.
       'volHorizontal':false,        // Change the volume level to horizontal instead of vertical.
       'tabLogHeight':0,             // The height size of the log tab on bottom when user changes it with mouse.
@@ -50,11 +52,6 @@ class PandaGOptions {
       'timerUsed':'mainTimer',      // Default value for which timer is being used.
       'searchDuration':12000        // The time in milliseconds by default to use for panda found by a search job.
     };
-    this.timerRange = {'min':700, 'max':15000};   // The limits for the timer in milliseconds when editing.
-    this.timerHamDur = {'min':1000, 'max':30000}  // The limits for the ham duration in milliseconds.
-    this.timerQueue = {'min':1000, 'max':60000};  // The limits for the timer queue in milliseconds when editing.
-    this.timerSearch = {'min':750, 'max':30000};  // The limits for the timer queue in milliseconds when editing.
-    this.timerChange = {'min':5, 'max':2000};     // The limits for the timer change buttons in milliseconds when editing.
     this.alarms = {};               // The alarms object used in script from database or default values.
     this.alarmsDefault = {          // Default values used at first run or default for alarms.
       'category':'alarms',          // Object category used for database saving and loading.
@@ -81,7 +78,7 @@ class PandaGOptions {
     this.searchDefault = {          // Default values used at first run or default for helpers option.
       'category':'search',          // Object category used for database saving and loading.
       'pageSize':45,                // Default value used for the number of HITs to display on each search page on MTURK
-      'queueSize':30,               // Default value used for the amount of trigger data to be kept in memory to save memory if needed.
+      'queueSize':60,               // Default value used for the amount of trigger data to be kept in memory to save memory if needed.
       'defaultDur':18000,           // Default value used for the time in milliseconds to use for a panda duration when a HIT is found by search triggers.
       'defaultFetches':0,           // Default value used for the number of fetches to use for panda when a HIT is found by search triggers.
       'defaultHamDur':6000,         // Default value used for the time in milliseconds to use for ham duration when a HIT is found by search triggers.
@@ -95,72 +92,81 @@ class PandaGOptions {
       'minReward':'0.01',           // Default value used for the minimum reward to use when using the MTURK search page.
       'displayApproval':true,       // Default value used to show the approval rate from MTURK on the custom triggered HITs tab.
       'useJSON':true,               // Default value used for the search page to use HTML or JSON from MTURK.
+      'saveHistResults':false,      // Default value used for the saving history results.
+      'historyCache':200,           // Default value used for the amount of search group ID history saved in memory cache.
+      'triggerCacheTimer':40000,    // Default value used for the amount of time in milliseconds to check for any unsaved updates in trigger cache.
+      'historyCacheTimer':90000,    // Default value used for the amount of time in milliseconds to check for any unsaved updates in history cache.
     }
     this.sessionQueue = {};         // Used to hold all the session variables used with the helpers on MTURK page.
     this.captchaCounter = 0;        // Used to track how many HITs seen since last captcha has been seen.
     this.lastQueueAlert = -1;       // Used to keep track the time the queue alert alarm was used so it won't keep on alerting every second of a minute.
     this.timerUsed = 'mainTimer';   // Used to keep track of the timer that is used currently.
+    this.timerRange = {'min':700, 'max':15000};   // The limits for the timer in milliseconds when editing.
+    this.timerHamDur = {'min':1000, 'max':30000}  // The limits for the ham duration in milliseconds.
+    this.timerQueue = {'min':1000, 'max':60000};  // The limits for the timer queue in milliseconds when editing.
+    this.timerSearch = {'min':750, 'max':30000};  // The limits for the timer queue in milliseconds when editing.
+    this.timerChange = {'min':5, 'max':2000};     // The limits for the timer change buttons in milliseconds when editing.
   }
   /** Changes the option with the option name and changes object. Will update database if update is true.
-   * @param  {string} optionName - Option Name  @param  {object} changes - Object Changes  @param  {bool} [update] - Update Database?
+   * @param  {string} optionName - Option name.  @param  {object} changes - Object changes.  @param  {bool} [update] - Update database?
   **/
   doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(); }
   /** Changes the timers options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database?
-   * @return {object}           - Timers Options Object
+   * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
+   * @return {object}           - Timers options object.
   **/
   doTimers(changes=null, update=true) { if (changes) this.doChanges('timers', changes, update); else return this.timers; }
   /** Changes the general options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
-   * @return {object}           - General Options Object
+   * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
+   * @return {object}           - General options object.
   **/
   doGeneral(changes=null, update=true) {
     if (changes) {
       this.doChanges('general', changes, update);
-      if (extPandaUI) extPandaUI.resetToolTips(changes.showHelpTooltips);
+      if (MyPandaUI) MyPandaUI.resetToolTips(changes.showHelpTooltips);
       if (MySearchUI) MySearchUI.resetToolTips(changes.showHelpTooltips);
     }
     else return this.general;
   }
   /** Changes the search options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
-   * @return {object}           - Search Options Object
+   * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
+   * @return {object}           - Search options object.
   **/
-  doSearch(changes=null, update=true) { if (changes) this.doChanges('search', changes, update); else return this.search; }
+  doSearch(changes=null, update=true) { if (changes) { MySearch.redoCacheOptions(changes, this.search); this.doChanges('search', changes, update); } else return this.search; }
   /** Changes the alarms options with the changes object and updates database if update is true.
-   * @param  {object} [changes] - Object Changes  @param  {bool} [update] - Update Database? 
-   * @return {object}           - Alarms Options Object
+   * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
+   * @return {object}           - Alarms options object.
   **/
   doAlarms(changes=null, update=true) { if (changes) this.doChanges('alarms', changes, update); else return this.alarms; }
   /** Returns the timer range object.
-   * @return {object} - Returns Timer Range
+   * @return {object} - Returns timer range.
   **/
   getTimerRange() { return this.timerRange; }
   /** Returns the timer ham range object.
-   * @return {object} - Returns Timer Ham Range
+   * @return {object} - Returns timer ham range.
   **/
   getTimerHamRange() { return this.timerHamDur; }
   /** Returns the search timer range.
-   * @return {object} - Returns Search Timer Range
+   * @return {object} - Returns search timer range.
   **/
   getTimerSearch() { return this.timerSearch; }
   /** Returns the queue timer range.
-   * @return {object} - Returns Queue Timer Range
+   * @return {object} - Returns queue timer range.
   **/
   getTimerQueue() { return this.timerQueue; }
   /** Returns the timer change range.
-   * @return {object} - Returns Timer Change Range
+   * @return {object} - Returns timer change range.
   **/
   getTimerChange() { return this.timerChange; }
   /** Returns all the ranges in an object.
-   * @return {object} - Returns all ranges in an object
+   * @return {object} - Returns all ranges in an object.
   **/
   getRanges() { return {'timerRange':this.timerRange, 'hamRange':this.timerHamDur, 'searchRange':this.timerSearch, 'queueRange':this.timerQueue, 'timerChange':this.timerChange}; }
   /** Load up global options from database or use and save default options into database.
-   * @async                       - To wait for the options data to be loaded from the database.
-   * @param  {function} afterFunc - Function to call after done to send success array or error object.
+   * @async                         - To wait for the options data to be loaded from the database.
+   * @param  {function} [afterFunc] - Function to call after done to send success array or error object.
   **/
-  async prepare(afterFunc) {
+  async prepare(afterFunc=null) {
     let success = [], err = null;
     this.captchaCounter = 0; this.lastQueueAlert = -1; this.timerUsed = 'mainTimer';
     await MYDB.getFromDB('panda', 'options').then( async result => {
@@ -173,14 +179,14 @@ class PandaGOptions {
         if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
         if (this.search.defaultDur === 0 && this.search.defaultFetches === 0) this.search.defaultDur = this.searchDefault.defaultDur;
         if (this.search.defaultCustDur === 0 && this.search.defaultCustFetches === 0) this.search.defaultCustDur = this.searchDefault.defaultCustDur;
-        success[0] = 'Loaded all global options from database';
+        success[0] = 'Loaded All Global Options From Database';
       } else { // Add default values to the options database and use them.
         await MYDB.addToDB('panda', 'options', this.generalDefault)
         .then( async () => { await MYDB.addToDB('panda', 'options', this.timersDefault)
           .then( async () => { await MYDB.addToDB('panda', 'options', this.alarmsDefault)
             .then( async () => { await MYDB.addToDB('panda', 'options', this.helpersDefault)
               .then( async () => { await MYDB.addToDB('panda', 'options', this.searchDefault)
-                .then( () => success[0] = 'Added default global options to database.', rejected => err = rejected );
+                .then( () => success[0] = 'Added Default Global Options to Database.', rejected => err = rejected );
               }, rejected => { err = rejected; })
             }, rejected => { err = rejected; })
           }, rejected => { err = rejected; })
@@ -189,23 +195,27 @@ class PandaGOptions {
         this.alarms = Object.assign({}, this.alarmsDefault); this.helpers = Object.assign({}, this.helpersDefault);
         this.search = Object.assign({}, this.searchDefault);
       }
+      gDebugLog.changeErrorLevel(this.general.debugErrorLevel); gDebugLog.changeLogLevel(this.general.debugger);
     }, rejected => err = rejected);
     if (afterFunc) afterFunc(success, err); // Sends good Messages or any errors in the after function for processing.
   }
-  /** Removes data from memory so it's ready for closing or importing. */
+  /** Removes data from memory so it's ready for closing or importing. **/
   removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; this.search = {}; }
   /** Updates the captcha text area with updated info.
    * @return {number} - Returns the value in the captcha counter.
   **/
   updateCaptcha() { this.captchaCounter = (this.general.captchaAt > this.captchaCounter) ? this.captchaCounter + 1 : 0; return this.captchaCounter; }
-  /** Resets the captcha counter back down to 0. */
+  /** Resets the captcha counter back down to 0. **/
   resetCaptcha() { this.captchaCounter = 0; }
+  /** Sends all the options to the searchUI page through a message using Broadcast channel PCM_searchChannel. **/
   sendOptionsToSearch() {
-    searchChannel.postMessage({'msg':'searchTo: globalOptions', 'object':{'general':this.doGeneral(), 'search':this.doSearch(), 'timers':this.doTimers(), 'alarms':this.doAlarms(), 'ranges':this.getRanges()}});
+    PCM_searchChannel.postMessage({'msg':'searchTo: globalOptions', 'object':{'general':this.doGeneral(), 'search':this.doSearch(), 'timers':this.doTimers(), 'alarms':this.doAlarms(), 'ranges':this.getRanges()}});
   }
-  /** Updates the global options and resets anything that is needed. */
+  /** Updates the global options and resets anything that is needed.
+   * @param  {bool} [toSearch] - Should options be sent to the SearchUI?
+  **/
   update(toSearch=true) {
-    if (myPanda.logTabs) myPanda.logTabs.updateCaptcha(this.getCaptchaCount());
+    if (MyPanda.logTabs) MyPanda.logTabs.updateCaptcha(this.getCaptchaCount());
     MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
     MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
     if (toSearch) this.sendOptionsToSearch();
@@ -274,7 +284,7 @@ class PandaGOptions {
   /** Get the search duration time to use for new HITs when it starts to collect before searching.
    * @return {number} - Returns the searchDuration timer option.
   **/
-  theSearchDuration(val) { if (val) { this.timers.searchDuration = val; this.update(); } return this.timers.searchDuration; }
+  theSearchDuration(val) { if (val) { this.search.defaultDur = val; this.update(); } return this.search.defaultDur; }
   /** Get the timer increase value for increase timer button.
    * @return {number} - Returns the number for the timer increase value.
   **/
@@ -296,13 +306,13 @@ class PandaGOptions {
   **/
   getCardDisplay() { return this.general.cardDisplay; }
   /** Sets or gets the value for the to SearchUI option value.
-   * @param  {bool} [value] - Searches to SearchUI?  @param {bool} [update] - Save to Database?
-   * @return {bool}       - Returns the value for the to SearchUI option value.
+   * @param  {bool} [value] - Searches to SearchUI?  @param  {bool} [update] - Save to database?
+   * @return {bool}         - Returns the value for the to SearchUI option value.
   **/
   theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update(); } return this.general.toSearchUI; }
   /** Sets or gets the value for the search timer value.
-   * @param  {number} [value] - Search Timer Value  @param {bool} [update] - Save to Database?
-   * @return {number}       - Returns the value for the search timer.
+   * @param  {number} [value] - Search Timer Value  @param  {bool} [update] - Save to database?
+   * @return {number}         - Returns the value for the search timer.
   **/
   theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update(); } return this.timers.searchTimer; }
   /** Gets the queue timer value.
@@ -324,18 +334,18 @@ class PandaGOptions {
   **/
   theVolDir(vol=null) { if (vol) { this.general.volHorizontal = vol; this.update(); } return this.general.volHorizontal; }
   /** Changes the value of tabLogHeight of general options or will return the tabLogHeight value if value equals null.
-   * @param  {number} [value] - Height Value
+   * @param  {number} [value] - Height value.
    * @return {number}         - Returns tabLogHeight value.
   **/
   theTabLogHeight(value=null) { if (value !== null) { this.general.tabLogHeight = value; this.update(); } else return this.general.tabLogHeight; }
   /** Changes the theme index to the value given or returns the current theme index.
-   * @param  {number} [value] - Theme Index Value
-   * @return {string}         - Current Theme Index
+   * @param  {number} [value] - Theme index value.
+   * @return {string}         - Current theme index.
   **/
   theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
-   * @param  {number} [index] - Theme Index Value  @param  {string} [cssTheme] - Theme CSS Value  @param  {bool} all - Return All Themes
-   * @return {string}         - Returns current theme string.
+   * @param  {number} [index]     - Theme index value.  @param  {string} [cssTheme] - Theme CSS value.  @param  {bool} [all] - Return all themes?
+   * @return {null|object|string} - Returns current theme string or all objects or null if index is out of bounds.
   **/
   theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;
@@ -345,89 +355,11 @@ class PandaGOptions {
     else return this.general[thisTheme];
   }
   /** Sends back the helper options object.
-   * @return {object} - Helpers Options
+   * @return {object} - Helpers options.
   **/
-  theHelperOptions() { return this.helpers; }
+  theHelperOptions(data) { if (data) { this.helpers = data; this.update(); } return this.helpers; }
   /** Updates the current session queue data options.
-   * @param  {object} data - Session Options
+   * @param  {object} data - Session options.
   **/
-  theSessionQueue(data) { this.sessionQueue = data; }
-  /** Adds the Panda Crazy Buttons option to the element provided to forum pages and the property for the helper option to use.
-   * @param  {object} appendHere - Jquery Object  @param  {string} prop - Property Name to Change
-  **/
-  popupForumOptions(appendHere, prop) {
-    createCheckBox(appendHere, 'Panda Crazy Buttons', '', this.helpers[prop], this.helpers[prop], ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', e => {
-      this.helpers[prop] = $(e.target).prop('checked'); this.update();
-      helperSendCommands(this.helpers, 'optionsChange');
-    });
-  }
-  /** Adds options to MTURK pages on the element provided using helper and session options from current page.
-   * @param  {object} appendHere - Jquery Object
-  **/
-  mturkQueueOptions(appendHere) {
-    createCheckBox(appendHere, 'Panda Crazy Buttons', 'pcm-mturkButtons', this.helpers.mturkPageButtons, this.helpers.mturkPageButtons, ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', () => {
-      this.helpers.mturkPageButtons = !this.helpers.mturkPageButtons; this.update(); helperSendCommands(this.helpers, 'globalOptions');
-    });
-    createCheckBox(appendHere, 'Unique Tab Hits Restriction', 'pcm-restrictTabUnique', this.helpers.tabUniqueHits, this.helpers.tabUniqueHits, ' pcm-tooltipData', ' pcm-tooltipData', 'Allow only unique HITs in each tab.', () => {
-      this.helpers.tabUniqueHits = !this.helpers.tabUniqueHits; this.update(); helperSendCommands(this.helpers, 'globalOptions');
-    });
-    createCheckBox(appendHere, `Display Queue #'s in Title`, 'pcm-displayQueueTitle', this.helpers.titleQueueDisplay, this.helpers.titleQueueDisplay, ' pcm-tooltipData', ' pcm-tooltipData', `Show Hit position in queue and total HITs in queue in tab title.`, () => {
-      this.helpers.titleQueueDisplay = !this.helpers.titleQueueDisplay; this.update(); helperSendCommands(this.helpers, 'globalOptions');
-    });
-    $(`<hr class='pcm-sessionVarsSplit'><div class='pcm-sessionOptText'>Session Options:</div>`).appendTo(appendHere);
-    createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', this.sessionQueue.monitorNext, this.sessionQueue.monitorNext, ' pcm-tooltipData', ' pcm-tooltipData', 'Monitor Queue automatically once you finish HITs in your queue.', () => {
-      this.sessionQueue.monitorNext = !this.sessionQueue.monitorNext; helperSendCommands(this.sessionQueue, 'optionsChange');
-    });
-  }
-  /** Adds options to HIT pages on the element provided using session options from current page.
-   * @param  {object} appendHere - Jquery Object
-  **/
-  mturkAssignedOptions(appendHere) {
-    createCheckBox(appendHere, 'Same GroupID Next?', 'pcm-sameGIDHit', this.sessionQueue.gidNext, this.sessionQueue.gidNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue with the same group ID as this HIT.', e => {
-      this.sessionQueue.gidNext = !this.sessionQueue.gidNext; this.sessionQueue.ridNext = false;
-      $(e.target).closest('.pcm-addedSection').find('#pcm-sameRIDHit').prop('checked',false);
-      helperSendCommands(this.sessionQueue, 'optionsChange');
-    });
-    createCheckBox(appendHere, 'Same RequesterID Next?', 'pcm-sameRIDHit', this.sessionQueue.ridNext, this.sessionQueue.ridNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue from the same Requester ID as this HIT.', e => {
-      this.sessionQueue.ridNext = !this.sessionQueue.ridNext; this.sessionQueue.gidNext = false;
-      $(e.target).closest('.pcm-addedSection').find('#pcm-sameGIDHit').prop('checked',false);
-      helperSendCommands(this.sessionQueue, 'optionsChange');
-    });
-  }
-  /**
-   * Adds the go to queue position link using the number of HITs in queue and a function to send any commands needed to popup page.
-   * @param  {object} appendHere - Jquery Object  @param  {number} queueSize - Number of HITs in Queue  @param  {function} [popupSend] - Send To Popup Function
-  **/
-  mturkQueueLinks(appendHere, queueSize, popupSend=null) {
-    if (queueSize > 0) {
-      let gotoLink = $(`<div class='pcm-goSelectDiv'>Go To Queue Position: </div>`).appendTo(appendHere);
-      let sel = $(`<select></select>`).change( e => {
-        let value = $(e.target).val(), position = (value.length <= 2) ? value : '1', goUrl = null;
-        if (value === 'Last') goUrl = 'https://worker.mturk.com/tasks?JRPC=lasthit'; else if (value) goUrl = `https://worker.mturk.com/tasks?JRPC=gohit${position}`;
-        if (goUrl) helperSendCommands({'url':goUrl}, 'newUrl', popupSend);
-      }).appendTo(gotoLink);
-      sel.append($('<option>').attr('value','---').text('---'));
-      sel.append($('<option>').attr('value','First').text('First'));
-      for (let i=2; i<queueSize; i++) { sel.append($('<option>').attr('value',i).text(i)); }
-      sel.append($('<option>').attr('value','Last').text('Last'));
-      $(`<a href='#' class='pcm-goNextHit'>Go To Next Hit</a>`).click( () => { helperSendCommands({}, 'goNext', popupSend); } ).appendTo(appendHere);
-      gotoLink = null; sel = null;
-    }
-  }
-  /** Figures out which options should be shown on the popup page from the URL and then uses the queue size and popup function.
-   * @param  {string} url - Page URL  @param  {number} queueSize - Number of HITs in Queue  @param  {function} [popupSend] - Send To Popup Function
-  **/
-  helperOptions(url, queueSize, popupSend=null) {
-    let df = $(document.createDocumentFragment()), onMturk = false;
-    if (/\/\/worker\.mturk\.com($|\/$|.*projects[/]?|.*tasks.*|.*requesters\/.*)/.test(url)) { onMturk = true; this.mturkQueueOptions(df); }
-    if (/\/\/[^/]*\/projects\/[^/]*\/tasks\/.*?assignment_id/.test(url)) this.mturkAssignedOptions(df);
-    else if (/\/\/[^/]*mturkcrowd.com.*$/.test(url)) this.popupForumOptions(df, 'MTCButtons');
-    else if (/\/\/[^/]*turkerview.com.*$/.test(url)) this.popupForumOptions(df, 'TVButtons');
-    else if (/\/\/[^/]*mturkforum.com.*$/.test(url)) this.popupForumOptions(df, 'MTFButtons');
-    else if (/\/\/[^/]*ourhitstop.com.*$/.test(url)) this.popupForumOptions(df, 'OHSButtons');
-    else if (/\/\/[^/]*slack.com.*$/.test(url)) this.popupForumOptions(df, 'SlackButtons');
-    else if (/\/\/[^/]*discord.com.*$/.test(url)) this.popupForumOptions(df, 'DiscordButtons');
-    if (onMturk) this.mturkQueueLinks(df, queueSize, popupSend);
-    return df;
-  }
+  theSessionQueue(data) { if (data) this.sessionQueue = data; return this.sessionQueue; }
 }

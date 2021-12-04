@@ -1,18 +1,21 @@
 /** A class that deals with the basic URL object.
  * @class UrlClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
 class UrlClass {
 	/**
  	 * @param  {string} thisUrl - The URL string that is being used for this class.
 	 */
 	constructor(thisUrl) {
-		this.url = thisUrl;
+		this.url = thisUrl;		// Holds the URL for this class.
 	}
 	/** Gets the URL being used by this class.
-	 * @return {string} - The URL string that this class is using. */
+	 * @return {string} - The URL string that this class is using.
+	**/
 	returnUrl() { return this.url; }
 	/** Fetches the URL and handles MTURK results. Detects json result and text result.
-	 * @async - To wait for the responses to be received after a fetch. */
+	 * @async - To wait for the responses to be received after a fetch.
+	**/
 	async goFetch() {
 		let returnValue = null, response = {}, thisResult = 'ok', dataType = '', theData = null;
 		try {

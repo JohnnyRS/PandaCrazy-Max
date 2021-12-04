@@ -1,22 +1,24 @@
-/** This class deals with the different menus and which methods to call.
- * @class MenuClass ##
- * @author JohnnyRS - johnnyrs@allbyjohn.com */
+/** This class deals with the different menus and which methods to call for SearchUI page.
+ * @class MenuSearchClass ##
+ * @author JohnnyRS - johnnyrs@allbyjohn.com
+**/
  class MenuSearchClass {
   constructor() {
-    this.modalAlarms = null;
-		this.modalSearch = null;
+    this.modalAlarms = null;    // Holds the temporary modal alarms class for the SearchUI page.
+		this.modalSearch = null;    // Holds the temporary modal search class for the SearchUI page.
   }
-  /** Resets the CSS variable values after a theme change to change any text on buttons or stats. */
+  /** Resets the CSS variable values after a theme change to change any text on buttons or stats. **/
   resetCSSValues() {
     let elements = '.pcm-searchTop .pcm-btn-menu';
-    $(elements).each( (_, ele) => {
+    $(elements).each( (_s, ele) => {
       let theId = $(ele).attr('id'), label = $(ele).data('label');
-      if (theId) { let cssVar = getCSSVar(theId.replace('pcm-', ''), label); $(ele).html(cssVar); } 
+      if (theId) { let cssVar = getCSSVar(theId.replace('pcm-', ''), label); $(ele).html(cssVar); }
     });
   }
   /** This method will add a menu with a label and the function to use when button clicked.
-   * @param  {object} appendHere - Jquery Element  @param  {string} label       - Menu label  @param  {function} btnFunc - Button Function
-   * @param  {string} [tooltip]  - Tooltip String  @param  {string} [className] - Class name  @param  {string} [idName]    - Id Name */
+   * @param  {object} appendHere - Jquery element.  @param  {string} label       - Menu label.  @param  {function} btnFunc - Button function.
+   * @param  {string} [tooltip]  - Tooltip string.  @param  {string} [className] - Class name.  @param  {string} [idName]  - Id name.
+  **/
   addMenu(appendHere, label, btnFunc, tooltip='', className='', idName='') {
     const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``;
     let idAdd = (idName !== '') ? `id='${idName}' ` : '', classAdd = (tooltip !== '') ? 'pcm-tooltipData pcm-tooltipHelper' : '';
@@ -24,10 +26,11 @@
     let cssVar = getCSSVar(idName.replace('pcm-', ''), label); theButton.html(cssVar); theButton = null;
   }
   /** Adds a sub menu to a menu with dropdownstyle allowing for 3 submenus under the main menu.
-   * @param  {object} appendHere    - Jquery Element      @param  {string} label      - SubMenu label    @param  {string} theClass        - Class Name
-   * @param  {string} btnGroupClass - Button Group Class  @param  {string} btnGroupID - Button Group ID  @param  {array} dropdownInfo     - Dropdown Info
-   * @param  {string} [tooltip]     - CSS style           @param  {string} [buttonId] - CSS style        @param  {string} [dropdownClass] - CSS style
-   * @param  {string} [noClick]     - CSS style           @param  {string} [onClosed] - CSS style */
+   * @param  {object} appendHere    - Jquery element.      @param  {string} label        - SubMenu label.    @param  {string} theClass        - Class name.
+   * @param  {string} btnGroupClass - Button group class.  @param  {string} btnGroupID   - Button group ID.  @param  {array} dropdownInfo     - Dropdown info.
+   * @param  {string} [tooltip]     - CSS style.           @param  {string} [buttonId]   - CSS style.        @param  {string} [dropdownClass] - CSS style.
+   * @param  {bool} [noClick]       - Should stop prop?    @param  {function} [onClosed] - Menu close function.
+  **/
   addSubMenu(appendHere, label, theClass, btnGroupClass, btnGroupID, dropdownInfo, tooltip='', buttonId='', dropdownClass='', noClick=false, onClosed=null) {
     const addTip = (tooltip !== '') ? ` data-toggle='tooltip' data-placement='bottom' data-original-title='${tooltip}'` : ``, addId = (btnGroupID) ? ` id=${btnGroupID}` : '';
     let btnGroup = $(`<div class='btn-group ${btnGroupClass}'${addId}></div>`).appendTo(appendHere), idAdd = (buttonId !== '') ? `id='${buttonId}' ` : '';
@@ -50,7 +53,7 @@
     });
     btnGroup = null; dropdownMenu = null; theButton = null;
   }
-  /** Create the search top menu using addMenu and addSubMenu Methods. */
+  /** Create the search top menu using addMenu and addSubMenu Methods. **/
   createSearchTopMenu() {
 		let topBar = $(`.pcm-menuRow1:first`);
     this.addMenu(topBar, ' ', async (e) => {
@@ -58,7 +61,7 @@
 			if (MySearchUI && searchIsOn) MySearchUI.stopSearching();
 			else if (MySearch.isPandaUI()) {
         let doStart = await MySearchUI.startSearching();
-				if (!doStart) MySearchUI.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.');
+				if (!doStart) MySearchUI.showModalMessage('Nothing to search for.','There are no search triggers enabled to search for so searching cancelled.', false);
 			} else MySearchUI.showModalMessage('Open PandaCrazyMax First', 'PandaCrazyMax must be opened before search triggers can start collecting HITs.');
 			$(e.target).blur();
 		}, 'Start searching for trigger jobs.', 'pcm-btn-toggle pcm-btn-menu pcm-searchingOff', 'pcm-searchNow');
@@ -69,15 +72,15 @@
 			{'type':'item', 'label':`General`, 'menuFunc': () => {
         if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchOptions(() => this.modalSearch = null);
 				}, class:'pcm-searchGeneral', 'tooltip':'Change search general options'},
-      {'type':'item', 'label':`Advanced`, 'menuFunc': () => {
-        if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
-        }, class:'pcm-searchAdvanced', 'tooltip':'Change search advanced options'},
-			{'type':'item', 'label':`Alarms`, 'menuFunc': () => {
-					this.modalAlarms = new ModalAlarmClass(); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null, true );
+        {'type':'item', 'label':`Alarms`, 'menuFunc': () => {
+          this.modalAlarms = new ModalSearchAlarmClass(PCM_channel); this.modalAlarms.showAlarmsModal( () => this.modalAlarms = null, true );
 				}, class:'pcm-searchAlarms', 'tooltip':'Change alarms for search triggers'},
-			{'type':'item', 'label':`Blocked Id's`, 'menuFunc': () => {
-        if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
+        {'type':'item', 'label':`Blocked Id's`, 'menuFunc': () => {
+          if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchBlocked(() => this.modalSearch = null);
 				}, class:'pcm-searchBlocked', 'tooltip':`Add or remove blocked group or requester ID's used in all search triggers.`},
+        {'type':'item', 'label':`Advanced`, 'menuFunc': () => {
+          if (!this.modalSearch) this.modalSearch = new ModalSearchClass(); this.modalSearch.showSearchAdvanced(() => this.modalSearch = null);
+          }, class:'pcm-searchAdvanced', 'tooltip':'Change search advanced options'},
 		], '', 'pcm-bSearchOptions-dropdown');
 		let stats = $(`<small class='pcm-searchStats'></span>`).appendTo(topBar);
 		stats.append(` - [ <span id='pcm-timerStats' class='toggle'></span> | `);

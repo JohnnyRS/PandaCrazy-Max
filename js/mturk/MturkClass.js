@@ -3,8 +3,8 @@
  * @author JohnnyRS - johnnyrs@allbyjohn.com
 **/
 class MturkClass {
-	/** Fetches the url in url object and handles MTURK results. Can deal with Pre's, maxed out and logged out for any MTURK URL;
-	 * @param  {object} objUrl - The url object to use for fetching.
+	/** Fetches the URL in URL object and handles MTURK results. Can deal with Pre's, maxed out and logged out for any MTURK URL;
+	 * @param  {object} objUrl - The URL object to use for fetching.  @param  {object} [resultsBack] - Object used for status passing from goFetch.
 	 * @return {object} 			 - Returns data in an object or null if got nothing.
 	**/
 	goFetch(objUrl, resultsBack=null) {

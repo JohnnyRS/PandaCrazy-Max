@@ -11,7 +11,7 @@
 1. Need to download the ZIP file from the clone or download button. [Zip File](https://github.com/JohnnyRS/PandaCrazy-Max/archive/master.zip).
 1. Now you need to unzip the file into a folder which should be called: `PandaCrazy-Max-master`
 1. Go to the chrome extensions page (`chrome://extensions`).
-1. For this script to work for now you have to enable the Developer Mode switch at top.
+1. For this script to work manually you have to enable the Developer Mode switch at top.
 1. Push the load unpacked button and find the new folder or drag and drop the folder anywhere on the page.
 1. Make sure PandaCrazy Max extension is enabled on the extensions page.
 1. There should be an icon with PC Max on it at the top in the extension bar.
@@ -27,9 +27,8 @@
 1. You may export jobs and options but it will not work with the older Panda Crazy script.
 
 ##### Some other changes:
-* This is a beta script there could be problems with saving and loading database.
 * There is a button to wipe all data and go back to default in the help page.
-* Older scripts that send messages to the old PC script should now work with this extension too.
+* Older scripts that send messages to the old PC script should work with this extension too.
 * Buttons on forums should still work but they may change in the future.
 * Buttons on some MTURK pages have been changed and search multiple button has been added.
 * Search button will add a groupID search job (gid) that accepts only one hit. Good for surveys.
@@ -37,8 +36,8 @@
 
  Panda jobs are now saved in the database. Only relevant data is kept in memory when needed to save some memory space. Search jobs are working now also but searches are on a separate timer. Searches only check the first 25 hits every second for all the search jobs which makes it a lot more efficient to find hits from searches. Compared to the original script there can be a lot more searches running and won't cause any timer problems. Groupings are now working and can be run at a specific time for a certain duration. A lot of debugging lines have been added for future use. Queue watch is now better and a bit smarter. It only adds new hits to the queue. New icon has been added for the extension bar.
 
-Some menus still don't work. Options haven't all been tested yet.
-
 This is being built by the newest ECMAScript, jquery, jquery UI and bootstrap. Coding in Visual Studio Code.
 
-At this time this works in Chrome and new microsoft edge in developer mode!
+This extension will work in chrome and should be added from the chrome store.
+This extension can work in new microsoft edge in developer mode!
+This extension may work in Firefox with manifest - firefox.json moved to manifest.json and added in developer mode. I may add this to firefox when I do more testing to make sure everything works correctly.
