@@ -305,7 +305,7 @@ class EximClass {
     }
     let hamD = (!rData.hamDuration) ? MyOptions.getHamDelayTimer() : rData.hamDuration;
 		if (typeof rData.dateAdded === 'string') rData.dateAdded = new Date(rData.dateAdded).getTime();
-    let dO = dataObject(rData.groupId, rData.description, rData.title, rData.reqId, rData.reqName, rData.price, rData.hitsAvailable, rData.assignedTime, rData.expires, rData.friendlyTitle, rData.friendlyReqName);
+    let dO = dataObject(rData.groupId, rData.description, rData.title, rData.reqId, rData.reqName, rData.price, rData.hitsAvailable, rData.assignedTime, rData.expires, rData.friendlyTitle, rData.friendlyReqName, rData.ext, rData.created);
     let oO = optObject(rData.once, rData.search, rData.tabUnique, rData.limitNumQueue, rData.limitTotalQueue, rData.limitFetches, rData.duration, rData.autoGoHam, hamD, rData.acceptLimit, rData.day, rData.weight, rData.dailyDone);
     this.importSearchData[rData.id] = {'rules':{}, 'history':{}}; this.importJobIds.push(rData.id);
     this.importJobData[rData.id] = {'data':dO, 'options':oO, 'dateAdded':rData.dateAdded, 'totalSeconds':rData.totalSeconds, 'totalAccepted':rData.totalAccepted};

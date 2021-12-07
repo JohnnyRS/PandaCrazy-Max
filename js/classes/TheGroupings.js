@@ -149,7 +149,7 @@ class TheGroupings {
   async delayedToggle(grouping, keys) {
     if (keys.length > 0) {
       let isPanda = (this.type === 'panda'), dbKey = keys.shift(), myId = (isPanda) ? MyPanda.getMyId(dbKey) : dbKey, collecting = this.groupStatus[grouping].collecting;
-      if (collecting && isPanda) MyPandaUI.startCollecting(myId);
+      if (collecting && isPanda) MyPandaUI.startCollecting(myId,_,_,_,_, true);
       else if (!collecting && isPanda) MyPandaUI.stopCollecting(myId);
       else if (!isPanda) { let itemCount = await MySearch.getToggleTrigger(myId, collecting, false); MySearchUI.statusMe(itemCount, (collecting) ? 'searching' : 'disabled'); }
       setTimeout( () => { this.delayedToggle(grouping, keys); }, 100 );

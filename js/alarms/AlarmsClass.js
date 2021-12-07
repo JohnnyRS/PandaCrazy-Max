@@ -66,7 +66,7 @@ class AlarmsClass {
   /** Changes the name of the voice being used for text to speech and then saves it to database.
    * @param  {string} name - The name to use for the voice.
   **/
-  theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update(false); }
+  theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update('alarms', false); }
   /** Prepare the alarms by getting the src of the alarm url and save to database if using default values.
    * @async                - To wait for the alarm data to completely load into memory.
    * @param  {object} data - Data object.  @param  {bool} fromDB - Did these alarms come from the database or default values?

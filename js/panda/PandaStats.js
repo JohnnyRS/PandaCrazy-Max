@@ -19,6 +19,7 @@ class PandaStats {
     this.collectAccepted = 0;                 // The number of HITs accepted for a collecting session.
     this.secondsCollecting = 0;               // The seconds collecting for a collecting session.
     this.dailyAccepted = 0;                   // The number of accepted HITs today.
+    this.auto = false;                        // This job has started to collect automatically by a search job or trigger.
     this.fetched = { 'value':0, 'session':0, 'id':'#pcm-hitFetched', 'class':'.pcm-hitFetched', 'label':'Fetch', 'id1':'#pcm-hitFetched1' };
     this.accepted = { 'value':0, 'id':'#pcm-hitAccepted', 'class':'.pcm-hitAccepted', 'label':'Acc', 'id1':'#pcm-hitAccepted1' };
     this.noMore = { 'value':0, 'id':'#pcm-hitNoMore', 'class':'.pcm-hitNoMore', 'label':'NM', 'id1':'#pcm-hitNoMore1' };
@@ -41,14 +42,14 @@ class PandaStats {
    * @param  {number} [total] - Total number for daily accepted HITs.
   **/
   setDailyStats(total=0) { this.dailyAccepted = total; }
-  /** Stores the data in the collect stats database for collecting times of panda jobs.
+  /** Stores the data in the collect stats cache database for collecting times of panda jobs.
    * @param  {object} data - The data to store in the database stats for collecting.
   **/
-  collectStatsDB(data) { MYDB.addToDB('stats',_, data).then( () => {} ); }
-  /** Stores the data in the accepted stats database for accepted HITs times of panda jobs.
+  collectStatsDB(data) { MyHistory.addToStats('collected', data); }
+  /** Stores the data in the accepted stats cache database for accepted HITs times of panda jobs.
    * @param  {object} data - The data to store in the database stats for accepted HITs.
   **/
-  acceptedStatsDB(data) { MYDB.addToDB('stats', 'accepted', data).then( () => {} ); }
+  acceptedStatsDB(data) { MyHistory.addToStats('accepted', data); }
   /** Deletes all stats for panda with the unique ID from the panda stats database.
    * @param  {number} dbId - The database ID of the panda to delete all stats from.
   **/
@@ -86,7 +87,7 @@ class PandaStats {
   /** Adds the start time and end time for this panda that was collecting in the stats database.
    * @param  {dateTime} end - The Date that collecting has stopped.
   **/
-  addToCollectTimes(end) { this.collectStatsDB( {'dbId':this.dbId, 'start':this.collectStart, 'end':end} ); }
+  addToCollectTimes(end) { this.collectStatsDB( {'dbId':this.dbId, 'start':this.collectStart, 'end':end, 'auto':this.auto} ); }
   /** Adds the time a HIT was accepted to the stats database. **/
   addToAcceptedTimes() { this.acceptedStatsDB( {'dbId':this.dbId, 'date':new Date().getTime()} ); }
   /** Adds 1 to the fetched counter for this panda and updates stat on the panda card. **/
@@ -101,14 +102,16 @@ class PandaStats {
   addAccepted() { this.accepted.value++; this.dailyAccepted++; this.addToAcceptedTimes(); this.collectAccepted++; this.updateHitStat(this.accepted); }
   /** Adds 1 to the total no mores for this panda and updates stat on the panda card. **/
   addNoMore() { this.noMore.value++; this.updateHitStat(this.noMore); }
-  /** Starts the stats for this collecting session. **/
-  startCollecting() { this.collecting = true; this.collectStart = new Date().getTime(); this.collectAccepted = 0; this.fetched.session = 0; }
+  /** Starts the stats for this collecting session.
+   * @param  {bool} auto - Job automatically collecting?
+  **/
+  startCollecting(auto=false) { this.collecting = true; this.auto = auto; this.collectStart = new Date().getTime(); this.collectAccepted = 0; this.fetched.session = 0; }
   /** Add the collecting time for this session to the stats database and resets stat values.
    * @return {object} - Returns the seconds and accepted stats for this collecting session.
   **/
   stopCollecting() {
     const ended = new Date().getTime(); this.collecting = false;
-    this.addToSeconds(ended); this.addToCollectTimes(ended); this.collectStart = null;
+    this.addToSeconds(ended); this.addToCollectTimes(ended); this.collectStart = null; this.auto = false;
     return {'seconds':this.secondsCollecting, 'accepted':this.collectAccepted};
   }
 	/** Sets or returns value of the searching status.

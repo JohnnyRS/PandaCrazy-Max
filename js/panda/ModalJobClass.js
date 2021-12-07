@@ -36,6 +36,7 @@ class ModalJobClass {
     if (!ridDisabled) $(`<div class='pcm-detailsHeading unSelectable'>Details of job: All can be edited except details in yellow. Click on the details to edit.</div>`).appendTo(appendHere);
     let theTable = $(`<table class='table table-dark table-sm pcm-detailsTable table-bordered'></table>`).appendTo(appendHere);
     let ridDisableTip = (ridDisabled) ? ' May not be changed by user.' : '';
+    let timeCollecting = theData.totalSeconds;
     displayObjectData([
       {'label':'Requester ID', 'type':'text', 'key':'reqId', 'disable':ridDisabled, 'default':'-- No Requester ID found yet --', 'tooltip':`The requester ID for this job.${ridDisableTip}`},
       {'label':'Requester Name:', 'type':'text', 'key':'reqName', 'disable':true, 'tooltip':'The requester name for this job. May not be changed by user.'},
@@ -48,7 +49,7 @@ class ModalJobClass {
       {'label':'Assigned Time', 'type':'text', 'key':'assignedTime', 'disable':true, 'tooltip':'The assigned time in seconds that this has before expiration. May not be changed by user.'},
       {'label':'Expires', 'type':'text', 'key':'expires', 'disable':true, 'default':'No Expiration', 'tooltip':'The day and time which this HIT will no longer be on MTURK. May not be changed by user.'},
       {'label':'Date Added', 'type':'keyValue', 'key':'dateAdded', 'disable':true, 'format':'date', 'tooltip':'The date which this HIT was added to PandaCrazy Max. May not be changed by user.'},
-      {'label':'Total Seconds Collecting', 'type':'text', 'key':'totalSeconds', 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect HITs since it was added. May not be changed by user.'},
+      {'label':'Total Seconds Collecting', 'type':'string', 'string':timeCollecting, 'disable':true, 'tooltip':'The total amount of seconds which this job has tried to collect HITs since it was added. May not be changed by user.'},
       {'label':'Total Accepted HITs', 'type':'text', 'key':'totalAccepted', 'disable':true, 'tooltip':'The total amount of HITs collected by this job since it was added. May not be changed by user.'}
     ], theTable, theData, true);
     theTable = null;
@@ -254,7 +255,7 @@ class ModalJobClass {
           title = (reqId) ? '--( Requester ID Search )--' : title;
           if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm-searchJob').is(':checked')) ? 'gid' : null);
-          let data = dataObject(groupId, desc, title, reqId, reqName, pay,_,_,_);
+          let data = dataObject(groupId, desc, title, reqId, reqName, pay);
           let opt = optObject(once, search,_,_,_,_, 0,_, (search) ? 0 : MyOptions.getHamDelayTimer());
           MyPandaUI.addPanda(data, opt, false, startNow,_,_, (search) ? 0 : MyOptions.getHamDelayTimer());
           MyModal.closeModal();

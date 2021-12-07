@@ -31,7 +31,7 @@ async function prepare() {
   await MYDB.openSearching().then( async () => {
     await MYDB.openHistory(historyWipe).then( async () => {
       await MYDB.openPCM().then( async () => {
-        await MYDB.openStats(true).then( async () => {
+        await MYDB.openStats().then( async () => {
           await MyOptions.prepare(showMessages);
           MyAlarms = new AlarmsClass();
           MyQueue = new MturkQueue(2000); MyDash = new MturkDashboard(); MyPanda = new MturkPanda(995, 950); MySearch = new MturkHitSearch(950);
@@ -58,9 +58,9 @@ async function startPandaCrazy() {
     MyThemes.prepareThemes(_, showMessages);
     await MyGroupings.prepare(showMessages);  // Wait for groupings to load and show message or error.
     await MySGroupings.prepare(showMessages); // Wait for search groupings to load and show message or error.
-    MyMenus.preparePanda(showMessages);
+    MyMenus.preparePanda();
     await MySearch.loadFromDB(showMessages);
-    await MyPandaUI.prepare(showMessages);    // Wait for panda jobs to load and show message or error.
+    await MyPandaUI.prepare();    // Wait for panda jobs to load and show message or error.
     $('.sortable').sortable().addClass('unSelectable'); // Set up sortables Disable selection for sortables.
     showMessages(['Finished Loading Everything Needed to Start!'], null); // Show last Message that all should be good.
     setTimeout( () => {
@@ -139,7 +139,7 @@ PCM_channel.onmessage = async (e) => {
     } else if (data.msg === 'search: updateOptions' && data.object) {
       let theObject = data.object;
       MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
-      MyOptions.update(false);
+      MyOptions.update(_, false);
     } else if (data.msg === 'search: closingSearchUI') { MyPandaUI.searchUIConnect(false); gPCM_searchOpened = false; if (gPCM_pandaOpened) MySearch.originRemove(); }
     else if (data.msg === 'search: openedSearchUI') {  }
     else if (data.msg === 'search: setSearchUI') { if (MyPanda) MyPanda.searchUIConnect(true); gPCM_searchOpened = true; }

@@ -110,7 +110,7 @@ class PandaGOptions {
   /** Changes the option with the option name and changes object. Will update database if update is true.
    * @param  {string} optionName - Option name.  @param  {object} changes - Object changes.  @param  {bool} [update] - Update database?
   **/
-  doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(); }
+  doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(optionName); }
   /** Changes the timers options with the changes object and updates database if update is true.
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Timers options object.
@@ -176,7 +176,7 @@ class PandaGOptions {
           if (Array.isArray(this.search.blockedGids)) { this.search.blockedGids = ''; await MYDB.addToDB('panda', 'options', this.search); }
           if (count === 0) { await MYDB.addToDB('panda', 'options', this[cat + 'Default']).then( () => { this[cat] = Object.assign({}, this[cat + 'Default']); }); }
         }
-        if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update(); }
+        if (this.timers.searchDuration < 1000) { this.timers.searchDuration = this.timersDefault.searchDuration; this.update('timers'); }
         if (this.search.defaultDur === 0 && this.search.defaultFetches === 0) this.search.defaultDur = this.searchDefault.defaultDur;
         if (this.search.defaultCustDur === 0 && this.search.defaultCustFetches === 0) this.search.defaultCustDur = this.searchDefault.defaultCustDur;
         success[0] = 'Loaded All Global Options From Database';
@@ -212,12 +212,15 @@ class PandaGOptions {
     PCM_searchChannel.postMessage({'msg':'searchTo: globalOptions', 'object':{'general':this.doGeneral(), 'search':this.doSearch(), 'timers':this.doTimers(), 'alarms':this.doAlarms(), 'ranges':this.getRanges()}});
   }
   /** Updates the global options and resets anything that is needed.
-   * @param  {bool} [toSearch] - Should options be sent to the SearchUI?
+   * @param  {string} [dataToSave] - Option name to save.  @param  {bool} [toSearch] - Should options be sent to the SearchUI?
   **/
-  update(toSearch=true) {
+  update(dataToSave=null, toSearch=true) {
     if (MyPanda.logTabs) MyPanda.logTabs.updateCaptcha(this.getCaptchaCount());
-    MYDB.addToDB('panda', 'options', this.general); MYDB.addToDB('panda', 'options', this.timers); MYDB.addToDB('panda', 'options', this.alarms);
-    MYDB.addToDB('panda', 'options', this.helpers); MYDB.addToDB('panda', 'options', this.search);
+    if (dataToSave === null || dataToSave === 'general') MYDB.addToDB('panda', 'options', this.general);
+    if (dataToSave === null || dataToSave === 'timers') MYDB.addToDB('panda', 'options', this.timers);
+    if (dataToSave === null || dataToSave === 'alarms') MYDB.addToDB('panda', 'options', this.alarms);
+    if (dataToSave === null || dataToSave === 'helpers') MYDB.addToDB('panda', 'options', this.helpers);
+    if (dataToSave === null || dataToSave === 'search') MYDB.addToDB('panda', 'options', this.search);
     if (toSearch) this.sendOptionsToSearch();
   }
   /** Import the options from an exported file.
@@ -284,7 +287,7 @@ class PandaGOptions {
   /** Get the search duration time to use for new HITs when it starts to collect before searching.
    * @return {number} - Returns the searchDuration timer option.
   **/
-  theSearchDuration(val) { if (val) { this.search.defaultDur = val; this.update(); } return this.search.defaultDur; }
+  theSearchDuration(val) { if (val) { this.search.defaultDur = val; this.update('search'); } return this.search.defaultDur; }
   /** Get the timer increase value for increase timer button.
    * @return {number} - Returns the number for the timer increase value.
   **/
@@ -309,40 +312,44 @@ class PandaGOptions {
    * @param  {bool} [value] - Searches to SearchUI?  @param  {bool} [update] - Save to database?
    * @return {bool}         - Returns the value for the to SearchUI option value.
   **/
-  theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update(); } return this.general.toSearchUI; }
+  theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update('general'); } return this.general.toSearchUI; }
   /** Sets or gets the value for the search timer value.
    * @param  {number} [value] - Search Timer Value  @param  {bool} [update] - Save to database?
    * @return {number}         - Returns the value for the search timer.
   **/
-  theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update(); } return this.timers.searchTimer; }
+  theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update('timers'); } return this.timers.searchTimer; }
   /** Gets the queue timer value.
    * @return {number} - Returns the queue timer.
   **/
   getQueueTimer() { return this.timers.queueTimer; }
+  /** Gets the option for saving the search results and returns it.
+   * @return {bool} - Returns the value for the save history search results option.
+  **/
+  getSaveHistResults() { return this.search.saveHistResults; }
   /** Change the display number used to display information in the panda cards.
    * @param  {number} display - The number for the display format to use for information in the panda card.
   **/
-  setCardDisplay(display) { this.general.cardDisplay = display; this.update(); }
+  setCardDisplay(display) { this.general.cardDisplay = display; this.update('general'); }
   /** Sets or Gets the value of the volume.
    * @param  {number} [vol] - The value of the volume to change or null to return current value.
    * @return {number}       - Returns the value of the volume.
   **/
-  theVolume(vol=null) { if (vol) { this.alarms.volume = vol; this.update(); } return this.alarms.volume; }
+  theVolume(vol=null) { if (vol) { this.alarms.volume = vol; this.update('alarms'); } return this.alarms.volume; }
   /** Sets or Gets the value of the volume direction.
    * @param  {bool} [vol] - The value of the volume direction to change or null to return current value.
    * @return {bool}       - Returns the value of the volume direction.
   **/
-  theVolDir(vol=null) { if (vol) { this.general.volHorizontal = vol; this.update(); } return this.general.volHorizontal; }
+  theVolDir(vol=null) { if (vol) { this.general.volHorizontal = vol; this.update('general'); } return this.general.volHorizontal; }
   /** Changes the value of tabLogHeight of general options or will return the tabLogHeight value if value equals null.
    * @param  {number} [value] - Height value.
    * @return {number}         - Returns tabLogHeight value.
   **/
-  theTabLogHeight(value=null) { if (value !== null) { this.general.tabLogHeight = value; this.update(); } else return this.general.tabLogHeight; }
+  theTabLogHeight(value=null) { if (value !== null) { this.general.tabLogHeight = value; this.update('general'); } else return this.general.tabLogHeight; }
   /** Changes the theme index to the value given or returns the current theme index.
    * @param  {number} [value] - Theme index value.
    * @return {string}         - Current theme index.
   **/
-  theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(); } else return this.general.themeIndex; }
+  theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update('general'); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
    * @param  {number} [index]     - Theme index value.  @param  {string} [cssTheme] - Theme CSS value.  @param  {bool} [all] - Return all themes?
    * @return {null|object|string} - Returns current theme string or all objects or null if index is out of bounds.
@@ -350,14 +357,14 @@ class PandaGOptions {
   theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;
     let thisIndex = (index === null) ? this.general.themeIndex : index, thisTheme = `theme${thisIndex}`;
-    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update(); }
+    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update('general'); }
     else if (all) return {'theme0':this.general['theme0'], 'theme1':this.general['theme1'], 'theme2':this.general['theme2'], 'theme3':this.general['theme3']};
     else return this.general[thisTheme];
   }
   /** Sends back the helper options object.
    * @return {object} - Helpers options.
   **/
-  theHelperOptions(data) { if (data) { this.helpers = data; this.update(); } return this.helpers; }
+  theHelperOptions(data) { if (data) { this.helpers = data; this.update('helpers'); } return this.helpers; }
   /** Updates the current session queue data options.
    * @param  {object} data - Session options.
   **/

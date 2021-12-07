@@ -48,7 +48,7 @@ class SearchAlarmsClass {
   /** Changes the name of the voice being used for text to speech and then saves it to database.
    * @param  {string} name - The name to use for the voice.
   **/
-  theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update(false); }
+  theVoiceName(name) { MyOptions.alarms.ttsName = name; MyOptions.update('alarms', false); }
   /** Sets up the voices to use when using text to speech from options or default value. **/
   setUpVoices() {
     if (this.voices.length === 0) {

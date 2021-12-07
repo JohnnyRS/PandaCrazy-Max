@@ -664,9 +664,9 @@ class MturkHitSearch extends MturkClass {
 		if (options.goHamDuration === 0 && options.autoGoHam) options.goHamDuration = MyOptions.getHamDelayTimer();
 		let goOnce = (useOnce) ? useOnce : options.once, goDur = (useDur !== null) ? useDur : tempDur, useFetch = (useFetches !== null) ? useFetches : options.tempFetches;
 		if (goDur === 0 && useFetch === 0) goDur = MyOptions.doSearch().defaultDur || 12000;
-		let dO = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count);
+		let dO = dataObject(item.hit_set_id, item.description, item.title, item.requester_id, item.requester_name, item.monetary_reward.amount_in_dollars, item.assignable_hits_count,_,_,_,_, false, 'automatically');
 		let oO = optObject(goOnce,_,_, options.limitNumQueue, options.limitTotalQueue, options.limitFetches, options.duration, options.autoGoHam, options.goHamDuration);
-		if (MyPandaUI) MyPandaUI.addFromSearch(dO, oO, true, true, true, goDur, options.tempGoHam, type, pandaId, info.setName, useFetch);
+		if (MyPandaUI) MyPandaUI.addFromSearch(dO, oO, true, true, goDur, options.tempGoHam, type, pandaId, 'fromSearch', useFetch);
 	}
 	/** Check all live triggers for this item.
 	 * @async 							 - To wait for The data from the database to be loaded if needed.

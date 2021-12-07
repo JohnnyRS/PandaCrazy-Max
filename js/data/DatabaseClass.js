@@ -91,12 +91,25 @@ class DatabasesClass {
   **/
   openStats(del=false) {
 		return new Promise( (resolve, reject) => {
-			this.stats.db = new DatabaseClass(this.stats.dbName, 1);
+			this.stats.db = new DatabaseClass(this.stats.dbName, 2);
     	this.stats.db.openDB( del, e => {
-				if (e.oldVersion === 0) { // Had no database so let's initialize it.
-					e.target.result.createObjectStore(this.stats.storeName, {'keyPath':'id', 'autoIncrement':true}).createIndex('dbId', 'dbId', {'unique':false});
-					let objStore = e.target.result.createObjectStore(this.stats.accepted, {'keyPath':'id', 'autoIncrement':true});
-					objStore.createIndex('dbId', 'dbId', {'unique':false}); objStore.createIndex('gid', 'gid', {'unique':false}); objStore.createIndex('rid', 'rid', {'unique':false});
+				if (e.oldVersion < 2) { // Had no database so let's initialize it.
+          let db = e.target.result, upgradeTransaction = e.target.transaction;
+          if (!db.objectStoreNames.contains(this.stats.storeName)) {
+            let store1 = db.createObjectStore(this.stats.storeName, {'keyPath':'id', 'autoIncrement':true});
+            store1.createIndex('dbId', 'dbId', {'unique':false}); store1.createIndex('start', 'start', {'unique':false});
+          } else {
+            let store1 = upgradeTransaction.objectStore(this.stats.storeName);
+            if (!store1.indexNames.contains('start')) store1.createIndex('start', 'start', {'unique':false});
+          }
+          if (!db.objectStoreNames.contains(this.stats.accepted)) {
+            let store2 = db.createObjectStore(this.stats.accepted, {'keyPath':'id', 'autoIncrement':true});
+            store2.createIndex('dbId', 'dbId', {'unique':false}); store2.createIndex('date', 'date', {'unique':false});
+          } else {
+            let store2 = upgradeTransaction.objectStore(this.stats.accepted);
+            if (!store2.indexNames.contains('date')) store2.createIndex('date', 'date', {'unique':false});
+            if (store2.indexNames.contains('gid')) store2.deleteIndex('gid'); if (store2.indexNames.contains('rid')) store2.deleteIndex('rid');
+          }
           this.stats.default = true;
 				}
       }).then( response => { if (response === 'OPENED') resolve(this.stats.db); }, rejected => { console.error(rejected); reject(rejected); });

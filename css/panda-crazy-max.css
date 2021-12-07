@@ -42,6 +42,7 @@ html, body { height: 100%; }
 #pcm-importCheck { width: 300px; margin: 5px auto; color: #e4aeae; }
 #pcm-resetMyData { background-color: crimson; color: white; }
 #pcm-selectedBox { margin-left: auto; margin-right: auto; }
+#pcm-statInfo { background-color: #020212; color:#8fc2f0; height:100%; }
 .pcm-theUI { color: white; padding: 0; border: 1px solid #f8f9fa; border-radius: 0.25rem; background-color: #343a40; }
 .pcm-top { height: 45px; line-height: 1.1rem; background-color: #03043a; border: 1px solid #dee2e6; border-bottom-width: 4px; }
 .pcm-quickMenu { line-height: 1.0; border: 1px solid #f8f9fa; border-bottom: 3px solid; border-top: 0px; background-color: #03043a; padding: 2px 0 3px 4px; }
@@ -143,9 +144,13 @@ html, body { height: 100%; }
 .pcm-myWarning { color: #ffc107; text-align: center; }
 .pcm-helpPage { background-color: black; }
 .pcm-myCenter { text-align: center; }
+.pcm-dataDisplay { margin:10px 100px; border:darkgoldenrod ridge 2px; background-color: darkslategrey; font-size: 0.80rem; }
+.pcm-statsDate { color:#f3fd7d; }
+.pcm-statsDateCount { color:cyan; }
 .pcm-popupPage { width: 210px; background-color: midnightblue; height: initial; border: 0; padding-bottom: 15px; }
 .pcm-popupPage .pcm-horizontalRow { border-top: 2px solid #17a2b8; margin: 2px 0 4px 0; }
 .pcm-startPCM, .pcm-startPCMSearch, .pcm-doHelp, .pcm-doStats { padding: 8px 0; text-align: center; }
+.pcm-statsAndHelp { text-align: center; }
 .pcm-muteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
 .pcm-deleteJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }
 .pcm-createGidJob.btn { background-color: #17a2b8; border-color: #17a2b8; color: white; }

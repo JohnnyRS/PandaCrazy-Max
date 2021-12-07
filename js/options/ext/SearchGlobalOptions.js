@@ -20,7 +20,7 @@
   /** Changes the option with the option name and changes object. Will update database if update is true.
    * @param  {string} optionName - Option name.  @param  {object} changes - The changes.  @param  {bool} [update] - Should update?
   **/
-  doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(); }
+  doChanges(optionName, changes, update=true) { this[optionName] = changes; if (update) this.update(optionName); }
   /** Changes the timers options with the changes object and updates database if update is true.
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Timers options object.
@@ -47,8 +47,12 @@
   getTimerSearch() { return this.timerSearch; }
   /** Removes data from memory so it's ready for closing or importing. **/
   removeAll() { this.general = {}; this.timers = {}; this.alarms = {}; this.helpers = {}; this.search = {}; }
-  /** Sends message back to the main global options class to save the options to the database. **/
-  update() { this.pcm_channel.postMessage({'msg':'search: updateOptions', 'object':{'general':this.general, 'search':this.search, 'timers':this.timers, 'alarms':this.alarms}}); }
+  /** Sends message back to the main global options class to save the options to the database.
+   * @param  {string} optName - Name of option to save or null for all.
+  **/
+  update(optName=null) {
+    this.pcm_channel.postMessage({'msg':'search: updateOptions', 'object':{'general':this.general, 'search':this.search, 'timers':this.timers, 'alarms':this.alarms, 'toDo':optName}});
+  }
   /** Are the notifications enabled?
    * @return {bool} - True if notifications are enabled.
   **/
@@ -61,22 +65,22 @@
    * @param  {bool} [value] - Searches to SearchUI?  @param  {bool} [update] - Save to database?
    * @return {bool}         - Returns the value for the to SearchUI option value.
    **/
-  theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update(); } return this.general.toSearchUI; }
+  theToSearchUI(value=null, update=true) { if (value !== null) { this.general.toSearchUI = value; if (update) this.update('general'); } return this.general.toSearchUI; }
   /** Sets or gets the value for the search timer value.
    * @param  {number} [value] - Search timer value.  @param  {bool} [update] - Save to database?
    * @return {number}         - Returns the value for the search timer.
   **/
-  theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update(); } return this.timers.searchTimer; }
+  theSearchTimer(value=null, update=true) { if (value !== null) { this.timers.searchTimer = value; if (update) this.update('timers'); } return this.timers.searchTimer; }
   /** Sets or Gets the value of the volume.
    * @param  {number} [vol] - The value of the volume to change or null to return current value.
    * @return {number}       - Returns the value of the volume.
   **/
-  theVolume(vol=null) { if (vol) { this.alarms.volume = vol; this.update(); } return this.alarms.volume; }
+  theVolume(vol=null) { if (vol) { this.alarms.volume = vol; this.update('alarms'); } return this.alarms.volume; }
   /** Changes the theme index to the value given or returns the current theme index.
    * @param  {number} [value] - Theme index value.
    * @return {string}         - Current theme index.
   **/
-  theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update(); } else return this.general.themeIndex; }
+  theThemeIndex(value=null) { if (value !== null) { this.general.themeIndex = value; this.update('general'); } else return this.general.themeIndex; }
   /** Changes the CSS theme string for given index or the current theme string if index is null. Returns the theme string for given index or the current theme string if index is null.
    * @param  {number} [index]     - Theme index value.  @param  {string} [cssTheme] - Theme CSS value.  @param  {bool} [all] - Return all themes?
    * @return {null|object|string} - Returns current theme string or all objects or null if index is out of bounds.
@@ -84,7 +88,7 @@
   theThemes(index=null, cssTheme=null, all=false) {
     if (index !== null && (index < 0 || index > 3)) return null;
     let thisIndex = (index === null) ? this.general.themeIndex : index, thisTheme = `theme${thisIndex}`;
-    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update(); }
+    if (cssTheme !== null) { this.general[thisTheme] = cssTheme; this.update('general'); }
     else if (all) return {'theme0':this.general['theme0'], 'theme1':this.general['theme1'], 'theme2':this.general['theme2'], 'theme3':this.general['theme3']};
     else return this.general[thisTheme];
   }

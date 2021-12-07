@@ -72,7 +72,7 @@ class ModalClass {
     else if (typeof MyQueue !== 'undefined') MyQueue.nowLoggedOn();
   }
   /** Prepare a modal dialog for showing data with different buttons.
-   * @param  {object} dataObject     - Cloned data.   @param  {number} width        - The width.      @param  {string} addModalClass  - Modal class.
+   * @param  {object} dataObj        - Cloned data.   @param  {number} width        - The width.      @param  {string} addModalClass  - Modal class.
    * @param  {string} addHeaderClass - Header class.  @param  {string} title        - The title.      @param  {string} body           - Body html.
    * @param  {string} bodyClass      - Body class.    @param  {string} footerClass  - Footer class.   @param  {string} [saveButton]   - Save class.
    * @param  {string} [saveText]     - Save text.     @param  {function} [saveFunc] - Save function.  @param  {string} [noButton]     - No class.
@@ -80,9 +80,9 @@ class ModalClass {
    * @param  {string} [cancelText]   - Cancel text.
    * @return {string}                - Id name.
   **/
-  prepareModal(dataObject, width, addModalClass, addHeaderClass, title, body, bodyClass, footerClass, saveButton='invisible', saveText='Save', saveFunc=null, noButton='invisible', noText='No', noFunc=null, cancelButton='invisible', cancelText='Cancel') {
+  prepareModal(dataObj, width, addModalClass, addHeaderClass, title, body, bodyClass, footerClass, saveButton='invisible', saveText='Save', saveFunc=null, noButton='invisible', noText='No', noFunc=null, cancelButton='invisible', cancelText='Cancel') {
     const idName = this.createModal(addModalClass);
-    this.tempObject[idName] = Object.assign({}, dataObject);
+    this.tempObject[idName] = Object.assign({}, dataObj);
     $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
     $(`#${idName} .${this.classModalDialog}`).css('maxWidth',width);
     $(`#${idName} .${this.classModalHeader}`).css('maxWidth',width).addClass(addHeaderClass);

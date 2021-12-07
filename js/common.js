@@ -422,10 +422,11 @@ function hitObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null) {
  * @param  {string} gid	  - The group ID.           @param  {string} desc - The description.  @param  {string} title - The title.       @param  {string} rid  - Requester ID.
  * @param  {string} rN	  - Requester name.         @param  {string} pay	- The price.        @param  {number} [hA]  - Hits available.  @param  {number} [aT] - Assigned time.
  * @param  {string} [exp] - Date and time expires.  @param  {string} [fT]	- Friendly title.   @param  {string} [fR]  - Friendly requester name.
+ * @param  {bool} [ext]   - Created externally?     @param  {string} [cr] - Created 'manually' or 'automatically'.
  * @return {object}       - Object with all the data set or using default values.
 **/
-function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT='', fR='') {
-  return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp, 'friendlyTitle':fT, 'friendlyReqName':fR };
+function dataObject(gid, desc, title, rid, rN, pay, hA=0, aT=null, exp=null, fT='', fR='', ext=false, cr='manually') {
+  return {'groupId':gid, 'description':desc, 'title':title, 'reqId':rid, 'reqName':rN, 'price':pay, 'hitsAvailable':Number(hA), 'assignedTime':Number(aT), 'expires':exp, 'friendlyTitle':fT, 'friendlyReqName':fR, 'ext':ext, 'created':cr};
 }
 /** Creates and returns an object for options of a HIT and default values set if needed.
  * @param  {bool} [o]	     - Once?               @param  {string} [s]  - Search?         @param  {number} [tab] - Tab unique.    @param  {number} [lN] - Limit number queue.
