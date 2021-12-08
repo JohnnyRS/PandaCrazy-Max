@@ -511,10 +511,10 @@ class MturkHitSearch extends MturkClass {
 			if (this.tempBlockRidGid.has(gId)) {
 				if (ridDbId) {
 					let ridTrigger = this.triggers[ridDbId];
-					if (collected && ridDbId) {
+					if (collected) {
 						ridTrigger.collected.add(gId); ridTrigger.accepted++; if (this.isSearchUI()) MySearchUI.updateStats(ridTrigger.count,_, ridTrigger.accepted);
 						this.setTempBlockGid(gId, false, true);
-						setTimeout( (dbId, gId) => { if (this.triggers[dbId]) this.triggers[dbId].collected.delete(gId); }, 30000, ridDbId, gId );
+						setTimeout( (dbId, gId) => { if (this.triggers[dbId]) this.triggers[dbId].collected.delete(gId); }, 20000, ridDbId, gId );
 					} else if (!status) this.setTempBlockGid(gId, false, true);
 				}
 			}

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PandaCrazy Max",
   "short_name": "PC Max",
-  "version": "0.9.49.0",
+  "version": "1.0.0",
   "author": "JohnnyRS",
   "description": "Extension for Mturk.com to Collect HIT's for you at a set time value. Lot of organizing of panda's for easier use.",
 
@@ -14,7 +14,7 @@
     "default_title": "PandaCrazy Max for Mturk.com"
   },
   "background": {
-    "service_worker": "js/background/backgroundCommon.js"
+    "service_worker": "js/pageScript/backgroundCommon.js"
   },
   "content_scripts": [
     {
@@ -30,7 +30,7 @@
       "css": ["css/PCM-Content-Script.css"],
       "js":[
         "lib/jquery-3.6.0.min.js",
-        "js/common.js",
+        "js/common/common.js",
         "js/common/DebuggerClass.js",
         "js/contentScripts/hitHelper.js"
       ],
