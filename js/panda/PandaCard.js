@@ -26,7 +26,7 @@ class PandaCards {
       'friendlyReqName':{'valueName':'friendlyReqName', 'id':'#pcm-hitReqName', 'class':'.pcm-reqName', 'label':''},
       'groupId':{'valueName':'groupId', 'id':'#pcm-groupId', 'class':'.pcm-groupId', 'label':''},
       'price':{'valueName':'price', 'id':'#pcm-hitPrice', 'class':'.pcm-price', 'label':''},
-      'numbers':{'valueName':'hitsAvailable', 'id':'#pcm-numbers', 'class':'.pcm-numbers', 'label':''},
+      'numbers':{'valueName':'hitsAvailable', 'id':'#pcm-numbers', 'class':'.pcm-numbers', 'statusClass':'.pcm-statusHitNumbers', 'label':''},
       'title':{'valueName':'title', 'id':'#pcm-hitTitle', 'class':'.pcm-title', 'label':''},
       'reqId':{'valueName':'reqId'},
       'friendlyTitle':{'valueName':'friendlyTitle', 'id':'#pcm-hitTitle', 'label':''},
@@ -99,8 +99,9 @@ class PandaCards {
   createCardStatus(myId, info, oneLine=false) {
     let element = (oneLine) ? 'span' : 'div', one = (oneLine) ? '1' : '', searchText = (oneLine) ? '' : '';
     let search = (info.search) ? ` (<span class='${info.search}search'>${info.search.toUpperCase()}${searchText}</span>)` : '';
+    let hitNumbers = ` <span class='pcm-statusHitNumbers text-truncate' id='pcm-statusHitNumbers-${myId}'></span>`;
     let searchFound = (info.search === 'rid') ? ` <span class='pcm-hitSearchFound' id='pcm-hitSearchFound${one}-${myId}'></span> | ` : '';
-    return `<${element} class='pcm-hitStats${one} text-truncate' id='pcm-hitStats${one}-${myId}'>[ <span class='pcm-hitAccepted' id='pcm-hitAccepted${one}-${myId}'></span> | ${searchFound}<span class='pcm-hitFetched' id='pcm-hitFetched${one}-${myId}'></span> ]${search}</${element}>`;
+    return `<${element} class='pcm-hitStats${one} text-truncate' id='pcm-hitStats${one}-${myId}'>[ <span class='pcm-hitAccepted' id='pcm-hitAccepted${one}-${myId}'></span> | ${searchFound}<span class='pcm-hitFetched' id='pcm-hitFetched${one}-${myId}'></span> ]${search}${hitNumbers}</${element}>`;
   }
   /** Create the button group area for the panda card.
    * @param  {number} myId - Unique ID number.  @param  {object} info - Panda info.
@@ -406,15 +407,16 @@ class PandaCard {
       this.df.find(`${val.groupId.class}`).html(`${shortenGroupId(shortenThis)}`);
       this.df.find(`${val.price.class}`).html(`${parseFloat(info.data[val.price.valueName]).toFixed(2)}`);
       if (info.data[val.numbers.valueName]>1) this.df.find(`${val.numbers.class}`).html(`[${info.data[val.numbers.valueName]}]`);
+      if (info.data[val.numbers.valueName]>1) this.df.find(`${val.numbers.statusClass}`).html(`[${info.data[val.numbers.valueName]}]`);
       let title = (info.data[val.friendlyTitle.valueName]!=='') ? info.data[val.friendlyTitle.valueName] : info.data[val.title.valueName];
       titleSelect.attr(`${titlePre}title`, `${title}`).html(`${title}`); titleSelect = null;
     }
   }
   /** Hides or shows the element with the ID value and using closest if needed.
-   * @param  {number} id - ID name.  @param  {string} closest - Closest selector.  @param  {bool} show - Shown or hidden?
+   * @param  {string} findThis - ID name.  @param  {string} closest - Closest selector.  @param  {bool} show - Shown or hidden?  @param  {bool} useMyId - Use myId at end of id.
   **/
-  hideShow(id, closest, show) {
-    let ele = (closest !== '') ? this.df.find(`${id}-${this.myId}`).closest(closest) : this.df.find(`${id}-${this.myId}`);
+  hideShow(findThis, closest, show, useMyId=true) {
+    let ele = (closest !== '') ? this.df.find(`${findThis}${(useMyId) ? '-' + this.myId : ''}`).closest(closest) : this.df.find(`${findThis}${(useMyId) ? '-' + this.myId : ''}`);
     if (show) $(ele).show(); else $(ele).hide(); ele = null;
   }
   /** Update the card display by showing or hiding different elements in the card.
@@ -425,6 +427,7 @@ class PandaCard {
     this.hideShow(val.reqName.id, '.pcm-nameGroup', (!oneLine)); this.hideShow(val.reqName1Line.id, '.pcm-nameGroup1', (oneLine));
     this.hideShow(val.price.id, '.pcm-priceGroup', (!oneLine && !min)); this.hideShow(val.groupId.id, '', (!oneLine));
     this.hideShow(val.title.id, '', (!oneLine && !min)); this.hideShow('#pcm-hitStats', '', (!oneLine)); this.hideShow('#pcm-buttonGroup', '', (!oneLine));
+    this.hideShow('.pcm-statusHitNumbers', '', min, false);
     const addThis = (oneLine) ? 'pcm-oneLine' : '';
     const removeThis = (!oneLine) ? 'pcm-oneLine' : '';
     this.df.addClass(addThis).removeClass(removeThis);

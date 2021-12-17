@@ -48,15 +48,12 @@ class SearchUI {
 		if (doStart) { MySearch.searchGStats.searchingOn(); $('.pcm-top').removeClass('pcm-searchingOff').addClass('pcm-searchingOn'); return true; }
 		else return false;
 	}
-	/** Will toggle the paused value or force the paused value to a given value.
-	 * @async 							- To wait for the searching to be paused fully.
-	 * @param  {bool} [val] - Force pause value.
-	**/
-	async pauseToggle(val=null) { if (MySearch) { await MySearch.pauseToggle(val); }}
-	 /** Shows logged off modal and will unpause the timer when logged off modal closes. **/
-	nowLoggedOff() {
-		if (!MyModal) MyModal = new ModalClass(); MyModal.showLoggedOffModal( () => { if (MyModal && MyModal.modals.length < 2) MyModal = null; MySearch.unPauseTimer(); });
-	}
+	/** Pauses the search page by adding a class for pausing. **/
+	nowPaused() { $('.pcm-top').addClass('pcm-searchingPaused'); }
+	/** Unpauses the search page by removing a class for pausing. **/
+	unPaused() { $('.pcm-top').removeClass('pcm-searchingPaused'); }
+	/** Shows logged off modal and will unpause the timer when logged off modal closes. **/
+	nowLoggedOff() { if (!MyModal) MyModal = new ModalClass(); MyModal.showLoggedOffModal( () => { if (MyModal && MyModal.modals.length < 2) MyModal = null; }); }
   /** Closes any loggedoff modal because it's now logged on. **/
 	nowLoggedOn() { if (MyModal) MyModal.closeModal('Program Paused!'); }
 	/** Show message that it is now importing data so please wait. **/

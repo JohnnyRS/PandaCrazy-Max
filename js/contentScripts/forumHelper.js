@@ -16,15 +16,15 @@ let gFormatObj = {
   'RDADRQ': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|[^•]*).*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*Reward:\s*\${0,1}([\d.]*)[^:]*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Description:\s*(.*)\s*(Qualifications|Requirements):/, 'order':[1,3,'rid-4',8,6,7,5,'gid-2']},
   'TARQ': {'regex':/Title:\s*(.*)\s*\|\s*PANDA\s*Requester:\s*(.*)\s*\[(A.+)\]\s*\(.*Description:\s*(.*)\s*HITs Available:\s*([\d,]*)\s*Reward:\s*\$([\d.]*)\s*Qualifications:/, 'order':[1,2,3,4,-1,5,6,'gid']},
   'ARDADQ': {'regex':/Title:\s*(.*)\s*\|\s*(?:Accept|PANDA)[^:]*Requester:\s*(.*)\s*\[(A[^\]]*)\][\s(]*Contact.*Reward:[\s$]*([\d.]*)\s*Duration:\s*(.*)\s*Available:\s*([\d,]*)\s*Description:\s*(.*)\s*(?:Qualifications|Requirements):/, 'order':[1,2,3,7,5,6,4,'gid']},
-  'RTPG': {'regex':/Requester:\s*(.*)\s*(http:\/\/.*)\s*Title:\s*(.*)\s*(http:\/\/.*)\s*Pay:\s*([\d.]*)\s*Group ID:\s*(.*)\s*Avg Hourly/, 'order':[3,1,_,_,_,_,5,6,2,4]},
-  'DISQUAL': {'regex':/Requester:\s*(.*)\s*(http:[^\s]*)\s*HIT Title:\s*(.*)\s*Panda:\s*([^\s]*)\s*Qualification:\s*(.*)\s*(http:[^\s]*)\s*Qual Description:\s*(.*)\s*Qual/, 'order':[3,1,_,_,_,_,_,4,2,_,6,7]},
+  'RTPG': {'regex':/Requester:\s*(.*)\s*(http\w?:\/\/.*)\s*Title:\s*(.*)\s*(http\w?:\/\/.*)\s*Pay:\s*([\d.]*)\s*Group ID:\s*(.*)\s*Avg Hourly/, 'order':[3,1,_,_,_,_,5,6,2,4]},
+  'DISQUAL': {'regex':/Requester:\s*(.*)\s*(http\w?:[^\s]*)\s*HIT Title:\s*(.*)\s*Panda:\s*([^\s]*)\s*Qualification:\s*(.*)\s*(http\w?:[^\s]*)\s*Qual Description:\s*(.*)\s*Qual/, 'order':[3,1,_,_,_,_,_,4,2,_,6,7]},
   'QUALATT': {'regex':/Title:\s*([^•]*)\s*•\s*(https:[^•]*|)\s*•\s*[^\s]*Requester:\s*([^•\/]*)\s*[•|]*\s*(https:[^•]*projects)\s*.*•.*TO2/, 'order':[1,3,'rid-4',_,_,_,_,'gid-2']}
 };
 
 /** Detects if the extension was restarted or uninstalled.
  * @return {boolean} - Returns if extension is still loaded and hasn't been restarted.
 **/
- function extensionLoad() { try { (chrome.runtime.getManifest()); return true; } catch (error) { return false; } }
+ function extensionLoad() { try { (browser.runtime.getManifest()); return true; } catch (error) { return false; } }
  /** Sends a message to the extension with given values.
  * @param  {string} com     - The command.   @param  {object} data  - Data object.     @param  {string} gId     - Group ID.        @param  {string} [desc]  - The description.
  * @param  {string} [title] - The title.     @param  {string} [rId] - Requester ID.    @param  {string} [rName] - Requester name.  @param  {number} [price] - The price.
@@ -36,7 +36,7 @@ function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.
     if (data) localStorage.setItem('PCM_LastExtCommand', JSON.stringify({'command':com, 'data':data}));
     window.location.reload();
   } else if (extCommands.includes(com)) {
-    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'data':data});
+    browser.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'data':data});
   }
 }
 /** Sets up a mutation observer on the target element and use a function for each mutation or a trigger function when something changes.
@@ -45,6 +45,7 @@ function sendToExt(com, data, gId, desc='', title='', rId='', rName='', price=0.
  * @return {class}                - Returns mutationObserver class.
 **/
 function setUpObserver(observeTarget, subTree, doFunc, triggerFunc) {
+  if (observeTarget.length === 0) return null;
   let elementToObserve = observeTarget[0];
   let observer = new MutationObserver( mutationsList => {
     if (doFunc) for (const mutation of mutationsList) { if (mutation.type === 'childList') for (const node of mutation.addedNodes) doFunc(node); } else triggerFunc();
@@ -83,7 +84,7 @@ function ridMatch(reqUrl) { if (reqUrl.includes('requesters')) return reqUrl.mat
 function setHoldData() {
   $(`a[href*='/projects/']`).click( e => {
     let theIndex = $(e.target).closest('.PCM_doneButtons').data('index'), data = (theIndex) ? gHitInfo[theIndex] : null;
-    if (data) chrome.storage.local.set({'PCM_holdGID':data.gid, 'PCM_holdRID':data.rid, 'PCM_holdRname':data.rName, 'PCM_holdTitle':data.title, 'PCM_holdReward':data.pay});
+    if (data) browser.storage.local.set({'PCM_holdGID':data.gid, 'PCM_holdRID':data.rid, 'PCM_holdRname':data.rName, 'PCM_holdTitle':data.title, 'PCM_holdReward':data.pay});
   });
 }
 /** Sends the HIT data to the extension in the correct format.
@@ -208,44 +209,43 @@ function findMessages(containerMessages, theMessage, theNumber, forum) {
 }
 /** Finds the message container and sets up an observer for scrolling for slack when used in browser. **/
 function slack() {
-  $(window).on('load', () => {
-    let message = '.p-rich_text_section', message2 = '.c-message_kit__attachments';
-    gSlackObserver = setUpObserver($('.c-message_list:first').find('.c-virtual_list__scroll_container'), false, node => {
-      if ($(node).find(message).length) findMessages($(node), message, '.c-timestamp:first', 'slack');
-      if ($(node).find(message2).length) findMessages($(node), message2, '.c-timestamp:first', 'slack');
-    });
-    setTimeout( () => { findMessages('.p-message_pane:first .c-virtual_list__scroll_container:first .c-message_kit__gutter__right', message, '.c-timestamp:first', 'slack'); }, 400);
-    setTimeout( () => { findMessages('.p-message_pane:first .c-virtual_list__scroll_container:first .c-message_kit__gutter__right', message2, '.c-timestamp:first', 'slack'); }, 600);
+  let message = '.p-rich_text_section', message2 = '.c-message_kit__attachments';
+  let loaded = setUpObserver($('body'), false,null, () => {
+    if ($('.p-message_pane:first').length) {
+      loaded.disconnect(); loaded = null;
+      findMessages('.p-message_pane:first .c-virtual_list__scroll_container:first', message, '.c-timestamp:first', 'slack');
+      findMessages('.p-message_pane:first .c-virtual_list__scroll_container:first', message2, '.c-timestamp:first', 'slack');
+      setTimeout(() => {
+        gSlackObserver = setUpObserver($('.p-message_pane:first .c-virtual_list__scroll_container:first'), false, node => {
+          if ($(node).find(message).length) findMessages($(node), message, '.c-timestamp:first', 'slack');
+          if ($(node).find(message2).length) findMessages($(node), message2, '.c-timestamp:first', 'slack');
+        });
+      }, 700);
+    }
   });
 }
 /** Finds the message container and sets up an observer for scrolling for discord app when used in browser. **/
 function discordApp() {
-  let mturkCrowd = false;
   let messageExpanded = () => {
-    return setUpObserver($('div[class^=scrollerInner-]'), false, node => { setTimeout( () => { findMessages($(node), 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 100); });
+    return setUpObserver($('ol[class^=scrollerInner-]'), false, node => { setTimeout( () => { findMessages(node, 'blockquote', 'span[class^=timestamp-]', 'discord');  }, 500);  });
   };
   /** Detects a room change and redoes the observer. */
   let roomChange = () => {
     return setUpObserver($('div[class^=content-] div[class^=chat-]'), false, null, () => {
-      gMObserver.disconnect(); gMObserver = null; gMObserver = messageExpanded();
-      setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
+      if (gMObserver) gMObserver.disconnect(); gMObserver = null;
+      if (/discord\.com\/channels\/555541818771636254\//.test(window.location.href)) {
+        gMObserver = messageExpanded();
+        setTimeout(() => { findMessages('main[class^=chatContent-]:first ol[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 500);
+      }
     });
   };
-  $(window).on('load', () => {
-    setTimeout(() => {
-      let loaded = setUpObserver($('div[class^=base-] div[class^=content-]'), true, null, () => {
-        loaded.disconnect(); gRObserver = roomChange(); gMObserver = messageExpanded();
-        setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
-        gForumObserver = setUpObserver($('div[class^=base-] div[class^=content-]'), false, () => {
-          if (/discord\.com\/channels\/555541818771636254\//.test(window.location.href)) mturkCrowd = true; else mturkCrowd = false;
-          if (gRObserver) { gRObserver.disconnect(); gRObserver = null; }
-          if (mturkCrowd) {
-            setTimeout( () => { findMessages('main[class^=chatContent-]:first div[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 400);
-            gRObserver = roomChange(); gMObserver.disconnect(); gMObserver = null; gMObserver = messageExpanded();
-          }
-        });
-      });
-    }, 500);
+  let loaded = setUpObserver($('body'), true, null, () => {
+    loaded.disconnect(); loaded = null; gRObserver = roomChange(); gMObserver = messageExpanded();
+    gForumObserver = setUpObserver($('div[class^=base-] div[class^=chat-]'), false, () => {
+      if (/discord\.com\/channels\/555541818771636254\//.test(window.location.href)) {
+        setTimeout(() => { findMessages('main[class^=chatContent-]:first ol[class^=scrollerInner-]:first div[class^=contents-]', 'blockquote', 'span[class^=timestamp-]', 'discord'); }, 500);
+      }
+    });
   });
 }
 /** Sets up an event listener and removes older buttons. **/
@@ -282,13 +282,13 @@ function detectForums(data) {
 }
 
 /** Sends a message to the extension background page to send the forum options back. **/
-chrome.runtime.sendMessage( {'command':'forumOptions', 'data':{}}, detectForums);
+browser.runtime.sendMessage({'command':'forumOptions', 'data':{}}).then(data => { detectForums(data); });
 
 /** Adds a listener to get any messages coming from the background page to change the forum options. **/
-chrome.runtime.onMessage.addListener( (request) => {
+browser.runtime.onMessage.addListener(request => {
   let command = request.command, data = request.data;
   if (command && data) {
-    if (command === 'optionsChange') {
+    if (command === 'globalOptions') {
       if (gForumOptions[gForumOptProp] !== data[gForumOptProp]) {
         if (gForumObserver) gForumObserver.disconnect(); if (gSlackObserver) gSlackObserver.disconnect();
         if (gRObserver) gRObserver.disconnect(); if (gMObserver) gMObserver.disconnect();

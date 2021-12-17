@@ -1,8 +1,8 @@
 let MyAlarms = null, MyPandaUI = null, MyNotify = null, MySGroupings = null, MyHistory = null, MYDB = null, MyGroupings = null, MyQueue = null;
 let gNewVersion = false, MySearch = null, MyDash = null, MyThemes = null, MyOptions = null, MyPanda = null, MyMenus = null, MyModal = null;
 let gLocalVersion = localStorage.getItem('PCM_version'), MySearchUI = new ExtSearchUI(), MyPandaTimer = null, MyQueueTimer = null, MySearchTimer = null;
-let gPCM_pandaOpened = false, gPCM_searchOpened = false, gPCM_otherRunning = 0, gUniqueTabID = Math.random().toString(36).slice(2), gNewUpdatedVersion = null;
-let gCurrentVersion = chrome.runtime.getManifest().version;
+let gPCM_pandaOpened = false, gPCM_searchOpened = false, gNewUpdatedVersion = null, gLoadCompleted = false, gLoadVerified = false;
+let gCurrentVersion = browser.runtime.getManifest().version;
 
 const PCM_startChannel = new BroadcastChannel('PCM_kpanda_band'); // Used for starter messages to discourage multiple pages running.
 const PCM_channel = new BroadcastChannel('PCM_kpanda_band');      // Used for sending and receiving messages from search page.
@@ -24,6 +24,7 @@ function modalLoadingData(doAfterShow) {
 **/
 async function prepare() {
   let historyWipe = false; if (compareVersion(gLocalVersion, '0.8.7')) historyWipe = true; // For older versions of history.
+  browser.runtime.sendMessage({'command':'pandaUI_opened'}); gPCM_pandaOpened = true; document.title = 'Panda Crazy Max - Loading';
   MYDB = new DatabasesClass(); MyOptions = new PandaGOptions(); MyHistory = new HistoryClass();
   MyPandaTimer = new TimerClass(995,970,'pandaTimer'); // little lower than 1s for panda timer by default
   MyQueueTimer = new TimerClass(2000,1000,'queueTimer'); // 2s for queue monitor by default
@@ -64,10 +65,11 @@ async function startPandaCrazy() {
     $('.sortable').sortable().addClass('unSelectable'); // Set up sortables Disable selection for sortables.
     showMessages(['Finished Loading Everything Needed to Start!'], null); // Show last Message that all should be good.
     setTimeout( () => {
-      if (MyModal) MyModal.closeModal('Loading Data'); gPCM_pandaOpened = true;
+      if (MyModal) MyModal.closeAll(); gLoadCompleted = true;
       MyQueue.startQueueMonitor(); MyDash.doDashEarns();
-      chrome.runtime.sendMessage({'command':'pandaUI_opened'});
       PCM_channel.postMessage({'msg':'panda crazy Loaded'});
+      document.title = 'Panda Crazy Max';
+      browser.runtime.sendMessage({'command':'pandaUI_startDone'});
     }, 500); // Just a small delay so messages can be read by user.
   } else { haltScript('Halting for error', 'Important data has not been loaded correctly.', 'Problem with Database.', 'Error opening database:'); }
 }
@@ -81,67 +83,77 @@ function showMessages(good, bad=null) {
     good.forEach( value => { $('#pcm-modal-0 .modal-body').append($(`<div>${value}</div>`)); });
   }
 }
+function multipleWarning() {
+  if (MyModal) MyModal.closeAll(); gLoadCompleted = true;
+  browser.runtime.sendMessage({'command':'pandaUI_startDone'});
+  document.title = 'PCM - Error Starting';
+  haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
+}
 /** ================ First lines executed when page is loaded. ============================ **/
+document.title = 'PCM - Starting';
 modalLoadingData( () => {
-  chrome.runtime.sendMessage({'command':'pandaUI_starting', 'data':{'tabID':gUniqueTabID}}, (response) => {
-    if (response) PCM_startChannel.postMessage({'msg':'panda crazy starting', 'value':gUniqueTabID});
-    else haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
-  });
+  let randTime = Math.floor(Math.random() * 600) + 100;  // Random timeout so two pages won't be trying to start at same time.
+  setTimeout(() => {
+    browser.runtime.sendMessage({'command':'pandaUI_starting'}).then(result => {
+      if (result) {
+        browser.runtime.sendMessage({'command':'pandaUI_status'}).then(result => {
+          if (!result) { browser.runtime.sendMessage({'command':'pandaUI_opened'}); gPCM_pandaOpened = true; prepare(); }
+          else {
+            PCM_channel.postMessage({'msg':'pandaUI: checking'});  // Ask if there is really another PandaUI running.
+            setTimeout(() => { // Checking to see if PCM_running is actually correct and wasn't changed for some reason.
+              if (!gLoadVerified) { browser.runtime.sendMessage({'command':'pandaUI_opened'}); gPCM_pandaOpened = true; prepare(); }
+            }, 1000);
+          }
+        });
+      } else multipleWarning();
+    });
+  }, randTime);
 });
 
 /** ================ EventListener Section ================================================================================================= **/
 /** Detect when user closes page so all caches can be flushed to database and memory use gets released. Also sets PCM_running flag to false. **/
 window.addEventListener('beforeunload', async () => {
   if (MyPanda) {
-    chrome.storage.local.set({'PCM_running':false}); gPCM_pandaOpened = false; gPCM_searchOpened = false; PCM_channel.postMessage({'msg':'panda crazy closing'});
-    chrome.runtime.sendMessage({'command':'pandaUI_startDone', 'data':{}}); chrome.runtime.sendMessage({'command':'cleanLocalStorage'});
+    browser.runtime.sendMessage({'command':'pandaUI_closed'}); gPCM_pandaOpened = false; gPCM_searchOpened = false; PCM_channel.postMessage({'msg':'panda crazy closing'});
     MyQueue.stopQueueMonitor(); MySearch.stopSearching(); MyAlarms.removeAll(); MyOptions.removeAll(); MyPanda.removeAll(true); MyPanda.closeDB();
     MyAlarms.setAudioClass(null, 'panda'); MyGroupings.removeAll(); MySGroupings.removeAll(); await MyHistory.closeDB(); await MySearch.closeDB();
   }
-  MyNotify = null; MyAlarms = null; MyModal = null; MyMenus = null; MyHistory = null; MYDB = null; MySearch = null; MyDash = null; MyOptions = null; MyQueue = null; MyPanda = null;
+  MyNotify = null; MyAlarms = null; MyMenus = null; MyHistory = null; MYDB = null; MySearch = null; MyDash = null; MyOptions = null; MyQueue = null; MyPanda = null;
   MyPandaUI = null; MyThemes = null; MyGroupings = null; MySGroupings = null; gNewVersion = false; MySearchUI = null; MyPandaTimer = null; MyQueueTimer = null; MySearchTimer = null;
 });
+/** Sometimes a modal could get stuck if tab is not focussed so make sure 'Loading Data' modal is actually closed after load is completed. **/
+$(window).focus(() => { if (gLoadCompleted && MyModal) MyModal.closeModal('Loading Data'); });
 /** Detects when a user presses the ctrl button down so it can disable sortable and selection for cards. **/
 document.addEventListener('keydown', e => { if (e.key === 'Control' || e.metaKey) { $('.ui-sortable').sortable('option', 'disabled', true).addClass('unSelectable'); }});
 /** Detects when a user releases the ctrl button so it can enable sortable and selection for cards. **/
 document.addEventListener('keyup', e => { if (e.key === 'Control' || e.metaKey) { $('.ui-sortable').sortable('option', 'disabled', false).addClass('unSelectable'); }});
 /** Sets the gNewUpdatedVersion variable so next time user clicks on the extension icon it can show a notice of a new update. Also will show a notification to user. **/
-chrome.runtime.onUpdateAvailable.addListener( details => {
+browser.runtime.onUpdateAvailable.addListener(details => {
   gNewUpdatedVersion = details.version;
   if (MyPandaUI) { MyPandaUI.newVersionAvailable(gNewUpdatedVersion); }
 });
 /** Detects when a popup is opened so it can send a response with options and other relevant info. **/
-chrome.runtime.onMessage.addListener( async (request,_, sendResponse) => {
+browser.runtime.onMessage.addListener(request => {
   if (request.command === 'popupOpened') {
-    if (!MyQueue || !MyOptions) sendResponse(null); // Needs queue to be running to get the queue size.
+    if (!MyQueue || !MyOptions) return Promise.resolve(null); // Needs queue to be running to get the queue size.
     else {
       let sendData = {'toolTips':MyOptions.doGeneral().showHelpTooltips, 'sessionQueue':MyOptions.theSessionQueue(), 'queueSize':MyQueue.getQueueSize(), 'helpers':MyOptions.theHelperOptions(), 'gNewUpdatedVersion':gNewUpdatedVersion};
-      sendResponse(sendData);
+      return Promise.resolve(sendData);
     }
   }
-  return true;
 });
 /** Listens on a channel for messages to make sure it's the only panda page running and dealing with the SearchUI page. **/
 PCM_channel.onmessage = async (e) => {
   if (e.data) {
     const data = e.data;
-    if ((data.msg === 'panda crazy starting' || data.msg === 'search crazy starting') && data.value) { // PCM trying to start so send details of this page to all other pages on channel.
-      gPCM_otherRunning = 0; PCM_startChannel.postMessage({'msg':'panda crazy responding', 'object':{'sender':data.value, 'tabId':gUniqueTabID, 'status':gPCM_pandaOpened}});
-    } else if (data.msg === 'panda crazy responding' && data.object && data.object.sender === gUniqueTabID) { // Got a PCM response so collect stats on other pages running currently.
-      if (gUniqueTabID !== data.object.tabId) { if (data.object.status) gPCM_otherRunning++; } // Count panda pages actually running.
-      else if (!gPCM_pandaOpened) { // Make sure current panda page isn't running already.
-        setTimeout(() => { // Sets a timeout so it can get ALL responses from other pages to know if this page should start running.
-          chrome.runtime.sendMessage({'command':'pandaUI_startDone', 'data':{}}); // Releases hold when multiple pages try to start all at once.
-          if (gPCM_otherRunning === 0) { gPCM_pandaOpened = true; prepare(); } // No other pages are running so get started.
-          else haltScript(null, `You have PandaCrazy Max running in another tab or window. You can't have multiple instances running or it will cause database problems.`, null, 'Error starting PandaCrazy Max', true);
-        }, 200);
-      }
-    } else if (data.msg === 'search: updateOptions' && data.object) {
+    if (data.msg === 'search: updateOptions' && data.object) {
       let theObject = data.object;
       MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
       MyOptions.update(_, false);
-    } else if (data.msg === 'search: closingSearchUI') { MyPandaUI.searchUIConnect(false); gPCM_searchOpened = false; if (gPCM_pandaOpened) MySearch.originRemove(); }
-    else if (data.msg === 'search: openedSearchUI') {  }
+    } else if (data.msg === 'search: closingSearchUI') { if (MyPandaUI) MyPandaUI.searchUIConnect(false); gPCM_searchOpened = false; if (gPCM_pandaOpened) MySearch.originRemove(); }
+    else if (data.msg === 'pandaUI: checking') { if (gPCM_pandaOpened) PCM_channel.postMessage({'msg':'pandaUI: panda crazy opened'}); }
+    else if (data.msg === 'pandaUI: panda crazy opened') { gLoadVerified = true; multipleWarning(); }
+    else if (data.msg === 'search: openingSearchUI') { if (gPCM_pandaOpened && gLoadCompleted) PCM_channel.postMessage({'msg':'searchTo: panda crazy running'}); }
     else if (data.msg === 'search: setSearchUI') { if (MyPanda) MyPanda.searchUIConnect(true); gPCM_searchOpened = true; }
     else if (data.msg === 'search: sendOptionsToSearch') { if (MyOptions) MyOptions.sendOptionsToSearch(); }
     alarmsListener(data);

@@ -77,7 +77,7 @@ class AlarmsClass {
     for (const value of data) {
       delete value.audio;
       if (!fromDB) { await MYDB.addToDB('panda', 'alarms', value).then(id => value.id = id, rejected => err = rejected); }
-      let theSrc = (!value.obj) ? chrome.runtime.getURL(`${this.alarmFolder}/${value.filename}`) : value.obj;
+      let theSrc = (!value.obj) ? browser.runtime.getURL(`${this.alarmFolder}/${value.filename}`) : value.obj;
       this.data[value.name] = value; this.setTheAudio(value.name, theSrc);
     }
     return err;

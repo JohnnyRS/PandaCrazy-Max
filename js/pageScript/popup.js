@@ -15,8 +15,8 @@ function pageData(fragment, closeThis=false, tooltips=null) {
 function popupForumOptions(appendHere, prop) {
   createCheckBox(appendHere, 'Panda Crazy Buttons', '', gExtData.helpers[prop], gExtData.helpers[prop], ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', e => {
     gExtData.helpers[prop] = $(e.target).prop('checked');
-    chrome.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
+    browser.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
   });
 }
 /** Adds options to MTURK pages on the element provided using helper and session options from current page.
@@ -25,24 +25,24 @@ function popupForumOptions(appendHere, prop) {
 function mturkQueueOptions(appendHere) {
   createCheckBox(appendHere, 'Panda Crazy Buttons', 'pcm-mturkButtons', gExtData.helpers.mturkPageButtons, gExtData.helpers.mturkPageButtons, ' pcm-tooltipData', ' pcm-tooltipData', 'Should PCM buttons be added?', () => {
     gExtData.helpers.mturkPageButtons = !gExtData.helpers.mturkPageButtons;
-    chrome.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
+    browser.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
   });
   createCheckBox(appendHere, 'Unique Tab Hits Restriction', 'pcm-restrictTabUnique', gExtData.helpers.tabUniqueHits, gExtData.helpers.tabUniqueHits, ' pcm-tooltipData', ' pcm-tooltipData', 'Allow only unique HITs in each tab.', () => {
     gExtData.helpers.tabUniqueHits = !gExtData.helpers.tabUniqueHits;
-    chrome.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
+    browser.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
   });
   createCheckBox(appendHere, `Display Queue #'s in Title`, 'pcm-displayQueueTitle', gExtData.helpers.titleQueueDisplay, gExtData.helpers.titleQueueDisplay, ' pcm-tooltipData', ' pcm-tooltipData', `Show Hit position in queue and total HITs in queue in tab title.`, () => {
     gExtData.helpers.titleQueueDisplay = !gExtData.helpers.titleQueueDisplay;
-    chrome.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
+    browser.runtime.sendMessage({'command':'popup: helperOptions', 'data':gExtData.helpers});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'globalOptions', 'data':gExtData.helpers});
   });
   $(`<hr class='pcm-sessionVarsSplit'><div class='pcm-sessionOptText'>Session Options:</div>`).appendTo(appendHere);
   createCheckBox(appendHere, 'Monitor at Queue End?', 'pcm-monitorNext', gExtData.sessionQueue.monitorNext, gExtData.sessionQueue.monitorNext, ' pcm-tooltipData', ' pcm-tooltipData', 'Monitor Queue automatically once you finish HITs in your queue.', () => {
     gExtData.sessionQueue.monitorNext = !gExtData.sessionQueue.monitorNext;
-    chrome.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
+    browser.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
   });
 }
 /** Adds options to HIT pages on the element provided using session options from current page.
@@ -52,14 +52,14 @@ function mturkAssignedOptions(appendHere) {
   createCheckBox(appendHere, 'Same GroupID Next?', 'pcm-sameGIDHit', gExtData.sessionQueue.gidNext, gExtData.sessionQueue.gidNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue with the same group ID as this HIT.', e => {
     gExtData.sessionQueue.gidNext = !gExtData.sessionQueue.gidNext; gExtData.sessionQueue.ridNext = false;
     $(e.target).closest('.pcm-addedSection').find('#pcm-sameRIDHit').prop('checked',false);
-    chrome.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
+    browser.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
   });
   createCheckBox(appendHere, 'Same RequesterID Next?', 'pcm-sameRIDHit', gExtData.sessionQueue.ridNext, gExtData.sessionQueue.ridNext, ' pcm-tooltipData', ' pcm-tooltipData', 'After submit go to the next HIT in queue from the same Requester ID as this HIT.', e => {
     gExtData.sessionQueue.ridNext = !gExtData.sessionQueue.ridNext; gExtData.sessionQueue.gidNext = false;
     $(e.target).closest('.pcm-addedSection').find('#pcm-sameGIDHit').prop('checked',false);
-    chrome.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
-    chrome.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
+    browser.runtime.sendMessage({'command':'popup: sessionOptions', 'data':gExtData.sessionQueue});
+    browser.tabs.sendMessage(gCurrentTab.id, {'command':'optionsChange', 'data':gExtData.sessionQueue});
   });
 }
 /** Adds the go to queue position link using the number of HITs in queue and a function to send any commands needed to popup page.
@@ -71,7 +71,7 @@ function mturkQueueLinks(appendHere) {
     let sel = $(`<select></select>`).change( e => {
       let value = $(e.target).val(), position = (value.length <= 2) ? value : '1', goUrl = null;
       if (value === 'Last') goUrl = 'https://worker.mturk.com/tasks?JRPC=lasthit'; else if (value) goUrl = `https://worker.mturk.com/tasks?JRPC=gohit${position}`;
-      chrome.tabs.sendMessage(gCurrentTab.id, {'command':'newUrl', 'data':{'url':goUrl}}); window.close();
+      browser.tabs.sendMessage(gCurrentTab.id, {'command':'newUrl', 'data':{'url':goUrl}}); window.close();
     }).appendTo(gotoLink);
     sel.append($('<option>').attr('value','---').text('---'));
     sel.append($('<option>').attr('value','First').text('First'));
@@ -79,10 +79,10 @@ function mturkQueueLinks(appendHere) {
     sel.append($('<option>').attr('value','Last').text('Last'));
     let goLinks = $(`<div>Go To </div>`);
     $(`<a href='#' class='pcm-goPrevHit'>Prev Hit</a>`).click( () => {
-      chrome.tabs.sendMessage(gCurrentTab.id, {'command':'goPrev', 'data':{}}); window.close();
+      browser.tabs.sendMessage(gCurrentTab.id, {'command':'goPrev', 'data':{}}); window.close();
     }).appendTo(goLinks);
     $(`<a href='#' class='pcm-goNextHit'>Next Hit</a>`).click( () => {
-      chrome.tabs.sendMessage(gCurrentTab.id, {'command':'goNext', 'data':{}}); window.close();
+      browser.tabs.sendMessage(gCurrentTab.id, {'command':'goNext', 'data':{}}); window.close();
     }).appendTo(goLinks);
     goLinks.appendTo(appendHere);
     gotoLink = null; sel = null;
@@ -106,7 +106,7 @@ function helperOptions() {
 }
 /** Checks the current URL and shows the helper options if needed. Also will show a message about a new version available. **/
 function checkPage() {
-  if (gCurrentURL && /^(?!.*chrome-extension:\/\/|.*chrome:\/\/).*$/.test(gCurrentURL)) {
+  if (gCurrentURL && /^(?!.*chrome-extension:\/\/|.*chrome:\/\/|.*moz-extension:\/\/).*$/.test(gCurrentURL)) {
     if (!gCurrentTitle.includes('NO PCM')) {
       let fragment = helperOptions();
       $(`<div class='pcm-addedSection'></div>`).appendTo('body').append(fragment);
@@ -117,7 +117,7 @@ function checkPage() {
     let versionUpdate = $(`<div class='pcm-newVersionUpdate'>New version: ${gExtData.gNewUpdatedVersion} is detected.<br></div>`).appendTo(newUpdateOptions);
     $(`<button data-toggle='confirmation'>Click to Update Extension</button>`).click( () => {
       let result = confirm('Be aware that updating now will stop all jobs running and restart the extension.\n\nAre you sure you want to update now?');
-      if (result === true) { chrome.runtime.reload(); }
+      if (result === true) { browser.runtime.reload(); }
       else { alert('OK. Extension update will happen after next chrome start.'); gExtData.gNewUpdatedVersion = null; }
     }).appendTo(versionUpdate);
     $('.pcm-addedSection').append(newUpdateOptions);
@@ -126,12 +126,13 @@ function checkPage() {
 }
 /** Will inform extension that it's icon has been clicked and sends active tab object. Waits for any sent data back to add to popup or close it. **/
 window.onload = () => {
-  chrome.runtime.sendMessage({'command':'pandaUI_status'}, (result) => {
+  browser.runtime.sendMessage({'command':'pandaUI_status'}).then(result => {
     if (result) {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      browser.tabs.query({'active':true, 'currentWindow':true}).then(tabs => {
         gCurrentTab = tabs[0], gCurrentURL = gCurrentTab.url; gCurrentTitle = gCurrentTab.title;
-        chrome.runtime.sendMessage({'command':'popupOpened'}, (results) => { if (results) { gExtData = results; checkPage(); }});
+        browser.runtime.sendMessage({'command':'popupOpened'}).then(results => { if (results) { gExtData = results; checkPage(); }});
       });
     }
-  })
-};
+  });
+  $('a').click( (e) => { window.open($(e.target).attr('href'), '_blank'); window.close(); return false; });  // Workaround so firefox will close popup after button clicked.
+}

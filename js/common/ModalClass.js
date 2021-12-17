@@ -64,11 +64,18 @@ class ModalClass {
       delete this.tempObject[idName]; // Delete the temporary cloned copy of object to be saved.
     }
   }
+  /** Will close all modals created. **/
+  closeAll() {
+    for (const theModal of this.modals) {
+      $(`#${theModal}`).modal('hide'); $(`#${theModal}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
+      delete this.tempObject[theModal]; // Delete the temporary cloned copy of object to be saved.
+    }
+  }
   /** Workaround for popup unload not working when crossed domains. (www.mturk.com vs worker.mturk.com)
    * Recursively will keep checking until popup window closes. Used for login popup window.
   **/
   isPopup() {
-    if (!this.popup.closed && (typeof MyQueue !== 'undefined') && MyQueue.isLoggedOff()) setTimeout(this.isPopup.bind(this), 500);
+    if (!this.popup.closed && (typeof MyQueue !== 'undefined') && MyQueue && MyQueue.isLoggedOff()) setTimeout(this.isPopup.bind(this), 500);
     else if (typeof MyQueue !== 'undefined') MyQueue.nowLoggedOn();
   }
   /** Prepare a modal dialog for showing data with different buttons.

@@ -172,11 +172,11 @@ class PandaGStats {
   /** Resets stats when wiping data for importing. **/
 	resetStats() { this.totalPandas.value = 0; this.totalSearches.value = 0; this.totalSubmitted.value = 0; }
 	/** Will send the full stats back using the function given.
-	 * @param  {function} [sendResponse] - Function to send response back.
+	 * @return {object} - Returns the object with stats.
 	**/
-	sendStats(sendResponse=null) {
+	sendStats() {
 		let newTime = new Date().getTime();
-		if (newTime - this.sendStatsTime < 1000) sendResponse({'for':'getStats', 'response':{error:'Too Fast'}});
+		if (newTime - this.sendStatsTime < 1000) return {'for':'getStats', 'response':{'error':'Too Fast'}};
 		else {
 			this.sendStatsTime = newTime;
 			let statsReturned = {}, stats = [this.timerStats, this.jobFetchStats, this.preStats, this.jobStats, this.earningsStats, [this.collecting], [this.collectingTotal]];
@@ -185,7 +185,7 @@ class PandaGStats {
 			for (const statObj of stats) {
 				for (const stat of statObj) { let key = (stat.string) ? stat.string : stat.id.replace('#', ''); statsReturned[key] = stat.value; }
 			}
-			if (sendResponse) sendResponse({'for':'getStats', 'response':statsReturned});
+			return {'for':'getStats', 'response':statsReturned};
 		}
 	}
 }

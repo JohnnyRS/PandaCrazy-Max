@@ -31,9 +31,9 @@ class PandaUI {
 	**/
 	deleteFromStats(myId, dbId) { this.pandaStats[myId].deleteIdFromDB(dbId); }
 	/** Will send all stats to the function given.
-	 * @param {function} sendResponse - Function to send the stats response.
+	 * @return {object} - Returns object with stats.
 	**/
-	sendStats(sendResponse) { if (this.pandaGStats) this.pandaGStats.sendStats(sendResponse); }
+	sendStats() { if (this.pandaGStats) return this.pandaGStats.sendStats(); }
 	/** Loads up any panda jobs that are saved or saves default panda jobs if database was just created.
 	 * @async												- To wait for the tabs to completely load from the database.
 	 * @param  {function} afterFunc - Function to call after done to send success array or error object.
@@ -241,12 +241,17 @@ class PandaUI {
 		}, animate);
 	}
 	/** Remove job from an external script command and then send response back with the updated job list and removed job key equal to true;
-	 * @param  {number} dbId - Database ID.  @param  {function} sendResponse - Function to send response.
+	 * @async  							 - To wait for the job to be fully removed.
+	 * @param  {number} dbId - Database ID.
+	 * @return {object}			 - Returns the object with removed job status.
 	**/
-	extRemoveJob(dbId, sendResponse) {
+	async extRemoveJob(dbId) {
 		let myId = MyPanda.getMyId(dbId);
-		if (myId >= 0) this.removeJob(myId, () => { this.getAllData( (data) => { data.for = 'removeJob'; data['removedJob'] = true; sendResponse(data); } )});
-		else { sendResponse({'for':'removeJob', 'response':{}, 'removedJob':false}); }
+		if (myId >= 0) await this.removeJob(myId, async () => {
+			let retData = await this.getAllData(true); retData.for = 'removeJob'; retData['removedJob'] = true;
+			return retData;
+		});
+		else { return {'for':'removeJob', 'response':{}, 'removedJob':false}; }
 	}
 	/** Remove the list of jobs in the array and call function after remove animation effect is finished.
 	 * @param  {array} jobsArr				 - Array of deleted jobs.  @param  {function} [afterFunc] - After function.        @param  {string} [whyStop] - Why stopping?
@@ -464,15 +469,16 @@ class PandaUI {
 		for (const key of Object.keys(this.pandaStats)) {
 			this.pandaStats[key].setDailyStats(); let data = MyPanda.data(key); data.day = new Date().getTime(); data.dailyDone = 0;
 		}
-		MyHistory.maintenance(); MyPanda.nullData(false, true);
+		MyHistory.maintenance(); MyPanda.nullData(false, true); MyDash.doDashEarns(true);
 	}
 	/** Returns all panda jobs data after getting all data from database for sending back to another tab in a response send function.
-	 * @async                          - To wait for all the data to be loaded.
-	 * @param  {function} sendResponse - Function to send the panda job data.
+	 * @async           - To wait for all the data to be loaded.
+	 * @return {object} - Returns the response from getting all panda data.
 	**/
-	async getAllData(sendResponse) {
-		await MyPanda.getAllPanda(false); let copiedData = JSON.parse(JSON.stringify(MyPanda.getData()));
-		MyPanda.nullData(false, true); sendResponse({'for':'getJobs', 'response':copiedData});
+	async getAllData() {
+		await MyPanda.getAllPanda(false);
+		let copiedData = JSON.parse(JSON.stringify(MyPanda.getData())); MyPanda.nullData(false, true);
+		return {'for':'getJobs', 'response':copiedData};
 	}
 	/** Returns the total number recorded of HITs in queue.
 	 * @param  {string} [gId] - Group ID to search for and count the HITs in queue.

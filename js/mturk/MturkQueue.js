@@ -34,14 +34,15 @@ class MturkQueue extends MturkClass {
   **/
   getQueueSize() { return this.queueResults.length; }
   /** Sends queue results and authenticity token for returning jobs to the panda UI and search UI.
-   * @param  {function} [sendResults] - The function to use to send results if given.
+   * @param  {bool} [sendResults] - Should queue results be returned or not?
+   * @return {object|void}        - Returns the queue result or void.
   **/
-  sendQueueResults(sendResults=null) {
-    if (sendResults) sendResults({'for':'getQueueData', 'response':this.queueResults});
+  sendQueueResults(sendResults=false) {
+    if (sendResults) return {'for':'getQueueData', 'response':this.queueResults};
     else {
       if (MyPanda) MyPanda.gotNewQueue(this.queueResults, this.authenticityToken);
       if (MySearch) MySearch.gotNewQueue(this.queueResults, this.authenticityToken);
-      chrome.storage.local.set({'PCM_queueData':this.queueResults});
+      browser.storage.local.set({'PCM_queueData':this.queueResults});
     }
   }
   /** Changes the time for the queue timer and returns the time saved.

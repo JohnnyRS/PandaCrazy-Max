@@ -42,6 +42,7 @@ class ExtHitSearch {
   // Methods to send a message but doesn't have to wait for a response and no arguments to pass.
   stopSearching() { PCM_searchChannel.postMessage({'msg':'search: stopSearching'}); }
   unPauseTimer() { PCM_searchChannel.postMessage({'msg':'search: unPauseTimer'}); }
+  pauseTimer() { PCM_searchChannel.postMessage({'msg':'search: pauseTimer'}); }
 
   /** Methods that pass messages through the Broadcast channel to the history class but no parameters because it gets passed through. */
   // Methods to send a message and wait for a response back and no arguments to pass.
@@ -58,7 +59,6 @@ class ExtHitSearch {
   async sendToPanda() { return await this.sendBroadcastMsg('search: sendToPanda', 'search: returning sendToPanda', [...arguments], false); }
   async pandaToDbId() { return await this.sendBroadcastMsg('search: pandaToDbId', 'search: returning pandaToDbId', [...arguments], false); }
   async timerChange() { return await this.sendBroadcastMsg('search: timerChange', 'search: returning timerChange', [...arguments], false); }
-  async pauseToggle() { return await this.sendBroadcastMsg('search: pauseToggle', 'search: returning pauseToggle', [...arguments], null); }
   async optionsCopy() { return await this.sendBroadcastMsg('search: optionsCopy', 'search: returning optionsCopy', [...arguments], null); }
 	async rulesCopy() { return await this.sendBroadcastMsg('search: rulesCopy', 'search: returning rulesCopy', [...arguments], null); }
   async addTrigger() { return await this.sendBroadcastMsg('search: addTrigger', 'search: returning addTrigger', [...arguments], null); }
@@ -92,6 +92,8 @@ PCM_searchChannel.onmessage = async (e) => {
     else if (msg === 'search: DB loaded') { MySearchUI.appendFragments(); setTimeout( () => { MyModal.closeModal('Loading Data'); }, 300); }
     else if (msg === 'searchTo: nowLoggedOn') { MySearchUI.nowLoggedOn(); }
     else if (msg === 'searchTo: nowLoggedOff') { MySearchUI.nowLoggedOff(); }
+    else if (msg === 'searchTo: nowPaused') { MySearchUI.nowPaused(); }
+    else if (msg === 'searchTo: unPaused') { MySearchUI.unPaused(); }
     else if (msg === 'searchTo: stopSearching') { MySearchUI.stopSearching(); }
     else if (msg === 'searchTo: importing') { MySearchUI.importing(); }
     else if (msg === 'searchTo: importingDone') { MySearchUI.importingDone(); }

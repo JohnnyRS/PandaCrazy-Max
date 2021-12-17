@@ -1,40 +1,30 @@
+let isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+if (!isFirefox) importScripts('../../lib/browser-polyfill.min.js');  // To make it compatible with firefox message sending with a Promise.
+let gStarting = false;  // Temporary variable used to keep multiple pages running at same time. Stays in memory only when service worker is active.
 
 /** Cleans the chrome local storage of all created data from extension. Used at start and when all pages are closed. **/
 function cleanLocalStorage() {
-  if (chrome.storage) {
-    chrome.storage.local.get(null, values => {
-      for (const key of Object.keys(values)) { if (key.includes('PCM_')) chrome.storage.local.remove(key); }
-      chrome.storage.local.set({'PCM_running':false});
+  gStarting = false;
+  if (browser.storage) {
+    browser.storage.local.get(null).then(values => {
+      for (const key of Object.keys(values)) { if (key.includes('PCM_')) browser.storage.local.remove(key); }
     });
   }
 }
 
 /** ================ EventListener Section ================================================================================================= **/
 /** Handles any messages coming from other pages and sends out messages from local variables. */
-chrome.runtime.onMessage.addListener( (request,_, sendResponse) => {
-  if (request.command === 'pandaUI_starting') {
-    chrome.storage.local.get('firstInstall', (result) => {
-      chrome.storage.local.set({'firstInstall':false});
-    });
-    chrome.storage.local.get('startingUp', (result) => { // Find out if another page has tried to start up by checking the hold data.
-      if (typeof result.startingUp === 'undefined') chrome.storage.local.set({'startingUp':request.data.tabID}, () => { sendResponse(true); });
-      else sendResponse(false);
-    });
-  } else if (request.command === 'pandaUI_startDone') chrome.storage.local.remove('startingUp'); // Release hold on any other pages trying to start up at same time.
-  else if (request.command === 'searchUI_starting') {
-    chrome.storage.local.get('searchUI_startingUp', (result) => { // Find out if another page has tried to start up by checking the hold data.
-      if (typeof result.searchUI_startingUp === 'undefined') chrome.storage.local.set({'searchUI_startingUp':request.data.tabID}, () => { sendResponse(true); });
-      else sendResponse(false);
-    });
-  } else if (request.command === 'searchUI_startDone') chrome.storage.local.remove('searchUI_startingUp');
-  else if (request.command === 'pandaUI_opened') { chrome.storage.local.set({'PCM_running':true}); }
-  else if (request.command === 'pandaUI_status') chrome.storage.local.get('PCM_running', (r) => { sendResponse(r.PCM_running); });
-  else if (request.command === 'cleanLocalStorage') cleanLocalStorage();
-  return true;
+browser.runtime.onMessage.addListener(request => {
+  if (request.command === 'pandaUI_opened') browser.storage.local.set({'PCM_running':true});
+  else if (request.command === 'pandaUI_closed') { browser.storage.local.remove('PCM_running'); cleanLocalStorage(); }
+  else if (request.command === 'pandaUI_status') return browser.storage.local.get('PCM_running').then(r => r.PCM_running);
+  else if (request.command === 'searchUI_opened') browser.storage.local.set({'PCM_searchUI_running':true});
+  else if (request.command === 'searchUI_closed') browser.storage.local.remove('PCM_searchUI_running');
+  else if (request.command === 'searchUI_status') return browser.storage.local.get('PCM_searchUI_running').then(r => r.PCM_searchUI_running);
+  else if (request.command === 'pandaUI_startDone' || request.command === 'searchUI_start_done') gStarting = false;
+  else if (request.command === 'pandaUI_starting' || request.command === 'searchUI_starting') {
+    if (!gStarting) { gStarting = true; return Promise.resolve(true); } else return Promise.resolve(false);
+  }
 });
 /** Detects when the extension is first installed or restarted. **/
-chrome.runtime.onInstalled.addListener( () => {
-  cleanLocalStorage();
-  chrome.storage.local.set({'firstInstall':true}); chrome.storage.local.remove('startingUp'); chrome.storage.local.remove('searchUI_startingUp');
-  chrome.storage.local.set({'PCM_running':false});
-});
+browser.runtime.onInstalled.addListener( () => { cleanLocalStorage(); browser.storage.local.set({'firstInstall':true}); });

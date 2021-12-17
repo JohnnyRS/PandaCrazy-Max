@@ -17,7 +17,7 @@ async function wipeData() {
 function startHelp() {
   $('.pcm-versionNumber').html(`Current Extension Version: ${localStorage.getItem('PCM_version')} (<a href='https://github.com/JohnnyRS/PandaCrazy-Max/wiki/Versions'>Version history page</a>)`);
   $('#pcm-resetMyData').click( () => {
-    chrome.runtime.sendMessage({'command':'pandaUI_status'}, async (response) => {
+    browser.runtime.sendMessage({'command':'pandaUI_status'}).then(async (response) => {
       MyModal = new ModalClass();
       if (response) MyModal.showDialogModal('700px', 'Please Close the Panda Crazy Page!', 'You must close the Panda Crazy Max page first before wiping the data.', null, false, false);
       else  {

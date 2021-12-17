@@ -151,9 +151,9 @@ class MturkHitSearch extends MturkClass {
 		return returnValue;
 	}
 	/** To send all triggers from the searchUI to a function given. Used for external script command.
-	 * @param  {function} sendResponse - Function to send response.
+	 * @return {object} - Returns an object with all the triggers data.
 	**/
-	getAllTriggers(sendResponse) { sendResponse({'for':'getTriggers', 'response':{'info':this.triggers, 'data':this.data}}); }
+	getAllTriggers() { return {'for':'getTriggers', 'response':{'info':this.triggers, 'data':this.data}}; }
 	/** returns the dbID from a type and value given from any UI.
 	 * @param  {string} type  - Trigger type.  @param  {string} value - Trigger value.  @param  {bool} [live] - Check only live triggers.  @param  {bool} [sUI] - From searchUI?
 	 * @return {null|number}	- The dbID for this trigger to use for all other data.
@@ -197,7 +197,7 @@ class MturkHitSearch extends MturkClass {
 	**/
 	uniqueToDbId(unique) { return this.dbIds.unique[unique]; }
 	/** Passes the object used to transform a unique ID to a database ID. Used for message sending to searchUI for faster processing.
-	 * @returns {object} - Returns the object with the unique numbers as key and dbid numbers as the value.
+	 * @return {object} - Returns the object with the unique numbers as key and dbid numbers as the value.
 	**/
 	getAllUniques() { return this.dbIds.unique; }
 	/** Returns the database id from the panda unique id number given.
@@ -408,13 +408,10 @@ class MturkHitSearch extends MturkClass {
 	 * @return {bool} - True if the panda UI has been opened.
 	**/
 	isPandaUI() { return (MyPandaUI !== null); }
-	/** Toggle the panda timer pause status with the value sent or returns the value of the pause value instead.
-	 * @param  {bool} [val] - Sets the timer to the value or returns pause status if null.
-	 * @return {bool}       - Returns the status of the panda timer pause mode.
-	**/
-	pauseToggle(val=null) { if (MySearchTimer) { let paused = (val) ? MySearchTimer.paused = val : MySearchTimer.pauseToggle(); return paused; } }
 	/** Unpause the search timer. **/
-	unPauseTimer() { MySearchTimer.paused = false; }
+	unPauseTimer() { MySearchTimer.paused = false; if (!MySearchTimer.paused) MySearchUI.unPaused(); }
+	/** Pause the search timer. **/
+	pauseTimer() { MySearchTimer.paused = true; if (MySearchTimer.paused) MySearchUI.nowPaused(); }
 	/** This method gets called when the queue gets a new result from MTURK.
 	 * @param  {object} results - The results from a new queue with all the hit data.
 	**/
@@ -429,11 +426,11 @@ class MturkHitSearch extends MturkClass {
 					}
 				}
 			}
-			this.nowLoggedOn(); // Must be logged on if MTURK sent the queue results.
+			if (this.loggedOff) this.nowLoggedOn(); // Must be logged on if MTURK sent the queue results.
 		}
 	}
 	/** We are logged off so pause the timer and tell the search UI that it's logged off. **/
-	nowLoggedOff() { MySearchTimer.paused = true; this.loggedOff = true; if (this.isSearchUI()) MySearchUI.nowLoggedOff(); }
+	nowLoggedOff() { this.pauseTimer(); this.loggedOff = true; if (this.isSearchUI()) MySearchUI.nowLoggedOff(); }
 	/** We are logged on so unpause timer and tell the search UI that it's logged back in. **/
 	nowLoggedOn() { this.unPauseTimer(); this.loggedOff = false; if (this.isSearchUI()) MySearchUI.nowLoggedOn(); }
 	/** Checks to see if logged off from MTURK and returns the result.
@@ -676,7 +673,8 @@ class MturkHitSearch extends MturkClass {
 	async checkTriggers(item, checkRid=null) {
 		let liveStr = ((!this.pausedPandaUI) ? this.livePandaUIStr : '') + ((MySearchUI.searchGStats.isSearchOn() && !this.pausedSearchUI) ? this.liveSearchUIStr : '');
 		if (this.isIdsBlocked(item.hit_set_id, item.requester_id)) return;
-		let gidFound = liveStr.includes(`[[gid:${item.hit_set_id}]]`), ridFound = liveStr.includes(`[[rid:${item.requester_id}]]`) || (checkRid === item.requester_id);
+		let gidFound = !MyPanda.isPaused() && liveStr.includes(`[[gid:${item.hit_set_id}]]`);
+		let ridFound = !MyPanda.isPaused() && (liveStr.includes(`[[rid:${item.requester_id}]]`) || (checkRid === item.requester_id));
 		let titleDescription = item.title.toLowerCase() + ' , ' + item.description.toLowerCase(), termsFound = [];
 		if (MySearchUI.searchGStats && MySearchUI.searchGStats.isSearchOn() && Object.keys(this.liveTermData).length) {
 			for (const key of Object.keys(this.liveTermData)) {
@@ -896,10 +894,11 @@ class MturkHitSearch extends MturkClass {
 	appendFragments() { if (this.isSearchUI()) MySearchUI.appendFragments(); }
 	/** Remove the trigger from memory with the database ID, Panda Database ID, unique number with sUI value. Can also force removal from database.
 	 * @async 								 - To wait for disabling the trigger.
-	 * @param  {number} [dbId] - Database ID.  @param  {number} [pDbId]  - Panda database ID.     @param  {number} [unique]       - Unique number.
-	 * @param  {bool} [sUI]    - SearchUI?     @param  {bool} [removeDB] - Remove from database?  @param  {function} sendResponse - Function to send queue results.
+	 * @param  {number} [dbId] - Database ID.  @param  {number} [pDbId]  - Panda database ID.     @param  {number} [unique]   - Unique number.
+	 * @param  {bool} [sUI]    - SearchUI?     @param  {bool} [removeDB] - Remove from database?  @param  {bool} sendResponse - Should response be returned?
+	 * @return {object|void}	 - Returns the object with removed triggers or void.
 	**/
-	async removeTrigger(dbId=null, pDbId=null, unique=null, sUI=true, removeDB=false, sendResponse=null) {
+	async removeTrigger(dbId=null, pDbId=null, unique=null, sUI=true, removeDB=false, sendResponse=false) {
 		dbId = (dbId) ? dbId : (unique !== null) ? this.dbIds.unique[unique] : this.dbIds.pDbId[pDbId];
 		if (dbId && this.data[dbId]) {
 			let tempData = Object.assign({}, this.data[dbId]);
@@ -914,8 +913,12 @@ class MturkHitSearch extends MturkClass {
 			}
 			if (MySearchUI.searchGStats && MySearchUI.searchGStats.isSearchOn() && this.liveCounter === 0 && this.termCounter === 0) this.stopSearching();
 			MyPanda.searchUIConnect(true);
-			if (sendResponse) this.getAllTriggers( (data) => { data.for = 'removeTrigger'; data['removedTrigger'] = true; sendResponse(data); });
-		} else if (sendResponse) sendResponse({'for':'removeJob', 'response':{}, 'removedJob':false});
+			if (sendResponse) {
+				let retData = this.getAllTriggers();
+				retData.for = 'removeTrigger'; retData['removedTrigger'] = true;
+				return retData;
+			}
+		} else if (sendResponse) return {'for':'removeJob', 'response':{}, 'removedJob':false};
 	}
 	/** When a UI is closed then this method will remove any triggers added from that UI.
 	 * @async								- To wait for removal of triggers from memory.

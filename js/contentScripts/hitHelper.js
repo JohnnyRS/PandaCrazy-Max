@@ -10,7 +10,7 @@ let gSecure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enable
 /** Detects if the extension was restarted or uninstalled.
  * @return {boolean} - Returns if extension is still loaded and hasn't been restarted.
 **/
-function extensionLoad() { try { (chrome.runtime.getManifest()); return true; } catch (error) { return false; } }
+function extensionLoad() { try { (browser.runtime.getManifest()); return true; } catch (error) { return false; } }
 /** Sends a message to the extension with given values.
  * @param  {string} com     - The command.      @param  {object} data    - Data object.   @param  {bool} passHit - Passing HIT data?  @param  {string} gId     - Group ID.
  * @param  {string} [desc]  - The description.  @param  {string} [title] - The title.     @param  {string} [rId] - Requester ID.      @param  {string} [rName] - Requester name.
@@ -23,9 +23,9 @@ function sendToExt(com, data, passHit, gId, desc='', title='', rId='', rName='',
     window.location.reload();
   } else if (passHit) {
     if (rName === '') rName = gId; if (title === '') title = gId;
-    chrome.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'hitData':hD, 'data':data});
+    browser.runtime.sendMessage({'command':com, 'groupId':gId, 'description':desc, 'title':title, 'reqId':rId, 'reqName':rName, 'price':price, 'duration':dur, 'hitsAvailable':hA, 'assignmentId':aI, 'taskId':tI, 'hitData':hD, 'data':data});
   } else {
-    chrome.runtime.sendMessage({'command':com, 'data': data}, (data) => { localStorage.setItem('JR_message_response', JSON.stringify({'data':data, 'date': new Date().getTime()})); });
+    browser.runtime.sendMessage({'command':com, 'data': data}).then(data => { localStorage.setItem('JR_message_response', JSON.stringify({'data':data, 'date': new Date().getTime()})); });
   }
 }
 /** Parses the command string and sends message to extension.
@@ -56,13 +56,13 @@ function sendPong() {
 /** Prepares global variables from local chrome storage. Starts storage listener. **/
 function prepareGlobals() {
   if ($('.mturk-alert-danger').text().includes('This HIT is no longer available')) { if (gSessionData.monitorNext) $('.mturk-alert-danger').remove(); }
-  chrome.storage.local.get(null, value => {
+  browser.storage.local.get(null).then(value => {
     for (const key of Object.keys(value)) {
       if (key === 'PCM_returnedHit') { setRememberIds('return', value.PCM_returnedHit.assignmentId); gHitReturned = true; }
       else if (key.includes('PCM_t_')) { let obj = value[key]; gTabIds[obj.unique] = obj; doIds(obj.assignmentId, obj.unique); }
     }
     gIdsDone = true;
-    chrome.storage.onChanged.addListener(listenChanged);
+    browser.storage.onChanged.addListener(listenChanged);
   });
   if (localStorage.getItem('JR_message_ping_pandacrazy')) sendPong();
   window.addEventListener('storage', e => {
@@ -96,8 +96,8 @@ function addIframe() {
 /** Cleans the chrome local storage of all created data from extension. Used at start. **/
 function cleanLocalStorage() {
   if (extensionLoad()) {
-    chrome.storage.local.get(null, values => {
-      for (const key of Object.keys(values)) { if (['PCM_returnClicked','PCM_returnedHit','PCM_submittedHit','PCM_acceptedHit'].includes(key)) chrome.storage.local.remove(key); }
+    browser.storage.local.get(null).then(values => {
+      for (const key of Object.keys(values)) { if (['PCM_returnClicked','PCM_returnedHit','PCM_submittedHit','PCM_acceptedHit'].includes(key)) browser.storage.local.remove(key); }
     })
   }
 }
@@ -188,7 +188,7 @@ function checkQueue(queueResults) {
   if (gGotoHit === 26) gGotoHit = queueResults.length;
   if (extensionLoad()) {
     if (gGotoHit && gGotoHit > 0 && queueResults.length >= gGotoHit) {
-      chrome.storage.onChanged.removeListener(listenChanged);
+      browser.storage.onChanged.removeListener(listenChanged);
       goPosition(gGotoHit-1);
     } else if (!gAlreadyOpened && gOpenHits && gOpenHits > 1 && queueResults.length >= gOpenHits) {
       let hitPosition = 2, numOpenHits = gOpenHits; gAlreadyOpened = true;
@@ -208,8 +208,8 @@ function checkQueue(queueResults) {
     } else if (gMonitorOn && queueResults.length > 0) {
       let task_url = nextHit();
       if (task_url) {
-        chrome.runtime.sendMessage({'command':'monitorSpeech', 'data':{}});
-        chrome.storage.onChanged.removeListener(listenChanged);
+        browser.runtime.sendMessage({'command':'monitorSpeech', 'data':{}});
+        browser.storage.onChanged.removeListener(listenChanged);
         goPosition(0, task_url);
       }
     }
@@ -269,7 +269,7 @@ function loadSessionData() {
   gSubmits = JSON.parse(sessionStorage.getItem('PCM_hitSubmits')) || []; gReturns = JSON.parse(sessionStorage.getItem('PCM_hitReturns')) || [];
   gRedirected = JSON.parse(sessionStorage.getItem('PCM_Redirected')) || false; sessionStorage.removeItem('PCM_Redirected');
   if (gQueuePage && gSessionData.monitorNext) gMonitorOn = true;
-  chrome.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData}, data => { gOptions = data; });
+  browser.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData}).then(data => { gOptions = data; });
 }
 /** Parses the HIT data on queue page, assigned HIT page or HIT list on MTURK page. **/
 function getReactProps() {
@@ -342,7 +342,7 @@ function checkSubmitted() {
   let submitText1 = `The HIT has been successfully submitted`, submitText2 = `HIT Submitted`, alertContent = $(`.mturk-alert-content`).text();
   if (!gRedirected && gPrevHit && (alertContent.includes(submitText1) || alertContent.includes(submitText2))) {
     gHitSubmitted = true; setRememberIds('submit', gPrevHit.assignmentId);
-    chrome.storage.local.set({'PCM_submittedHit':{'assignmentId':gPrevHit.assignmentId, 'groupId':gPrevHit.groupId, 'taskId':gPrevHit.taskId, 'unique':new Date().getTime()}});
+    browser.storage.local.set({'PCM_submittedHit':{'assignmentId':gPrevHit.assignmentId, 'groupId':gPrevHit.groupId, 'taskId':gPrevHit.taskId, 'unique':new Date().getTime()}});
     sendToExt('submitted', gPrevHit, true, gPrevHit.groupId,_,_,_,_, gPrevHit.pay,_,_, gPrevHit.assignmentId, gPrevHit.taskId);
   }
 }
@@ -365,7 +365,7 @@ function oldPCRemoval() {
 function setReturnBtn() {
   $(`.btn-warning:contains('Return'), .btn:contains('Return')`).unbind('click').bind( 'click', e => { if (dLog(2)) console.log('return button');
     let theIndex = (Object.keys(gHitData).length) ? -1 : $(e.target).closest('.table-row').index(), theHit = (theIndex !== -1) ? gQueueResults[theIndex-1] : gHitData;
-    if (theHit) { if (extensionLoad()) { chrome.storage.local.set({'PCM_returnClicked':{'assignmentId':theHit.assignment_id, 'unique':new Date().getTime()}}); gReturnBtn = true; }}
+    if (theHit) { if (extensionLoad()) { browser.storage.local.set({'PCM_returnClicked':{'assignmentId':theHit.assignment_id, 'unique':new Date().getTime()}}); gReturnBtn = true; }}
   });
   $(`.btn-warning:contains('Return'), .btn:contains('Return')`).unbind('blur').bind( 'blur', () => { if (gReturnBtn) gReturnBtn = false; });
   $('.expand-projects-button').unbind('click').bind( 'click', () => { setTimeout( () => { setReturnBtn(); }, 0); });
@@ -375,11 +375,11 @@ function setBeforeUnload() {
   window.addEventListener('beforeunload', async () => {
     gUnloading = true;
     if (extensionLoad()) {
-      if (gIds[gAssignedHit] && gIds[gAssignedHit].count < 2) { chrome.storage.local.remove(`PCM_tHit_${gAssignedHit}`); delete gIds[gAssignedHit]; }
-      chrome.storage.local.remove(`PCM_t_${gTabUnique}`);
+      if (gIds[gAssignedHit] && gIds[gAssignedHit].count < 2) { browser.storage.local.remove(`PCM_tHit_${gAssignedHit}`); delete gIds[gAssignedHit]; }
+      browser.storage.local.remove(`PCM_t_${gTabUnique}`);
       sessionStorage.setItem('PCM_gIds',JSON.stringify(gIds));
       if (gReturnBtn) {
-        chrome.storage.local.set({'PCM_returnedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
+        browser.storage.local.set({'PCM_returnedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
         sendToExt('returned', {}, true, gGroupId,_,_,_,_, gPay,_,_, gAssignedHit, gTaskId);
       }
     }
@@ -400,7 +400,7 @@ function addCommands() {
   if (!locationUrl.includes('JRGID')) regex = /\/.{0,2}PandaCrazy([^\/]*)\/.*groupID=([^&]*)&requesterName=(.*)&requesterID=([^&]*)&hitTitle=(.*)&hitReward=(.*)/;
   let [, command, groupId, reqName, reqId, title, reward] = locationUrl.match(regex);
   command = (command === 'Add') ? 'addJob' : (command === 'Search') ? 'addSearchOnceJob' : (command === 'Once') ? 'addOnceJob' : 'addSearchMultiJob';
-  chrome.runtime.sendMessage({'command':command, 'groupId':groupId, 'description':'', 'title':title, 'reqId':reqId, 'reqName':reqName, 'price':reward, 'data':{}});
+  browser.runtime.sendMessage({'command':command, 'groupId':groupId, 'description':'', 'title':title, 'reqId':reqId, 'reqName':reqName, 'price':reward, 'data':{}});
 }
 /** Adds buttons to the preview page making sure to remove any other buttons added before. **/
 function previewButtons() {
@@ -433,11 +433,11 @@ function doAssignment() {
   let requesterUrl = $(`.project-detail-bar a[href*='/requesters/']`).attr('href'), tabUnique = `PCM_t_${gTabUnique}`; gReqId = requesterUrl.split('/')[2];
   let acceptedId = sessionStorage.getItem('PCM_acceptedBtn'); sessionStorage.removeItem('PCM_acceptedBtn'), tabHit = `PCM_tHit_${gAssignedHit}`;
   if (acceptedId && acceptedId === gGroupId) {
-    chrome.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
+    browser.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
     sendToExt('acceptedhit', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, gReqId, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
   }
   if (gHolders) {
-    chrome.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
+    browser.storage.local.set({'PCM_acceptedHit':{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'unique':new Date().getTime()}});
     sendToExt('acceptedhit', {}, true, gGroupId, gHitData.description, gHitData.projectTitle, gReqId, gHitData.requesterName, gPay, gHitData.assignmentDurationInSeconds, gHitData.assignableHitsCount, gAssignedHit, gTaskId, gHitData);
   }
   if (gOptions.tabUniqueHits && gIdsDone && gIds[gAssignedHit]) {
@@ -452,8 +452,8 @@ function doAssignment() {
     let newUrl = nextHit();
     if (!newUrl) { resetIDNext(); goPosition(0, 'https://worker.mturk.com/tasks'); } else goPosition(0, 'https://worker.mturk.com' + newUrl);
   } else {
-    chrome.storage.local.set({[tabUnique]:{'unique':gTabUnique, 'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
-    chrome.storage.local.set({[tabHit]:{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
+    browser.storage.local.set({[tabUnique]:{'unique':gTabUnique, 'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
+    browser.storage.local.set({[tabHit]:{'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId}});
   }
   sessionStorage.setItem('PCM_hitDoing',JSON.stringify({'assignmentId':gAssignedHit, 'groupId':gGroupId, 'taskId':gTaskId, 'pay':gHitData.monetaryReward.amountInDollars, 'reqId':gReqId}));
   assignmentButtons(); setReturnBtn();
@@ -500,9 +500,9 @@ else if (/projects\/[^\/]*\/tasks\/.*?assignment_id/.test(locationUrl)) { grabCu
 
 /** load up any local storage data saved **/
 loadSessionData(); prepareGlobals(); getReactProps();
-chrome.storage.local.get('PCM_running', value => {
+browser.storage.local.get('PCM_running').then(value => {
   gPcmRunning = value.PCM_running;
-  chrome.storage.local.get('PCM_queueData', value => { queueData(value.PCM_queueData, true); checkQueue(gQueueResults); } );
+  browser.storage.local.get('PCM_queueData').then(value => { queueData(value.PCM_queueData, true); checkQueue(gQueueResults); } );
   cleanLocalStorage(); setBeforeUnload(); checkExtension();
   $( () => {
     prevAssigned(); checkSubmitted();
@@ -530,7 +530,7 @@ chrome.storage.local.get('PCM_running', value => {
 });
 
 /** Listens for messages that are sent from the extension background page. **/
-chrome.runtime.onMessage.addListener( (request) => {
+browser.runtime.onMessage.addListener(request => {
   let command = request.command, data = request.data;
   if (command && data) {
     if (command === 'optionsChange') {
@@ -547,4 +547,4 @@ chrome.runtime.onMessage.addListener( (request) => {
 });
 
 /** When window has focus it will send the current session values over to extension so when user changes options it will be correct. **/
-$(window).on( 'focus', () => { if (extensionLoad()) chrome.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData}); });
+$(window).on('focus', () => { if (extensionLoad()) browser.runtime.sendMessage({'command':'queueOptions', 'data':gSessionData}); });

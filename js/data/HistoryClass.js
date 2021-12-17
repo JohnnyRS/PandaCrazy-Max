@@ -140,15 +140,16 @@ class HistoryClass {
 	}
 	/** Saves all the search results data from the database to a CSV formatted string with all name, descriptions and titles set. (Testing for stats page.)
 	 * @async 					- To wait for the data to be loaded from the database.
-	 * @return {string} - Returns a string in a CSV format to save to a file.
+	 * @return {object} - Returns an object with allResults, reqObj and gidObj.
 	**/
-	async searchResultsToCSV() {
-		let fromDate = new Date(), toDate = new Date(); fromDate.setDate(fromDate.getDate() - 1); fromDate.setHours(0,0,0,0);
-		let keyRange = IDBKeyRange.bound(fromDate.getTime(), toDate.getTime()), returnString = '', unknownReqInfo = {'hits':0,'reqName':'unknown', 'theId':'unknown', 'updated':'unknown'};
+	async getSearchResults() {
+		let fromDate = new Date(), toDate = new Date(); fromDate.setDate(fromDate.getDate() - 6); fromDate.setHours(0,0,0,0);
+		let keyRange = IDBKeyRange.bound(fromDate.getTime(), toDate.getTime()), unknownReqInfo = {'hits':0,'reqName':'unknown', 'theId':'unknown', 'updated':'unknown'};
 		let unknownGidInfo = {'date':'unknown', 'description':'unknown', 'duration':0, 'pay':0.0, 'reqId':'unknown', 'title':'unknown', 'updated':'unknown'};
+		let requesterObj = {}, requesterSet = new Set(), gidObj = {}, gidSet = new Set(), allResults = [];
 		await MYDB.getFromDB('searching','results', keyRange,_, 'date').then( async (sResults) => {
-			let requesterObj = {}, requesterSet = new Set(), gidObj = {}, gidSet = new Set();
-			for (const item of sResults) {
+			allResults = [...sResults];
+			for (const item of allResults) {
 				let gid = item.gid, rid = item.rid;
 				if (rid && gid) {
 					if (!requesterObj[rid]) { requesterObj[rid] = {'stats':{'gids':new Set(), 'count':0}}; requesterSet.add(rid); }
@@ -163,14 +164,8 @@ class HistoryClass {
 			await this.findValues(Array.from(gidSet)).then( (gidFound) => {
 				for (const groupId of Object.keys(gidFound)) { let infoResult = (gidFound[groupId]) ? gidFound[groupId] : unknownGidInfo; gidObj[groupId].info = infoResult; }
 			});
-			returnString = `date,group id,requester id,requester name,title,hits,pay,duration\r\n`;
-			for (const item of sResults) {
-				let requesterName = requesterObj[item.rid].info.reqName.trim(), title = gidObj[item.gid].info.title.trim();
-				let pay = gidObj[item.gid].info.pay, duration = gidObj[item.gid].info.duration;
-				returnString += `${formatAMPM('short',new Date(item.date))},${item.gid},${item.rid},${requesterName},${title},${item.hits},${pay},${duration}\r\n`;
-			}
 		}, (rejected) => console.log(rejected));
-		return returnString;
+		return {'all':allResults, 'reqObj':requesterObj, 'gidObj':gidObj};
 	}
 	/** Gathers the total HITs found per day from the search results and returns it back in an array.
 	 * @async 				 - To wait for counting of the database to finish for each day.

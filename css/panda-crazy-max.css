@@ -266,6 +266,7 @@ html, body { height: 100%; }
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }
 #pcm-searchUI .pcm-top.pcm-searchingOff { background-color: #400a0a; }
 #pcm-searchUI .pcm-top.pcm-searchingOn { background-color: #0b3e0b; }
+#pcm-searchUI .pcm-top.pcm-searchingPaused { background-color: orangered !important; }
 #pcm-searchUI .pcm-btn-menu { color: white; }
 #pcm-searchUI .pcm-btn-dropDown.pcm-btn-menu { margin-left: -6px; }
 #pcm-searchUI .pcm-btn-dropDown, #pcm-searchUI .pcm-btn-menu { background-color: #007bff; border-color: #007bff; padding-bottom: 4px; }

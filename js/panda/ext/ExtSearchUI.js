@@ -17,6 +17,8 @@ class ExtSearchUI {
   // Methods to send a message but doesn't have to wait for a response and no arguments to pass.
   nowLoggedOff() { PCM_searchChannel.postMessage({'msg':'searchTo: nowLoggedOff'}); }
   nowLoggedOn() { PCM_searchChannel.postMessage({'msg':'searchTo: nowLoggedOn'}); }
+  nowPaused() { PCM_searchChannel.postMessage({'msg':'searchTo: nowPaused'}); }
+  unPaused() { PCM_searchChannel.postMessage({'msg':'searchTo: unPaused'}); }
   stopSearching() { PCM_searchChannel.postMessage({'msg':'searchTo: stopSearching'}); }
   startSearching() { PCM_searchChannel.postMessage({'msg':'searchTo: startSearching'}); }
   importing() { PCM_searchChannel.postMessage({'msg':'searchTo: importing'}); }
@@ -53,8 +55,9 @@ function sendToChannel(returning, value, subject='search') { PCM_search2Channel.
 PCM_searchChannel.onmessage = async (e) => {
   if (e.data && gPCM_searchOpened) {
     const data = e.data, val = data.value;
-    if (data.msg === 'search: stopSearching') { MySearch.stopSearching(); }
+    if (data.msg === 'search: stopSearching') { if (MySearch) MySearch.stopSearching(); }
     else if (data.msg === 'search: unPauseTimer') { MySearch.unPauseTimer(); }
+    else if (data.msg === 'search: pauseTimer') { MySearch.pauseTimer(); }
     else if (data.msg === 'searchGStat: searchingOff') { MySearchUI.searchGStats.searchingOff(); }
     else if (data.msg === 'searchGStat: searchingOn') { MySearchUI.searchGStats.searchingOn(); }
     else if (data.msg === 'searchGStat: prepare') { MySearchUI.searchGStats.prepare(); }
@@ -85,7 +88,6 @@ PCM_search2Channel.onmessage = async (e) => {
       else if (data.msg === 'search: sendToPanda') { await MySearch.sendToPanda(val[0], val[1], val[2], val[3], val[4], val[5]); sendToChannel('sendToPanda', null); }
       else if (data.msg === 'search: optionsChanged') { await MySearch.optionsChanged(val[0], val[1]); sendToChannel('optionsChanged', null); }
       else if (data.msg === 'search: rulesCopy') { let retVal = await MySearch.rulesCopy(val[0]); sendToChannel('rulesCopy', retVal); }
-      else if (data.msg === 'search: pauseToggle') { let retVal = await MySearch.pauseToggle(val[0]); sendToChannel('pauseToggle', retVal); }
       else if (data.msg === 'search: timerChange') { let retVal = await MySearch.timerChange(val[0]); sendToChannel('timerChange', retVal); }
       else if (data.msg === 'search: pandaToDbId') { let retVal = await MySearch.pandaToDbId(val[0]); sendToChannel('pandaToDbId', retVal); }
       else if (data.msg === 'search: getData') { let retVal = await MySearch.getData(val[0]); sendToChannel('getData', retVal); }

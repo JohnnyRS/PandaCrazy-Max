@@ -30,7 +30,7 @@ class TabbedClass {
     this.tabStructure(this.attachedTo, divId, ulId, contentId);   // Start creating the tabbed areas.
   }
 	/** Gets the current active tab unique number
-   * @returns {number} - The unique number for the active tab.
+   * @return {number} - The unique number for the active tab.
   **/
   get currentTab() { return $('.nav-tabs .active').closest('li').data('unique') }
   /** Public method to get all the tab unique in an array from a private member.

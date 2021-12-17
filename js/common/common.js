@@ -174,7 +174,7 @@ function testGidRid(url) {return /(^http[s]{0,1}\:\/\/[^\s]*\/(projects|requeste
 **/
 function arrayCount(arr, countFunc, counting=true) { // Similar to the ES6 filter method without creating an array.
   let total = 0;
-  if (countFunc && arr.length) { for (const item of arr) { let val = countFunc(item); total += (!counting) ? val : ((val) ? 1 : 0); }}
+  if (countFunc && arr.length) { for (const i in arr) { let item = arr[i]; let val = countFunc(item, i); total += (!counting) ? val : ((val) ? 1 : 0); }}
   return total;
 }
 /** Moves a value in an array from one position to another. The array is changed by splice so no need to return array.
@@ -325,7 +325,7 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
       if (element.clickFunc) valueSpan.closest('td').on( 'click', {unique:element.unique}, e => { element.clickFunc.apply(this, [e]); }); valueSpan = null;
     } else if (element.type === 'string') {
       const id = (element.id) ? ` id=${element.id}` : ``, border = (element.noBorder) ? '' : ` `;
-      $(`<span class='${textColor}${border}'${id}>${theValue}</span>`).appendTo(valueCol);
+      $(`<span class='${textColor}${border}'${id}>${pre}${theValue}</span>`).appendTo(valueCol);
     }
     if (append) row.appendTo(divContainer); else row.prependTo(divContainer);
     $(row).show();
@@ -333,26 +333,14 @@ function displayObjectData(thisArrayObject, divContainer, thisObject, table=true
   }
   row = null;
 }
-/** Gets all the tabs opened in browser and will count how many page URLs that includes the search term.
- * @param  {string} search - Search term to use for all tabs opened in browser.  @param  {function} [doAfter] - Function to call after counting tabs.
+/** Save object to a file. Adds prefix, suffix and extension to filename if given. Uses a function given after file is saved.
+ * @param  {object} theData      - Export data.          @param  {string} [prefix]      - File prefix.                    @param  {string} [suffix]    - File ending.
+ * @param  {function} [doneFunc] - After save function.  @param  {bool}   [doStringify] - Should theData be stringified?  @param  {string} [extension] - File extension.
 **/
-function allTabs(search, doAfter=null) {
-  let count = 0;
-  chrome.windows.getAll({'populate':true}, windows => { // Populate is true so tabs are included in the windows objects.
-    for (let i1=0, len1=windows.length; i1 < len1; i1++) {
-      for (let i2=0, len2=windows[i1].tabs.length; i2 < len2; i2++) { const tab = windows[i1].tabs[i2]; if (tab.url.includes(search)) count++; }
-    }
-    if (doAfter !== null) doAfter(count);
-  });
-}
-/** Save object to a file. Adds prefix and suffix to filename if given. Uses a function given after file is saved.
- * @param  {object} theData      - Export data.          @param  {string} [prefix]      - File prefix.                    @param  {string} [suffix] - File ending.
- * @param  {function} [doneFunc] - After save function.  @param  {bool}   [doStringify] - Should theData be stringified?
-**/
-function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true) {
+function saveToFile(theData, prefix='PandaCrazyEXP', suffix=null, doneFunc=null, doStringify=true, extension='json') {
   let dataToSave = (doStringify) ? JSON.stringify(theData) : theData;
   let blob = new Blob( [dataToSave], {'type': 'text/plain'}), dl = document.createElement('A'), fileEnd = (suffix) ? suffix : '';
-  dl.href = URL.createObjectURL(blob); dl.download = `${prefix}_${formatAMPM('short')}${fileEnd}.json`;
+  dl.href = URL.createObjectURL(blob); dl.download = `${prefix}_${formatAMPM('short')}${fileEnd}.${extension}`;
   document.body.appendChild(dl); dl.click();
   setTimeout( () => { dl.remove(); URL.revokeObjectURL(blob); if (doneFunc) doneFunc(); }, 0);
 }
@@ -372,7 +360,7 @@ function parsePandaUrl(url) {
 function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error has happened. Stopping script.', warn=false) {
   $('.pcm-top:first').html(''); $('#pcm-pandaUI .pcm-quickMenu').html(''); $('.panel').html('');
   $('.panel:first').append(`<H1 class='pcm-myCenter'>${title}</H1><H5 class='pcm-haltMessage'>${alertMessage}</H5>`);
-  if (MyModal) setTimeout(() => { MyModal.closeModal(); }, 200);
+  setTimeout(() => { if (MyModal) MyModal.closeAll(); }, 500);
   if (!warn && error) {                             // Only show message on console as an error if it's not a warning.
     console.error( (consoleMessage !== null) ? consoleMessage : alertMessage, error );
     if (MyQueue !== null) MyQueue.stopQueueMonitor();

@@ -104,7 +104,7 @@ class ModalAlarmClass {
           });
           $('.pcm-defaultAudio').click( () => {
             let data = MyAlarms.getData(soundName);
-            this.myAudio = new Audio(); this.myAudio.src = chrome.runtime.getURL(`${MyAlarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
+            this.myAudio = new Audio(); this.myAudio.src = browser.runtime.getURL(`${MyAlarms.getFolder()}/${data.filename}`); this.addSaveButton(soundName);
           });
           if (MyPandaUI) MyPandaUI.resetToolTips(MyOptions.doGeneral().showHelpTooltips);
         }

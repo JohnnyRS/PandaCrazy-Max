@@ -222,7 +222,13 @@ class MturkPanda extends MturkClass {
 	 * @param  {bool} [val] - Sets the timer to the value or returns pause status if null.
 	 * @return {bool}       - Returns the status of the panda timer pause mode.
 	**/
-	pauseToggle(val=null) { if (MyPandaTimer) { let paused = (val) ? MyPandaTimer.paused = val : MyPandaTimer.pauseToggle(); MySearch.pauseSearch(paused); return paused; } }
+	pauseToggle(val=null) { if (MyPandaTimer) { let paused = (val) ? MyPandaTimer.paused = val : MyPandaTimer.pauseToggle(); return paused; } }
+	/** Unpause the panda timer. **/
+	unPauseTimer() { MyPandaTimer.paused = false; }
+	/** Pause the search timer. **/
+	pauseTimer() { MyPandaTimer.paused = true; }
+	/** Is the panda timer paused? **/
+	isPaused() { return MyPandaTimer.paused; }
 	/** Finds out if the panda timer is in go ham mode and returns status.
 	 * @return {bool} - Returns true if timer is in ham mode.
 	**/
