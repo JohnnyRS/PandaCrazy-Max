@@ -433,7 +433,7 @@ class MturkPanda extends MturkClass {
 	**/
 	async removePanda(myId, deleteDB, whyStop=null) {
 		const tData = await this.dataObj(myId), data = Object.assign({}, tData);
-		await this.stopCollecting(myId, data, whyStop);
+		await this.stopCollecting(myId, data, whyStop); MySearch.pandaRemoved(data.groupId);
 		this.pandaUniques = arrayRemove(this.pandaUniques,myId); this.searchesUniques = arrayRemove(this.searchesUniques,myId);
 		flattenSortObject(this.pandaGroupIds, data.groupId, myId);
 		if (data.search) {

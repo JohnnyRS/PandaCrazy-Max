@@ -147,7 +147,7 @@ async function startUp() {
   let infoDiv = $(`<div class='pcm-myInfo'></div>`).appendTo(statsDiv);
   infoDiv.append(`<H1 class='pcm-myPrimary'>Your Stats Page.</H1><div>This page lets you download the search results from MTURK search page to a CSV file or view basic stats.<br>You must have the save all mturk HITs option on for any data to be downloaded.</div>`);
   let dataResults = $(`<div class='pcm-dataDisplay'></div>`).appendTo(statsDiv);
-  if (!sResultsOpt) dataResults.append(`<div class='pcm-myWarning'>Your current search Results option is set to false so you may not have any data to download.<br>Go to the advanced options on the SearchCrazy page. Change 'Should All MTURK HITs be stored for stats' to true.<br>Now when you start searching it will save every HIT it sees on the MTURK search page.</div>`);
+  if (!sResultsOpt) dataResults.append(`<div class='pcm-myWarning'>Your current search Results option is set to false so you may not have any data to download.<br>Go to the advanced options on the SearchCrazy page. Change 'Should All MTURK HITs be stored for stats' to true.<br>Now when you start searching it will save every HIT it sees on the MTURK search page.</div><br>`);
   dataResults.append(`<div class='pcm-warningPausing pcm-myWarning'>Be aware that loading up stats from the database may take awhile so all panda jobs will be paused until fully loaded.<br>To load up the stats you must click the button below.<br><br><button id='pcm-goStartStats'>Load Up All Stats Now!</button></div>`);
 
   $('#pcm-goStartStats').click( async () => {

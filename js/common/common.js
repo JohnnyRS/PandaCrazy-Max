@@ -1,10 +1,24 @@
-let STARTDATE = new Date();   // Date the script started to detect day changes while script is running.
-const _ = undefined;          // Used for sending to functions if parameter is not used.
+let gStartDate = new Date();   // The current local date.
+let gMturkDate = null;         // The current date in timezone where MTURK is located.
+const _ = undefined;           // Used for sending to functions if parameter is not used.
 /** Constant values for console coloring. **/
 const CONSOLE_WARN  = 'color: red;'
 const CONSOLE_INFO  = 'color: purple;'
 const CONSOLE_DEBUG = 'color: blue;'
 
+/** Will take the maximum timezone offset of Jan 1st and Jul 1st to get the standard timezone and return it.
+ * @return {number} - The maximum timezone offset of jan 1st and jul 1st.
+**/
+Date.prototype.stdTimezoneOffset = function() {
+  var jan = new Date(this.getFullYear(), 0, 1), jul = new Date(this.getFullYear(), 6, 1);
+  return Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
+};
+/** Compares the current timezone offset to the standard timezone offset and returns if the current one is less than which means it's observing DST.
+ * @return {bool} - Returns if the current timezone offset is less than the standard which means it's observing DST.
+**/
+Date.prototype.isDstObserved  = function() {
+  return this.getTimezoneOffset() < this.stdTimezoneOffset();
+};
 /** Checks to see if a value is a string.
  * @param  {object} val - Unknown type of value.
  * @return {bool}       - True if val is a string and false otherwise.
@@ -125,12 +139,12 @@ function createTimeElapse(hourValue, minuteValue) {
 }
 /** Returns the date in a readable format according to the provided format and timezone.
  * @param  {string} theFormat - The format.  @param  {object} theDate - The date.  @param  {string} theTimeZone - The timezone.
- * @return {string}           - Returns the string of the date in a more readable format.
+ * @return {string|object}    - Returns the string of the date in a more readable format or just the Date object.
 **/
 function formatAMPM(theFormat, theDate, theTimeZone) {
   var d = (theDate) ? theDate : new Date();
   if (theTimeZone === 'mturk') {
-    let mturkTZOffset = -8, today = new Date(); if (today.dst()) mturkTZOffset++;
+    let mturkTZOffset = -8, today = new Date(); if (today.isDstObserved()) mturkTZOffset++;
     let utc = d.getTime() + (d.getTimezoneOffset() * 60000), MturkTime = utc + (3600000 * mturkTZOffset);
     d = new Date(MturkTime);
   }
@@ -143,6 +157,7 @@ function formatAMPM(theFormat, theDate, theTimeZone) {
   else if (theFormat === 'dayandtime') return days[d.getDay()] + ' ' + hours + ':' + minutes + ampm;
   else if (theFormat === 'onlydate') return ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2) + '-' + d.getFullYear();
   else if (theFormat === 'yearMonDay') return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
+  else if (theFormat === 'theDateObj') return d;
   else return days[d.getDay()] + ' ' + months[d.getMonth()] + ' ' + d.getDate() + ' ' + d.getFullYear() + ' ' + hours + ':' + minutes + ampm;
 }
 /** Convert seconds into the number of weeks, days, hours, minutes and seconds.
@@ -367,6 +382,11 @@ function haltScript(error, alertMessage, consoleMessage=null, title='Fatal error
     throw 'Stopping script due to an error displayed previously or in another console.';
   } else console.info('Warning: ' + alertMessage);  // Show a warning alert message on the console.
 }
+/** Returns the saved MTURK date or save the current MTURK date and then return it.
+ * @param  {bool} renew - Should get new MTURK date?
+ * @return              - The saved MTURK date or the current MTURK date.
+**/
+function getMturkDate(renew=false) { if (gMturkDate === null || renew) gMturkDate = formatAMPM('theDateObj',_,'mturk'); return gMturkDate; }
 /** Checks if the day sent is the same day as today.
  * @param  {date} day - The date that needs to be compared to today.
  * @return {bool}     - True if the date is the same as today.
@@ -375,15 +395,16 @@ function isSameDay(day) {
   let d1 = new Date();
   return day.getFullYear() === d1.getFullYear() && day.getMonth() === d1.getMonth() && day.getDate() === d1.getDate();
 }
-/** Checks if it's a new day by using getDate.
- * @param  {Date} [testDate] - A date to test today's date with.
- * @return {bool}            - True if it's a new day.
+/** Checks if it's a new MTURK day by using getDate and updates the current local time or MTURK time.
+ * @param  {Date} [testDate] - A date to test today's MTURK date with.  @param  {bool} useLocal - Use local time for comparison instead of MTURK time.
+ * @return {bool}            - True if it's a new MTURK day.
 **/
-function isNewDay(testDate=null) {
-  let day = new Date(), returnValue = false;
-  if (testDate !== null && (!datesAreOnSameDay(STARTDATE, testDate, true) || STARTDATE.getDate() !== testDate.getDate())) returnValue = true;
-  else if (STARTDATE.getDate() !== day.getDate()) returnValue = true;
-  STARTDATE = day; return returnValue;
+function isNewDay(testDate=null, useLocal=false) {
+  let savedDay = (useLocal) ? gStartDate : getMturkDate(), newDay = (useLocal) ? new Date() : getMturkDate(true), returnValue = false;
+  if (testDate !== null && (!datesAreOnSameDay(newDay, testDate, true) || newDay.getDate() !== testDate.getDate())) returnValue = true;
+  else if (savedDay.getDate() !== newDay.getDate()) returnValue = true;
+  if (useLocal) gStartDate = newDay; else gMturkDate = newDay;
+  return returnValue;
 }
 /** Checks if two dates are the exact day, month and year. Don't compare to the day if notDay is true.
  * @param  {Date} first - First date.  @param  {Date} second - Second date.  @param  {bool} [notDay] - Don't use getDate?

@@ -492,6 +492,10 @@ class MturkHitSearch extends MturkClass {
 		this.liveCounter = this.livePandaUIStr.length + ((MySearchUI.searchGStats && MySearchUI.searchGStats.isSearchOn()) ? this.liveSearchUIStr.length : 0);
 		if (this.timerUnique && this.liveCounter === 0) { if (MySearchTimer) MySearchTimer.deleteFromQueue(this.timerUnique); this.timerUnique = null; }
 	}
+	/** Removes any GID being temporary blocked when a panda job is removed.
+	 * @param  {string} gId - The group ID of the panda being removed.
+	**/
+	pandaRemoved(gId) { this.setTempBlockGid(gId, false, true); this.setTempBlockGid(gId, false); }
 	/** Gets the status from panda UI of this particular panda job.
 	 * @async								  - To wait for data to be loaded from the database if needed.
 	 * @param  {string} gId	  - The group ID.  @param  {string} rId        - The requester ID.  @param  {bool} status - Job Status.  @param  {bool} [collected] - Collected yet?
@@ -511,7 +515,7 @@ class MturkHitSearch extends MturkClass {
 					if (collected) {
 						ridTrigger.collected.add(gId); ridTrigger.accepted++; if (this.isSearchUI()) MySearchUI.updateStats(ridTrigger.count,_, ridTrigger.accepted);
 						this.setTempBlockGid(gId, false, true);
-						setTimeout( (dbId, gId) => { if (this.triggers[dbId]) this.triggers[dbId].collected.delete(gId); }, 20000, ridDbId, gId );
+						setTimeout( (dbId, gId) => { if (this.triggers[dbId]) this.triggers[dbId].collected.delete(gId); }, 10000, ridDbId, gId );
 					} else if (!status) this.setTempBlockGid(gId, false, true);
 				}
 			}
@@ -556,7 +560,7 @@ class MturkHitSearch extends MturkClass {
 				if (this.isSearchUI()) MySearchUI.updateStats(this.triggers[dbId].count, thisData, this.triggers[dbId].accepted);
 			}
 		});
-		if (!datesAreOnSameDay(this.maintenanceDate, todayDate) || isNewDay(this.maintenanceDate)) {
+		if (!datesAreOnSameDay(this.maintenanceDate, todayDate) || isNewDay(this.maintenanceDate, true)) {
 			let max = TrigLimit, min = customLimit, minType = 'custom'; if (max < min) { [min, max] = [max, min]; minType = 'normal'; } this.maintenanceDate = todayDate;
 			let before1 = new Date(); before1.setDate(before1.getDate() - max); let range1 = IDBKeyRange.bound(0, before1.getTime());
 			let before2 = new Date(); before2.setDate(before2.getDate() - min); let range2 = IDBKeyRange.bound([minType,0], [minType,before2.getTime()]);

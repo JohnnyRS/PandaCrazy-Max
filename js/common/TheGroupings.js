@@ -54,7 +54,6 @@ class TheGroupings {
   }
   /** This method checks all the start times and starts groupings when necessary. **/
   checkStartTimes() {
-    if (isNewDay()) this.resetTimes(false);        // Reset start and end times object if new day.
     if (Object.keys(this.startTimes).length > 0) { // Are there any startTimes to check?
       let thisDate = new Date();
       for (var i=0, keys=Object.keys(this.startTimes); i < keys.length; i++) {

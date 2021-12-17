@@ -220,6 +220,7 @@ class EximClass {
         $('.pcm-importButton:first').on('click', async e => {
           if (!this.importCompleted) {
             $(e.target).html('Please Wait: Importing').css('color','white').prop('disabled',true); MySearchUI.importing();
+            $(e.target).tooltip('dispose'); $(e.target).tooltip('disable');
             await this.startImporting($('#pcm-importAlarms').prop('checked'));
             await delay(600);
             $('.custom-file-input').off('change');
@@ -232,7 +233,7 @@ class EximClass {
         inputContainer = null;
       }
       df = null;
-    }, () => { MyModal = null; if (this.importCompleted) { MySearchUI.importCompleted(); setTimeout(() => { window.location.reload(); }, 800); } });
+    }, () => { MyModal = null; if (this.importCompleted) { MySearchUI.importCompleted(); setTimeout(() => { window.location.reload(); }, 100); } });
   }
   /** Shows the export modal for user to choose to export alarm sounds or not. **/
   exportModal() {

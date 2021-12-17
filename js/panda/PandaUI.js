@@ -502,8 +502,9 @@ class PandaUI {
 	 * @param  {object} queueResults - Object from the MTURK queue with all the HITs information.
 	**/
 	async gotNewQueue(queueResults) {
+		if (isNewDay()) await this.resetDailyStats();							// Did the date change over to the next day in MTURK timezone?
+		if (isNewDay(_, true)) MyGroupings.resetTimes(false);			// Did the date change over to the next day for the current local timezone?
 		MyGroupings.checkStartTimes();
-		if (isNewDay()) await this.resetDailyStats();
 		this.logTabs.updateQueue(queueResults);
 		if (this.tabLogResized) { this.tabLogResized = false; MyOptions.theTabLogHeight(this.tabLogHeight); }
 	}
