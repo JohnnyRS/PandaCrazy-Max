@@ -14,6 +14,7 @@ class ModalClass {
     this.classSaveButton = 'pcm-modalSave';       // The class name for the save button of modal.
     this.classNoButton = 'pcm-modalNo';           // The class name for the no button of modal.
     this.classCancelButton = 'pcm-modalCancel';   // The class name for the cancel button of modal.
+    this.classCloseButton = 'pcm-modalClose';     // The class name for the close button of modal.
     this.modalLoggedOff = 0;                      // A counter for how many logged off modals are opened.
     this.modalCaptcha = 0;                        // A counter for how many Captcha Found modals are opened.
     this.popup = null;                            // A window object of the popup window opened from a modal.
@@ -84,10 +85,10 @@ class ModalClass {
    * @param  {string} bodyClass      - Body class.    @param  {string} footerClass  - Footer class.   @param  {string} [saveButton]   - Save class.
    * @param  {string} [saveText]     - Save text.     @param  {function} [saveFunc] - Save function.  @param  {string} [noButton]     - No class.
    * @param  {string} [noText]       - No text.       @param  {function} [noFunc]   - No function.    @param  {string} [cancelButton] - Cancel class.
-   * @param  {string} [cancelText]   - Cancel text.
+   * @param  {string} [cancelText]   - Cancel text.   @param  {string} [closeText]  - Close text.
    * @return {string}                - Id name.
   **/
-  prepareModal(dataObj, width, addModalClass, addHeaderClass, title, body, bodyClass, footerClass, saveButton='invisible', saveText='Save', saveFunc=null, noButton='invisible', noText='No', noFunc=null, cancelButton='invisible', cancelText='Cancel') {
+  prepareModal(dataObj, width, addModalClass, addHeaderClass, title, body, bodyClass, footerClass, saveButton='invisible', saveText='Save', saveFunc=null, noButton='invisible', noText='No', noFunc=null, cancelButton='invisible', cancelText='Cancel', closeText=null) {
     const idName = this.createModal(addModalClass);
     this.tempObject[idName] = Object.assign({}, dataObj);
     $(`#${idName}`).unbind('hide.bs.modal').unbind('shown.bs.modal').unbind('hidden.bs.modal');
@@ -102,6 +103,7 @@ class ModalClass {
     });
     $(`#${idName} .${this.classNoButton}`).removeClass('invisible visible').addClass(noButton).html(noText).unbind('click').click( () => { if (noFunc) noFunc(); });
     $(`#${idName} .${this.classCancelButton}`).removeClass('invisible visible').addClass(cancelButton).html(cancelText);
+    if (closeText !== null) $(`#${idName} .${this.classCloseButton}`).html(closeText);
     return idName;
   }
   /** Shows a modal informing user that they are logged off from MTURK.
@@ -160,11 +162,12 @@ class ModalClass {
    * @param  {string} [question]    - The question.        @param  {string} [defAns]       - Default answer.       @param  {number} [max]           - Max characters.
    * @param  {function} [afterShow] - AfterShow function.  @param  {function} [afterClose] - AfterClose function.  @param  {string} [yesTxt]        - Yes text.
    * @param  {string} [noTxt]       - No text.             @param  {function} [noFunc]     - No function.          @param  {function} [placeHolder] - The placeholder.
+   * @param  {string} [cancelText]  - Cancel text.         @param  {function} [cancelFunc] - Cancel function.      @param  {string} [closeText]     - Close text.
   **/
-  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='') {
-    const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible';
-    let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, () => { if (yesFunc) yesFunc(idName); }, noClass, noTxt, noFunc);
-    this.showModal(null, () => {
+  showDialogModal(width, title, body, yesFunc, yesBtn, noBtn, question='', defAns='', max=null, afterShow=null, afterClose=null, yesTxt='Yes', noTxt='No', noFunc=null, placeHolder='', cancelText='', cancelFunc=null, closeText=null) {
+    const yesClass = (yesBtn) ? 'visible btn-sm' : 'invisible', noClass = (noBtn) ? 'visible btn-sm' : 'invisible', cancelClass = (cancelText) ? 'visible btn-sm' : 'invisible';
+    let idName = this.prepareModal(null, width, 'pcm-messageModal', 'modal-lg', title, body, '', '', yesClass, yesTxt, () => { if (yesFunc) yesFunc(idName); }, noClass, noTxt, noFunc, cancelClass, cancelText, closeText);
+    this.showModal(cancelFunc, () => {
       let docKeys = '';
       if (question !== '') { // Should an input field be shown with a question?
         createInput($(`#${idName} .${this.classModalBody}`), ' pcm-inputDiv-question', 'pcm-formQuestion', question, placeHolder, null, '', defAns, 95, false, max).append(`<span class='pcm-inputError small'></span>`);
@@ -173,6 +176,6 @@ class ModalClass {
       $(`${docKeys}#${idName}`).keypress( e => { if (yesFunc && (e.keyCode ? e.keyCode : e.which) == '13') yesFunc(idName); });
       $('#pcm-formQuestion').focus().select();
       if (afterShow) afterShow(idName);
-    }, () => { if (afterClose) afterClose(); else MyModal = null; });
+    }, () => { if (afterClose) afterClose(); else MyModal = null; }, cancelText);
   }
 }

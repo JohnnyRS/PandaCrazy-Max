@@ -18,12 +18,14 @@ class ModalOptionsClass {
   **/
   showGeneralOptions(afterClose=null) {
     if (!MyModal) MyModal = new ModalClass();
-    let theseOptions = {'general': Object.assign({}, MyOptions.doGeneral()), 'search': Object.assign({}, MyOptions.doSearch())}, oldMinReward = theseOptions.search.minReward;
+    let theseOptions = {'general': Object.assign({}, MyOptions.doGeneral()), 'search': Object.assign({}, MyOptions.doSearch())};
+    let oldMinReward = theseOptions.search.minReward, oldDisableNotifications = theseOptions.general.disableNotifications;
     const idName = MyModal.prepareModal(theseOptions, '700px', 'pcm-generalOptModal', 'modal-lg', 'General Options', '', '', '', 'visible btn-sm', 'Save General Options', changes => {
       /** When options have changed, make sure the global options are changed too. */
       let closeAndSave = () => {
         MyOptions.doGeneral(Object.assign(MyOptions.doGeneral(), changes.general)); MyOptions.doSearch(Object.assign(MyOptions.doSearch(), changes.search));
         if (MyPandaUI !== null) MyPandaUI.queueAlertUpdate();
+        if (oldDisableNotifications !== changes.general.disableNotifications &&  MyOptions.isNotifications()) MyNotify.prepare(true);
         $('.pcm-volumeHorizGroup').css('display',(changes.general.volHorizontal) ? 'block' : 'none');
         $('.pcm-volumeVertGroup').css('display',(changes.general.volHorizontal) ? 'none': 'flex');
         if (changes.general.advancedSearchJobs) $('.pcm-requesterButton').show(); else $('.pcm-requesterButton').hide();

@@ -98,7 +98,9 @@ html, body { height: 100%; }
 .pcm-inputRange { height: 13px; width: 75px; margin-top: 0; margin-right:5px; border: none; -webkit-appearance: none; background-color: transparent; font-size:0.5em; }
 .pcm-inputRange:focus { outline:none; }
 .pcm-inputRange::-webkit-slider-thumb { -webkit-appearance: none; height:14px; width: 10px; background-color: #6ECFFF; border: 1px solid #000000; margin-top:-4px; }
+.pcm-inputRange::-moz-range-thumb { -webkit-appearance: none; height:14px; width: 10px; background-color: #6ECFFF; border: 1px solid #000000; margin-top:-4px; }
 .pcm-inputRange::-webkit-slider-runnable-track { background-color: whitesmoke; height:8px; box-shadow: 1px 1px 1px #000000; border-radius: 5px; border: 1px solid #000000; }
+.pcm-inputRange::-moz-range-track { background-color: whitesmoke; height:8px; box-shadow: 1px 1px 1px #000000; border-radius: 5px; border: 1px solid #000000; }
 .pcm-inputRangeText { height: 13px; margin-left: 2px; font-size: 0.7em; width: 30px; }
 .pcm-inputDiv-question { margin-left: 20px; }
 .pcm-checkbox { height: 11px; }
@@ -261,6 +263,7 @@ html, body { height: 100%; }
 .pcm-pandaCard.pcm-cardLimited { background-color: #ffa691; }
 .pcm-muteAlarm { margin-top: 2px; margin-right: 3px; height: 11px; }
 .pcm-muteAlarmLabel { font-size: 10px; padding-right:5px; padding-top: 1px; margin: 0; }
+.pcm-notificationsAsk { font-size: 0.9rem; color: burlywood; font-weight: 700; }
 
 /* SearchUI Targeted Styles. */
 #pcm-searchUI .pcm-top { background-color: darkslategrey; }

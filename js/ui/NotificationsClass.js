@@ -9,10 +9,27 @@ class NotificationsClass {
     this.lastGroupId = '';                        // The last group ID that used a notification so it won't send multiple all at once.
     this.enabled = 'Notification' in window;      // The notification object from windows.
     this.granted = (this.enabled) ? Notification.permission : false;
-    if (this.enabled && this.granted !== 'granted') Notification.requestPermission().then( (permission) => {
-      if (permission === 'granted') this.granted = true;
-      this.show('Notifications are on');
-    });
+  }
+  /** Will prepare Notifications in browser by showing a modal which the user has to interact with so browsers will permit to ask permission.
+   * @param  {bool} [reset] - Reset granted to try again if not granted already.
+  **/
+  prepare(reset=false) {
+    if (reset && this.granted !== 'granted') this.granted = false;
+    setTimeout(() => {
+      if (this.enabled && this.granted !== 'granted') {
+        let body = `<div class='pcm-notificationsAsk'>Notifications are not permitted on your browser right now.<br>Would you like Notifications to be shown when important actions happen?<br><br>When you click Yes your browser will ask for permission and you<br>must accept it or Notifications will be turned off for this session.<br>Click No to have no Notification used for this session.<br>To not allow Notifications permanently click on the 'Never Ask Again' button.</div>`;
+        if (!MyModal) MyModal = new ModalClass();
+        MyModal.showDialogModal('600px', 'Notification Permission.', body, () => {
+          Notification.requestPermission().then( (permission) => {
+            if (permission === 'granted') {
+              this.granted = true;
+              this.show('Notifications are allowed', 'You have allowed Notifications and will now receive notifications when HITs get accepted or other important information.');
+            }
+            MyModal.closeAll();
+          });
+        }, true, true,_,_,_,_,_,_,_, () => {},_, `Don't ask again`, () => { MyOptions.setNotifications(true); }, '');
+      } else if (reset && this.granted === 'granted') this.show('Notifications are allowed', 'You have allowed Notifications and will now receive notifications when HITs get accepted or other important information.');
+    }, 100);
   }
   /** Checks to make sure that the notifications are enabled and granted.
    * @return {bool} - Returns true if everything is fine.

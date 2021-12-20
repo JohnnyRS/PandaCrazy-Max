@@ -17,7 +17,7 @@ $('body').tooltip({'selector': `.pcm-tooltipData:not(.pcm-tooltipDisable)`, 'del
 function modalLoadingData(doAfterShow) {
   MyModal = new ModalClass();
   MyModal.showDialogModal('700px', 'Loading Data', 'Please Wait. Loading up all data for you.',
-    null , false, false, '', '', null, doAfterShow() ); // Calls startPandaCrazy after modal shown.
+    null , false, false, '', '', null, doAfterShow(),_,_,_,_,_,_,_, ''); // Calls startPandaCrazy after modal shown.
 }
 /** Prepares the main global variables with classes and background data.
  * @async - To wait for the database functions to finish opening up databases.
@@ -69,6 +69,7 @@ async function startPandaCrazy() {
       MyQueue.startQueueMonitor(); MyDash.doDashEarns();
       PCM_channel.postMessage({'msg':'panda crazy Loaded'});
       document.title = 'Panda Crazy Max';
+      if (MyOptions.isNotifications()) MyNotify.prepare();
       browser.runtime.sendMessage({'command':'pandaUI_startDone'});
     }, 500); // Just a small delay so messages can be read by user.
   } else { haltScript('Halting for error', 'Important data has not been loaded correctly.', 'Problem with Database.', 'Error opening database:'); }

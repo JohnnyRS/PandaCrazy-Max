@@ -1,6 +1,6 @@
 const locationUrl = window.location.href;
-let gParentUrl = document.referrer, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false, gOpenHits = null, gAlreadyOpened = false;
-let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMonitorOn = false, gReturnBtn = false, gSessionData = {};
+let gParentUrl = parent.document.URL, gDocTitle = document.title, gHitReturned = false, gInterval = null, gQueuePage = false, gOpenHits = null, gAlreadyOpened = false;
+let gHitData = {}, gHitsData = {}, gPrevHit = null, gAssignedHit = null, gGroupId = null, gMonitorOn = false, gReturnBtn = false, gSessionData = {}, gReloaded = false;
 let gGotoHit = 0, gHitSubmitted = null, gPcmRunning = false, gQueueResults = [], gTaskId = null, gPay = null, gIframeAtt = false, gHitLost = false, gReqId = null, gNextHit = null;
 let gNewQueue = false, gHolders = {}, gTabIds = {}, gPositionsTitle = false, gIds = {}, gIdsSession = {}, gIdsDone = false, gTabUnique = null, gUnloading = false, gThisPosition = null;
 let gSessionDefault = {'monitorNext':false, 'gidNext':false, 'ridNext':false}, gOptions = {'mturkPageButtons':true, 'tabUniqueHits':true, 'titleQueueDisplay':true};
@@ -10,7 +10,7 @@ let gSecure = ['startcollect', 'stopcollect', 'startgroup', 'stopgroup', 'enable
 /** Detects if the extension was restarted or uninstalled.
  * @return {boolean} - Returns if extension is still loaded and hasn't been restarted.
 **/
-function extensionLoad() { try { (browser.runtime.getManifest()); return true; } catch (error) { return false; } }
+function extensionLoad() { try { (browser.runtime.getManifest()); return !gReloaded; } catch (error) { gReloaded = true; return false; } }
 /** Sends a message to the extension with given values.
  * @param  {string} com     - The command.      @param  {object} data    - Data object.   @param  {bool} passHit - Passing HIT data?  @param  {string} gId     - Group ID.
  * @param  {string} [desc]  - The description.  @param  {string} [title] - The title.     @param  {string} [rId] - Requester ID.      @param  {string} [rName] - Requester name.
@@ -242,16 +242,18 @@ function listenChanged(changes, name) {
       if (key === 'PCM_queueData') {
         queueData(newVal); addQueueOldKeys();
         if (gIframeAtt) localStorage.setItem('JR_QUEUE_StoreData',JSON.stringify( {'date': new Date().getTime(), 'ScriptID': '1', 'queue':gQueueResults} ));
-        else checkQueue(gQueueResults); }
-      else if (key === 'PCM_running') { gPcmRunning = newVal; document.title = gDocTitle; }
-      else if (key === 'PCM_returnClicked') { // Detects a return cancelled from a prompt dialog due to a script.
+        else checkQueue(gQueueResults);
+      } else if (key === 'PCM_returnClicked') { // Detects a return cancelled from a prompt dialog due to a script.
         if (newVal) {
           let thisAssignedID = newVal.assignmentId;
           if (thisAssignedID && thisAssignedID === gAssignedHit) { if (gReturnBtn) { setTimeout( () => { gReturnBtn = false; }, 1000); }}
-        }}
+        }
+      } else if (key.includes('PCM_t_')) {
+        if (!newVal && oldVal) doIds(oldVal.assignmentId, oldVal.unique, true); else if (newVal) doIds(newVal.assignmentId, newVal.unique);
+      }
+      else if (key === 'PCM_running') { gPcmRunning = newVal; document.title = gDocTitle; }
       else if (key === 'PCM_returnedHit') { gHitReturned = true; if (newVal) { setRememberIds('return', newVal.assignmentId); }}
-      else if (key.includes('PCM_t_')) {
-        if (!newVal && oldVal) doIds(oldVal.assignmentId, oldVal.unique, true); else if (newVal) doIds(newVal.assignmentId, newVal.unique); }
+      else if (key === 'firstInstall') gReloaded = true;
     }
   }
 }

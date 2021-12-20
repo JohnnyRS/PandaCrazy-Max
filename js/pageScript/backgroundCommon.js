@@ -1,5 +1,5 @@
 let isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-if (!isFirefox) importScripts('../../lib/browser-polyfill.min.js');  // To make it compatible with firefox message sending with a Promise.
+if (!isFirefox) importScripts('../../lib/browser-polyfill.js');  // To make it compatible with firefox message sending with a Promise.
 let gStarting = false;  // Temporary variable used to keep multiple pages running at same time. Stays in memory only when service worker is active.
 
 /** Cleans the chrome local storage of all created data from extension. Used at start and when all pages are closed. **/

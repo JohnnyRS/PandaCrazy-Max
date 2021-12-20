@@ -260,6 +260,10 @@ class PandaGOptions {
    * @return {bool} - True if notifications are enabled.
   **/
   isNotifications() { return !this.general.disableNotifications; }
+  /** Will set the disableNotifications option to the value and then update it to database.
+   * @param  {bool} value - Disable or enable Notifications?
+  **/
+  setNotifications(value=false) { this.general.disableNotifications = value; this.update('general'); }
   /** Is the captcha alert enabled?
    * @return {bool} - True if captcha alert is enabled.
   **/
