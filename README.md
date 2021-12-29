@@ -1,6 +1,6 @@
 <h1 align="center">PandaCrazy Chrome Extension for Amazon MTURK</h1>
 
-*This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.* (MODIFIED BY LEE FOR TESTING)
+*This is a rebuild of my PandaCrazy userscript for Mturk.com in a Chrome Extension version.* (MODIFIED BY LEE FOR TESTING AND GENERAL FUCKING AROUND)
 
 ### This extension has been submitted to the webstore and has been approved. You can now do a search for panda crazy in the chrome store or go to the [PandaCrazy Max Page](https://chrome.google.com/webstore/detail/pandacrazy-max/gefompgkggmjbcihdkdbfddhjnnceipm) to install the extension.
 * If the Panda Crazy Icon doesn't show up on the chrome bar then click on the extensions icon and then push the pin next to the Panda Crazy Max extension.
