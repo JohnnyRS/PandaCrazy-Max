@@ -32,8 +32,10 @@ class MturkDashboard extends MturkClass {
 	stopDashEarns(paused=false) { if (paused) this.paused = true; else { this.dashDone = true; if (MyPandaUI) MyPandaUI.setEarnings(this.total) } }
   /** Sets loggedOff to true and pauses the earning calculations. **/
   nowLoggedOff() { this.loggedOff = true; this.stopDashEarns(true); }
-  /** Sets loggedOff to false and starts to calculate the earnings. **/
-  nowLoggedOn() { this.loggedOff = false; this.paused = false; if (!this.dashDone) this.doDashEarns(false); }
+  /** Sets loggedOff to false and starts to calculate the earnings.
+	 * @param  {bool} paused - If timer is paused or not.
+	**/
+  nowLoggedOn(paused) { this.loggedOff = false; this.paused = paused; if (!this.dashDone) this.doDashEarns(false); }
   /** Fetches the URL for the dashboard after timer class tells it to do so and handles MTURK results. **/
   goFetch() {
     let theDate = formatAMPM('yearMonDay', new Date()), urlString = `${this.dashUrl}${theDate}`, startTime = new Date().getTime();

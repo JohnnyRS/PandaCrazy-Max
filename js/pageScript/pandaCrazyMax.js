@@ -151,11 +151,13 @@ PCM_channel.onmessage = async (e) => {
       let theObject = data.object;
       MyOptions.doGeneral(theObject.general, false); MyOptions.doSearch(theObject.search, false); MyOptions.doTimers(theObject.timers, false); MyOptions.doAlarms(theObject.alarms, false);
       MyOptions.update(_, false);
-    } else if (data.msg === 'search: closingSearchUI') { if (MyPandaUI) MyPandaUI.searchUIConnect(false); gPCM_searchOpened = false; if (gPCM_pandaOpened) MySearch.originRemove(); }
+    } else if (data.msg === 'search: closingSearchUI') {
+      if (MyPandaUI) MyPandaUI.searchUIConnect(false); gPCM_searchOpened = false; if (gPCM_pandaOpened) MySearch.originRemove(); MyPandaUI.removeCustomContextMenu();
+    }
     else if (data.msg === 'pandaUI: checking') { if (gPCM_pandaOpened) PCM_channel.postMessage({'msg':'pandaUI: panda crazy opened'}); }
     else if (data.msg === 'pandaUI: panda crazy opened') { gLoadVerified = true; multipleWarning(); }
     else if (data.msg === 'search: openingSearchUI') { if (gPCM_pandaOpened && gLoadCompleted) PCM_channel.postMessage({'msg':'searchTo: panda crazy running'}); }
-    else if (data.msg === 'search: setSearchUI') { if (MyPanda) MyPanda.searchUIConnect(true); gPCM_searchOpened = true; }
+    else if (data.msg === 'search: setSearchUI') { if (MyPanda) MyPanda.searchUIConnect(true); gPCM_searchOpened = true; MyPandaUI.addCustomContextMenu(); }
     else if (data.msg === 'search: sendOptionsToSearch') { if (MyOptions) MyOptions.sendOptionsToSearch(); }
     alarmsListener(data);
   }

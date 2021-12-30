@@ -91,7 +91,7 @@ class PandaUI {
 	}
 	/** Removes all panda jobs from UI and stats. **/
 	removeAll() {
-		if (this.cards) this.cards.removeAll(); if (this.tabs) this.tabs.wipeTabs(); if (this.logTabs) this.logTabs.removeAll();
+		if (this.cards) this.cards.removeAll(); if (this.tabs) this.tabs.wipeTabs(); if (this.logTabs) this.logTabs.removeAll(); this.listener.removeContextAll();
 		this.cards = null; this.pandaStats = {}; this.listener = null; this.hitQueue = []; this.lastAdded = null; this.tabs = null; this.logTabs = null;
 		this.pandaGStats = null; this.delayedTimeout = null; this.resizeObserver = null; this.modalJob = null;
 	}
@@ -130,7 +130,7 @@ class PandaUI {
 	pauseToggle(val=null) { if (MyPanda) { if (MyPanda.pauseToggle(val)) $('#pcm-bqPandaPause').html('Unpause'); else $('#pcm-bqPandaPause').html('Pause'); }}
 	/** Shows the logged off modal and after it will unpause the timer. **/
 	nowLoggedOff() {
-		if (!MyModal) MyModal = new ModalClass(); MyModal.showLoggedOffModal( () => { if (MyModal.modals.length < 2) MyModal = null; MyPanda.unPauseTimer(); });
+		if (!MyModal) MyModal = new ModalClass(); MyModal.showLoggedOffModal( () => { if (MyModal.modals.length < 2) MyModal = null; if (MyPanda.isLoggedOff()) MyPanda.unPauseTimer(); });
 		if (!MyPanda.isLoggedOff()) { MyAlarms.doLoggedOutAlarm(); if (MyOptions.isNotifications()) MyNotify.showLoggedOff(); }
 		MyDash.nowLoggedOff();
 	}
@@ -144,8 +144,10 @@ class PandaUI {
 			if (MyModal.modals.length < 2) MyModal = null; this.pauseToggle(false); document.title = 'Panda Crazy Max';
 		}, url.replace('?format=json',''));
 	}
-  /** Closes the logged off modal if it's opened. **/
-	nowLoggedOn() { if (MyModal) MyModal.closeModal('Program Paused!'); MyDash.nowLoggedOn(); }
+  /** Closes the logged off modal if it's opened.
+	 * @param  {bool} paused - If timer is paused or not.
+	**/
+	nowLoggedOn(paused) { if (MyModal) MyModal.closeModal('Program Paused!'); MyDash.nowLoggedOn(paused); }
 	/** Sets the mute value of the specific panda job with the unique number with the status value.
 	 * @param  {number} myId - Unique number.  @param  {bool} value - Mute status.
 	**/
@@ -551,4 +553,8 @@ class PandaUI {
 	disconnectedWarning(status=true) {
 		if (status) $('.pcm-menuRow1 .pcm-myWarning').html('Internet may be disconnected or MTURK is down.'); else $('.pcm-menuRow1 .pcm-myWarning').html('');
 	}
+	/** Creates the custom context menu by using the listener. **/
+	addCustomContextMenu() { this.listener.addCustomContextMenu(); }
+	/** Removes the custom context menu by using the listener. **/
+	removeCustomContextMenu() { this.listener.removeCustomContextMenu(); }
 }

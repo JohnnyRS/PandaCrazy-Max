@@ -161,7 +161,7 @@ async function startUp() {
       setTimeout(() => { MyModal.closeModal('Loading Stats'); }, Math.max(0, 800 - msElapsed));
       $('.pcm-warningPausing').remove();
       doShowStats();
-    });
+    },_,_,_,_,_,_,_, '');
   });
 }
 

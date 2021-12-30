@@ -227,6 +227,7 @@ class ModalOptionsClass {
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
         {'label':'Display MTURK Approval Rate For Requesters:', 'type':'trueFalse', 'key1':'options', 'key':'displayApproval', 'tooltip':`Should Approval Rate from MTURK be shown on the Custom Triggered Hits Tab or only shown on mouse over requester name?`},
         {'label':'Search Page JSON Format:', 'type':'trueFalse', 'key1':'options', 'key':'useJSON', 'tooltip':`Should MTURK return the search results in JSON or HTML format? JSON should be the fastest.`},
+        {'label':'Show Custom Context Menus on Selections:', 'type':'trueFalse', 'key1':'options', 'key':'customContextMenu', 'tooltip':`Should there be an add custom search context menu shown when you right click on a selection on any other page?`},
       ], df, MyModal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${MyModal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(MyModal.tempObject[idName]); });

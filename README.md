@@ -40,4 +40,4 @@ This is being built by the newest ECMAScript, jquery, jquery UI and bootstrap. C
 
 This extension will work in chrome and should be added from the chrome store.
 This extension can work in new microsoft edge in developer mode!
-This extension can work in Firefox with 'manifest - firefox.json' renamed to 'manifest.json' and added in 'Debug Add-ons' in the addons section. Soon will be in the add-ons store.
+This extension can work in Firefox with 'manifest - firefox.json' renamed to 'manifest.json' and added in 'Debug Add-ons' in the addons section. Also is now found in the Firefox add on store..

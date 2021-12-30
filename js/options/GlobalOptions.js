@@ -96,6 +96,7 @@ class PandaGOptions {
       'historyCache':200,           // Default value used for the amount of search group ID history saved in memory cache.
       'triggerCacheTimer':40000,    // Default value used for the amount of time in milliseconds to check for any unsaved updates in trigger cache.
       'historyCacheTimer':90000,    // Default value used for the amount of time in milliseconds to check for any unsaved updates in history cache.
+      'customContextMenu':true,     // Default value used to show custom context menu on selections or not?
     }
     this.sessionQueue = {};         // Used to hold all the session variables used with the helpers on MTURK page.
     this.captchaCounter = 0;        // Used to track how many HITs seen since last captcha has been seen.
@@ -132,7 +133,13 @@ class PandaGOptions {
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Search options object.
   **/
-  doSearch(changes=null, update=true) { if (changes) { MySearch.redoCacheOptions(changes, this.search); this.doChanges('search', changes, update); } else return this.search; }
+  doSearch(changes=null, update=true) {
+    if (changes) {
+      if (MyPandaUI && changes.customContextMenu) MyPandaUI.addCustomContextMenu(); else if (MyPandaUI && !changes.customContextMenu) MyPandaUI.removeCustomContextMenu();
+      MySearch.redoCacheOptions(changes, this.search); this.doChanges('search', changes, update);
+    }
+    else return this.search;
+  }
   /** Changes the alarms options with the changes object and updates database if update is true.
    * @param  {object} [changes] - Object changes.  @param  {bool} [update] - Update database?
    * @return {object}           - Alarms options object.

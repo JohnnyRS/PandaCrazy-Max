@@ -19,7 +19,7 @@ class ModalSearchClass {
     this.minPayRange = {'min':0.00, 'max':300.00};       // The minimum and maximum amount of pay for MTURK to filter on the search page.
     this.cacheTimerRange = {'min':30000, 'max':300000};  // The minimum and maximum amount of pay for MTURK to filter on the search page.
   }
-  /** Shows a modal for adding panda or search jobs.
+  /** Shows a modal for adding search triggers.
    * @param  {function} [afterClose] - After function.  @param  {bool} [doCustom] - Custom trigger?
   **/
   showTriggerAddModal(afterClose=null, doCustom=false) {
@@ -42,6 +42,7 @@ class ModalSearchClass {
       else if (doCustom && (isNaN(minPay))) wrongInput(modalBody, 'All custom Triggers need to have a minimum pay filled in with numbers and a decimal only!', $(`label[for='pcm-formMinPay']`));
       else if ((doCustom) || testGidRid(groupVal)) {
         let groupId = null, reqId = null;
+        if (doCustom) groupVal = groupVal.toLowerCase().trim();
         if (!doCustom) { if (groupVal.includes('://')) [groupId, reqId] = parsePandaUrl(groupVal); else if (groupVal.match(/^[^Aa]/)) groupId = groupVal; else { reqId = groupVal;} }
         if (!doCustom && !reqId && !groupId) wrongInput(modalBody, _, $(`label[for='pcm-formAddGroupID']`));
         else {
@@ -402,6 +403,7 @@ class ModalSearchClass {
         {'label':'Minimum Reward for MTURK Search Page:', 'type':'number', 'key1':'options', 'key':'minReward', 'money':true, 'default':0, 'tooltip':`The minimum reward to show on the search page. The default value is $0.01 but there may be some HITs at $0.00 which are qualifications. Most HITs at $0.00 are no good. Be sure to change this back after getting any qualifications you were looking for.`, 'minMax':this.minPayRange},
         {'label':'Display MTURK Approval Rate For Requesters:', 'type':'trueFalse', 'key1':'options', 'key':'displayApproval', 'tooltip':`Should Approval Rate from MTURK be shown on the Custom Triggered Hits Tab or only shown on mouse over requester name?`},
         {'label':'Search Page JSON Format:', 'type':'trueFalse', 'key1':'options', 'key':'useJSON', 'tooltip':`Should MTURK return the search results in JSON or HTML format? JSON should be the fastest.`},
+        {'label':'Show Custom Context Menus on Selections:', 'type':'trueFalse', 'key1':'options', 'key':'customContextMenu', 'tooltip':`Should there be an add custom search context menu shown when you right click on a selection on any other page?`},
       ], df, MyModal.tempObject[idName], true);
       $(`<table class='table table-dark table-hover table-sm pcm-detailsTable table-bordered'></table>`).append($(`<tbody></tbody>`).append(df)).appendTo(`#${idName} .${MyModal.classModalBody}`);
       $(`#${idName}`).keypress( e => { if ((e.keyCode ? e.keyCode : e.which) == '13') saveFunction(MyModal.tempObject[idName]); });

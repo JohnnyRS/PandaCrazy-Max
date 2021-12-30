@@ -144,7 +144,7 @@ class DatabasesClass {
    * @return {promise}        - Database key or new key in resolve. Error object in reject.
   **/
   addToDB(target, store='storeName', mData=null, onlyNew=false, key=null, updateFunc=null) {
-		return new Promise((resolve, reject) => { this[target].db.addToDB(this[target][store], mData, onlyNew, key, updateFunc).then( r => resolve(r), e => reject(e) ); });
+		return new Promise((resolve, reject) => { if (this[target].db) this[target].db.addToDB(this[target][store], mData, onlyNew, key, updateFunc).then( r => resolve(r), e => reject(e) ); });
   }
   /** Deletes data from the database in the store name and the key. Can use an index name also.
    * @param  {string} target - Database name.  @param  {string} [store] - Store name.  @param  {string} [key] - Key name.  @param  {string} [indexName] - Index name.

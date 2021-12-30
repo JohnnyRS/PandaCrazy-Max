@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "PandaCrazy Max",
   "short_name": "PC Max",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "author": "JohnnyRS",
   "description": "Extension for Mturk.com to Collect HIT's for you at a set time value. Lot of organizing of panda's for easier use.",
   "browser_specific_settings": {
@@ -68,6 +68,7 @@
   "permissions": [
     "activeTab",
     "storage",
+    "contextMenus",
     "https://worker.mturk.com/*",
     "https://www.amazon.com/ap/signin?*openid.return_to=https://worker.mturk.com/*"
   ],

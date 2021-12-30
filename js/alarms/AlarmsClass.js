@@ -14,6 +14,7 @@ class AlarmsClass {
     this.data = {};                               // Object with all the alarms data stored in memory.
     this.myAudio = null;                          // This is a temporary variable that holds the audio which will be played.
     this.audio = {'panda': null, 'search':null};  // An object that separates the panda page alarms from the search page alarms.
+    this.playingNow = '';                         // Holds the name of the alarm that is playing right now.
     this.dataDefault = {                          // Default values for all the alarms data.
       'less2':{'filename':'sword-hit-01.mp3', 'name':'less2', 'obj':null, 'desc':'HITs Paying less than', 'pay':'0.02', 'lessThan':-1, 'mute':false, 'tts':false},
       'less2Short':{'filename':'less2Short.mp3', 'name':'less2Short', 'obj':null, 'desc':'HITs Paying less than', 'pay':'0.02', 'lessThan':2, 'mute':false, 'tts':false},
@@ -153,21 +154,26 @@ class AlarmsClass {
           if (isPlaying) { this.myAudio.load(); this.myAudio = null; }
           this.myAudio = this.data[alarmSound].audio;
           if (this.myAudio) {
-            this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100;
-            this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { endFunc(); }
+            this.myAudio.currentTime = 0; this.myAudio.volume = this.volume/100; this.playingNow = alarmSound;
+            this.myAudio.play(); if (endFunc) this.myAudio.onended = () => { this.playingNow = ''; endFunc(); }
           }
         }
       }
     } else if (speakThis !== '') this.speakThisNow(speakThis, endFunc);
     else console.info('Alarms not fully loaded yet.');
   }
-  /** Stop any sound currently playing from the myAudio variable. **/
-  stopSound() { if (this.myAudio) this.myAudio.load(); }
+  /** Stop any sound currently playing or a specific alarm that is playing from the myAudio variable.
+   * @param  {string} [alarmSound] - The name of the alarm to check if it's playing now and stop it.
+  **/
+  stopSound(alarmSound=null) { if (this.myAudio && (alarmSound === null || this.playingNow == alarmSound)) this.myAudio.load(); }
   /** Toggles the mute value for this alarm.
    * @param  {string} alarmSound - The name of the alarm to toggle the mute value.
    * @return {bool}              - Returns the value of mute after toggling it.
   **/
-  muteToggle(alarmSound) { this.data[alarmSound].mute = !this.data[alarmSound].mute; this.saveAlarm(alarmSound); return this.data[alarmSound].mute; }
+  muteToggle(alarmSound) {
+    if (!this.data[alarmSound].mute) this.stopSound(alarmSound);
+    this.data[alarmSound].mute = !this.data[alarmSound].mute; this.saveAlarm(alarmSound); return this.data[alarmSound].mute;
+  }
   /** Toggles the TTS value for this alarm.
    * @param  {string} alarmSound - The name of the alarm to toggle the TTS value.
    * @return {bool}              - Returns the value of TTS after toggling it.

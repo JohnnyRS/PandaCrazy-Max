@@ -26,6 +26,7 @@ class MturkPanda extends MturkClass {
 		this.loggedOff = false;									// Are we logged off from MTURK?
 		this.skipError = false;									// Used to skip displaying error when fetching twice for speed.
 		this.tempPaused = false;								// Used to pause timer if queue is maxed or a MTURK problem.
+		this.pausedSave = false;								// Used to save the pause status before changing the pause when logged off.
 		this.skippedDoNext = false;							// Used when checking skipped jobs in a recursive function.
 		this.authenticityToken = null;					// The authenticity token from MTURK so HITs can be returned.
 		this.resultsBack = {'status':true, 'elapsed':null, 'parsedTime':null, 'lastParsed':null};	// Records status and times of results returned from MTURK including parsed times.
@@ -245,12 +246,10 @@ class MturkPanda extends MturkClass {
 	 * @param  {number} queueUnique - Unique number for the panda in timer queue.
 	**/
 	resetTimerStarted(queueUnique) { MyPandaTimer.resetTimeStarted(queueUnique); }
-	/** Unpause the panda timer. **/
-	unPauseTimer() { MyPandaTimer.paused = false; }
 	/** When logged off this will pause the panda timer and let panda UI know it's logged off. **/
-	nowLoggedOff() { if (MyPandaUI) MyPandaUI.nowLoggedOff(); MyPandaTimer.paused = true; this.loggedOff = true; }
+	nowLoggedOff() { if (MyPandaUI) MyPandaUI.nowLoggedOff(); if (!this.loggedOff) { this.pausedSave = MyPandaTimer.paused; MyPandaTimer.paused = true; this.loggedOff = true; }}
 	/** When logged back in this will unpause the panda timer and let panda UI know it's logged back in. **/
-	nowLoggedOn() { this.unPauseTimer(); this.loggedOff = false; if (MyPandaUI) MyPandaUI.nowLoggedOn(); }
+	nowLoggedOn() { MyPandaTimer.paused = this.pausedSave; this.loggedOff = false; if (MyPandaUI) MyPandaUI.nowLoggedOn(MyPandaTimer.paused); }
 	/** Send the collection status and group ID for this panda to the search class.
 	 * @param  {object} data - Data object.  @param  {bool} status - Collection status.  @param  {bool} [collected] - Collected yet?  @param  {string} [url] - URL String.
 	**/

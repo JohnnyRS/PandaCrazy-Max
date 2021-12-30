@@ -22,6 +22,7 @@ browser.runtime.onMessage.addListener(request => {
   else if (request.command === 'searchUI_closed') browser.storage.local.remove('PCM_searchUI_running');
   else if (request.command === 'searchUI_status') return browser.storage.local.get('PCM_searchUI_running').then(r => r.PCM_searchUI_running);
   else if (request.command === 'pandaUI_startDone' || request.command === 'searchUI_start_done') gStarting = false;
+  else if (request.command === 'doTimeout') { return new Promise((resolve) => { setTimeout((thisId) => resolve(thisId), request.value, request.id); }); }
   else if (request.command === 'pandaUI_starting' || request.command === 'searchUI_starting') {
     if (!gStarting) { gStarting = true; return Promise.resolve(true); } else return Promise.resolve(false);
   }

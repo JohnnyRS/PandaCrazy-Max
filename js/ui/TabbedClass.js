@@ -82,7 +82,7 @@ class TabbedClass {
     } else if (this.ulId === 'pcm-tabbedlogs') {
       $(`<li class='pcm-endTab'></li><li class='pcm-captchaText'></li><input class='pcm-muteAlarm ml-auto' type='checkbox' title='Mute Alarm' name='muteAlarm'><label class='pcm-muteAlarmLabel' for='muteAlarm'>Mute Alarm</label>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));
       this.updateMuteAlarm();
-      $(`input.pcm-muteAlarm`).click( () => { MyAlarms.muteToggle('queueAlert'); this.updateMuteAlarm(); } )
+      $(`input.pcm-muteAlarm`).click(() => { MyAlarms.muteToggle('queueAlert'); this.updateMuteAlarm(); });
       success = 'Added All Log Tabs.';
     } else {
       $(`<li class='pcm-endTab'></li>`).appendTo($(`#${this.ulId}`).addClass('unSelectable'));

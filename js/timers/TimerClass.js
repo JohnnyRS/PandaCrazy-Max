@@ -17,6 +17,8 @@ class TimerClass {
 		this.hamTimer = hamTimer;		    // Timer used when going ham.
 		this.min = 650;									// The minimum time that the timer can be.
 		this.timeoutID = null;					// A timeout ID for the current timeout.
+		this.timeOutCounter = 0;				// Stores a unique number for each timeout that is created in the background.
+		this.clearTimeout = new Set();	// A set that has all timeout ID's that should be ignored if a timeout is finished and then removed from Set.
 		this.timeoutDoing = null;				// A timeout ID saved so the timeout ID can be nulled.
 		this.queue = [];								// The main queue holding all jobs to cycle through.
 		this.queueObject = {};					// All the jobs data information in an object.
@@ -118,48 +120,53 @@ class TimerClass {
 	/** This is the main loop for the timer to work with. After timeout is done it will run this method.
 	 * Stops timer if duration is elapsed. Stops hamming after ham duration is elapsed.
 	 * Calculates exact elapsed time for information purposes.
+	 * @param  {number} id - The timeout ID currently being done so it can be ignored if in the clearTimeout variable.
 	**/
-	privateLoop() {
-		this.timeoutDoing = this.timeoutID; this.timeoutID = null;
-		const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
-		const usingTimer = (this.goingHam!==null && this.hamTimer!==null) ? this.hamTimer : this.timeout;
-		const usingTimer2 = (this.goingHam!==null && this.hamTimer!==null) ? 'hamTimer' : 'normalTimer';
-		const elapsed = end - this.started; // Get elapsed time from when timer started to end
-		if (usingTimer !== null && !this.paused && this.queue.length > 0) {
-			// How accurate was the timer? find difference between real timer and actual time elapsed.
-			const diff = ((elapsed - usingTimer) > 0) ? elapsed - usingTimer : 0;
-			if (this.dLog(3)) console.debug(`%c[${this.timerName}] using: ${usingTimer2} elapsed: ${elapsed} timer: ${usingTimer}`, CONSOLE_DEBUG);
-			let newTimer = usingTimer - diff; // If actual time went over timer than subtract the difference for next timer
-			if (this.goingHam !== null) { queueUnique = this.goingHam; } // If going ham then get item unique from ham
-			else queueUnique = this.queue.shift(); // If not going ham then item unique is in the next queue position
-			const thisItem = this.queueObject[queueUnique]; // Let's get the details of this item
-			if (thisItem) {
-				if (thisItem.timeStarted === null) thisItem.timeStarted = end;
-				if (thisItem.timeRestarted === null) thisItem.timeRestarted = end;
-				if (thisItem.duration > 0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
-				if (thisItem.tDuration > 0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
-				if (thisItem.dGoHam > 0) { // Is this just a temporary go ham job and item just started then init hamStarted
-					if (thisItem.hamStarted === null) thisItem.hamStarted = end;
-					else if ((end - thisItem.hamStarted) > thisItem.dGoHam) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamStarted = null; }
+	privateLoop(id) {
+		if (this.clearTimeout.has(id)) this.clearTimeout.delete(id);
+		else {
+			this.timeoutDoing = this.timeoutID; this.timeoutID = null;
+			const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
+			const usingTimer = (this.goingHam!==null && this.hamTimer!==null) ? this.hamTimer : this.timeout;
+			const usingTimer2 = (this.goingHam!==null && this.hamTimer!==null) ? 'hamTimer' : 'normalTimer';
+			const elapsed = end - this.started; // Get elapsed time from when timer started to end
+			if (usingTimer !== null && !this.paused && this.queue.length > 0) {
+				// How accurate was the timer? find difference between real timer and actual time elapsed.
+				const diff = ((elapsed - usingTimer) > 0) ? elapsed - usingTimer : 0;
+				if (this.dLog(3)) console.debug(`%c[${this.timerName}] using: ${usingTimer2} elapsed: ${elapsed} timer: ${usingTimer}`, CONSOLE_DEBUG);
+				let newTimer = usingTimer - diff; // If actual time went over timer than subtract the difference for next timer
+				if (this.goingHam !== null) { queueUnique = this.goingHam; } // If going ham then get item unique from ham
+				else queueUnique = this.queue.shift(); // If not going ham then item unique is in the next queue position
+				const thisItem = this.queueObject[queueUnique]; // Let's get the details of this item
+				if (thisItem) {
+					if (thisItem.timeStarted === null) thisItem.timeStarted = end;
+					if (thisItem.timeRestarted === null) thisItem.timeRestarted = end;
+					if (thisItem.duration > 0 && (end-thisItem.timeStarted) > thisItem.duration ) stopFor = thisItem.duration;
+					if (thisItem.tDuration > 0 && (end-thisItem.timeRestarted) > thisItem.tDuration ) stopFor = thisItem.tDuration;
+					if (thisItem.dGoHam > 0) { // Is this just a temporary go ham job and item just started then init hamStarted
+						if (thisItem.hamStarted === null) thisItem.hamStarted = end;
+						else if ((end - thisItem.hamStarted) > thisItem.dGoHam) { turnOffHam=true; thisItem.dGoHam = 0; thisItem.hamStarted = null; }
+					}
+					if (!stopFor && this.goingHam === null) this.queue.push(queueUnique);
+					if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
+						thisItem.theFunction(queueUnique, elapsed, thisItem.myId);
+						this.started = end;
+					}
+					else if (stopFor) { // This item has expired so run the after function and delete it from queue
+						if (this.dLog(2)) console.info(`%c[${this.timerName}] timer expired: ${stopFor}`, CONSOLE_INFO);
+						thisItem.funcAfter(thisItem.myId, turnOffHam);
+						this.deleteFromQueue(queueUnique);
+						if (this.goingHam === queueUnique) this.goingHam = null; // If this was going ham then turn ham off.
+						newTimer = 0;	// Pass to next item in queue
+					}
+					// Put this item back on the bottom of the queue if it's not going ham and good to go back on queue
+					if (turnOffHam) this.hamOff(queueUnique); // If turning off ham then make sure ham is really off.
+					this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++;
+					browser.runtime.sendMessage({'command':'doTimeout', 'value':Math.max(newTimer, 0), 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
 				}
-				if (!stopFor && this.goingHam === null) this.queue.push(queueUnique);
-				if (!stopFor) { // Is this item good to go back into queue? Run the function and update started time.
-					thisItem.theFunction(queueUnique, elapsed, thisItem.myId);
-					this.started = end;
-				}
-				else if (stopFor) { // This item has expired so run the after function and delete it from queue
-					if (this.dLog(2)) console.info(`%c[${this.timerName}] timer expired: ${stopFor}`, CONSOLE_INFO);
-					thisItem.funcAfter(thisItem.myId, turnOffHam);
-					this.deleteFromQueue(queueUnique);
-					if (this.goingHam === queueUnique) this.goingHam = null; // If this was going ham then turn ham off.
-					newTimer = 0;	// Pass to next item in queue
-				}
-				// Put this item back on the bottom of the queue if it's not going ham and good to go back on queue
-				if (turnOffHam) this.hamOff(queueUnique); // If turning off ham then make sure ham is really off.
-				this.timeoutDoing = null;
-				this.timeoutID = setTimeout(this.privateLoop.bind(this), Math.max(newTimer, 0)); // Timeout never under 0
-			}
-		} else { this.running = false; } // queue isn't running right now.
+			} else { this.running = false; } // queue isn't running right now.
+			if (this.queue.length === 0) this.clearTimeout.clear();
+		}
 	}
 	/** Starts the timer if it's not running, not paused and the queue is not empty.
 	 * Checks to make sure the timeoutID is null so it won't start another timeout.
@@ -168,7 +175,8 @@ class TimerClass {
 		if (this.timeoutID === null && !this.running && this.timeout !== null && !this.paused && this.queue.length > 0) {
 			if (this.dLog(2)) console.info(`%c[${this.timerName}] is now starting: ${this.timeout}`, CONSOLE_INFO);
 			this.running = true; this.started = new Date().getTime();
-			this.timeoutID = setTimeout(this.privateLoop.bind(this), 0); // Start only one timeout.
+			this.timeoutID = this.timeOutCounter++;
+			browser.runtime.sendMessage({'command':'doTimeout', 'value':0, 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
 		}
 	}
 	/** Removes the unique number from the queue.
@@ -194,10 +202,11 @@ class TimerClass {
 	**/
 	adjustTimer(newTimer) {
 		if (this.timeoutID !== null && this.timeoutDoing !== this.timeoutID) {
-			clearTimeout(this.timeoutID); // Drop current timeout ID.
+			this.clearTimeout.add(this.timeoutID); // Drop current timeout ID.
 			const timeElapsed = newTimer - (new Date().getTime() - this.started);
 			const newTimeout = (timeElapsed > 0) ? timeElapsed : 0; // If there is time left then use that time.
-			this.timeoutDoing = null; this.timeoutID = setTimeout(this.privateLoop.bind(this), newTimeout);
+			this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++;
+			browser.runtime.sendMessage({'command':'doTimeout', 'value':newTimeout, 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
 		}
 	}
 	/** Change the duration for a job inside the queue.
@@ -241,7 +250,7 @@ class TimerClass {
 	/** Remove all jobs from queue and stop the timer. **/
 	stopAll() {
 		if (this.queue.length || this.queueSkipped.length) {
-			if (this.timeoutID !== null) clearTimeout(this.timeoutID);
+			if (this.timeoutID !== null) this.clearTimeout.add(this.timeoutID);
 			this.timeoutDoing = null; this.timeoutID = null;
 			Object.keys(this.queueObject).forEach( key => {
 				let thisItem = this.queueObject[key];
@@ -314,7 +323,7 @@ class TimerClass {
 			this.removeFromQueueSkipped(queueUnique); // Make sure it's no longer in skipped queue.
 			delete this.queueObject[queueUnique];
 			if (this.dLog(3)) console.info(`%c[${this.timerName}] is trying to delete from queue: ${queueUnique}`, CONSOLE_INFO);
-			if (this.queue.length === 0) { this.running = false; clearTimeout(this.timeoutID); this.timeoutID = null; this.timeoutDoing = null; }
+			if (this.queue.length === 0) { this.running = false; this.clearTimeout.add(this.timeoutID); this.timeoutID = null; this.timeoutDoing = null; }
 			else this.sendBackInfo();
 		}
 	}

@@ -251,7 +251,7 @@ class ModalJobClass {
           $(`label[for='pcm-formAddGroupID']`).removeClass('pcm-inputError'); $('#pcm-formAddGroupID').data('gIdDup',true);
           theBody.find('.pcm-checkStatus.pcm-inputError').html('GroupID already added. Still want to add?');
           $('.modal-footer .pcm-modalSave:first').html('YES! Add new Panda Info');
-        } else if ( (groupId && !reqSearch) || reqId) {
+        } else if ((groupId && !reqSearch) || reqId) {
           title = (reqId) ? '--( Requester ID Search )--' : title;
           if (!reqName) reqName = reqId;
           let search = (reqId) ? 'rid' : ((groupId && $('#pcm-searchJob').is(':checked')) ? 'gid' : null);
