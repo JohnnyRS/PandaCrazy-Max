@@ -13,6 +13,7 @@ class PandaUI {
 		this.tabs = null;												// The tabbed area where the panda card will go to.
 		this.logTabs = null;										// The log tabs on the bottom of the page with queue watch.
 		this.pandaGStats = null;								// The global stats for all the panda's and display stats to status area.
+		this.timeoutCount = 0;									// A unique number that represents the timeout value for a timeout in the background.
 		this.delayedTimeout = null;					    // Used to delay adding jobs externally to get control.
     this.tabPandaHeight = 0;								// Panda tab row's height.
 		this.tabLogHeight = 0;									// Log tab row's height.
@@ -54,11 +55,13 @@ class PandaUI {
 					for (const unique of tabUniques) {
 						let positions = this.tabs.getPositions(unique);
 						for (const dbId of positions) {
-							let myId = MyPanda.getMyId(dbId);
-							dbIds = arrayRemove(dbIds, dbId.toString());
-							if (MyPanda.info.hasOwnProperty(myId)) this.addPandaToUI(myId, MyPanda.options(myId), null, true, true);
-							else this.tabs.removePosition(unique, dbId);
-							if (this.pandaStats[myId]) this.pandaStats[myId].updateAllStats(this.cards.get(myId));
+							if (!isNaN(dbId)) {
+								let myId = MyPanda.getMyId(dbId);
+								dbIds = arrayRemove(dbIds, dbId.toString());
+								if (MyPanda.info.hasOwnProperty(myId)) this.addPandaToUI(myId, MyPanda.options(myId), null, true, true);
+								else this.tabs.removePosition(unique, dbId);
+								if (this.pandaStats[myId]) this.pandaStats[myId].updateAllStats(this.cards.get(myId));
+							} else this.tabs.removePosition(unique, dbId);
 						}
 						this.cards.appendDoc(unique);
 					}
@@ -304,6 +307,13 @@ class PandaUI {
 	 * @param  {number} myId - The unique ID for a panda job.
 	**/
 	searchingNow(myId) { let pandaStat = this.pandaStats[myId]; pandaStat.doSearching(true); this.cards.pandaSearchingNow(myId); }
+	/** Calls nextInDelayedQueue with a timeout. Uses a message to the background so it is done in the background to stop throttling and keeps track of the internal timeout ID.
+	 * @param  {number} timer - The timer to use in the message being sent to the background timeout.
+	**/
+	doDelayedTimeout(timer) {
+		this.delayedTimeout = this.timeoutCount++; let theId = this.delayedTimeout;
+		browser.runtime.sendMessage({'command':'doTimeout', 'value':timer, 'id':theId}).then(() => { this.nextInDelayedQueue(theId); });
+	}
 	/** When panda's are coming in externally too fast they need to delay collecting for 500 milliseconds each.
 	 * @async 								 - To wait for panda data to be fully loaded.
 	 * @param  {number} [diff] - The difference of time since the last panda was added.
@@ -317,8 +327,8 @@ class PandaUI {
 				this.lastAdded = new Date().getTime(); if (info.autoAdded !== false) info.autoAdded = true; data.hitsAvailable = obj.hitsAvailable;
 				this.cards.updateAllCardInfo(obj.myId, info); this.startCollecting(obj.myId, false, obj.tempDuration, obj.tempGoHam, obj.tF, obj.auto);
 				if (this.hitQueue.length === 0) { this.lastAdded = null; this.delayedTimeout = null; }
-				else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
-			} else this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500);
+				else this.doDelayedTimeout(400);
+			} else this.doDelayedTimeout(400);
 		} else this.delayedTimeout = null;
 	}
 	/** Run this panda after adding it to panda class with a temporary duration and temporary go ham duration.
@@ -336,7 +346,7 @@ class PandaUI {
 				if (diff < this.hitQueue[0].lowestDur) {
 					if (this.hitQueue.length > 1) this.hitQueue.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
 					MyPanda.sendStatusToSearch(hitInfo.data, true);
-					if (!this.delayedTimeout) this.delayedTimeout = setTimeout(this.nextInDelayedQueue.bind(this), 500, diff);
+					if (!this.delayedTimeout) this.doDelayedTimeout(400);
 				} else this.nextInDelayedQueue(diff);
 			} else this.nextInDelayedQueue(-1);
 		} else { this.cards.updateAllCardInfo(myId, hitInfo); }

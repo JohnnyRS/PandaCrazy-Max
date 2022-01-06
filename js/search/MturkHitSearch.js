@@ -264,12 +264,29 @@ class MturkHitSearch extends MturkClass {
 	 * @async - To wait for the cache to be fully saved to the database.
 	**/
 	async closeDB() { await this.doSaveCacheHistory(); await this.doSaveCacheTriggers(); MYDB.closeDB('searching'); this.db = null; }
+	/**	Trims the HITs saved in searching history according to the options for trigger limit and the custom limit.
+	 * @return {promise} - Array which has the number of history HITs deleted with the max range first and the min range second.
+	**/
+	trimHistory() {
+		return new Promise((resolve) => {
+			let customLimit = MyOptions.doSearch().customHistDays, TrigLimit = MyOptions.doSearch().triggerHistDays, todayDate = new Date;
+			if (!datesAreOnSameDay(this.maintenanceDate, todayDate) || isNewDay(this.maintenanceDate, true)) {
+				let max = TrigLimit, min = customLimit, minType = 'custom'; if (max < min) { [min, max] = [max, min]; minType = 'normal'; } this.maintenanceDate = todayDate;
+				let before1 = new Date(); before1.setDate(before1.getDate() - max); let range1 = IDBKeyRange.bound(0, before1.getTime());
+				let before2 = new Date(); before2.setDate(before2.getDate() - min); let range2 = IDBKeyRange.bound([minType,0], [minType,before2.getTime()]);
+				MYDB.deleteFromDB('searching', 'history', range1, 'date').then((result1) => {
+					MYDB.deleteFromDB('searching', 'history', range2, 'typeDate').then((result2) => { resolve([result1, result2]); }, rejected => console.log(rejected));
+				}, rejected => console.log(rejected));
+			} else resolve([0,0]);
+		});
+	}
 	/** Loads data from database into memory using restrictions and adds to UI.
 	 * @async  												- So it can wait for the data to be loaded from the database before doing anything with it.
 	 * @param  {function} [afterFunc] - Function to call after done to send success array or error object.
 	**/
 	async loadFromDB(afterFunc=null) {
 		let success = [], err = null, optionsUpdated = [], triggersUpdated = [], updateOptions = false;
+		await this.trimHistory().then(async (trimResults) => { if (this.dLog(2)) console.log('Deleted Hits History Total:', trimResults[0] + trimResults[1]); });
 		await MYDB.getFromDB('searching').then( async result => {
 			if (result.length > 0) {
 				let allDbIds = result.map((item) => { return item.id; }); // Create an array of all the database Id's to use for loading of options, rules and history.
@@ -545,28 +562,16 @@ class MturkHitSearch extends MturkClass {
 	}
 	/** Maintain the GID history for the trigger using dbId by adding any new data to the database and then deleting older data past the date range set up.
 	 * @async								 - To wait for data to be retrieved from database if needed.
-	 * @param  {number} dbId - Database ID.  @param  {string} key - Key name.  @param  {bool} sent - Sent already?  @param  {bool} [doUpdate] - Update also?
+	 * @param  {number} dbId - Database ID.  @param  {string} key - Key name.  @param  {bool} sent - Sent already?
 	**/
-	async maintainGidHistory(dbId, key, sent, doUpdate=false) {
+	async maintainGidHistory(dbId, key, sent) {
 		let thisData = this.data[dbId], thisType = thisData.type; if (thisType !== 'custom') thisType = 'normal';
-		let customLimit = MyOptions.doSearch().customHistDays, TrigLimit = MyOptions.doSearch().triggerHistDays, todayDate = new Date;
 		let saveData = {'dbId':dbId, 'gid':key, 'type':thisType, 'date':new Date().getTime(), 'sent':sent, 'updated':new Date().getTime()};
 		let foundData = await this.getFromHistory(saveData);
 		if (foundData.length > 0 && foundData[0].id) saveData = Object.assign(saveData, {'id':foundData[0].id});
+		else if (foundData.length === 0) { thisData.numHits = thisData.numHits + 1; this.updateToDB('data', thisData); }
 		this.updateToDB('history', saveData);
-		await MYDB.getFromDB('searching', 'history', dbId,_, 'dbId', true).then( async historyNum => {
-			if (thisData) {
-				if (thisData.numHits !== historyNum && doUpdate) { thisData.numHits = historyNum; this.updateToDB('data', thisData); }
-				if (this.isSearchUI()) MySearchUI.updateStats(this.triggers[dbId].count, thisData, this.triggers[dbId].accepted);
-			}
-		});
-		if (!datesAreOnSameDay(this.maintenanceDate, todayDate) || isNewDay(this.maintenanceDate, true)) {
-			let max = TrigLimit, min = customLimit, minType = 'custom'; if (max < min) { [min, max] = [max, min]; minType = 'normal'; } this.maintenanceDate = todayDate;
-			let before1 = new Date(); before1.setDate(before1.getDate() - max); let range1 = IDBKeyRange.bound(0, before1.getTime());
-			let before2 = new Date(); before2.setDate(before2.getDate() - min); let range2 = IDBKeyRange.bound([minType,0], [minType,before2.getTime()]);
-			MYDB.deleteFromDB('searching', 'history', range1, 'date').then( (result) => { if (dLog(2)) console.log('deleted max', result); }, rejected => console.log(rejected));
-			MYDB.deleteFromDB('searching', 'history', range2, 'typeDate').then( (result) => { if (dLog(2)) console.log('deleted min', result); }, rejected => console.log(rejected));
-		}
+		if (this.isSearchUI()) MySearchUI.updateStats(this.triggers[dbId].count, thisData, this.triggers[dbId].accepted);
 	}
 	/** Temporarily block trigger from detecting this group ID in the search results.
 	 * @param  {string} gId - Blocked group ID.  @param  {bool} [block] - Block this?  @param  {bool} [rIdBlock] - Block GID from requester.
@@ -694,7 +699,7 @@ class MturkHitSearch extends MturkClass {
 				let dbIdArr = (key1 === 'terms') ? this.liveTermData[term]: [`${this.theDbId(key1, key2)}`];
 				for (const thisDbId of dbIdArr) {
 					let dbId = (thisDbId.includes(',')) ? Number(thisDbId.split(',')[0]) : Number(thisDbId);
-					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false, doUpdate = false;
+					let triggered = true, thisTrigger = this.triggers[dbId], gId = item.hit_set_id, auto = false;
 					let options = await this.theData(dbId, 'options'), rules = await this.theData(dbId, 'rules');
 					if (rules.payRange) triggered = this.isPayRange(rules, item.monetary_reward.amount_in_dollars);
 					if (rules.include.size || rules.exclude.size) triggered = triggered && this.isTermCheck(rules, titleDescription, (key1 !== 'terms'));
@@ -707,15 +712,14 @@ class MturkHitSearch extends MturkClass {
 							if (this.isSearchUI()) MySearchUI.triggeredHit(thisTrigger.count, this.data[dbId]);
 							if (options.once && key1 === 'rid') this.setTempBlockGid(gId, true, true);
 							if (key1 === 'gid') { thisTrigger.tempDisabled = true; thisTrigger.status = 'collecting'; }
-							doUpdate = true;
 						} else if (key1 === 'terms' && !this.customGidSkip.includes(gId)) {
 							if (options.auto && this.autoAllow && thisTrigger.auto < options.autoLimit) {
 								this.sendToPanda(item, dbId, key1, true, 10000); thisTrigger.auto++; this.autoGids[gId] = dbId; auto = true; this.setTempBlockGid(gId, true);
 							}
 							if (this.isSearchUI()) MySearchUI.triggeredHit(thisTrigger.count, this.data[dbId], item, term, auto);
-							this.setCustomGidSkip(gId, true); doUpdate = true;
+							this.setCustomGidSkip(gId, true);
 						}
-						this.maintainGidHistory(dbId, gId, true, doUpdate);
+						this.maintainGidHistory(dbId, gId, true);
 						break;
 					}
 				}

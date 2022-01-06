@@ -18,7 +18,6 @@ class TimerClass {
 		this.min = 650;									// The minimum time that the timer can be.
 		this.timeoutID = null;					// A timeout ID for the current timeout.
 		this.timeOutCounter = 0;				// Stores a unique number for each timeout that is created in the background.
-		this.clearTimeout = new Set();	// A set that has all timeout ID's that should be ignored if a timeout is finished and then removed from Set.
 		this.timeoutDoing = null;				// A timeout ID saved so the timeout ID can be nulled.
 		this.queue = [];								// The main queue holding all jobs to cycle through.
 		this.queueObject = {};					// All the jobs data information in an object.
@@ -120,11 +119,10 @@ class TimerClass {
 	/** This is the main loop for the timer to work with. After timeout is done it will run this method.
 	 * Stops timer if duration is elapsed. Stops hamming after ham duration is elapsed.
 	 * Calculates exact elapsed time for information purposes.
-	 * @param  {number} id - The timeout ID currently being done so it can be ignored if in the clearTimeout variable.
+	 * @param  {number} id - The timeout ID currently being done so it can be ignored if not the current timeout ID that it's waiting for.
 	**/
 	privateLoop(id) {
-		if (this.clearTimeout.has(id)) this.clearTimeout.delete(id);
-		else {
+		if (id === this.timeoutID) {
 			this.timeoutDoing = this.timeoutID; this.timeoutID = null;
 			const end = new Date().getTime(); let stopFor = null, queueUnique = null, turnOffHam = false;
 			const usingTimer = (this.goingHam!==null && this.hamTimer!==null) ? this.hamTimer : this.timeout;
@@ -161,11 +159,10 @@ class TimerClass {
 					}
 					// Put this item back on the bottom of the queue if it's not going ham and good to go back on queue
 					if (turnOffHam) this.hamOff(queueUnique); // If turning off ham then make sure ham is really off.
-					this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++;
-					browser.runtime.sendMessage({'command':'doTimeout', 'value':Math.max(newTimer, 0), 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
+					this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++; let timerID = this.timeoutID;
+					browser.runtime.sendMessage({'command':'doTimeout', 'value':Math.max(newTimer, 0), 'id':timerID}).then(() => { this.privateLoop(timerID); });
 				}
 			} else { this.running = false; } // queue isn't running right now.
-			if (this.queue.length === 0) this.clearTimeout.clear();
 		}
 	}
 	/** Starts the timer if it's not running, not paused and the queue is not empty.
@@ -175,8 +172,8 @@ class TimerClass {
 		if (this.timeoutID === null && !this.running && this.timeout !== null && !this.paused && this.queue.length > 0) {
 			if (this.dLog(2)) console.info(`%c[${this.timerName}] is now starting: ${this.timeout}`, CONSOLE_INFO);
 			this.running = true; this.started = new Date().getTime();
-			this.timeoutID = this.timeOutCounter++;
-			browser.runtime.sendMessage({'command':'doTimeout', 'value':0, 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
+			this.timeoutID = this.timeOutCounter++; let timerID = this.timeoutID;
+			browser.runtime.sendMessage({'command':'doTimeout', 'value':0, 'id':timerID}).then(() => { this.privateLoop(timerID); });
 		}
 	}
 	/** Removes the unique number from the queue.
@@ -202,11 +199,10 @@ class TimerClass {
 	**/
 	adjustTimer(newTimer) {
 		if (this.timeoutID !== null && this.timeoutDoing !== this.timeoutID) {
-			this.clearTimeout.add(this.timeoutID); // Drop current timeout ID.
 			const timeElapsed = newTimer - (new Date().getTime() - this.started);
 			const newTimeout = (timeElapsed > 0) ? timeElapsed : 0; // If there is time left then use that time.
-			this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++;
-			browser.runtime.sendMessage({'command':'doTimeout', 'value':newTimeout, 'id':this.timeoutID}).then((id) => { this.privateLoop(id); });
+			this.timeoutDoing = null; this.timeoutID = this.timeOutCounter++; let timerID = this.timeoutID;
+			browser.runtime.sendMessage({'command':'doTimeout', 'value':newTimeout, 'id':timerID}).then(() => { this.privateLoop(timerID); });
 		}
 	}
 	/** Change the duration for a job inside the queue.
@@ -250,7 +246,6 @@ class TimerClass {
 	/** Remove all jobs from queue and stop the timer. **/
 	stopAll() {
 		if (this.queue.length || this.queueSkipped.length) {
-			if (this.timeoutID !== null) this.clearTimeout.add(this.timeoutID);
 			this.timeoutDoing = null; this.timeoutID = null;
 			Object.keys(this.queueObject).forEach( key => {
 				let thisItem = this.queueObject[key];
@@ -323,7 +318,7 @@ class TimerClass {
 			this.removeFromQueueSkipped(queueUnique); // Make sure it's no longer in skipped queue.
 			delete this.queueObject[queueUnique];
 			if (this.dLog(3)) console.info(`%c[${this.timerName}] is trying to delete from queue: ${queueUnique}`, CONSOLE_INFO);
-			if (this.queue.length === 0) { this.running = false; this.clearTimeout.add(this.timeoutID); this.timeoutID = null; this.timeoutDoing = null; }
+			if (this.queue.length === 0) { this.running = false; this.timeoutID = null; this.timeoutDoing = null; }
 			else this.sendBackInfo();
 		}
 	}

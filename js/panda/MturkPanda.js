@@ -107,23 +107,28 @@ class MturkPanda extends MturkClass {
 	}
 	/** Adds data to the database and sets the ID in info to the key resolved from database.
 	 * @async										- To wait for the adding of data in the database.
-	 * @param  {object} newData - New data.  @param  {bool} [multiple] - Does the data object have multiple items to add?
+	 * @param  {object} newData - New data.  @param  {bool} [multiple] - Does the data object have multiple items to add? (Only used when importing.)
+	 * @return {promise}				- Returns the database ID that was added or -1 if multiple data was added.
 	**/
-	async addToDB(newData, multiple=false) {
-		await MYDB.addToDB('panda',_, newData).then( id => {
-			if (!multiple) newData.id = id; else for (const data of newData) data.myId = this.uniqueIndex++;
-		}, rejected => { MyPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
+	addToDB(newData, multiple=false) {
+		return new Promise((resolve) => {
+			MYDB.addToDB('panda',_, newData).then(id => {
+				if (!multiple) newData.id = id; else for (const data of newData) data.myId = this.uniqueIndex++; resolve(id);
+			}, rejected => { MyPandaUI.haltScript(rejected, 'Failed adding new data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
+		});
 	}
 	/** Updates the data for this panda using the unique ID. Key should already be in the data object.
 	 * @async									- To wait for the updating of data in the database.
 	 * @param  {number} myId	- Unique ID.  @param  {object} [newData] - Object to update panda with or use the data in the panda info object.
+	 * @return {promise}			- Returns the database ID that was updated.
 	**/
-	async updateDbData(myId, newData=null) {
+	updateDbData(myId, newData=null) {
 		let theData = (newData) ? newData : this.info[myId].data;
-		await MYDB.addToDB('panda',_, theData).then( id => theData.id = id,
-			rejected => { MyPandaUI.haltScript(rejected, 'Failed updating data to database for a panda so had to end script.', 'Error adding panda data. Error:'); }
-		);
 		if (this.dLog(3)) console.info(`%cUpdating data for dbId: ${theData.id}.`,CONSOLE_INFO);
+		return new Promise((resolve) => {
+			MYDB.addToDB('panda',_, theData).then(id => { theData.id = id; resolve(id); },
+			rejected => { MyPandaUI.haltScript(rejected, 'Failed updating data to database for a panda so had to end script.', 'Error adding panda data. Error:'); });
+		});
 	}
 	/** Delete the panda data and stats with this unique ID from the databases.
 	 * @async								 - To wait for the deletion of data from the database.
