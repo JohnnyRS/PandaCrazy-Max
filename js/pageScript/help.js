@@ -29,6 +29,23 @@ function startHelp() {
       }
     });
   });
+  $('#pcm-resetMyHistory').click( async () => {
+    browser.runtime.sendMessage({'command':'pandaUI_status'}).then(async (response) => {
+      MyModal = new ModalClass();
+      if (response) MyModal.showDialogModal('700px', 'Please Close the Panda Crazy Page!', 'You must close the Panda Crazy Max page first before wiping the history data.', null, false, false);
+      else {
+        MyModal.showDialogModal('600px', 'Wipe All History Data', 'Do you really want to delete all of your history data?', async () => {
+          if (!MYDB) MYDB = new DatabasesClass(); if (!MyOptions) MyOptions = new PandaGOptions(); if (!MyHistory) MyHistory = new HistoryClass(false);
+          await MyHistory.wipeData();
+          await MYDB.openSearching().then( async () => {
+            await MYDB.clearStore('searching', 'history'); await MYDB.clearStore('searching', 'results');
+            MyModal.closeModal(); await delay(100); // Just a small delay so modal can close completely.
+            MyModal.showDialogModal('700px', 'All History Data is Wiped!', 'All of your history data has been wiped!', null, false, false,_,_,_,_, () => { window.open('pandaCrazy.html', '_blank'); myModal = null; window.close(); });
+          });
+        }, true, true,_,_,_,_, () => {});
+      }
+    });
+  });
 }
 
 /** ================ First lines executed when page is loaded. ============================ **/

@@ -55,7 +55,7 @@ class PandaUI {
 					for (const unique of tabUniques) {
 						let positions = this.tabs.getPositions(unique);
 						for (const dbId of positions) {
-							if (!isNaN(dbId)) {
+							if (dbId != null) {
 								let myId = MyPanda.getMyId(dbId);
 								dbIds = arrayRemove(dbIds, dbId.toString());
 								if (MyPanda.info.hasOwnProperty(myId)) this.addPandaToUI(myId, MyPanda.options(myId), null, true, true);
@@ -377,7 +377,7 @@ class PandaUI {
 	**/
 	addFromSearch(data, opt, auto, run, tempDuration, tempGoHam, searchType, myId=-1, from='fromPanda', tF=0) {
 		if (myId !== -1 && data.reqName !== '') MyPanda.updateReqName(myId, data.reqName);
-		if (data.hamDuration === 0) data.hamDuration = MyOptions.getHamDelayTimer();
+		if (opt.autoGoHam && opt.hamDuration === 0) opt.hamDuration = MyOptions.getHamDelayTimer();
 		this.addPanda(data, opt, auto, run, true, tempDuration, tempGoHam,_,_,_,_, searchType, from, tF);
 	}
 	/** Add panda from the database.

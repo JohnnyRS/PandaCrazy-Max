@@ -6,7 +6,7 @@ class ModalSearchClass {
 	constructor() {
     this.pandaDur = {'min':0, 'max':360};                // The minimum and maximum duration for panda jobs in minutes. (6 hours max)
     this.pandaDurSeconds = {'min':0, 'max':21600};       // The minimum and maximum duration for panda jobs in seconds. (6 hours max)
-    this.hamDur = {'min':2, 'max':120};                  // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
+    this.hamDur = {'min':0, 'max':120};                  // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
     this.pandaHamDur = {'min':0, 'max':120};             // The minimum and maximum duration for panda ham duration in seconds. (2 minutes max)
     this.dailyLimitRange = {'min':0, 'max':5000};        // The minimum and maximum number of HITs allowed in a day for a panda job.
     this.fetchesTempDur = {'min':0, 'max':21600};        // The minimum and maximum number of fetches allowed. (6 hour max approximately)
@@ -210,7 +210,7 @@ class ModalSearchClass {
         let otherValue = $(`#pcm-tempDurationDetailS`).html() || $(`#pcm-tempDurationDetailI`).val();
         return (Number(otherValue) === this.pandaDurSeconds.min);
       }},
-      {'label':'Temporary Start Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':MyOptions.doSearch().defaultHamDur, 'tooltip':'The TEMPORARY duration in seconds to use to go in ham mode after starting to collect a HIT and then go back to normal collecting mode. Every panda job created by a trigger will go into Ham mode at beginning.', 'minMax':this.hamDur},
+      {'label':'Temporary Start Ham Duration (Seconds):', 'type':'number', 'key1':'options', 'key':'tempGoHam', 'seconds':true, 'default':MyOptions.doSearch().defaultHamDur, 'tooltip':'The TEMPORARY duration in seconds to use to go in ham mode after starting to collect a HIT and then go back to normal collecting mode.', 'minMax':this.hamDur},
       ...customOpt,
     ], theTable, changes, true);
     theTable = null; prependOpt = null; customOpt = null;
@@ -244,7 +244,6 @@ class ModalSearchClass {
     let idName = MyModal.prepareModal(sChanges, '700px', 'pcm-triggerDetailsModal', 'modal-lg', 'Details for a Trigger', '', '', '', 'visible btn-sm', 'Save New Details', async (changes) => {
       $(`.pcm-eleLabel`).removeClass('pcm-optionLabelError'); let newOpt = changes.options;
       if (newOpt.autoGoHam && newOpt.goHamDuration === 0) newOpt.goHamDuration = MyOptions.getHamDelayTimer();
-      if (newOpt.tempGoHam === 0) newOpt.tempGoHam = MyOptions.doSearch().defaultHamDur;
       if (newOpt.tempDuration === 0 && newOpt.tempFetches === 0) {
         newOpt.tempDuration = (newOpt.tempDuration !== oldTempDuration) ? oldTempDuration : newOpt.tempDuration;
         newOpt.tempFetches = (newOpt.tempFetches !== oldTempFetches) ? oldTempFetches : newOpt.tempFetches;

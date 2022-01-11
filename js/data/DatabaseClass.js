@@ -155,8 +155,9 @@ class DatabasesClass {
   }
   /** Clears the store name given in the database provided.
    * @param  {string} target - Database name.  @param  {string} [store] - Store name.
+   * @return {Promise}       - Returns a resolve and a reject in a promise so it can wait for a response.
   **/
-  clearStore(target, store='storeName') { this[target].db.clearStore(this[target][store]); }
+  clearStore(target, store='storeName') { return new Promise((resolve, reject) => { this[target].db.clearStore(this[target][store]).then( r => resolve(r), e => reject(e) ); }); }
 }
 /** Class for using databases with promises for operations so it can wait for completion of function.
  * @class DatabaseClass

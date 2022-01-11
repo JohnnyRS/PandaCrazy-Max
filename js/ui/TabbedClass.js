@@ -258,8 +258,10 @@ class TabbedClass {
    * @param  {number} tabUnique - The tab unique ID.  @param  {number} id - The unique ID for the panda.
   **/
   setPosition(tabUnique, id) {
-    this.#dataTabs[tabUnique].list.push(id);
-    MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
+    if (!isNaN(id)) {
+      this.#dataTabs[tabUnique].list.push(Number(id));
+      MYDB.addToDB('panda', 'tabs', this.#dataTabs[tabUnique]);
+    }
   }
   /** Removes the panda from this tab unique ID and then saves the updated positions to database.
    * @param  {number} tabUnique - The tab unique ID.  @param  {number} id - The unique ID for the panda.

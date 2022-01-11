@@ -265,18 +265,18 @@ class MturkHitSearch extends MturkClass {
 	**/
 	async closeDB() { await this.doSaveCacheHistory(); await this.doSaveCacheTriggers(); MYDB.closeDB('searching'); this.db = null; }
 	/**	Trims the HITs saved in searching history according to the options for trigger limit and the custom limit.
-	 * @return {promise} - Array which has the number of history HITs deleted with the max range first and the min range second.
+	 * @return {promise} - Array which has the number of history HITs deleted with the max range first and the min range second with a reject message if rejected.
 	**/
 	trimHistory() {
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			let customLimit = MyOptions.doSearch().customHistDays, TrigLimit = MyOptions.doSearch().triggerHistDays, todayDate = new Date;
 			if (!datesAreOnSameDay(this.maintenanceDate, todayDate) || isNewDay(this.maintenanceDate, true)) {
 				let max = TrigLimit, min = customLimit, minType = 'custom'; if (max < min) { [min, max] = [max, min]; minType = 'normal'; } this.maintenanceDate = todayDate;
 				let before1 = new Date(); before1.setDate(before1.getDate() - max); let range1 = IDBKeyRange.bound(0, before1.getTime());
 				let before2 = new Date(); before2.setDate(before2.getDate() - min); let range2 = IDBKeyRange.bound([minType,0], [minType,before2.getTime()]);
 				MYDB.deleteFromDB('searching', 'history', range1, 'date').then((result1) => {
-					MYDB.deleteFromDB('searching', 'history', range2, 'typeDate').then((result2) => { resolve([result1, result2]); }, rejected => console.log(rejected));
-				}, rejected => console.log(rejected));
+					MYDB.deleteFromDB('searching', 'history', range2, 'typeDate').then((result2) => { resolve([result1, result2]); }, rejected => { console.log(rejected); reject(rejected); });
+				}, rejected => { console.log(rejected); reject(rejected); });
 			} else resolve([0,0]);
 		});
 	}
@@ -303,7 +303,6 @@ class MturkHitSearch extends MturkClass {
 						if (!this.dbIds.values.hasOwnProperty(valueString)) {
 							let numHits = historyNum, stats = Object.assign({'numFound':numHits, 'added':new Date().getTime(), 'lastFound':null}, trigger); stats.numHits = numHits;
 							if (options.autoGoHam && options.goHamDuration === 0) { options.goHamDuration = this.optionDef.goHamDuration; updateOptions = true; }
-							if (options.tempGoHam === 0) { options.tempGoHam = MyOptions.doSearch().defaultHamDur; updateOptions = true; }
 							if (options.tempDuration === 0 && options.tempFetches === 0) { options.tempDuration = MyOptions.searchDefault.defaultDur; updateOptions = true; }
 							if (compareVersion(gLocalVersion, '0.9.38')) { options.duration = 0; options.limitFetches = 0; updateOptions = true; }
 							this.options[dbId] = Object.assign({}, this.optionDef, options);
@@ -980,7 +979,7 @@ class MturkHitSearch extends MturkClass {
 						this.lastCreationTime = resultsTarget[0].last_updated_time; MySearchUI.releaseHoldAlarm();
 						if (MyHistory) MyHistory.fillInHistory(tempNewHits, 'searchResults');
 						this.searchesString = tempString + this.searchesString;
-						this.searchesString = this.searchesString.substr(0,3700);
+						this.searchesString = this.searchesString.substring(0,3599);
 						tempString = ''; tempNewHits = {};
 					} else if (result.type === 'ok.text') {
 						let reactProps = $(result.data).find('.row.m-b-md div:eq(1)').data('react-props');
@@ -1011,7 +1010,7 @@ class MturkHitSearch extends MturkClass {
 								} else if (foundData) this.sendToPanda(foundData, dbId, lookGid);
 							}
 							this.searchesString = tempString + this.searchesString;
-							this.searchesString = this.searchesString.substr(0,3700);
+							this.searchesString = this.searchesString.substring(0,3599);
 							tempString = ''; hitsData = null; rewardSort = null;
 						}
 						if (dbId !== null && (this.triggers[dbId].setName === 'fromSearch' || !this.triggers[dbId].reqSearch)) {
