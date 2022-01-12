@@ -608,7 +608,7 @@ class MturkPanda extends MturkClass {
 							console.info('cookie large problem'); this.tempPaused = true; MyPandaTimer.paused = true;
 							MyPandaUI.pandaGStats.addTotalPandaErrors();
 						}
-						else if (result.type === 'ok.text' || result.mode === 'captcha') { MyPandaUI.captchaFound(objUrl.url); }
+						else if (result.type === 'ok.text' || result.mode === 'captcha') { if (MyOptions.isCaptchaAlert()) MyPandaUI.captchaFound(objUrl.url); }
 					}
 					MyPandaUI.updateLogStatus(myId, info.lastElapsed); dateNow = null;
 				}
