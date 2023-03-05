@@ -273,6 +273,7 @@ function detectForums(data) {
     else if (/turkerview\.com/.test(gLocationUrl)) { gForumName = 'TV'; gForumOptProp = 'TVButtons'; if (data.TVButtons) onForums(); }
     else if (/mturkforum\.com/.test(gLocationUrl)) { gForumName = 'MTF'; gForumOptProp = 'MTFButtons'; if (data.MTFButtons) onForums(); }
     else if (/ourhitstop\.com/.test(gLocationUrl)) { gForumName = 'OHS'; gForumOptProp = 'OHSButtons'; if (data.OHSButtons) onForums(); }
+    else if (/forum\.theottoforum\.com/.test(gLocationUrl)) { gForumName = 'OHS'; gForumOptProp = 'OHSButtons'; if (data.OHSButtons) onForums(); }
     else if (/slack\.com\/client\/TDBT14TPY\//.test(gLocationUrl)) { gForumName = 'slack'; gForumOptProp = 'SlackButtons'; if (data.SlackButtons) slack(); }
     else if (/discord\.com\/channels\//.test(gLocationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp(); }
     else if (/discord\.com\/app/.test(gLocationUrl)) { gForumName = 'discord'; gForumOptProp = 'DiscordButtons'; if (data.DiscordButtons) discordApp('@me'); }

@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PandaCrazy Max",
   "short_name": "PC Max",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "author": "JohnnyRS",
   "description": "Extension for Mturk.com to Collect HIT's for you at a set time value. Lot of organizing of panda's for easier use.",
 
@@ -41,6 +41,7 @@
         "*://forum.turkerview.com/*",
         "*://*.mturkforum.com/*",
         "*://*.ourhitstop.com/*",
+        "*://*.forum.theottoforum.com/*",
         "*://*.mturkcrowd.com/*",
         "*://*.slack.com/client/TDBT14TPY/*",
         "*://*.discord.com/channels/*",
